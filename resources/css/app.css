@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Brand Palette: Deep Navy + Warm Gold (Luxury Chain) ── */
+  --color-brand-50:   #fdf8ec;
+  --color-brand-100:  #faefd0;
+  --color-brand-200:  #f3d98a;
+  --color-brand-300:  #e8c96d;
+  --color-brand-400:  #d4aa48;
+  --color-brand-500:  #c9a84c;
+  --color-brand-600:  #b8922e;
+  --color-brand-700:  #9a7520;
+  --color-brand-800:  #7c5c16;
+  --color-brand-900:  #5c420e;
+
+  /* ── Navy Palette ── */
+  --color-navy-50:    #e8edf5;
+  --color-navy-100:   #c5d0e6;
+  --color-navy-200:   #8fa4cc;
+  --color-navy-300:   #5978b3;
+  --color-navy-400:   #2e529a;
+  --color-navy-500:   #1a3a6b;
+  --color-navy-600:   #152f57;
+  --color-navy-700:   #102444;
+  --color-navy-800:   #0f2044;
+  --color-navy-900:   #0a1830;
+  --color-navy-950:   #060f1e;
+
+  /* ── Surface Palette ── */
+  --color-surface-0:   #ffffff;
+  --color-surface-50:  #fdf8f0;
+  --color-surface-100: #f5f0e8;
+  --color-surface-200: #ebe3d4;
+  --color-surface-300: #d5c9b0;
+  --color-surface-700: #5c4e38;
+  --color-surface-800: #3d3220;
+  --color-surface-900: #1e1a10;
+  --color-surface-950: #0f0d08;
+
+  /* ── Semantic Colors ── */
+  --color-success:  #059669;
+  --color-warning:  #d97706;
+  --color-error:    #dc2626;
+  --color-info:     #0284c7;
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Readable sizes: nothing below 13px; body copy 15px on a 16px root. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5rem;
+
+  /* ── Radius ── */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-surface-100);
+    color: var(--color-surface-900);
+    line-height: 1.6;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-surface-300); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-surface-700); }
+
+  /* Flat UI: no glows. Focus is a solid outline (keyboard accessible), never a coloured halo. */
+  :focus-visible { outline: 2px solid var(--color-navy-500); outline-offset: 2px; }
+}
+
+@layer components {
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           text-slate-400 hover:text-white hover:bg-navy-700 transition-colors duration-150 cursor-pointer;
+  }
+  .nav-item.active {
+    @apply text-white bg-navy-700 border-l-4 border-brand-500;
+  }
+  .nav-item.active svg { @apply text-white; }
+
+  /* Card */
+  .card {
+    @apply bg-white rounded-xl border border-slate-200;
+  }
+  .card-dark {
+    @apply bg-slate-800 rounded-xl border border-slate-700;
+  }
+
+  /* Stat tile */
+  .stat-tile {
+    @apply bg-white rounded-xl p-5 border border-slate-200;
+  }
+
+  /* Form controls */
+  .input {
+    @apply w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm
+           bg-white text-slate-900 placeholder-slate-400
+           focus:outline-none focus:border-navy-500 focus:border-2
+           transition-colors duration-150;
+  }
+  .label {
+    @apply block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold
+           transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold
+           transition-all duration-150 cursor-pointer disabled:opacity-50
+           bg-yellow-600 text-white hover:bg-yellow-700 active:bg-yellow-800;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold
+           transition-all duration-150 cursor-pointer disabled:opacity-50
+           bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold
+           transition-all duration-150 cursor-pointer disabled:opacity-50
+           bg-red-600 text-white hover:bg-red-700;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold
+           transition-all duration-150 cursor-pointer disabled:opacity-50
+           text-slate-600 hover:bg-slate-100;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-md;
+  }
+  .btn-lg {
+    @apply px-6 py-3.5 text-base rounded-xl;
+  }
+
+  /* Badge */
+  .badge        { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold; }
+  .badge-green  { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800; }
+  .badge-yellow { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800; }
+  .badge-red    { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800; }
+  .badge-blue   { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800; }
+  .badge-slate  { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700; }
+
+  /* Table */
+  .table-auto thead th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide bg-slate-50 border-b border-slate-200;
+  }
+  .table-auto tbody td {
+    @apply px-4 py-3.5 text-sm text-slate-700 border-b border-slate-100;
+  }
+  .table-auto tbody tr:last-child td { @apply border-0; }
+  .table-auto tbody tr:hover td { @apply bg-slate-50; }
+}

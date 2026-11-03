@@ -1,0 +1,135 @@
+{
+ "@@locale": "fr",
+ "appTitle": "OpesHotel",
+ "settings": "Paramètres",
+ "serverUrl": "Adresse du serveur",
+ "serverUrlHint": "ex. http://192.168.1.189:8000",
+ "language": "Langue",
+ "save": "Enregistrer",
+ "saved": "Enregistré",
+ "guest": "Client",
+ "staff": "Personnel",
+ "chooseMode": "Comment voulez-vous utiliser l'application ?",
+ "guestModeDesc": "Réserver, voir mes réservations, carte fidélité",
+ "staffModeDesc": "Tâches, interventions, paie, congés, pointage",
+ "groupSlug": "Code du groupe hôtelier",
+ "continueLabel": "Continuer",
+ "book": "Réserver",
+ "myBookings": "Mes réservations",
+ "loyaltyCard": "Carte fidélité",
+ "arrival": "Arrivée",
+ "departure": "Départ",
+ "adults": "Adultes",
+ "children": "Enfants",
+ "search": "Rechercher",
+ "noOffers": "Aucune chambre disponible pour ces dates.",
+ "nights": "{count} nuit(s)",
+ "@nights": {
+  "placeholders": {
+   "count": {
+    "type": "int"
+   }
+  }
+ },
+ "roomsLeft": "{count} restante(s)",
+ "@roomsLeft": {
+  "placeholders": {
+   "count": {
+    "type": "int"
+   }
+  }
+ },
+ "refundable": "Remboursable",
+ "nonRefundable": "Non remboursable",
+ "firstName": "Prénom",
+ "lastName": "Nom",
+ "email": "E-mail",
+ "phone": "Téléphone",
+ "specialRequests": "Demandes particulières",
+ "acceptTerms": "J'accepte les conditions de réservation",
+ "confirmBooking": "Confirmer la réservation",
+ "bookingConfirmed": "Réservation confirmée : {number}",
+ "@bookingConfirmed": {
+  "placeholders": {
+   "number": {
+    "type": "String"
+   }
+  }
+ },
+ "confirmationNumber": "Numéro de confirmation",
+ "findBooking": "Retrouver une réservation",
+ "noBookings": "Aucune réservation enregistrée.",
+ "remove": "Retirer",
+ "memberNumber": "Numéro de membre",
+ "showCard": "Afficher la carte",
+ "cardHelp": "Présentez ce code à la réception.",
+ "password": "Mot de passe",
+ "mfaCode": "Code d'authentification (si demandé)",
+ "signIn": "Se connecter",
+ "signOut": "Se déconnecter",
+ "chooseHotel": "Choisir l'hôtel",
+ "housekeeping": "Ménage",
+ "roomStatus": "Statut des chambres",
+ "workOrders": "Interventions",
+ "payslips": "Mes bulletins",
+ "leave": "Congé",
+ "clock": "Pointage",
+ "start": "Commencer",
+ "finish": "Terminer",
+ "complete": "Clôturer",
+ "resolution": "Travaux effectués",
+ "noTasks": "Aucune tâche pour vous aujourd'hui.",
+ "noWorkOrders": "Aucune intervention assignée.",
+ "noPayslips": "Aucun bulletin disponible.",
+ "roomNumber": "Chambre {number}",
+ "@roomNumber": {
+  "placeholders": {
+   "number": {
+    "type": "String"
+   }
+  }
+ },
+ "roomId": "Identifiant de la chambre",
+ "newStatus": "Nouveau statut",
+ "reason": "Motif",
+ "apply": "Appliquer",
+ "leaveType": "Type de congé",
+ "startDate": "Date de début",
+ "endDate": "Date de fin",
+ "submit": "Envoyer",
+ "clockIn": "Pointer l'arrivée",
+ "clockOut": "Pointer le départ",
+ "clockedInSince": "Présent depuis {time}",
+ "@clockedInSince": {
+  "placeholders": {
+   "time": {
+    "type": "String"
+   }
+  }
+ },
+ "notClockedIn": "Non pointé",
+ "gross": "Brut",
+ "net": "Net",
+ "pendingSync": "{count} action(s) en attente de synchronisation",
+ "@pendingSync": {
+  "placeholders": {
+   "count": {
+    "type": "int"
+   }
+  }
+ },
+ "syncNow": "Synchroniser",
+ "done": "Fait",
+ "queuedOffline": "Hors ligne : action enregistrée, elle sera envoyée plus tard.",
+ "error": "Erreur : {message}",
+ "@error": {
+  "placeholders": {
+   "message": {
+    "type": "String"
+   }
+  }
+ },
+ "retry": "Réessayer",
+ "required": "Obligatoire",
+ "cancel": "Annuler"
+}

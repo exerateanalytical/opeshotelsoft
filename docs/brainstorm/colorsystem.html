@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; padding: 20px; color: #1a1a2e; }
+  h2 { font-size: 1.4em; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #6c757d; font-size: 0.9em; margin-bottom: 20px; }
+  .palettes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .palette-card { background: #fff; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .palette-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-1px); }
+  .palette-card.selected { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+  .palette-header { padding: 14px 16px 10px; }
+  .palette-label { font-size: 0.65em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
+  .palette-name { font-size: 1.05em; font-weight: 700; margin-bottom: 3px; }
+  .palette-desc { font-size: 0.78em; color: #6c757d; line-height: 1.4; }
+  .color-strip { display: flex; height: 48px; }
+  .color-strip div { flex: 1; }
+  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 10px 16px; }
+  .swatch { border-radius: 6px; height: 32px; position: relative; }
+  .swatch-label { font-size: 0.6em; color: #9ca3af; text-align: center; padding-top: 2px; }
+  .mock-ui { padding: 12px 16px 16px; border-top: 1px solid #f1f5f9; }
+  .mock-ui-label { font-size: 0.65em; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px; }
+  .mock-nav { height: 36px; border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-size: 0.72em; font-weight: 600; color: #fff; gap: 10px; margin-bottom: 8px; }
+  .mock-nav span { opacity: 0.6; }
+  .mock-nav span.active { opacity: 1; }
+  .mock-card { border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; font-size: 0.72em; }
+  .mock-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 6px; }
+  .mock-stat { border-radius: 6px; padding: 8px; text-align: center; }
+  .mock-stat-num { font-size: 1.1em; font-weight: 700; }
+  .mock-stat-lbl { font-size: 0.7em; opacity: 0.7; }
+  .mock-btn { border-radius: 5px; padding: 6px 12px; font-size: 0.72em; font-weight: 600; display: inline-block; margin-right: 4px; border: none; }
+  .rec-badge { background: #2563eb; color: #fff; font-size: 0.65em; font-weight: 700; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
+</style>
+<script>
+  function selectPalette(el) {
+    document.querySelectorAll('.palette-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    if (window.parent && window.parent.recordChoice) window.parent.recordChoice(el.dataset.choice);
+    try {
+      const evts = JSON.parse(localStorage.getItem('brainstorm_events') || '[]');
+      evts.push({ type: 'click', choice: el.dataset.choice, text: el.querySelector('.palette-name').textContent, timestamp: Date.now() });
+      localStorage.setItem('brainstorm_events', JSON.stringify(evts));
+    } catch(e) {}
+  }
+</script>
+</head>
+<body>
+<h2>Color System: The visual DNA of the platform</h2>
+<p class="subtitle">Four directions — each sets the entire tone for staff panels, guest apps, loyalty cards, and mobile. No glowing, no color collision, clean and healthy.</p>
+
+<div class="palettes">
+
+  <!-- PALETTE 1: Deep Navy + Gold (Luxury) -->
+  <div class="palette-card" data-choice="navy-gold" onclick="selectPalette(this)">
+    <div class="color-strip">
+      <div style="background:#0f2044;"></div>
+      <div style="background:#1a3a6b;"></div>
+      <div style="background:#c9a84c;"></div>
+      <div style="background:#e8c96d;"></div>
+      <div style="background:#f5f0e8;"></div>
+      <div style="background:#ffffff;"></div>
+    </div>
+    <div class="palette-header">
+      <div class="palette-label" style="background:#0f2044;color:#c9a84c;">LUXURY CHAIN</div>
+      <div class="palette-name">Deep Navy + Warm Gold</div>
+      <div class="palette-desc">Classic 5-star hotel palette. Communicates trust, prestige, and heritage. Used by Four Seasons, Ritz-Carlton digital products. Perfect for Hilton subsidiaries.</div>
+    </div>
+    <div style="padding: 0 16px;">
+      <div class="swatches">
+        <div><div class="swatch" style="background:#0f2044;"></div><div class="swatch-label">Primary</div></div>
+        <div><div class="swatch" style="background:#1a3a6b;"></div><div class="swatch-label">Dark</div></div>
+        <div><div class="swatch" style="background:#c9a84c;"></div><div class="swatch-label">Gold</div></div>
+        <div><div class="swatch" style="background:#e8c96d;"></div><div class="swatch-label">Lt Gold</div></div>
+        <div><div class="swatch" style="background:#16a34a;"></div><div class="swatch-label">Success</div></div>
+        <div><div class="swatch" style="background:#dc2626;"></div><div class="swatch-label">Error</div></div>
+      </div>
+    </div>
+    <div class="mock-ui">
+      <div class="mock-ui-label">UI Preview</div>
+      <div class="mock-nav" style="background:#0f2044;">
+        <span class="active">Dashboard</span><span>Reservations</span><span>Loyalty</span>
+      </div>
+      <div class="mock-stat-row">
+        <div class="mock-stat" style="background:#0f2044;color:#fff;"><div class="mock-stat-num" style="color:#c9a84c;">48</div><div class="mock-stat-lbl">Check-ins</div></div>
+        <div class="mock-stat" style="background:#1a3a6b;color:#fff;"><div class="mock-stat-num" style="color:#e8c96d;">12</div><div class="mock-stat-lbl">Check-outs</div></div>
+        <div class="mock-stat" style="background:#f5f0e8;color:#0f2044;"><div class="mock-stat-num">96%</div><div class="mock-stat-lbl">Occupancy</div></div>
+      </div>
+      <div>
+        <button class="mock-btn" style="background:#c9a84c;color:#0f2044;">New Booking</button>
+        <button class="mock-btn" style="background:#f5f0e8;color:#0f2044;border:1px solid #c9a84c;">Check-in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PALETTE 2: Slate + Emerald (Modern/Fresh) -->
+  <div class="palette-card" data-choice="slate-emerald" onclick="selectPalette(this)">
+    <div class="color-strip">
+      <div style="background:#0f172a;"></div>
+      <div style="background:#1e293b;"></div>
+      <div style="background:#059669;"></div>
+      <div style="background:#34d399;"></div>
+      <div style="background:#f1f5f9;"></div>
+      <div style="background:#ffffff;"></div>
+    </div>
+    <div class="palette-header">
+      <div class="rec-badge">★ RECOMMENDED</div>
+      <div class="palette-name">Charcoal Slate + Emerald</div>
+      <div class="palette-desc">Clean, modern, healthy-feeling. Dark surfaces feel premium without being heavy. Emerald accent conveys growth and hospitality warmth. Used by Mews, Cloudbeds, and modern fintech. Works beautifully dark mode.</div>
+    </div>
+    <div style="padding: 0 16px;">
+      <div class="swatches">
+        <div><div class="swatch" style="background:#0f172a;"></div><div class="swatch-label">Primary</div></div>
+        <div><div class="swatch" style="background:#1e293b;"></div><div class="swatch-label">Surface</div></div>
+        <div><div class="swatch" style="background:#059669;"></div><div class="swatch-label">Accent</div></div>
+        <div><div class="swatch" style="background:#34d399;"></div><div class="swatch-label">Lt Accent</div></div>
+        <div><div class="swatch" style="background:#10b981;"></div><div class="swatch-label">Success</div></div>
+        <div><div class="swatch" style="background:#ef4444;"></div><div class="swatch-label">Error</div></div>
+      </div>
+    </div>
+    <div class="mock-ui">
+      <div class="mock-ui-label">UI Preview</div>
+      <div class="mock-nav" style="background:#0f172a;">
+        <span class="active" style="color:#34d399;">Dashboard</span><span>Reservations</span><span>Loyalty</span>
+      </div>
+      <div class="mock-stat-row">
+        <div class="mock-stat" style="background:#059669;color:#fff;"><div class="mock-stat-num">48</div><div class="mock-stat-lbl">Check-ins</div></div>
+        <div class="mock-stat" style="background:#1e293b;color:#fff;"><div class="mock-stat-num" style="color:#34d399;">12</div><div class="mock-stat-lbl">Check-outs</div></div>
+        <div class="mock-stat" style="background:#f1f5f9;color:#0f172a;"><div class="mock-stat-num">96%</div><div class="mock-stat-lbl">Occupancy</div></div>
+      </div>
+      <div>
+        <button class="mock-btn" style="background:#059669;color:#fff;">New Booking</button>
+        <button class="mock-btn" style="background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;">Check-in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PALETTE 3: Warm Ivory + Deep Burgundy -->
+  <div class="palette-card" data-choice="ivory-burgundy" onclick="selectPalette(this)">
+    <div class="color-strip">
+      <div style="background:#3b0764;"></div>
+      <div style="background:#7e22ce;"></div>
+      <div style="background:#c4841d;"></div>
+      <div style="background:#fbbf24;"></div>
+      <div style="background:#fdf6ec;"></div>
+      <div style="background:#ffffff;"></div>
+    </div>
+    <div class="palette-header">
+      <div class="palette-label" style="background:#3b0764;color:#fbbf24;">AFRICAN LUXURY</div>
+      <div class="palette-name">Deep Violet + Amber</div>
+      <div class="palette-desc">Warm, rich palette with African luxury feel. Deep violet communicates authority and exclusivity. Amber/gold brings warmth. Excellent for CEMAC market — feels local and prestigious at the same time.</div>
+    </div>
+    <div style="padding: 0 16px;">
+      <div class="swatches">
+        <div><div class="swatch" style="background:#3b0764;"></div><div class="swatch-label">Primary</div></div>
+        <div><div class="swatch" style="background:#7e22ce;"></div><div class="swatch-label">Accent</div></div>
+        <div><div class="swatch" style="background:#c4841d;"></div><div class="swatch-label">Amber</div></div>
+        <div><div class="swatch" style="background:#fbbf24;"></div><div class="swatch-label">Lt Amber</div></div>
+        <div><div class="swatch" style="background:#16a34a;"></div><div class="swatch-label">Success</div></div>
+        <div><div class="swatch" style="background:#dc2626;"></div><div class="swatch-label">Error</div></div>
+      </div>
+    </div>
+    <div class="mock-ui">
+      <div class="mock-ui-label">UI Preview</div>
+      <div class="mock-nav" style="background:#3b0764;">
+        <span class="active" style="color:#fbbf24;">Dashboard</span><span>Reservations</span><span>Loyalty</span>
+      </div>
+      <div class="mock-stat-row">
+        <div class="mock-stat" style="background:#7e22ce;color:#fff;"><div class="mock-stat-num" style="color:#fbbf24;">48</div><div class="mock-stat-lbl">Check-ins</div></div>
+        <div class="mock-stat" style="background:#c4841d;color:#fff;"><div class="mock-stat-num">12</div><div class="mock-stat-lbl">Check-outs</div></div>
+        <div class="mock-stat" style="background:#fdf6ec;color:#3b0764;"><div class="mock-stat-num">96%</div><div class="mock-stat-lbl">Occupancy</div></div>
+      </div>
+      <div>
+        <button class="mock-btn" style="background:#c4841d;color:#fff;">New Booking</button>
+        <button class="mock-btn" style="background:#fdf6ec;color:#3b0764;border:1px solid #c4841d;">Check-in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PALETTE 4: Cool Blue + Steel (Enterprise) -->
+  <div class="palette-card" data-choice="blue-steel" onclick="selectPalette(this)">
+    <div class="color-strip">
+      <div style="background:#1e3a5f;"></div>
+      <div style="background:#1d4ed8;"></div>
+      <div style="background:#0ea5e9;"></div>
+      <div style="background:#bae6fd;"></div>
+      <div style="background:#f8fafc;"></div>
+      <div style="background:#ffffff;"></div>
+    </div>
+    <div class="palette-header">
+      <div class="palette-label" style="background:#1e3a5f;color:#0ea5e9;">ENTERPRISE</div>
+      <div class="palette-name">Deep Blue + Sky</div>
+      <div class="palette-desc">Corporate, trustworthy, global. Classic enterprise SaaS palette similar to Salesforce, Oracle OPERA, and major airline systems. Safe, universally legible, and familiar to international hotel chains.</div>
+    </div>
+    <div style="padding: 0 16px;">
+      <div class="swatches">
+        <div><div class="swatch" style="background:#1e3a5f;"></div><div class="swatch-label">Primary</div></div>
+        <div><div class="swatch" style="background:#1d4ed8;"></div><div class="swatch-label">Blue</div></div>
+        <div><div class="swatch" style="background:#0ea5e9;"></div><div class="swatch-label">Sky</div></div>
+        <div><div class="swatch" style="background:#bae6fd;"></div><div class="swatch-label">Lt Blue</div></div>
+        <div><div class="swatch" style="background:#16a34a;"></div><div class="swatch-label">Success</div></div>
+        <div><div class="swatch" style="background:#dc2626;"></div><div class="swatch-label">Error</div></div>
+      </div>
+    </div>
+    <div class="mock-ui">
+      <div class="mock-ui-label">UI Preview</div>
+      <div class="mock-nav" style="background:#1e3a5f;">
+        <span class="active" style="color:#0ea5e9;">Dashboard</span><span>Reservations</span><span>Loyalty</span>
+      </div>
+      <div class="mock-stat-row">
+        <div class="mock-stat" style="background:#1d4ed8;color:#fff;"><div class="mock-stat-num">48</div><div class="mock-stat-lbl">Check-ins</div></div>
+        <div class="mock-stat" style="background:#0ea5e9;color:#fff;"><div class="mock-stat-num">12</div><div class="mock-stat-lbl">Check-outs</div></div>
+        <div class="mock-stat" style="background:#f8fafc;color:#1e3a5f;"><div class="mock-stat-num">96%</div><div class="mock-stat-lbl">Occupancy</div></div>
+      </div>
+      <div>
+        <button class="mock-btn" style="background:#1d4ed8;color:#fff;">New Booking</button>
+        <button class="mock-btn" style="background:#f8fafc;color:#1e3a5f;border:1px solid #bae6fd;">Check-in</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.85em;color:#166534;">
+  <strong>My recommendation:</strong> Charcoal Slate + Emerald. It's clean, healthy-feeling, zero glowing effects, no color collision — exactly what you described. It also looks stunning in dark mode (staff working night shifts). The emerald accent is warm enough for hospitality without feeling corporate-cold. We can define the loyalty card color separately (often gold or the hotel brand color).
+</div>
+
+</body>
+</html>

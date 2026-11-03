@@ -1,0 +1,152 @@
+<h2>Tech Stack: What do we build it with?</h2>
+<p class="subtitle">Three stacks — each chosen for CEMAC context: offline resilience, mobile-first, French + English, local payment methods</p>
+
+<div class="cards">
+
+  <!-- OPTION A: Laravel + Next.js -->
+  <div class="card" data-choice="laravel-nextjs" onclick="toggleSelect(this)" style="border-left:4px solid #f97316;">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="background:#f97316;color:#fff;font-weight:700;font-size:0.75em;padding:3px 10px;border-radius:20px;">★ RECOMMENDED</div>
+        <span style="font-size:0.8em;color:#6b7280;">Best for your Laragon / PHP setup</span>
+      </div>
+      <h3 style="margin:0 0 6px;">A — Laravel API + Next.js Web + Flutter Mobile</h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:0.78em;">
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#c2410c;margin-bottom:6px;">Backend</div>
+          <div style="line-height:1.7;">Laravel 11<br>PHP 8.3<br>Laravel Sanctum (auth)<br>Laravel Horizon (queues)<br>Spatie packages<br>PostgreSQL 16<br>Redis</div>
+        </div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#c2410c;margin-bottom:6px;">Web Frontend</div>
+          <div style="line-height:1.7;">Next.js 15<br>React 19<br>TypeScript<br>Tailwind CSS v4<br>shadcn/ui<br>Zustand (state)<br>React Query</div>
+        </div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#c2410c;margin-bottom:6px;">Mobile</div>
+          <div style="line-height:1.7;">Flutter 3.x<br>Dart<br>Cross-platform<br>(iOS + Android)<br>Offline-first<br>SQLite local<br>BLoC pattern</div>
+        </div>
+      </div>
+
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px;margin-bottom:10px;font-size:0.78em;">
+        <div style="font-weight:700;color:#c2410c;margin-bottom:6px;">Infrastructure &amp; Services</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:5px;text-align:center;">PostgreSQL<br><span style="color:#9ca3af;font-size:0.9em;">Primary DB</span></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:5px;text-align:center;">Redis<br><span style="color:#9ca3af;font-size:0.9em;">Cache/Queue</span></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:5px;text-align:center;">S3/R2<br><span style="color:#9ca3af;font-size:0.9em;">File Storage</span></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:5px;text-align:center;">Nginx<br><span style="color:#9ca3af;font-size:0.9em;">Web Server</span></div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="font-size:0.8em;">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>You already run Laragon — zero env friction</li>
+            <li>Laravel is battle-tested for hospitality backends</li>
+            <li>Flutter gives true native iOS + Android from one codebase</li>
+            <li>Huge ecosystem, tons of devs to hire in Africa</li>
+            <li>Laravel Filament for rapid admin panels</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>Two languages (PHP + JS/Dart) to maintain</li>
+            <li>Next.js SSR adds deployment complexity</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION B: Full Node.js -->
+  <div class="card" data-choice="node-react-native" onclick="toggleSelect(this)" style="border-left:4px solid #16a34a;">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="background:#16a34a;color:#fff;font-weight:700;font-size:0.75em;padding:3px 10px;border-radius:20px;">JS EVERYWHERE</div>
+        <span style="font-size:0.8em;color:#6b7280;">One language across stack</span>
+      </div>
+      <h3 style="margin:0 0 6px;">B — NestJS API + Next.js Web + React Native Mobile</h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:0.78em;">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#15803d;margin-bottom:6px;">Backend</div>
+          <div style="line-height:1.7;">NestJS<br>Node.js 22<br>TypeScript<br>Prisma ORM<br>JWT + Passport<br>BullMQ queues<br>PostgreSQL</div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#15803d;margin-bottom:6px;">Web Frontend</div>
+          <div style="line-height:1.7;">Next.js 15<br>React 19<br>TypeScript<br>Tailwind v4<br>shadcn/ui<br>Zustand<br>React Query</div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#15803d;margin-bottom:6px;">Mobile</div>
+          <div style="line-height:1.7;">React Native<br>Expo<br>TypeScript<br>Cross-platform<br>(iOS + Android)<br>MMKV storage<br>Offline sync</div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="font-size:0.8em;">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>One language (TypeScript) everywhere</li>
+            <li>Share types between backend and frontend</li>
+            <li>Mews uses this pattern internally</li>
+            <li>Strong tooling and ecosystem</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>Node.js less mature for complex business logic</li>
+            <li>React Native performance behind Flutter</li>
+            <li>Loses your existing Laragon/PHP setup</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION C: Laravel + Livewire (full Laravel) -->
+  <div class="card" data-choice="laravel-livewire" onclick="toggleSelect(this)" style="border-left:4px solid #7c3aed;">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="background:#7c3aed;color:#fff;font-weight:700;font-size:0.75em;padding:3px 10px;border-radius:20px;">FULL PHP</div>
+        <span style="font-size:0.8em;color:#6b7280;">Laravel all the way</span>
+      </div>
+      <h3 style="margin:0 0 6px;">C — Laravel + Livewire/Filament + Flutter Mobile</h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:0.78em;">
+        <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#6d28d9;margin-bottom:6px;">Backend</div>
+          <div style="line-height:1.7;">Laravel 11<br>PHP 8.3<br>Livewire v3<br>Filament v3<br>Sanctum + Passport<br>Horizon queues<br>PostgreSQL</div>
+        </div>
+        <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#6d28d9;margin-bottom:6px;">Web Frontend</div>
+          <div style="line-height:1.7;">Livewire 3<br>Alpine.js<br>Tailwind CSS v4<br>Blade templates<br>Filament panels<br>No build step<br>for admin</div>
+        </div>
+        <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:8px;">
+          <div style="font-weight:700;color:#6d28d9;margin-bottom:6px;">Mobile</div>
+          <div style="line-height:1.7;">Flutter 3.x<br>Dart<br>Cross-platform<br>(iOS + Android)<br>Offline-first<br>SQLite local<br>BLoC pattern</div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="font-size:0.8em;">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>One backend language (PHP) for everything</li>
+            <li>Filament gives you admin panels in days not months</li>
+            <li>Livewire feels reactive without a heavy JS framework</li>
+            <li>Perfect for your existing Laragon environment</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>Livewire can feel slow for complex real-time UIs</li>
+            <li>Guest-facing portal needs a richer frontend experience</li>
+            <li>Less suitable for a white-label SaaS product later</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:0.85em;color:#9a3412;">
+  <strong>My recommendation:</strong> Option A (Laravel + Next.js + Flutter). You get Laravel's battle-tested business logic for the heavy HMS domain (reservations, billing, loyalty ledgers), Next.js for a world-class guest-facing web experience, and Flutter for a truly native mobile app — all supported by your existing Laragon environment. This is the closest to what Hilton and Marriott use at enterprise scale, just without the 10-year legacy debt.
+</div>

@@ -1,0 +1,127 @@
+<h2>Question 1 of 5 — Architecture Foundation</h2>
+<p class="subtitle">This is the most consequential decision. Everything else is built on top of it.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="modular-monolith" onclick="toggleSelect(this)" style="border-left:4px solid #2563eb;">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="background:#2563eb;color:#fff;font-size:0.7em;font-weight:700;padding:2px 10px;border-radius:20px;">★ RECOMMENDED</span>
+        <span style="font-size:0.78em;color:#6b7280;">Shopify · Stack Overflow · early Mews</span>
+      </div>
+      <h3 style="margin:0 0 6px;">A — Modular Monolith</h3>
+      <p style="font-size:0.82em;color:#4b5563;margin-bottom:12px;">One deployable application. Modules (Reservations, Loyalty, Housekeeping, POS, Finance) are self-contained code packages with clean internal interfaces — not separate services. Runs on one server.</p>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:0.75em;margin-bottom:10px;">
+        <div style="text-align:center;font-weight:700;color:#64748b;margin-bottom:8px;font-size:0.85em;">SYSTEM DIAGRAM</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px;">
+          <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:4px;padding:5px;text-align:center;font-weight:600;color:#1e40af;">📅 Reservations</div>
+          <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:4px;padding:5px;text-align:center;font-weight:600;color:#1e40af;">🏨 Front Desk</div>
+          <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:4px;padding:5px;text-align:center;font-weight:600;color:#1e40af;">⭐ Loyalty</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px;">
+          <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:4px;padding:5px;text-align:center;font-weight:600;color:#1e40af;">🧹 Housekeeping</div>
+          <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:4px;padding:5px;text-align:center;font-weight:600;color:#1e40af;">💰 Finance</div>
+          <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:4px;padding:5px;text-align:center;font-weight:600;color:#1e40af;">🍽️ POS / F&B</div>
+        </div>
+        <div style="background:#1e3a5f;color:#bfdbfe;border-radius:4px;padding:6px;text-align:center;font-weight:700;margin-bottom:5px;">⚙️ Shared Core — Auth · Events · Notifications · Config · Multi-tenant</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+          <div style="background:#0f172a;color:#94a3b8;border-radius:4px;padding:5px;text-align:center;">🐘 PostgreSQL (single DB with schema-per-hotel)</div>
+          <div style="background:#0f172a;color:#94a3b8;border-radius:4px;padding:5px;text-align:center;">⚡ Redis (cache + queues)</div>
+        </div>
+      </div>
+
+      <div class="pros-cons">
+        <div class="pros"><h4>Why it wins</h4><ul>
+          <li>Deploys on one VPS — cheap, reliable, works in CEMAC</li>
+          <li>Cross-module transactions are trivial (same database)</li>
+          <li>Fast to build — no network calls between modules</li>
+          <li>5–20 developers is the sweet spot</li>
+          <li>Easy to break into microservices later if needed</li>
+        </ul></div>
+        <div class="cons"><h4>Trade-offs</h4><ul>
+          <li>Whole app deploys at once</li>
+          <li>Needs code discipline to keep modules clean</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="api-first" onclick="toggleSelect(this)" style="border-left:4px solid #7c3aed;">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="background:#7c3aed;color:#fff;font-size:0.7em;font-weight:700;padding:2px 10px;border-radius:20px;">APALEO PATTERN</span>
+        <span style="font-size:0.78em;color:#6b7280;">Apaleo · Cloudbeds</span>
+      </div>
+      <h3 style="margin:0 0 6px;">B — API-First Platform</h3>
+      <p style="font-size:0.82em;color:#4b5563;margin-bottom:12px;">Lean core (identity, reservations, guest profiles) exposed via REST API. All other functionality — loyalty, housekeeping, POS — built as first-party apps consuming those APIs. Same API you'd expose to partners and third parties.</p>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:0.75em;margin-bottom:10px;">
+        <div style="text-align:center;font-weight:700;color:#64748b;margin-bottom:8px;font-size:0.85em;">SYSTEM DIAGRAM</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px;">
+          <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:4px;padding:4px;text-align:center;color:#5b21b6;font-weight:600;font-size:0.9em;">Staff App</div>
+          <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:4px;padding:4px;text-align:center;color:#5b21b6;font-weight:600;font-size:0.9em;">Guest App</div>
+          <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:4px;padding:4px;text-align:center;color:#5b21b6;font-weight:600;font-size:0.9em;">Loyalty</div>
+          <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:4px;padding:4px;text-align:center;color:#5b21b6;font-weight:600;font-size:0.9em;">3rd Party</div>
+        </div>
+        <div style="background:#7c3aed;color:#fff;border-radius:4px;padding:5px;text-align:center;font-weight:700;margin-bottom:5px;">REST / GraphQL API Gateway</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
+          <div style="background:#1e1b4b;color:#a5b4fc;border-radius:4px;padding:5px;text-align:center;">Core PMS Engine</div>
+          <div style="background:#1e1b4b;color:#a5b4fc;border-radius:4px;padding:5px;text-align:center;">Identity &amp; Auth</div>
+        </div>
+        <div style="background:#0f172a;color:#94a3b8;border-radius:4px;padding:5px;text-align:center;">PostgreSQL + Redis</div>
+      </div>
+
+      <div class="pros-cons">
+        <div class="pros"><h4>Why consider it</h4><ul>
+          <li>Clean partner API from day one</li>
+          <li>Apps deploy independently</li>
+          <li>Partner ecosystem becomes possible earlier</li>
+        </ul></div>
+        <div class="cons"><h4>Trade-offs</h4><ul>
+          <li>More complex to build initially</li>
+          <li>Cross-module transactions harder</li>
+          <li>API versioning discipline required from day 1</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="microservices" onclick="toggleSelect(this)" style="border-left:4px solid #dc2626;">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="background:#dc2626;color:#fff;font-size:0.7em;font-weight:700;padding:2px 10px;border-radius:20px;">ENTERPRISE ONLY</span>
+        <span style="font-size:0.78em;color:#6b7280;">Marriott · IHG at massive scale</span>
+      </div>
+      <h3 style="margin:0 0 6px;">C — Microservices</h3>
+      <p style="font-size:0.82em;color:#4b5563;margin-bottom:12px;">Each domain is a completely separate service with its own database, deploy pipeline, and team. Services communicate via message queues. Justified only at 50+ engineers and millions of bookings per day.</p>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:0.75em;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:5px;">
+          <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:5px;text-align:center;color:#991b1b;font-size:0.9em;"><strong>Reservation Svc</strong><br>Own PostgreSQL</div>
+          <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:5px;text-align:center;color:#991b1b;font-size:0.9em;"><strong>Loyalty Svc</strong><br>Own PostgreSQL</div>
+          <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:5px;text-align:center;color:#991b1b;font-size:0.9em;"><strong>Finance Svc</strong><br>Own PostgreSQL</div>
+        </div>
+        <div style="background:#7f1d1d;color:#fca5a5;border-radius:4px;padding:5px;text-align:center;font-weight:700;margin-bottom:4px;">Message Bus (RabbitMQ / Kafka)</div>
+        <div style="background:#0f172a;color:#94a3b8;border-radius:4px;padding:5px;text-align:center;">API Gateway + Service Mesh + k8s</div>
+      </div>
+
+      <div class="pros-cons">
+        <div class="pros"><h4>When it makes sense</h4><ul>
+          <li>50+ engineers across teams</li>
+          <li>1M+ bookings / day</li>
+          <li>Independent scaling per domain needed</li>
+        </ul></div>
+        <div class="cons"><h4>Why not yet</h4><ul>
+          <li>Distributed transactions are genuinely hard</li>
+          <li>DevOps overhead is massive (k8s, service mesh)</li>
+          <li>Overkill for this stage — adds years to delivery</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div style="margin-top:14px;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:0.82em;color:#1e40af;">
+  <strong>Recommendation: A — Modular Monolith.</strong> Oracle OPERA, Mews, and Cloudbeds all started this way. You get full HMS feature coverage deployed on a single server, with clean internal boundaries ready to split later. Perfect for CEMAC infrastructure.
+</div>
