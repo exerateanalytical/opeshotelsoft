@@ -107,7 +107,7 @@ export default function GroupShow({ id }: { id: string }) {
                 </div>
             )}
 
-            {!b ? (!block.error && <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-400" />) : (
+            {!b ? (!block.error && <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-500" />) : (
                 <div className="grid lg:grid-cols-2 gap-6">
                     <div className="space-y-6">
                         <div className="card overflow-x-auto">
@@ -115,7 +115,7 @@ export default function GroupShow({ id }: { id: string }) {
                                 <h3 className="font-semibold text-slate-800">{t('groups.show.allocation')}</h3>
                                 <span className="ml-auto text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">{t(`groups.status.${b.status}`)}</span>
                             </div>
-                            <table className="table-auto w-full">
+                            <div className="table-wrap"><table className="table-auto">
                                 <thead><tr><th>{t('res.room_type')}</th><th className="text-right">{t('groups.show.rooms_night')}</th><th className="text-right">{t('groups.show.picked_up')}</th><th className="text-right">{t('groups.show.room_nights')}</th><th>{t('groups.pickup')}</th></tr></thead>
                                 <tbody>
                                     {blockTypes.map((rt) => {
@@ -129,25 +129,25 @@ export default function GroupShow({ id }: { id: string }) {
                                                 <td className="text-right text-sm">{x.picked} / {x.rooms}</td>
                                                 <td className="w-32">
                                                     <div className="h-2 rounded bg-slate-100 overflow-hidden"><div className={cn('h-full', pct >= 100 ? 'bg-emerald-500' : 'bg-sky-500')} style={{ width: `${Math.min(pct, 100)}%` }} /></div>
-                                                    <div className="text-xs text-slate-400 mt-0.5">{pct}%</div>
+                                                    <div className="text-xs text-slate-500 mt-0.5">{pct}%</div>
                                                 </td>
                                             </tr>
                                         );
                                     })}
-                                    {blockTypes.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-slate-400 text-sm">{t('groups.show.no_alloc')}</td></tr>}
+                                    {blockTypes.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-slate-500 text-sm">{t('groups.show.no_alloc')}</td></tr>}
                                 </tbody>
-                            </table>
+                            </table></div>
                             {b.notes && <p className="px-5 py-3 text-sm text-slate-600 border-t border-slate-100 whitespace-pre-line">{b.notes}</p>}
                         </div>
 
                         <div className="card overflow-x-auto">
                             <div className="px-5 py-4 border-b border-slate-100"><h3 className="font-semibold text-slate-800">{t('groups.show.pickups')}</h3></div>
                             {pickups.error && <div className="mx-5 my-3 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{pickups.error.message}</div>}
-                            <table className="table-auto w-full">
+                            <div className="table-wrap"><table className="table-auto">
                                 <thead><tr><th>{t('groups.show.number')}</th><th>{t('res.guest')}</th><th>{t('res.room')}</th><th>{t('groups.dates')}</th><th>{t('res.status')}</th></tr></thead>
                                 <tbody>
-                                    {pickups.loading && !pickups.data && <tr><td colSpan={5} className="py-8"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" /></td></tr>}
-                                    {pickups.data && rowsOf(pickups.data).length === 0 && <tr><td colSpan={5} className="text-center py-8 text-slate-400 text-sm">{t('groups.show.none_yet')}</td></tr>}
+                                    {pickups.loading && !pickups.data && <tr><td colSpan={5} className="py-8"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
+                                    {pickups.data && rowsOf(pickups.data).length === 0 && <tr><td colSpan={5} className="text-center py-8 text-slate-500 text-sm">{t('groups.show.none_yet')}</td></tr>}
                                     {rowsOf(pickups.data).map((r) => (
                                         <tr key={r.id}>
                                             <td><Link href={`/reservations/${r.id}`} className="font-mono text-sm text-sky-700 hover:underline">{r.number}</Link></td>
@@ -158,7 +158,7 @@ export default function GroupShow({ id }: { id: string }) {
                                         </tr>
                                     ))}
                                 </tbody>
-                            </table>
+                            </table></div>
                         </div>
                     </div>
 
@@ -172,20 +172,20 @@ export default function GroupShow({ id }: { id: string }) {
                                     {entries.map((e, i) => (
                                         <div key={i} className="grid grid-cols-[1fr_9rem_4rem_auto] gap-2 items-center">
                                             <span className="text-sm truncate">{e.guest.first_name} {e.guest.last_name}</span>
-                                            <select className="input" required value={e.room_type_id} onChange={(ev) => setEntries(entries.map((x, j) => j === i ? { ...x, room_type_id: ev.target.value } : x))}>
+                                            <select className="input" required value={e.room_type_id} onChange={(ev) => setEntries(entries.map((x, j) => j === i ? { ...x, room_type_id: ev.target.value } : x))} aria-label={t('groups.room_type_ph')}>
                                                 <option value="" disabled>{t('groups.room_type_ph')}</option>
                                                 {blockTypes.map((rt) => <option key={rt} value={rt}>{rtName(rt)}</option>)}
                                             </select>
                                             <input className="input" type="number" min={1} title={t('res.adults')} value={e.adults} onChange={(ev) => setEntries(entries.map((x, j) => j === i ? { ...x, adults: ev.target.value } : x))} />
-                                            <button type="button" className="text-slate-400 hover:text-red-600" title={t('groups.remove')} onClick={() => setEntries(entries.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4" /></button>
+                                            <button type="button" className="text-slate-500 hover:text-red-600" title={t('groups.remove')} onClick={() => setEntries(entries.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
                             {!b.rate_plan_id && (
-                                <label className="text-xs text-slate-500 block">{t('groups.show.rate_plan_none')}
-                                    <select className="input mt-1" value={ratePlan} onChange={(e) => setRatePlan(e.target.value)}>
+                                <label className="label">{t('groups.show.rate_plan_none')}
+                                    <select className="input mt-1" value={ratePlan} onChange={(e) => setRatePlan(e.target.value)} aria-label={t('groups.show.rate_plan_ph')}>
                                         <option value="" disabled>{t('groups.show.rate_plan_ph')}</option>
                                         {rowsOf(ratePlans.data).map((r) => <option key={r.id} value={r.id}>{r.code ? `${r.code} · ` : ''}{r.name}</option>)}
                                     </select>
@@ -224,20 +224,20 @@ function GuestPicker({ onPick }: { onPick: (g: Guest) => void }) {
         <div className="space-y-2">
             <div className="flex gap-2">
                 <label className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('groups.picker.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9" aria-label={t('groups.picker.search')} placeholder={t('groups.picker.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </label>
                 <button type="button" className="btn-secondary" onClick={() => setCreating(!creating)}><UserPlus className="w-4 h-4" /> {t('groups.picker.new')}</button>
             </div>
             {term.length >= 2 && (
                 <div className="border border-slate-100 rounded-lg max-h-48 overflow-y-auto">
-                    {results.loading && <Loader2 className="w-4 h-4 m-3 animate-spin text-slate-400" />}
-                    {!results.loading && rowsOf(results.data).length === 0 && <p className="text-sm text-slate-400 px-3 py-2">{t('groups.picker.no_match')}</p>}
+                    {results.loading && <Loader2 className="w-4 h-4 m-3 animate-spin text-slate-500" />}
+                    {!results.loading && rowsOf(results.data).length === 0 && <p className="text-sm text-slate-500 px-3 py-2">{t('groups.picker.no_match')}</p>}
                     {rowsOf(results.data).map((r) => (
                         <button key={r.id} type="button" className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
                             onClick={() => { onPick(r); setQ(''); }}>
-                            <Plus className="w-3 h-3 text-slate-400" /> {r.first_name} {r.last_name}
-                            <span className="ml-auto text-xs text-slate-400">{r.phone ?? r.email ?? ''}</span>
+                            <Plus className="w-3 h-3 text-slate-500" /> {r.first_name} {r.last_name}
+                            <span className="ml-auto text-xs text-slate-500">{r.phone ?? r.email ?? ''}</span>
                         </button>
                     ))}
                 </div>
@@ -260,10 +260,10 @@ function GuestPicker({ onPick }: { onPick: (g: Guest) => void }) {
                         setBusy(false);
                     }
                 }}>
-                    <input className="input" required placeholder={t('res.create.field.first_name')} value={g.first_name} onChange={(e) => setG({ ...g, first_name: e.target.value })} />
-                    <input className="input" required placeholder={t('res.create.field.last_name')} value={g.last_name} onChange={(e) => setG({ ...g, last_name: e.target.value })} />
-                    <input className="input" placeholder={t('res.phone')} value={g.phone} onChange={(e) => setG({ ...g, phone: e.target.value })} />
-                    <input className="input" type="email" placeholder={t('res.email')} value={g.email} onChange={(e) => setG({ ...g, email: e.target.value })} />
+                    <input className="input" required aria-label={t('res.create.field.first_name')} placeholder={t('res.create.field.first_name')} value={g.first_name} onChange={(e) => setG({ ...g, first_name: e.target.value })} />
+                    <input className="input" required aria-label={t('res.create.field.last_name')} placeholder={t('res.create.field.last_name')} value={g.last_name} onChange={(e) => setG({ ...g, last_name: e.target.value })} />
+                    <input className="input" aria-label={t('res.phone')} placeholder={t('res.phone')} value={g.phone} onChange={(e) => setG({ ...g, phone: e.target.value })} />
+                    <input className="input" type="email" aria-label={t('res.email')} placeholder={t('res.email')} value={g.email} onChange={(e) => setG({ ...g, email: e.target.value })} />
                     {error && <div className="sm:col-span-2 rounded-lg text-sm px-3 py-2 bg-red-50 text-red-700">{error}</div>}
                     <button className="btn-primary sm:col-span-2 justify-center" disabled={busy}>{busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('groups.picker.create_add')}</button>
                 </form>

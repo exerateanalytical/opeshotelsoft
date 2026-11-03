@@ -59,11 +59,10 @@ export default function Seasons() {
     const typeName = (id: number | null) => (id ? types.data?.data.find((rt) => rt.id === id)?.name ?? `#${id}` : t('res.seasons.all_types'));
 
     return (
-        <AppLayout>
+        <AppLayout title={t('res.seasons.title')}>
             <Head title={t('res.seasons.short')} />
-            <div className="mx-auto max-w-4xl space-y-4 p-4">
+            <div className="mx-auto max-w-4xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h1 className="text-xl font-semibold">{t('res.seasons.title')}</h1>
                     <select className="input" value={planId ?? ''} onChange={(e) => (setPlanId(+e.target.value), setForm(blank))}>
                         {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.code} · {p.name}</option>)}
                     </select>
@@ -71,18 +70,18 @@ export default function Seasons() {
 
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{form.id ? t('res.seasons.edit') : t('res.seasons.new')}</h2>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <label className="label">{t('res.seasons.name')}<input className="input w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t('res.seasons.name_ph')} /></label>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <label className="label">{t('res.seasons.name')}<input className="input w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label={t('res.seasons.name_ph')} placeholder={t('res.seasons.name_ph')} /></label>
                         <label className="label">{t('res.seasons.from')}<input className="input w-full" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></label>
                         <label className="label">{t('res.seasons.to')}<input className="input w-full" type="date" min={form.start_date} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></label>
                         <label className="label">{t('res.room_type')}
-                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
+                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })} aria-label={t('res.seasons.all_types')}>
                                 <option value="">{t('res.seasons.all_types')}</option>
                                 {types.data?.data.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                             </select>
                         </label>
                         <label className="label">{t('res.seasons.price_rule')}
-                            <select className="input w-full" value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value as 'percent' | 'rate' })}>
+                            <select className="input w-full" value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value as 'percent' | 'rate' })} aria-label={t('res.seasons.mode_percent')}>
                                 <option value="percent">{t('res.seasons.mode_percent')}</option>
                                 <option value="rate">{t('res.seasons.mode_rate')}</option>
                             </select>
@@ -102,14 +101,14 @@ export default function Seasons() {
                 <section className="card p-4">
                     <h2 className="mb-2 font-medium">{t('res.seasons.short')}</h2>
                     {seasons.loading && !seasons.data ? <Loader2 className="h-5 w-5 animate-spin" /> : seasons.data?.data.length === 0 ? (
-                        <p className="text-sm text-gray-500">{t('res.seasons.empty')}</p>
+                        <p className="text-sm text-slate-500">{t('res.seasons.empty')}</p>
                     ) : (
                         <div className="space-y-2">
                             {seasons.data?.data.map((s) => (
-                                <div key={s.id} className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                <div key={s.id} className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <div className="font-medium">{s.name} <span className="badge-blue">{s.rate !== null ? formatCurrency(s.rate) : `${s.modifier_percent! > 0 ? '+' : ''}${s.modifier_percent}%`}</span></div>
-                                        <div className="text-gray-600">{formatDate(s.start_date)} → {formatDate(s.end_date)} · {typeName(s.room_type_id)}</div>
+                                        <div className="text-slate-600">{formatDate(s.start_date)} → {formatDate(s.end_date)} · {typeName(s.room_type_id)}</div>
                                     </div>
                                     <div className="flex gap-2">
                                         <button type="button" className="btn-secondary" onClick={() => setForm({

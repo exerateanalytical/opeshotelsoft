@@ -40,17 +40,16 @@ export default function TravelAgents() {
     }
 
     return (
-        <AppLayout>
+        <AppLayout title={t('res.agents.title')}>
             <Head title={t('res.agents.title')} />
-            <div className="mx-auto max-w-5xl space-y-4 p-4">
+            <div className="mx-auto max-w-5xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h1 className="text-xl font-semibold">{t('res.agents.title')}</h1>
                     <Link href="/reservations" className="btn-secondary">{t('res.title')}</Link>
                 </div>
 
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{form.id ? t('res.agents.edit') : t('res.agents.new')}</h2>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         <label className="label">{t('res.agents.name')}<input className="input w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
                         <label className="label">{t('res.agents.iata_number')}<input className="input w-full" value={form.iata_number} onChange={(e) => setForm({ ...form, iata_number: e.target.value })} /></label>
                         <label className="label">{t('res.agents.commission_pct')}<input className="input w-full" type="number" min={0} max={50} step="0.5" value={form.commission_percent} onChange={(e) => setForm({ ...form, commission_percent: e.target.value })} /></label>
@@ -68,11 +67,11 @@ export default function TravelAgents() {
                 <section className="card overflow-x-auto p-4">
                     <h2 className="mb-2 font-medium">{t('res.agents.list')}</h2>
                     {agents.loading && !agents.data ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                        <table className="table-auto w-full text-sm">
-                            <thead><tr className="text-left text-gray-500"><th>{t('res.agents.name')}</th><th>{t('res.agents.iata')}</th><th className="text-right">{t('res.agents.commission')}</th><th /></tr></thead>
+                        <div className="table-wrap"><table className="table-auto">
+                            <thead><tr><th>{t('res.agents.name')}</th><th>{t('res.agents.iata')}</th><th className="text-right">{t('res.agents.commission')}</th><th /></tr></thead>
                             <tbody>
                                 {agents.data?.data.map((a) => (
-                                    <tr key={a.id} className="border-t border-gray-100">
+                                    <tr key={a.id}>
                                         <td className="py-1">{a.name}</td>
                                         <td>{a.iata_number ?? '—'}</td>
                                         <td className="text-right">{Number(a.commission_percent)}%</td>
@@ -81,9 +80,9 @@ export default function TravelAgents() {
                                         </td>
                                     </tr>
                                 ))}
-                                {agents.data?.data.length === 0 && <tr><td colSpan={4} className="py-2 text-gray-500">{t('res.agents.empty')}</td></tr>}
+                                {agents.data?.data.length === 0 && <tr><td colSpan={4} className="py-2 text-slate-500">{t('res.agents.empty')}</td></tr>}
                             </tbody>
-                        </table>
+                        </table></div>
                     )}
                 </section>
 
@@ -98,19 +97,19 @@ export default function TravelAgents() {
                     {report.error && <p className="text-sm text-red-700">{report.error.message}</p>}
                     {report.data && (
                         <div className="overflow-x-auto">
-                            <table className="table-auto w-full text-sm">
-                                <thead><tr className="text-left text-gray-500"><th>{t('res.agents.agent')}</th><th className="text-right">{t('res.agents.bookings')}</th><th className="text-right">{t('res.agents.revenue')}</th><th className="text-right">{t('res.agents.commission')}</th></tr></thead>
+                            <table className="table-auto">
+                                <thead><tr><th>{t('res.agents.agent')}</th><th className="text-right">{t('res.agents.bookings')}</th><th className="text-right">{t('res.agents.revenue')}</th><th className="text-right">{t('res.agents.commission')}</th></tr></thead>
                                 <tbody>
                                     {report.data.data.map((r) => (
                                         <Fragment key={r.agent_id}>
-                                            <tr className="cursor-pointer border-t border-gray-100 hover:bg-gray-50" onClick={() => setOpen(open === r.agent_id ? null : r.agent_id)}>
-                                                <td className="py-1">{r.name} <span className="text-xs text-gray-500">{r.iata_number ?? ''} · {r.commission_percent}%</span></td>
+                                            <tr className="cursor-pointer border-t border-slate-100 hover:bg-slate-50" onClick={() => setOpen(open === r.agent_id ? null : r.agent_id)}>
+                                                <td className="py-1">{r.name} <span className="text-xs text-slate-500">{r.iata_number ?? ''} · {r.commission_percent}%</span></td>
                                                 <td className="text-right">{r.bookings}</td>
                                                 <td className="text-right">{formatCurrency(r.revenue)}</td>
                                                 <td className="text-right font-medium">{formatCurrency(r.commission)}</td>
                                             </tr>
                                             {open === r.agent_id && r.lines.map((l) => (
-                                                <tr key={`${r.agent_id}-${l.reservation_id}`} className="bg-gray-50 text-gray-600">
+                                                <tr key={`${r.agent_id}-${l.reservation_id}`} className="bg-slate-50 text-slate-600">
                                                     <td className="py-1 pl-4"><Link className="underline" href={`/reservations/${l.reservation_id}`}>{l.number}</Link> {l.guest} · {formatDate(l.arrival)}</td>
                                                     <td className="text-right">{t(`res.status.${l.status}`)}</td>
                                                     <td className="text-right">{formatCurrency(l.revenue)}</td>
@@ -119,9 +118,9 @@ export default function TravelAgents() {
                                             ))}
                                         </Fragment>
                                     ))}
-                                    {report.data.data.length === 0 && <tr><td colSpan={4} className="py-2 text-gray-500">{t('res.agents.report_empty')}</td></tr>}
+                                    {report.data.data.length === 0 && <tr><td colSpan={4} className="py-2 text-slate-500">{t('res.agents.report_empty')}</td></tr>}
                                 </tbody>
-                                <tfoot><tr className="border-t border-gray-200 font-semibold"><td colSpan={3} className="py-1">{t('res.agents.total_due')}</td><td className="text-right">{formatCurrency(report.data.total_commission)}</td></tr></tfoot>
+                                <tfoot><tr className="border-t border-slate-200 font-semibold"><td colSpan={3} className="py-1">{t('res.agents.total_due')}</td><td className="text-right">{formatCurrency(report.data.total_commission)}</td></tr></tfoot>
                             </table>
                         </div>
                     )}

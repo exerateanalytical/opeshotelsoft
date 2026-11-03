@@ -4,6 +4,7 @@ import { api, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Badge, Banner, errMsg, Field, Invoice, Loading, Page } from './shared';
 import { useT } from '@/lib/i18n';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 
 interface Statement {
     company: { id: number; name: string; tax_id: string | null; credit_limit: number | null; payment_terms_days: number | null };
@@ -33,9 +34,9 @@ export default function Receivables() {
     return (
         <div>
             <Banner error={list.error?.message} success={ok} />
-            <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:items-end">
-                <input className="input col-span-2 sm:w-56" placeholder={t('fin.recv.search')} value={q} onChange={(e) => setQ(e.target.value)} />
-                <select className="input" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+            <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:items-end [&>*]:min-w-0">
+                <input className="input sm:col-span-2 w-full sm:w-56" placeholder={t('fin.recv.search')} aria-label={t('fin.recv.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                <select className="input" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label={t('fin.all_statuses')}>
                     <option value="">{t('fin.all_statuses')}</option>
                     {['issued', 'partially_paid', 'paid', 'cancelled'].map((s) => <option key={s} value={s}>{t(`fin.status.${s}`)}</option>)}
                 </select>
@@ -61,12 +62,13 @@ export default function Receivables() {
                                 <td className="p-2 text-right whitespace-nowrap">{formatCurrency(i.total - i.paid)}</td>
                                 <td className="p-2"><Badge s={i.status} /></td>
                                 <td className="p-2 whitespace-nowrap text-right">
-                                    {i.company_id && <button className="btn-secondary mr-1 text-xs" onClick={() => setStatementFor(i.company_id)}>{t('fin.recv.statement')}</button>}
-                                    {i.company_id && ['issued', 'partially_paid'].includes(i.status) && <button className="btn-primary text-xs" onClick={() => setPaying(i)}>{t('fin.recv.payment')}</button>}
+                                    {i.company_id && ['issued', 'partially_paid'].includes(i.status) && [1, 2, 3].map((n) => <PrintPdfButton key={n} path={`reminder/${i.id}?level=${n}`} label={`R${n}`} className="btn-secondary mr-1 inline-flex items-center gap-1 btn-sm" />)}
+                                    {i.company_id && <button className="btn-secondary mr-1 btn-sm" onClick={() => setStatementFor(i.company_id)}>{t('fin.recv.statement')}</button>}
+                                    {i.company_id && ['issued', 'partially_paid'].includes(i.status) && <button className="btn-primary btn-sm" onClick={() => setPaying(i)}>{t('fin.recv.payment')}</button>}
                                 </td>
                             </tr>
                         ))}
-                        {list.data && rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-slate-400">{t('fin.recv.empty')}</td></tr>}
+                        {list.data && rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-slate-500">{t('fin.recv.empty')}</td></tr>}
                     </tbody>
                 </table>
             </div>
@@ -88,26 +90,26 @@ function CompanyPicker({ value, onChange }: { value: Company | null; onChange: (
     const found = useApi<Company[] | Page<Company>>(open && term.trim().length >= 2 ? `companies?q=${encodeURIComponent(term.trim())}` : null);
     if (value) {
         return (
-            <span className="input col-span-2 flex items-center justify-between gap-2 sm:w-56">
+            <span className="input sm:col-span-2 flex items-center justify-between gap-2 sm:w-56">
                 <span className="truncate">{value.name}</span>
-                <button type="button" aria-label={t('fin.recv.clear_company')} className="text-slate-400" onClick={() => onChange(null)}><X className="h-4 w-4" /></button>
+                <button type="button" aria-label={t('fin.recv.clear_company')} className="text-slate-500" onClick={() => onChange(null)}><X className="h-4 w-4" /></button>
             </span>
         );
     }
     const options = rowsOf(found.data);
     return (
-        <div className="relative col-span-2 sm:w-56">
-            <input className="input w-full" placeholder={t('fin.recv.company_ph')} value={term}
+        <div className="relative sm:col-span-2 sm:w-56">
+            <input className="input w-full" placeholder={t('fin.recv.company_ph')} aria-label={t('fin.recv.company_ph')} value={term}
                 onChange={(e) => { setTerm(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)} />
             {open && term.trim().length >= 2 && (
                 <ul className="card absolute z-10 mt-1 max-h-60 w-full overflow-y-auto text-sm">
-                    {found.loading && <li className="p-2 text-slate-400">{t('fin.searching')}</li>}
-                    {!found.loading && options.length === 0 && <li className="p-2 text-slate-400">{t('fin.recv.no_company')}</li>}
+                    {found.loading && <li className="p-2 text-slate-500">{t('fin.searching')}</li>}
+                    {!found.loading && options.length === 0 && <li className="p-2 text-slate-500">{t('fin.recv.no_company')}</li>}
                     {options.map((c) => (
                         <li key={c.id}>
                             <button type="button" className="w-full p-2 text-left hover:bg-slate-50" onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => { onChange(c); setTerm(''); setOpen(false); }}>
-                                {c.name}{c.tax_id && <span className="ml-1 text-xs text-slate-400">{c.tax_id}</span>}
+                                {c.name}{c.tax_id && <span className="ml-1 text-xs text-slate-500">{c.tax_id}</span>}
                             </button>
                         </li>
                     ))}
@@ -128,7 +130,8 @@ function StatementPanel({ id, onClose }: { id: number; onClose: () => void }) {
                     <h3 className="font-semibold">{d?.company.name ?? t('fin.recv.statement')}</h3>
                     {d && <p className="text-xs text-slate-500">{t('fin.recv.company_meta', { niu: d.company.tax_id ?? '—', days: d.company.payment_terms_days ?? '—', limit: d.company.credit_limit != null ? formatCurrency(d.company.credit_limit) : '—' })}</p>}
                 </div>
-                <button onClick={onClose} className="text-slate-400"><X className="h-5 w-5" /></button>
+                <PrintPdfButton path={`company-statement/${id}`} label={t('documents3.print_statement')} />
+                <button onClick={onClose} className="text-slate-500"><X className="h-5 w-5" /></button>
             </div>
             <Banner error={s.error?.message} />
             <Loading on={s.loading} />
@@ -181,10 +184,10 @@ function PayForm({ inv, onClose, onDone }: { inv: Invoice; onClose: () => void; 
         <form onSubmit={submit} className="card mb-4 p-4">
             <div className="mb-2 flex items-center justify-between">
                 <h3 className="font-semibold">{t('fin.recv.record_payment', { number: inv.number, name: inv.bill_to_name })}</h3>
-                <button type="button" onClick={onClose} className="text-slate-400"><X className="h-5 w-5" /></button>
+                <button type="button" onClick={onClose} className="text-slate-500"><X className="h-5 w-5" /></button>
             </div>
             <Banner error={error ?? pm.error?.message} />
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end [&>*]:min-w-0">
                 <Field label={t('fin.recv.amount_due', { amount: formatCurrency(due) })}><input type="number" min={1} max={due} className="input w-full" required value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
                 <Field label={t('fin.recv.method')}><select className="input w-full" value={method} onChange={(e) => setMethod(e.target.value)}>{methods.map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}</select></Field>
                 <Field label={t('fin.col.reference')}><input className="input w-full" value={reference} onChange={(e) => setReference(e.target.value)} /></Field>

@@ -44,11 +44,11 @@ export default function EditStay({ reservation, onSaved }: Props) {
     return (
         <section className="card space-y-3 p-4">
             <h2 className="font-medium">{t('res.edit.title')}</h2>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <label className="text-sm">{t('res.arrival')}<input className="input w-full" type="date" value={arrival} onChange={(e) => setArrival(e.target.value)} /></label>
-                <label className="text-sm">{t('res.departure')}<input className="input w-full" type="date" value={departure} min={arrival} onChange={(e) => setDeparture(e.target.value)} /></label>
-                <label className="text-sm">{t('res.room_type')}
-                    <select className="input w-full" value={typeId} onChange={(e) => setTypeId(e.target.value ? +e.target.value : '')}>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <label className="label">{t('res.arrival')}<input className="input w-full" type="date" value={arrival} onChange={(e) => setArrival(e.target.value)} /></label>
+                <label className="label">{t('res.departure')}<input className="input w-full" type="date" value={departure} min={arrival} onChange={(e) => setDeparture(e.target.value)} /></label>
+                <label className="label">{t('res.room_type')}
+                    <select className="input w-full" value={typeId} onChange={(e) => setTypeId(e.target.value ? +e.target.value : '')} aria-label={t('res.edit.keep_current')}>
                         <option value="">{t('res.edit.keep_current')}</option>
                         {types.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                     </select>

@@ -83,7 +83,7 @@ export default function LoyaltyIndex() {
             {program.error && <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm">{program.error.message}</div>}
 
             {program.loading && !p ? (
-                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <form onSubmit={save} className="card p-5 space-y-4 lg:col-span-1">
@@ -125,7 +125,7 @@ export default function LoyaltyIndex() {
                     <div className="card p-5 lg:col-span-2">
                         <h2 className="font-semibold text-slate-800 mb-3 flex items-center gap-2"><Award className="w-4 h-4 text-emerald-600" /> {t('loyalty.tiers')}</h2>
                         {!p ? (
-                            <p className="text-sm text-slate-400">{t('loyalty.no_tiers')}</p>
+                            <p className="text-sm text-slate-500">{t('loyalty.no_tiers')}</p>
                         ) : (
                             <TierEditor tiers={tiers} onSaved={(m) => { setSuccess(m); setError(null); program.reload(); }} onError={(m) => { setError(m); setSuccess(null); }} />
                         )}
@@ -207,7 +207,7 @@ function TierEditor({ tiers, onSaved, onError }: { tiers: Tier[]; onSaved: (t: s
                     {row(fresh, setFresh, 'new')}
                 </tbody>
             </table>
-            <p className="text-xs text-slate-400 mt-3">{t('loyalty.tiers_hint')}</p>
+            <p className="text-xs text-slate-500 mt-3">{t('loyalty.tiers_hint')}</p>
         </div>
     );
 }

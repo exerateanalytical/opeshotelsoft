@@ -35,15 +35,15 @@ export default function Accounts() {
         <div>
             <Banner error={error ?? list.error?.message} success={ok} />
             <div className="mb-4 flex flex-wrap items-end gap-2">
-                <input className="input w-full sm:w-64" placeholder={t('fin.accounts.search')} value={q} onChange={(e) => setQ(e.target.value)} />
-                <select className="input w-full sm:w-40" value={cls} onChange={(e) => setCls(e.target.value)}>
+                <input className="input w-full sm:w-64" placeholder={t('fin.accounts.search')} aria-label={t('fin.accounts.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                <select className="input w-full sm:w-40" value={cls} onChange={(e) => setCls(e.target.value)} aria-label={t('fin.accounts.all_classes')}>
                     <option value="">{t('fin.accounts.all_classes')}</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((c) => <option key={c} value={c}>{t('fin.accounts.class_n', { n: c })}</option>)}
                 </select>
                 <button className="btn-primary sm:ml-auto" onClick={() => setForm({ ...blank })}>{t('fin.accounts.new')}</button>
             </div>
             {form && (
-                <form onSubmit={save} className="card mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
+                <form onSubmit={save} className="card mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 [&>*]:min-w-0">
                     <Field label={t('fin.col.code')}><input className="input w-full" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required pattern="[1-9][0-9]{1,19}" /></Field>
                     <Field label={t('fin.col.name')}><input className="input w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></Field>
                     <Field label={t('fin.col.type')}>
@@ -54,7 +54,7 @@ export default function Accounts() {
                     <div className="flex flex-wrap gap-4 text-sm sm:col-span-3">
                         {(['postable', 'reconcilable', 'active'] as const).map((k) => (
                             <label key={k} className="flex items-center gap-1">
-                                <input type="checkbox" checked={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.checked })} /> {t(`fin.accounts.flag.${k}`)}
+                                <input type="checkbox" className="h-5 w-5 shrink-0" checked={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.checked })} /> {t(`fin.accounts.flag.${k}`)}
                             </label>
                         ))}
                     </div>
@@ -77,7 +77,7 @@ export default function Accounts() {
                                 <td className="p-2">{t(`fin.account_type.${a.type}`)}</td>
                                 <td className="p-2 text-xs text-slate-500">{[a.postable && t('fin.accounts.flag.postable'), a.reconcilable && t('fin.accounts.flag.reconcilable'), !a.active && t('fin.accounts.flag.inactive')].filter(Boolean).join(', ')}</td>
                                 <td className="p-2 text-right">
-                                    <button className="btn-secondary text-xs" onClick={() => setForm({ code: a.code, name: a.name, type: a.type, postable: a.postable, reconcilable: a.reconcilable, active: a.active })}>{t('common.edit')}</button>
+                                    <button className="btn-secondary btn-sm" onClick={() => setForm({ code: a.code, name: a.name, type: a.type, postable: a.postable, reconcilable: a.reconcilable, active: a.active })}>{t('common.edit')}</button>
                                 </td>
                             </tr>
                         ))}

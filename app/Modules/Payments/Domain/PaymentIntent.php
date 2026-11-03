@@ -47,6 +47,11 @@ class PaymentIntent extends Model
 
     public function methodCode(): string
     {
-        return self::METHODS[$this->provider];
+        return $this->meta['method'] ?? self::METHODS[$this->provider];
+    }
+
+    public function link()
+    {
+        return $this->belongsTo(PaymentLink::class, 'payment_link_id');
     }
 }

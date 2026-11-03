@@ -104,7 +104,7 @@ export default function SettingsUsers() {
                         <form onSubmit={save} className="card px-5 py-4 mb-6 space-y-4">
                             <div className="flex items-center">
                                 <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('settings.users.new') : t('settings.users.edit', { name: editing.name })}</h3>
-                                <button type="button" className="ml-auto text-slate-400 hover:text-slate-600" onClick={() => setEditing(null)}><X className="w-5 h-5" /></button>
+                                <button type="button" className="ml-auto text-slate-500 hover:text-slate-600" onClick={() => setEditing(null)}><X className="w-5 h-5" /></button>
                             </div>
                             <div className="grid sm:grid-cols-2 gap-3">
                                 <Field label={t('profile.name')}><input className="input w-full" required value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Field>
@@ -161,7 +161,7 @@ export default function SettingsUsers() {
                         <div className="lg:col-span-2 card overflow-x-auto">
                             <div className="flex flex-wrap gap-2 px-5 py-4 border-b border-slate-100">
                                 <div className="relative flex-1 min-w-[10rem]">
-                                    <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400" />
+                                    <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-500" />
                                     <input className="input w-full pl-8" placeholder={t('settings.users.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                                 </div>
                                 <select className="input" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
@@ -176,15 +176,15 @@ export default function SettingsUsers() {
                             <table className="table-auto w-full">
                                 <thead><tr><th>{t('settings.users.user')}</th><th>{t('settings.users.role')}</th><th>{t('settings.users.hotels')}</th><th>{t('settings.users.status')}</th><th></th></tr></thead>
                                 <tbody>
-                                    {users.loading && !users.data && <tr><td colSpan={5}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-400" /></td></tr>}
-                                    {users.data && filtered.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-slate-400 text-sm">{t('settings.users.no_match')}</td></tr>}
+                                    {users.loading && !users.data && <tr><td colSpan={5}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
+                                    {users.data && filtered.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-slate-500 text-sm">{t('settings.users.no_match')}</td></tr>}
                                     {filtered.map((u) => (
                                         <tr key={u.id}>
                                             <td><div className="text-sm font-medium text-slate-800">{u.name}</div><div className="text-xs text-slate-500">{u.email}</div></td>
                                             <td className="text-sm">{u.roles.map((r) => r.name).join(', ') || '—'}</td>
                                             <td className="text-xs">{u.all_hotels ? t('settings.users.all_hotels') : u.hotels.map((h) => h.code).join(', ') || '—'}</td>
                                             <td><span className={cn('text-xs px-2 py-0.5 rounded', u.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>{u.status}</span></td>
-                                            <td className="text-right"><button title={t('common.edit')} className="text-slate-400 hover:text-indigo-600" onClick={() => open(u)}><Pencil className="w-4 h-4" /></button></td>
+                                            <td className="text-right"><button title={t('common.edit')} className="text-slate-500 hover:text-indigo-600" onClick={() => open(u)}><Pencil className="w-4 h-4" /></button></td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -194,12 +194,12 @@ export default function SettingsUsers() {
                         <div className="card px-5 py-4">
                             <h3 className="font-semibold text-slate-800 mb-3">{t('settings.users.roles')}</h3>
                             {roles.error && <Banner ok={false} text={roles.error.message} />}
-                            {!roles.data && !roles.error && <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" />}
+                            {!roles.data && !roles.error && <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" />}
                             <div className="space-y-2">
                                 {(roles.data ?? []).map((r) => (
                                     <details key={r.id} className="border border-slate-100 rounded-lg px-3 py-2">
                                         <summary className="cursor-pointer text-sm font-medium text-slate-700">
-                                            {r.name} <span className="text-xs text-slate-400">({r.permissions.length})</span>
+                                            {r.name} <span className="text-xs text-slate-500">({r.permissions.length})</span>
                                         </summary>
                                         <div className="flex flex-wrap gap-1 mt-2">
                                             {r.permissions.map((p) => <span key={p.id} className="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">{p.name}</span>)}

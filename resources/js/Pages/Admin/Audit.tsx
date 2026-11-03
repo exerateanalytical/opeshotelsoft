@@ -24,12 +24,12 @@ const short = (type: string | null) => (type ? type.split('\\').pop() : '—');
 function Changes({ p }: { p: Entry['properties'] }) {
     const attrs = p?.attributes ?? {};
     const keys = Object.keys(attrs);
-    if (keys.length === 0) return <span className="text-slate-400">—</span>;
+    if (keys.length === 0) return <span className="text-slate-500">—</span>;
     return (
         <ul className="space-y-0.5">
             {keys.map((k) => (
                 <li key={k} className="text-xs text-slate-600 break-all">
-                    <span className="font-mono">{k}</span>: {p?.old && k in p.old ? <><s className="text-slate-400">{String(p.old[k] ?? '∅')}</s> → </> : null}{String(attrs[k] ?? '∅')}
+                    <span className="font-mono">{k}</span>: {p?.old && k in p.old ? <><s className="text-slate-500">{String(p.old[k] ?? '∅')}</s> → </> : null}{String(attrs[k] ?? '∅')}
                 </li>
             ))}
         </ul>
@@ -92,8 +92,8 @@ export default function AuditIndex() {
                         </tr>
                     </thead>
                     <tbody>
-                        {log.loading && !log.data && <tr><td colSpan={6}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-400" /></td></tr>}
-                        {log.data?.data.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-slate-400 text-sm">{t('admin.audit.empty')}</td></tr>}
+                        {log.loading && !log.data && <tr><td colSpan={6}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
+                        {log.data?.data.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-slate-500 text-sm">{t('admin.audit.empty')}</td></tr>}
                         {log.data?.data.map((e) => (
                             <tr key={e.id}>
                                 <td className="text-sm whitespace-nowrap">{formatDateTime(e.created_at)}</td>

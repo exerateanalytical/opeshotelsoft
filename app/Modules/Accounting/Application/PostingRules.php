@@ -62,7 +62,7 @@ class PostingRules
             $lines[] = [$pay['account'], $pay['amount']];
         }
         foreach ($p['revenue'] as $rev) {
-            $lines[] = [$rev['account'], -$rev['net'], ['department' => $rev['department']]];
+            $lines[] = [$rev['account'], -$rev['net'], ['department' => $rev['department'], 'outlet' => $p['outlet'] ?? null]];
         }
         foreach ($p['taxes'] as $tax) {
             $lines[] = [$tax['account'], -$tax['amount']];
@@ -115,10 +115,12 @@ class PostingRules
     public function supplierPayment(StoredEvent $e): void
     {
         $p = $e->payload;
-        $this->ledger->post($this->moneyJournal($p['account']), $p['date'], "Règlement fournisseur {$p['reference']}", [
+        $wht = (int) ($p['withheld'] ?? 0); // A-B: withholding tax kept back from the supplier, owed to the state
+        $this->ledger->post($this->moneyJournal($p['account']), $p['date'], "Règlement fournisseur {$p['reference']}", array_values(array_filter([
             [C::role('supplier'), $p['amount'], ['partner_type' => 'supplier', 'partner_id' => $p['supplier_id']]],
-            [$p['account'], -$p['amount']],
-        ], ['source_type' => 'supplier_payment', 'source_id' => $p['id'], 'source_event' => $e->uuid]);
+            [$p['account'], -($p['amount'] - $wht)],
+            $wht > 0 ? [\App\Modules\Accounting\Tax\Withholding::PAYABLE, -$wht] : null,
+        ])),['source_type' => 'supplier_payment', 'source_id' => $p['id'], 'source_event' => $e->uuid]);
     }
 
     /** payroll.run_approved */

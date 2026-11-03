@@ -163,6 +163,7 @@ class ProcurementService
         if ($inv->status !== 'pending') {
             throw new DomainException('Only pending invoices can be approved.');
         }
+        app(\App\Modules\Accounting\Payables\InvoiceApprovals::class)->assertCleared($inv); // A-B: amount-based approval chain
         $received = (int) GoodsReceipt::whereIn('id', $inv->goods_receipt_ids)->sum('net_total');
         $lines = [];
         if ($received > 0) {
@@ -195,16 +196,21 @@ class ProcurementService
 
         return DB::transaction(function () use ($inv, $amount, $account, $reference) {
             $hotel = Hotel::findOrFail($this->ctx->requireHotelId());
+            $wht = app(\App\Modules\Accounting\Tax\Withholding::class)->forPayment($inv, $amount); // A-B: retenue à la source
             $id = DB::table('supplier_payments')->insertGetId([
                 'group_id' => $hotel->group_id, 'hotel_id' => $hotel->id, 'supplier_id' => $inv->supplier_id,
                 'supplier_invoice_id' => $inv->id, 'date' => $hotel->business_date, 'amount' => $amount,
-                'account' => $account, 'reference' => $reference, 'created_at' => now(), 'updated_at' => now(),
+                'account' => $account, 'reference' => $reference, 'withheld' => $wht['amount'] ?? 0, 'created_at' => now(), 'updated_at' => now(),
             ]);
+            if ($wht) {
+                app(\App\Modules\Accounting\Tax\Withholding::class)->issue($inv->supplier_id, $id, $hotel->business_date->toDateString(), $wht);
+            }
             $paid = $inv->paid + $amount;
             $inv->update(['paid' => $paid, 'status' => $paid >= $inv->total ? 'paid' : 'partially_paid']);
             $this->bus->record('payables.payment_made', [
                 'id' => $id, 'supplier_id' => $inv->supplier_id, 'invoice_id' => $inv->id, 'amount' => $amount,
                 'account' => $account, 'reference' => $reference ?? $inv->reference, 'date' => $hotel->business_date->toDateString(),
+                'withheld' => $wht['amount'] ?? 0,
             ], 'supplier_invoice', $inv->id);
 
             return $inv;

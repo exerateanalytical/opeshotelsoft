@@ -57,3 +57,9 @@ Route::prefix('accounting')->group(function () {
 
 Route::get('receivables/companies/{company}/statement', [ReceivablesController::class, 'statement']);
 Route::post('receivables/invoices/{invoice}/payments', [ReceivablesController::class, 'pay']);
+
+// A-A core ledger (budgets, dimensions, deferrals, recurring, lock approvals, intercompany, consolidation).
+require __DIR__.'/routes_core.php';
+
+// A-B payables, tax and close (approvals, capture, dunning, bank feed, VAT, withholding, filings, statements, forecast, month-end).
+require __DIR__.'/routes_ab.php';

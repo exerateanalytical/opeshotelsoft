@@ -25,6 +25,7 @@ class Reservation extends Model
         return [
             'arrival' => 'date', 'departure' => 'date',
             'cancelled_at' => 'datetime', 'checked_in_at' => 'datetime', 'checked_out_at' => 'datetime',
+            'room_prefs' => 'array', 'deposit_deadline' => 'datetime', 'deposit_reminded_at' => 'datetime',
         ];
     }
 

@@ -10,6 +10,9 @@ use App\Modules\Reservations\Http\TravelAgentController;
 use App\Modules\Reservations\Http\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__.'/Revenue/routes.php'; // R-A revenue engine
+require __DIR__.'/Experience/routes.php'; // R-B reservation experience
+
 Route::apiResource('rate-plans', RatePlanController::class);
 Route::get('rates', [AriController::class, 'rates']);
 Route::put('rates', [AriController::class, 'setRates']);

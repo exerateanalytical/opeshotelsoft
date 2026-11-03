@@ -1,4 +1,5 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import ManageExperience from './ManageExperience';
 import { money, t } from './i18n';
 import PublicLayout, { Notice, publicApi, type PublicProps } from './PublicLayout';
 
@@ -12,8 +13,8 @@ interface Booking {
     checkin: { id_type: string; eta: string | null; submitted_at: string } | null;
 }
 
-const Card = ({ title, children }: { title: string; children: ReactNode }) => (
-    <section className="space-y-3 rounded-lg border border-[#e5dfd0] bg-white p-5">
+const Card = ({ id, title, children }: { id?: string; title: string; children: ReactNode }) => (
+    <section id={id} className="scroll-mt-4 space-y-3 rounded-lg border border-slate-200 bg-white p-5">
         <h2 className="font-serif text-xl">{title}</h2>
         {children}
     </section>
@@ -29,7 +30,6 @@ export default function Manage(p: PublicProps) {
     const [msg, setMsg] = useState('');
     const [busy, setBusy] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
-    const [ci, setCi] = useState({ id_type: 'passport', id_number: '', nationality: '', eta: '14:00', notes: '' });
     const [pay, setPay] = useState({ method: 'mtn_momo', phone: '' });
     const [pending, setPending] = useState('');
 
@@ -47,11 +47,6 @@ export default function Manage(p: PublicProps) {
         await reload(b!.number);
         setMsg(`${d.cancelled}${r.cancellation_fee > 0 ? ` ${d.fee}: ${money(r.cancellation_fee, b!.currency, p.lang)}` : ''}`);
     });
-    const checkIn = (e: FormEvent) => { e.preventDefault(); run(async () => {
-        await publicApi(slug, '/reservations/check-in', { confirmation: b!.number, token: b!.manage_token, ...ci, nationality: ci.nationality || null, notes: ci.notes || null });
-        await reload(b!.number);
-        setMsg(d.checkinDone);
-    }); };
     const deposit = (e: FormEvent) => { e.preventDefault(); run(async () => {
         // W03 Payments endpoint: creates a payment intent (sandbox/dry-run without keys).
         const r = await publicApi<{ reference: string; status: string; redirect_url: string | null }>(slug, `/reservations/${encodeURIComponent(b!.number)}/deposit`, {
@@ -64,6 +59,9 @@ export default function Manage(p: PublicProps) {
         setMsg(`${d.depositPending}: ${r.reference}`);
     }); };
 
+    // R-B: message links end in #checkin, #pay or #review; scroll there once the booking is shown.
+    useEffect(() => { if (b && window.location.hash) setTimeout(() => document.getElementById(window.location.hash.slice(1))?.scrollIntoView(), 400); }, [b?.number]);
+
     const upcoming = b && ['tentative', 'confirmed'].includes(b.status);
     const due = b ? Math.max(0, b.deposit_required - b.deposit_paid) : 0;
 
@@ -71,10 +69,10 @@ export default function Manage(p: PublicProps) {
         <PublicLayout p={p} title={d.manage}>
             <div className="space-y-6">
                 {!b && (
-                    <form onSubmit={lookup} className="max-w-xl space-y-4 rounded-lg border border-[#e5dfd0] bg-white p-5">
+                    <form onSubmit={lookup} className="max-w-xl space-y-4 rounded-lg border border-slate-200 bg-white p-5">
                         <div><label className="label" htmlFor="conf">{d.confirmationNo}</label><input id="conf" className="input" value={conf} onChange={(e) => setConf(e.target.value)} required /></div>
                         <div><label className="label" htmlFor="ln">{d.lastName}</label><input id="ln" className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} required /></div>
-                        <button type="submit" disabled={busy} className="rounded-md bg-[#0f1f3d] px-5 py-2 text-base font-semibold text-white hover:bg-[#1b2f57] disabled:opacity-50">{d.lookup}</button>
+                        <button type="submit" disabled={busy} className="btn-primary min-h-11 px-5">{d.lookup}</button>
                     </form>
                 )}
                 {error && <Notice kind="error">{error}</Notice>}
@@ -96,19 +94,19 @@ export default function Manage(p: PublicProps) {
 
                         {b.loyalty && (
                             <Card title={d.loyaltyCard}>
-                                <div className="space-y-2 rounded-lg bg-[#0f1f3d] p-5 text-white">
-                                    <p className="font-serif text-lg text-[#d4af6a]">{p.group.name}{b.loyalty.tier ? ` · ${b.loyalty.tier}` : ''}</p>
+                                <div className="space-y-2 rounded-lg bg-navy-800 p-5 text-white">
+                                    <p className="font-serif text-lg text-brand-300">{p.group.name}{b.loyalty.tier ? ` · ${b.loyalty.tier}` : ''}</p>
                                     <p className="text-sm">{b.guest.first_name} {b.guest.last_name}</p>
                                     <p className="font-mono text-2xl tracking-widest">{b.loyalty.number}</p>
                                     <p className="text-sm">{b.loyalty.points.toLocaleString()} {d.points}</p>
                                     {/* QR text fallback: no QR library in the bundle yet; front desk scanners accept the code text. */}
-                                    <p className="break-all rounded border border-[#d4af6a] bg-white px-3 py-2 font-mono text-sm text-[#0f1f3d]" aria-label="QR">{b.loyalty.qr_text}</p>
+                                    <p className="break-all rounded border border-brand-300 bg-white px-3 py-2 font-mono text-sm text-navy-800" aria-label="QR">{b.loyalty.qr_text}</p>
                                 </div>
                             </Card>
                         )}
 
                         {upcoming && due > 0 && (
-                            <Card title={d.payDeposit}>
+                            <Card id="pay" title={d.payDeposit}>
                                 <p className="text-base">{d.depositDue}: <strong>{money(due, b.currency, p.lang)}</strong></p>
                                 {pending && <p className="text-sm"><span className="badge-yellow">{d.depositPending}: {pending}</span></p>}
                                 <form onSubmit={deposit} className="space-y-3">
@@ -119,29 +117,11 @@ export default function Manage(p: PublicProps) {
                                         </select>
                                     </div>
                                     {pay.method !== 'card' && <div><label className="label" htmlFor="pphone">{d.phone}</label><input id="pphone" type="tel" className="input" value={pay.phone} onChange={(e) => setPay({ ...pay, phone: e.target.value })} required /></div>}
-                                    <button type="submit" disabled={busy} className="rounded-md bg-[#b8923a] px-5 py-2 text-base font-semibold text-white hover:bg-[#a07e2f] disabled:opacity-50">{d.payNow}</button>
+                                    <button type="submit" disabled={busy} className="btn-accent min-h-11 px-6">{d.payNow}</button>
                                 </form>
                             </Card>
                         )}
-
-                        {upcoming && (
-                            <Card title={d.onlineCheckin}>
-                                {b.checkin && <p className="text-sm"><span className="badge-green">{d.checkinDone}</span></p>}
-                                <form onSubmit={checkIn} className="grid gap-3 sm:grid-cols-2">
-                                    <div>
-                                        <label className="label" htmlFor="id_type">{d.idType}</label>
-                                        <select id="id_type" className="input" value={ci.id_type} onChange={(e) => setCi({ ...ci, id_type: e.target.value })}>
-                                            {(['passport', 'national_id', 'residence_permit', 'driving_licence'] as const).map((k) => <option key={k} value={k}>{d[k]}</option>)}
-                                        </select>
-                                    </div>
-                                    <div><label className="label" htmlFor="id_number">{d.idNumber}</label><input id="id_number" className="input" value={ci.id_number} onChange={(e) => setCi({ ...ci, id_number: e.target.value })} required /></div>
-                                    <div><label className="label" htmlFor="nat">{d.nationality}</label><input id="nat" className="input" maxLength={2} value={ci.nationality} onChange={(e) => setCi({ ...ci, nationality: e.target.value.toUpperCase() })} /></div>
-                                    <div><label className="label" htmlFor="eta">{d.eta}</label><input id="eta" type="time" className="input" value={ci.eta} onChange={(e) => setCi({ ...ci, eta: e.target.value })} required /></div>
-                                    <div className="sm:col-span-2"><label className="label" htmlFor="notes">{d.notes}</label><textarea id="notes" rows={2} className="input" value={ci.notes} onChange={(e) => setCi({ ...ci, notes: e.target.value })} /></div>
-                                    <div className="sm:col-span-2"><button type="submit" disabled={busy} className="rounded-md bg-[#0f1f3d] px-5 py-2 text-base font-semibold text-white hover:bg-[#1b2f57] disabled:opacity-50">{d.submit}</button></div>
-                                </form>
-                            </Card>
-                        )}
+                        <ManageExperience b={b} slug={slug} lang={p.lang} hidePay={!!upcoming && due > 0} onChanged={() => reload(b.number)} />
 
                         {b.can_cancel && (
                             <Card title={d.cancel}>
@@ -150,7 +130,7 @@ export default function Manage(p: PublicProps) {
                                     <button type="button" onClick={() => setConfirmCancel(true)} className="btn-secondary">{d.cancel}</button>
                                 ) : (
                                     <div className="flex flex-wrap gap-3">
-                                        <button type="button" disabled={busy} onClick={cancel} className="rounded-md bg-red-700 px-5 py-2 text-base font-semibold text-white hover:bg-red-800 disabled:opacity-50">{d.cancelConfirm}</button>
+                                        <button type="button" disabled={busy} onClick={cancel} className="btn-danger min-h-11 px-5">{d.cancelConfirm}</button>
                                         <button type="button" onClick={() => setConfirmCancel(false)} className="btn-secondary">{d.keep}</button>
                                     </div>
                                 )}

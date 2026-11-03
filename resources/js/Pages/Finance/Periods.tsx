@@ -33,7 +33,7 @@ export default function Periods() {
     return (
         <div>
             <Banner error={error ?? list.error?.message} success={ok} />
-            <form className="card mb-4 grid grid-cols-2 gap-2 p-4 sm:flex sm:items-end"
+            <form className="card mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 p-4 sm:flex sm:items-end [&>*]:min-w-0"
                 onSubmit={(e) => { e.preventDefault(); run('close', { year, month }, t('fin.periods.closed_ok', { period: `${MONTHS[month - 1]} ${year}` })); }}>
                 <Field label={t('fin.periods.year')}><input type="number" className="input w-full sm:w-28" value={year} onChange={(e) => setYear(Number(e.target.value))} /></Field>
                 <Field label={t('fin.periods.month')}>
@@ -41,11 +41,11 @@ export default function Periods() {
                         {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                     </select>
                 </Field>
-                <button className="btn-primary col-span-2" disabled={busy}>{t('fin.periods.close')}</button>
-                <p className="col-span-2 text-xs text-slate-500">{t('fin.periods.close_hint')}</p>
+                <button className="btn-primary sm:col-span-2" disabled={busy}>{t('fin.periods.close')}</button>
+                <p className="sm:col-span-2 text-xs text-slate-500">{t('fin.periods.close_hint')}</p>
             </form>
             {reopen && (
-                <form className="card mb-4 grid grid-cols-1 gap-2 border-amber-200 p-4 sm:grid-cols-[1fr_auto] sm:items-end"
+                <form className="card mb-4 grid grid-cols-1 gap-2 border-amber-200 p-4 sm:grid-cols-[1fr_auto] sm:items-end [&>*]:min-w-0"
                     onSubmit={(e) => { e.preventDefault(); run('reopen', { year: reopen.year, month: reopen.month, reason }, t('fin.periods.reopened_ok', { period: `${MONTHS[reopen.month - 1]} ${reopen.year}` })); }}>
                     <Field label={t('fin.periods.reopen_reason', { period: `${MONTHS[reopen.month - 1]} ${reopen.year}` })}><input className="input w-full" required value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
                     <div className="flex gap-2"><button className="btn-primary" disabled={busy}>{t('fin.periods.reopen')}</button><button type="button" className="btn-secondary" onClick={() => setReopen(null)}>{t('common.cancel')}</button></div>
@@ -62,11 +62,11 @@ export default function Periods() {
                                 <td className="p-2"><Badge s={p.status} /></td>
                                 <td className="p-2">{p.closed_at ? formatDateTime(p.closed_at) : '—'}</td>
                                 <td className="p-2 text-right">
-                                    {p.status === 'closed' && <button className="btn-secondary text-xs" onClick={() => setReopen(p)}>{t('fin.periods.reopen')}</button>}
+                                    {p.status === 'closed' && <button className="btn-secondary btn-sm" onClick={() => setReopen(p)}>{t('fin.periods.reopen')}</button>}
                                 </td>
                             </tr>
                         ))}
-                        {list.data?.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-slate-400">{t('fin.periods.empty')}</td></tr>}
+                        {list.data?.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-slate-500">{t('fin.periods.empty')}</td></tr>}
                     </tbody>
                 </table>
             </div>

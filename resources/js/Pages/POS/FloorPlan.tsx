@@ -19,7 +19,7 @@ export default function FloorPlan({ outletId, refresh, selectedId, onTable, onCh
     const cols = Math.max(4, ...tables.map((tb) => tb.pos_x + 1));
     const rows = Math.max(1, ...tables.map((tb) => tb.pos_y + 1));
 
-    if (floor.loading && !floor.data) return <Loader2 className="w-5 h-5 animate-spin text-slate-400" />;
+    if (floor.loading && !floor.data) return <Loader2 className="w-5 h-5 animate-spin text-slate-500" />;
     if (floor.error) return <p className="text-sm text-red-600">{floor.error.message}</p>;
     if (!tables.length) return <p className="text-sm text-slate-500">{t('pos.floor.no_tables')}</p>;
 
@@ -35,7 +35,7 @@ export default function FloorPlan({ outletId, refresh, selectedId, onTable, onCh
                                 key={tb.id}
                                 onClick={() => onTable(tb)}
                                 style={{ gridColumnStart: tb.pos_x + 1, gridRowStart: tb.pos_y + 1 }}
-                                className={`rounded-lg border p-2 text-left min-h-[64px] ${active ? 'border-emerald-600 bg-emerald-100' : ck ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                                className={`rounded-lg border p-2 text-left min-h-[64px] ${active ? 'border-navy-900 bg-navy-50' : ck ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
                             >
                                 <div className="font-semibold text-sm text-slate-800">{tb.name}</div>
                                 {ck ? (

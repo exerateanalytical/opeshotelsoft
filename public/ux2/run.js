@@ -1,0 +1,3 @@
+window.__run=async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));for(let i=0;i<40&&!document.querySelector('header h1');i++)await sl(300);await sl(1500);
+for(let t=0;t<3&&typeof __uiAudit!=='function';t++){await Promise.race([new Promise(r=>{const s=document.createElement('script');s.src='/ux2/audit.js?'+Date.now();s.onload=r;s.onerror=r;document.head.append(s)}),sl(8000)])}
+const o=__uiAudit();const c=o.counts;if(!Object.keys(c).length)return o.url+' CLEAN';return o.url+' '+JSON.stringify(c)+' '+JSON.stringify(Object.fromEntries(Object.entries(o.samples).map(([k,v])=>[k,v.slice(0,3).map(x=>x.el+(x.w?(' '+x.w+'x'+x.h):'')+(x.note?' ['+x.note+']':'')+(x.ratio?' r'+x.ratio:'')+(x.scrollWidth?' sw'+x.scrollWidth+'/'+x.clientWidth:''))])))};

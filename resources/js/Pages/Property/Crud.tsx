@@ -42,7 +42,7 @@ export function errMsg(e: unknown): string {
 export function cell(row: Row, c: Column): React.ReactNode {
     if (c.render) return c.render(row);
     const v = row[c.key];
-    if (v === null || v === undefined || v === '') return <span className="text-slate-300">-</span>;
+    if (v === null || v === undefined || v === '') return <span className="text-slate-500">-</span>;
     if (c.type === 'money') return formatCurrency(Number(v));
     if (c.type === 'date') return formatDate(v);
     if (c.type === 'bool' || typeof v === 'boolean')
@@ -53,7 +53,7 @@ export function cell(row: Row, c: Column): React.ReactNode {
 
 function YesNo({ v }: { v: boolean }) {
     const t = useT();
-    return v ? <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">{t('prop.crud.yes')}</span> : <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{t('prop.crud.no')}</span>;
+    return v ? <span className="badge-green">{t('prop.crud.yes')}</span> : <span className="badge-slate">{t('prop.crud.no')}</span>;
 }
 
 /** Converts form strings into the JSON body the API validates. */
@@ -88,12 +88,12 @@ export function fromRow(fields: Field[], row: Row | null): Record<string, any> {
 export function FormFields({ fields, form, set }: { fields: Field[]; form: Record<string, any>; set: (k: string, v: any) => void }) {
     const t = useT();
     return (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
             {fields.map((f) => (
                 <label key={f.name} className={f.type === 'textarea' ? 'sm:col-span-2 lg:col-span-3 block' : 'block'}>
                     {f.type === 'bool' ? (
                         <span className="flex items-center gap-2 pt-6 text-sm text-slate-700">
-                            <input type="checkbox" checked={!!form[f.name]} onChange={(e) => set(f.name, e.target.checked)} /> {f.label}
+                            <input type="checkbox" className="h-5 w-5 shrink-0" checked={!!form[f.name]} onChange={(e) => set(f.name, e.target.checked)} /> {f.label}
                         </span>
                     ) : (
                         <>
@@ -195,11 +195,11 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
             <Banner error={error ?? list.error?.message} success={success} />
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="relative min-w-[200px] flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('prop.crud.search', { noun: noun.toLowerCase() })} value={q} onChange={(e) => (setQ(e.target.value), setPage(1))} />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9" placeholder={t('prop.crud.search', { noun: noun.toLowerCase() })} aria-label={t('prop.crud.search', { noun: noun.toLowerCase() })} value={q} onChange={(e) => (setQ(e.target.value), setPage(1))} />
                 </div>
                 {filters.map((f) => (
-                    <select key={f.name} className="input w-auto" value={flt[f.name] ?? ''} onChange={(e) => (setFlt({ ...flt, [f.name]: e.target.value }), setPage(1))}>
+                    <select key={f.name} className="input w-full sm:w-auto sm:max-w-xs" value={flt[f.name] ?? ''} onChange={(e) => (setFlt({ ...flt, [f.name]: e.target.value }), setPage(1))} aria-label={t('prop.crud.filter_all', { label: f.label })}>
                         <option value="">{t('prop.crud.filter_all', { label: f.label })}</option>
                         {f.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
@@ -214,7 +214,7 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
                 <form onSubmit={save} className="card mb-4 p-4">
                     <div className="mb-3 flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{editing ? t('prop.crud.edit', { noun: noun.toLowerCase() }) : t('prop.crud.new', { noun: noun.toLowerCase() })}</h3>
-                        <button type="button" className="text-slate-400 hover:text-slate-600" onClick={() => setEditing(undefined)}><X className="h-4 w-4" /></button>
+                        <button type="button" className="text-slate-500 hover:text-slate-600" onClick={() => setEditing(undefined)}><X className="h-4 w-4" /></button>
                     </div>
                     <FormFields fields={fields} form={form} set={(k, v) => setForm((f) => ({ ...f, [k]: v }))} />
                     <div className="mt-4 flex gap-2">
@@ -234,17 +234,17 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
                     </thead>
                     <tbody>
                         {list.loading && !rows.length && (
-                            <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-400"><Loader2 className="inline h-4 w-4 animate-spin" /> {t('common.loading')}</td></tr>
+                            <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500"><Loader2 className="inline h-4 w-4 animate-spin" /> {t('common.loading')}</td></tr>
                         )}
                         {!list.loading && !rows.length && (
-                            <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-400">{t('prop.crud.none', { noun: noun.toLowerCase() })}</td></tr>
+                            <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500">{t('prop.crud.none', { noun: noun.toLowerCase() })}</td></tr>
                         )}
                         {rows.map((r) => (
                             <tr key={r.id} className="border-t border-slate-100">
                                 {columns.map((c) => <td key={c.key} className="whitespace-nowrap px-3 py-2">{cell(r, c)}</td>)}
                                 <td className="whitespace-nowrap px-3 py-2 text-right">
-                                    <button className="mr-2 text-slate-500 hover:text-emerald-600" title={t('common.edit')} onClick={() => open(r)}><Pencil className="h-4 w-4" /></button>
-                                    <button className="text-slate-500 hover:text-red-600" title={deleteLabel} onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></button>
+                                    <button className="btn-ghost btn-icon" title={t('common.edit')} onClick={() => open(r)} aria-label={t('common.edit')}><Pencil className="h-4 w-4" /></button>
+                                    <button className="btn-ghost btn-icon text-red-700" title={deleteLabel} onClick={() => remove(r)} aria-label={deleteLabel}><Trash2 className="h-4 w-4" /></button>
                                 </td>
                             </tr>
                         ))}
@@ -306,8 +306,8 @@ export function SetupTab({ kind, noun, columns, fields }: { kind: string; noun: 
             <Banner error={error ?? list.error?.message} success={success} />
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="relative min-w-[200px] flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('prop.crud.filter_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9" placeholder={t('prop.crud.filter_ph')} aria-label={t('prop.crud.filter_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </div>
                 <button className="btn-primary" onClick={() => open(null)}><Plus className="h-4 w-4" /> {t('prop.crud.new', { noun: noun.toLowerCase() })}</button>
             </div>
@@ -316,7 +316,7 @@ export function SetupTab({ kind, noun, columns, fields }: { kind: string; noun: 
                 <form onSubmit={save} className="card mb-4 p-4">
                     <div className="mb-3 flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{editing ? t('prop.crud.edit', { noun: editing.code }) : t('prop.crud.new', { noun: noun.toLowerCase() })}</h3>
-                        <button type="button" className="text-slate-400 hover:text-slate-600" onClick={() => setEditing(undefined)}><X className="h-4 w-4" /></button>
+                        <button type="button" className="text-slate-500 hover:text-slate-600" onClick={() => setEditing(undefined)}><X className="h-4 w-4" /></button>
                     </div>
                     <p className="mb-3 text-xs text-slate-500">{t('prop.crud.setup_hint_before', { noun })}<strong>{t('prop.crud.active')}</strong>{t('prop.crud.setup_hint_after')}</p>
                     <FormFields fields={fields} form={form} set={(k, v) => setForm((f) => ({ ...f, [k]: v }))} />
@@ -335,13 +335,13 @@ export function SetupTab({ kind, noun, columns, fields }: { kind: string; noun: 
                         </tr>
                     </thead>
                     <tbody>
-                        {list.loading && !rows.length && <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-400">{t('common.loading')}</td></tr>}
-                        {!list.loading && !rows.length && <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-400">{t('prop.crud.nothing')}</td></tr>}
+                        {list.loading && !rows.length && <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500">{t('common.loading')}</td></tr>}
+                        {!list.loading && !rows.length && <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500">{t('prop.crud.nothing')}</td></tr>}
                         {rows.map((r) => (
                             <tr key={r.id ?? r.code} className="border-t border-slate-100">
                                 {columns.map((c) => <td key={c.key} className="whitespace-nowrap px-3 py-2">{cell(r, c)}</td>)}
                                 <td className="px-3 py-2 text-right">
-                                    <button className="text-slate-500 hover:text-emerald-600" title={t('common.edit')} onClick={() => open(r)}><Pencil className="h-4 w-4" /></button>
+                                    <button className="btn-ghost btn-icon" title={t('common.edit')} onClick={() => open(r)} aria-label={t('common.edit')}><Pencil className="h-4 w-4" /></button>
                                 </td>
                             </tr>
                         ))}

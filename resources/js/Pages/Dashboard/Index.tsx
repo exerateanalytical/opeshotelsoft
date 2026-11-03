@@ -99,7 +99,7 @@ export default function Dashboard() {
             )}
             {property && !seeKpis && !seeBoard && (
                 <div className="card p-6 flex items-start gap-3">
-                    <LayoutDashboard className="w-5 h-5 text-slate-400 mt-0.5" />
+                    <LayoutDashboard className="w-5 h-5 text-slate-500 mt-0.5" />
                     <div>
                         <h3 className="text-sm font-semibold text-slate-900">{t('dashboard.welcome', { name: auth.user?.name ?? '' })}</h3>
                         <p className="text-sm text-slate-600 mt-1">{t('dashboard.welcome_text')}</p>
@@ -115,7 +115,7 @@ export default function Dashboard() {
             {seeKpis && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {(dash.loading && !k ? Array.from({ length: 8 }) : stats).map((s, i) => {
-                        if (!s) return <div key={i} className="stat-tile h-24 animate-pulse bg-slate-50" />;
+                        if (!s) return <div key={i} className="stat-tile h-24 bg-slate-100" />;
                         const st = s as (typeof stats)[number];
                         const Icon = st.icon;
                         return (
@@ -138,15 +138,15 @@ export default function Dashboard() {
                             <h3 className="text-sm font-semibold text-slate-900">{t('dashboard.forecast')}</h3>
                             <p className="text-xs text-slate-500 mt-0.5 mb-4">{t('dashboard.forecast_text')}</p>
                             <ResponsiveContainer width="100%" height={200}>
-                                <AreaChart data={forecast.data ?? []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                    <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(5)} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                                <AreaChart data={forecast.data ?? []} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                                    <XAxis dataKey="date" interval="preserveStartEnd" minTickGap={24} tickFormatter={(d: string) => d.slice(5)} tick={{ fontSize: 13, fill: '#526173' }} axisLine={false} tickLine={false} />
+                                    <YAxis width={40} tick={{ fontSize: 13, fill: '#526173' }} axisLine={false} tickLine={false} domain={[0, 100]} />
                                     <Tooltip
-                                        contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8, fontSize: 12, color: '#f1f5f9' }}
-                                        formatter={(v: number) => [`${v}%`, t('dashboard.occupancy')]}
+                                        contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8, fontSize: 13, color: '#f1f5f9' }}
+                                        formatter={(v) => [`${v}%`, t('dashboard.occupancy')]}
                                     />
-                                    <Area type="monotone" dataKey="occupancy_percent" stroke="#c9a84c" strokeWidth={2} fill="#c9a84c" fillOpacity={0.12} />
+                                    <Area type="monotone" dataKey="occupancy_percent" stroke="#1a3a6b" strokeWidth={2} fill="#1a3a6b" fillOpacity={0.1} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -204,7 +204,7 @@ export default function Dashboard() {
                                     </tr>
                                 ))}
                                 {board.data && board.data.arrivals.length === 0 && (
-                                    <tr><td colSpan={6} className="text-center text-sm text-slate-400 py-8">{t('dashboard.no_arrivals')}</td></tr>
+                                    <tr><td colSpan={6} className="text-center text-sm text-slate-500 py-8">{t('dashboard.no_arrivals')}</td></tr>
                                 )}
                             </tbody>
                         </table>

@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Modules\HR\Workforce\Domain;
+
+use App\Platform\Tenancy\BelongsToHotel;
+use Illuminate\Database\Eloquent\Model;
+
+class ShiftTemplate extends Model
+{
+    use BelongsToHotel;
+
+    protected $table = 'workforce_shift_templates';
+
+    protected $guarded = ['id', 'group_id', 'hotel_id'];
+
+    protected function casts(): array
+    {
+        return ['active' => 'boolean'];
+    }
+}

@@ -87,6 +87,7 @@ class AccountingController
             'lines.*.partner_type' => ['nullable', 'string'],
             'lines.*.partner_id' => ['nullable', 'integer'],
             'lines.*.department' => ['nullable', 'string'],
+            'lines.*.outlet' => ['nullable', 'string'], 'lines.*.project' => ['nullable', 'string'], 'lines.*.cost_centre' => ['nullable', 'string'],
             'lines.*.currency' => ['nullable', 'string', 'size:3'],
             'lines.*.fx_amount' => ['nullable', 'numeric', 'min:0'],
             'lines.*.fx_rate' => ['nullable', 'numeric', 'gt:0'],
@@ -275,6 +276,7 @@ class AccountingController
         abort_unless($request->user()->hasRole(['group-owner', 'finance-director']), 403, 'Only the finance director can reopen a period.');
         $data = $request->validate(['year' => ['required', 'integer'], 'month' => ['required', 'integer', 'between:1,12'], 'reason' => ['required', 'string']]);
         DB::table('fiscal_periods')->where(['hotel_id' => $this->ctx->requireHotelId(), 'year' => $data['year'], 'month' => $data['month']])->update(['status' => 'open']);
+        app(\App\Modules\Accounting\Application\Core\AuditTrail::class)->record('period_reopened', 'fiscal_period', $data['year'].'-'.$data['month'], ['reason' => $data['reason'], 'via' => 'direct']);
         $bus->record('accounting.period_reopened', $data, 'hotel', $this->ctx->requireHotelId());
 
         return ['status' => 'open'] + $data;
@@ -310,6 +312,7 @@ class AccountingController
         $names = Account::pluck('name', 'code');
         $revenue = $expenses = [];
         foreach ($balances as $code => $b) {
+            $code = (string) $code; // numeric account codes come back as int keys
             if ($code[0] === '7') {
                 $revenue[] = ['account' => $code, 'name' => $names[$code] ?? '?', 'amount' => -$b['balance']];
             } elseif ($code[0] === '6') {

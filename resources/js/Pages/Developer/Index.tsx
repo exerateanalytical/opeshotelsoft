@@ -162,7 +162,7 @@ function Webhooks() {
                                 {open === s.id ? t('dev.hide_deliveries') : t('dev.deliveries')}
                             </button>
                             {s.active && (
-                                <button className="text-slate-400 hover:text-red-600" aria-label={t('dev.disable')} onClick={() => remove(s)}><Trash2 className="w-4 h-4" /></button>
+                                <button className="text-slate-500 hover:text-red-600" aria-label={t('dev.disable')} onClick={() => remove(s)}><Trash2 className="w-4 h-4" /></button>
                             )}
                         </div>
                         <p className="text-xs text-slate-500 mt-1">{(s.event_types ?? []).join(', ')}</p>

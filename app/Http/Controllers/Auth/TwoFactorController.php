@@ -32,13 +32,14 @@ class TwoFactorController
             return redirect()->route('login');
         }
         if (! $this->twoFactor->check($user, $data['code'])) {
+            app(\App\Modules\Admin\Application\LoginGuard::class)->failed($user->email, $request->ip(), $user, 'two-factor');
             throw ValidationException::withMessages(['code' => __('auth.2fa.invalid_code')]);
         }
         $remember = (bool) $request->session()->pull('2fa.remember', false);
         $request->session()->forget('2fa.user_id');
         Auth::guard('web')->login($user, $remember);
         $request->session()->regenerate();
-        activity()->causedBy($user)->performedOn($user)->event('login')->log('Signed in with two-factor authentication');
+        app(\App\Modules\Admin\Application\LoginGuard::class)->succeeded($user->email, $request->ip(), $user, 'web-2fa');
 
         return redirect()->intended(route('dashboard'));
     }

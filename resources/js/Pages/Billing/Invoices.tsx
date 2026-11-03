@@ -1,3 +1,5 @@
+import Field from '@/Components/ui/Field';
+import FilterBar from '@/Components/ui/FilterBar';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Loader2, Search } from 'lucide-react';
@@ -60,37 +62,44 @@ export default function Invoices() {
     return (
         <AppLayout title={t('billing.invoices.title')} subtitle={t('billing.invoices.subtitle')}>
             <Head title={t('billing.invoices.title')} />
-            <div className="card px-4 py-3 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                <label className="relative lg:col-span-2">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('billing.invoices.search')} value={q} onChange={(e) => setQ(e.target.value)} />
-                </label>
-                <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
-                    <option value="">{t('billing.folios.all_statuses')}</option>
-                    {STATUSES.map((s) => <option key={s} value={s}>{stLabel(s)}</option>)}
-                </select>
-                <select className="input" value={company} onChange={(e) => setCompany(e.target.value)}>
-                    <option value="">{t('billing.folios.all_companies')}</option>
-                    {companies.data?.data.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <div className="flex gap-2">
-                    <input className="input" type="date" title={t('billing.invoices.from')} value={from} onChange={(e) => setFrom(e.target.value)} />
-                    <input className="input" type="date" title={t('billing.invoices.to')} value={to} onChange={(e) => setTo(e.target.value)} />
-                </div>
-            </div>
+            <FilterBar
+                activeCount={[status, company, from, to].filter(Boolean).length}
+                onClear={() => { setStatus(''); setCompany(''); setFrom(''); setTo(''); }}
+                search={
+                    <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                        <input type="search" className="input pl-9" aria-label={t('billing.invoices.search')} placeholder={t('billing.invoices.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    </div>
+                }
+            >
+                <Field label={t('billing.invoices.status')}>
+                    <select className="select sm:w-48" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <option value="">{t('billing.folios.all_statuses')}</option>
+                        {STATUSES.map((s) => <option key={s} value={s}>{stLabel(s)}</option>)}
+                    </select>
+                </Field>
+                <Field label={t('billing.folios.all_companies')}>
+                    <select className="select sm:w-52" value={company} onChange={(e) => setCompany(e.target.value)}>
+                        <option value="">{t('billing.folios.all_companies')}</option>
+                        {companies.data?.data.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                </Field>
+                <Field label={t('billing.invoices.from')}><input className="input sm:w-40" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
+                <Field label={t('billing.invoices.to')}><input className="input sm:w-40" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
+            </FilterBar>
 
             {invoices.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{invoices.error.message}</div>}
 
             <div className="card overflow-x-auto">
-                <table className="table-auto w-full">
+                <table className="table-auto">
                     <thead><tr><th>{t('billing.invoices.number')}</th><th>{t('billing.invoices.bill_to')}</th><th>{t('billing.invoices.issued')}</th><th>{t('billing.invoices.due')}</th><th className="text-right">{t('billing.invoices.total')}</th><th className="text-right">{t('billing.invoices.outstanding')}</th><th>{t('billing.invoices.status')}</th></tr></thead>
                     <tbody>
-                        {invoices.loading && !invoices.data && <tr><td colSpan={7} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" /></td></tr>}
-                        {invoices.data && rows.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-slate-400 text-sm">{t('billing.invoices.no_match')}</td></tr>}
+                        {invoices.loading && !invoices.data && <tr><td colSpan={7} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
+                        {invoices.data && rows.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-slate-500 text-sm">{t('billing.invoices.no_match')}</td></tr>}
                         {rows.map((i) => (
                             <tr key={i.id}>
-                                <td><Link href={`/billing/invoices/${i.id}`} className="font-mono text-sm text-sky-700 hover:underline">{i.number}</Link></td>
-                                <td className="text-sm">{i.bill_to_name}{i.company_id && <span className="ml-2 text-xs text-slate-400">{t('billing.invoices.city_ledger')}</span>}</td>
+                                <td><Link href={`/billing/invoices/${i.id}`} className="font-mono text-sm text-navy-600 underline underline-offset-2 inline-flex min-h-11 items-center">{i.number}</Link></td>
+                                <td className="text-sm">{i.bill_to_name}{i.company_id && <span className="ml-2 text-xs text-slate-500">{t('billing.invoices.city_ledger')}</span>}</td>
                                 <td className="text-sm">{formatDate(i.issue_date)}</td>
                                 <td className="text-sm">{i.due_date ? formatDate(i.due_date) : '—'}</td>
                                 <td className="text-right text-sm">{formatCurrency(i.total)}</td>

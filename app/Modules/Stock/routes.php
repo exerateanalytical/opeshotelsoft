@@ -63,3 +63,9 @@ Route::prefix('payables')->group(function () {
     Route::post('invoices/{invoice}/approve', [P::class, 'approveInvoice']);
     Route::post('invoices/{invoice}/pay', [P::class, 'payInvoice']);
 });
+
+// I-A inventory control (recipes, variance, par levels, lots, valuation).
+require __DIR__.'/Control/routes.php';
+
+// I-B inventory operations (RFQ, scanning, stocktake, minibar, menu engineering, issues).
+require __DIR__.'/Operations/routes.php';

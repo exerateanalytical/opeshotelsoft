@@ -1,17 +1,19 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { Hotel, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { LanguageSwitch } from '@/Components/layout/Topbar';
+import MemberAuthPanel from './MemberAuthPanel';
+import BrandLogo from '@/Components/ui/BrandLogo';
+import DemoSelect from '@/Components/auth/DemoSelect';
 
 interface DemoAccount { login: string; name: string; section: string }
 
-export default function Login({ demoAccounts = [] }: { demoAccounts?: DemoAccount[] }) {
+export default function Login({ demoAccounts = [], memberDemoAccounts = [], tab: initialTab = 'staff' }: { demoAccounts?: DemoAccount[]; memberDemoAccounts?: { n: number; name: string }[]; tab?: 'staff' | 'member' }) {
     const t = useT();
+    const [tab, setTab] = useState<'staff' | 'member'>(initialTab);
     const [showPass, setShowPass] = useState(false);
-    const [demoBusy, setDemoBusy] = useState<string | null>(null);
-    const sections = [...new Set(demoAccounts.map((a) => a.section))];
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -26,19 +28,14 @@ export default function Login({ demoAccounts = [] }: { demoAccounts?: DemoAccoun
     return (
         <>
             <Head title={t('auth.title')} />
-            <div className="min-h-screen flex bg-[#0a1830]">
+            <div className="min-h-screen flex bg-navy-900">
                 {/* Left panel — branding */}
-                <div className="hidden lg:flex flex-col justify-between w-[480px] bg-[#060f1e] p-12 relative overflow-hidden">
+                <div className="hidden lg:flex flex-col justify-between w-[480px] bg-navy-950 p-12 relative overflow-hidden">
 
                     <div className="relative">
-                        <div className="flex items-center gap-3 mb-12">
-                            <div className="w-10 h-10 rounded-xl bg-[#c9a84c] flex items-center justify-center">
-                                <Hotel className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <p className="text-white font-bold text-lg leading-tight">OPes Hotel Soft</p>
-                                <p className="text-slate-500 text-xs">{t('auth.tagline')}</p>
-                            </div>
+                        <div className="mb-12">
+                            <div className="inline-block rounded-lg bg-white p-4"><BrandLogo variant="wordmark" size={280} /></div>
+                            <p className="text-slate-400 text-sm mt-3">{t('auth.tagline')}</p>
                         </div>
 
                         <h1 className="text-4xl font-bold text-white leading-tight mb-4">
@@ -51,7 +48,7 @@ export default function Login({ demoAccounts = [] }: { demoAccounts?: DemoAccoun
 
                     {/* Hotel names */}
                     <div className="relative">
-                        <p className="text-slate-600 text-xs font-semibold uppercase tracking-widest mb-4">{t('auth.trusted_by')}</p>
+                        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">{t('auth.trusted_by')}</p>
                         <div className="flex flex-col gap-2">
                             {['Krystal Palace Hotel', 'Akwa Palace Hotel', 'Guims Group', 'Hilton Subsidiaries'].map(n => (
                                 <div key={n} className="flex items-center gap-2">
@@ -64,51 +61,59 @@ export default function Login({ demoAccounts = [] }: { demoAccounts?: DemoAccoun
                 </div>
 
                 {/* Right panel — form */}
-                <div className="flex-1 flex items-center justify-center p-6">
+                <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
                     <div className="w-full max-w-[400px]">
                         <div className="flex justify-end mb-6"><LanguageSwitch dark /></div>
                         {/* Mobile logo */}
-                        <div className="flex lg:hidden items-center gap-3 mb-10 justify-center">
-                            <div className="w-10 h-10 rounded-xl bg-[#c9a84c] flex items-center justify-center">
-                                <Hotel className="w-5 h-5 text-white" />
-                            </div>
-                            <p className="text-white font-bold text-lg">OPes Hotel Soft</p>
+                        <div className="flex lg:hidden justify-center mb-8">
+                            <div className="rounded-lg bg-white p-3"><BrandLogo variant="wordmark" size={220} /></div>
                         </div>
 
-                        <h2 className="text-2xl font-bold text-white mb-1.5">{t('auth.welcome')}</h2>
+                        <div role="tablist" aria-label={t('member.auth.tabs')} className="grid grid-cols-2 gap-1 p-1 mb-6 rounded-lg bg-navy-800 border border-slate-600">
+                            {(['staff', 'member'] as const).map((k) => (
+                                <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+                                    className={`min-h-11 rounded-md text-sm font-semibold ${tab === k ? 'bg-brand-500 text-navy-900' : 'text-slate-300 active:bg-navy-700'}`}>
+                                    {t(`member.auth.tab.${k}`)}
+                                </button>
+                            ))}
+                        </div>
+                        {tab === 'member' ? <MemberAuthPanel demo={memberDemoAccounts} /> : (<>
+                        <h1 className="text-2xl font-bold text-white mb-1.5">{t('auth.welcome')}</h1>
                         <p className="text-slate-400 text-sm mb-8">{t('auth.subtitle')}</p>
 
                         <form onSubmit={submit} className="space-y-5">
                             {/* Email */}
                             <div>
-                                <label className="label text-slate-400">{t('auth.email')}</label>
+                                <label htmlFor="login-email" className="label text-slate-300">{t('auth.email')}</label>
                                 <input
+                                    id="login-email"
                                     type="email"
                                     value={data.email}
                                     onChange={e => setData('email', e.target.value)}
                                     placeholder="you@hotel.com"
                                     autoComplete="email"
                                     className={cn(
-                                        'input bg-[#0f2044] border-[#1a3a6b] text-white placeholder-slate-500',
+                                        'input bg-navy-800 border-slate-600 text-white placeholder-slate-400',
                                         'focus:border-yellow-500',
                                         errors.email && 'border-red-500',
                                     )}
                                 />
-                                {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                                {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
                             </div>
 
                             {/* Password */}
                             <div>
-                                <label className="label text-slate-400">{t('auth.password')}</label>
+                                <label htmlFor="login-password" className="label text-slate-300">{t('auth.password')}</label>
                                 <div className="relative">
                                     <input
+                                        id="login-password"
                                         type={showPass ? 'text' : 'password'}
                                         value={data.password}
                                         onChange={e => setData('password', e.target.value)}
                                         placeholder="••••••••"
                                         autoComplete="current-password"
                                         className={cn(
-                                            'input bg-slate-800 border-slate-700 text-white placeholder-slate-500 pr-10',
+                                            'input bg-navy-800 border-slate-600 text-white placeholder-slate-400 pr-12',
                                             'focus:border-yellow-500',
                                             errors.password && 'border-red-500',
                                         )}
@@ -117,26 +122,26 @@ export default function Login({ demoAccounts = [] }: { demoAccounts?: DemoAccoun
                                         type="button"
                                         onClick={() => setShowPass(!showPass)}
                                         aria-label={t('auth.show_password')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                                        className="absolute right-0 top-0 h-full min-w-11 inline-flex items-center justify-center text-slate-300 active:text-white"
                                     >
-                                        {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        {showPass ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                                     </button>
                                 </div>
-                                {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+                                {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password}</p>}
                             </div>
 
                             {/* Remember + forgot */}
                             <div className="flex items-center justify-between">
-                                <label className="flex items-center gap-2 cursor-pointer">
+                                <label className="flex items-center gap-2 cursor-pointer min-h-11">
                                     <input
                                         type="checkbox"
                                         checked={data.remember}
                                         onChange={e => setData('remember', e.target.checked)}
-                                        className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-600"
+                                        className="w-5 h-5 rounded border-slate-500 bg-navy-800 accent-brand-500"
                                     />
                                     <span className="text-sm text-slate-400">{t('auth.remember')}</span>
                                 </label>
-                                <a href="/forgot-password" className="text-sm text-yellow-500 hover:text-yellow-400 transition-colors">
+                                <a href="/forgot-password" className="inline-flex items-center min-h-11 text-sm text-yellow-500 hover:text-yellow-400">
                                     {t('auth.forgot')}
                                 </a>
                             </div>
@@ -145,7 +150,7 @@ export default function Login({ demoAccounts = [] }: { demoAccounts?: DemoAccoun
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="btn-primary w-full justify-center py-3 text-base"
+                                className="btn-accent w-full min-h-12 text-base"
                             >
                                 {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 {t('auth.submit')}
@@ -153,29 +158,16 @@ export default function Login({ demoAccounts = [] }: { demoAccounts?: DemoAccoun
                         </form>
 
                         {demoAccounts.length > 0 && (
-                            <div className="mt-8 pt-6 border-t border-[#1a3a6b]">
-                                <p className="text-xs font-semibold uppercase tracking-widest text-yellow-500 mb-1">{t('auth.demo.title')}</p>
-                                <p className="text-xs text-slate-500 mb-4">{t('auth.demo.text')}</p>
-                                {sections.map((section) => (
-                                    <div key={section} className="mb-3">
-                                        <p className="text-xs uppercase tracking-wide text-slate-500 mb-1.5">{section}</p>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {demoAccounts.filter((a) => a.section === section).map((a) => (
-                                                <button key={a.login} type="button" disabled={demoBusy !== null}
-                                                    onClick={() => router.post(`/demo-login/${a.login}`, {}, {
-                                                        onStart: () => setDemoBusy(a.login), onFinish: () => setDemoBusy(null),
-                                                    })}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-slate-200 bg-[#0f2044] border border-[#1a3a6b] hover:border-yellow-500 hover:text-white transition-colors disabled:opacity-50">
-                                                    {demoBusy === a.login && <Loader2 className="w-3 h-3 animate-spin" />}{a.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="mt-8 pt-6 border-t border-slate-600">
+                                <p className="text-sm font-semibold uppercase tracking-widest text-yellow-500 mb-1">{t('auth.demo.title')}</p>
+                                <p className="text-sm text-slate-400 mb-4">{t('auth.demo.text')}</p>
+                                <DemoSelect options={demoAccounts.map((a) => ({ value: a.login, label: a.name, group: a.section }))}
+                                    endpoint={(v) => `/demo-login/${v}`} />
                             </div>
                         )}
 
-                        <p className="text-center text-xs text-slate-600 mt-8">
+                        </>)}
+                        <p className="text-center text-xs text-slate-400 mt-8">
                             {t('auth.footer')}
                         </p>
                     </div>

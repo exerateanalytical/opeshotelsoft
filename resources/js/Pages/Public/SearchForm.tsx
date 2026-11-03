@@ -68,7 +68,7 @@ export default function SearchForm({ p, hotels }: { p: PublicProps; hotels: { co
                 <input id="member_name" className="input" value={f.member_name} onChange={set('member_name')} />
             </div>
             <div className="col-span-2 flex items-end md:col-span-1">
-                <button type="submit" className="w-full rounded-md bg-[#0f1f3d] px-4 py-2 text-base font-semibold text-white hover:bg-[#1b2f57]">{d.search}</button>
+                <button type="submit" className="w-full btn-primary min-h-11 px-5">{d.search}</button>
             </div>
         </form>
     );

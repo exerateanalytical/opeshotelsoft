@@ -3,12 +3,10 @@
 namespace App\Modules\Tenancy\Http;
 
 use App\Models\User;
+use App\Modules\Admin\Application\ApiTokenIssuer;
+use App\Modules\Admin\Application\TwoFactorRequired;
 use App\Platform\Domain\DomainException;
-use App\Platform\Http\ProblemDetails;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
-use PragmaRX\Google2FA\Google2FA;
 
 /**
  * First-party login for staff apps (web SPA, mobile). Partners use the
@@ -26,30 +24,12 @@ class AuthController
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $key = 'login:'.strtolower($data['email']).'|'.$request->ip();
-        if (RateLimiter::tooManyAttempts($key, 5)) {
-            return ProblemDetails::make(429, 'too-many-attempts', 'Too many login attempts. Try again in '.RateLimiter::availableIn($key).' seconds.');
+        // Throttle, lockout, audit and two-factor (TOTP or recovery code) are enforced by the Admin issuer.
+        try {
+            $user = app(ApiTokenIssuer::class)->authenticate($data['email'], $data['password'], $data['mfa_code'] ?? null, $request->ip());
+        } catch (TwoFactorRequired $e) {
+            return $e->toProblem();
         }
-
-        $user = User::where('email', $data['email'])->first();
-        if (! $user || ! Hash::check($data['password'], $user->password) || $user->status !== 'active') {
-            RateLimiter::hit($key, 300);
-
-            return ProblemDetails::make(401, 'invalid-credentials', 'These credentials do not match our records.');
-        }
-
-        if ($user->mfa_confirmed_at) {
-            if (empty($data['mfa_code'])) {
-                return ProblemDetails::make(401, 'mfa-required', 'Enter the code from your authenticator app.');
-            }
-            if (! class_exists(Google2FA::class) || ! (new Google2FA)->verifyKey($user->mfa_secret, $data['mfa_code'])) {
-                RateLimiter::hit($key, 300);
-
-                return ProblemDetails::make(401, 'mfa-invalid', 'The authentication code is invalid.');
-            }
-        }
-
-        RateLimiter::clear($key);
         $token = $user->createToken($data['device_name'] ?? 'staff-app');
 
         return response()->json([

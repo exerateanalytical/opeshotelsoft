@@ -574,7 +574,7 @@
                                             "type": "array",
                                             "items": {
                                                 "type": "array",
-                                                "items": {}
+                                                "items": []
                                             }
                                         },
                                         "total_debit": {
@@ -1716,7 +1716,7 @@
                                             },
                                             "days": {
                                                 "type": "array",
-                                                "items": {}
+                                                "items": []
                                             }
                                         },
                                         "required": [
@@ -1957,7 +1957,7 @@
                                                                 "rate_plan": {
                                                                     "type": "string"
                                                                 },
-                                                                "available": {},
+                                                                "available": [],
                                                                 "currency": {
                                                                     "type": "string"
                                                                 },
@@ -2399,7 +2399,7 @@
                                         },
                                         "permissions": {
                                             "type": "array",
-                                            "items": {}
+                                            "items": []
                                         },
                                         "mfa_enabled": {
                                             "type": "boolean"
@@ -2593,7 +2593,7 @@
                                                 },
                                                 "permissions": {
                                                     "type": "array",
-                                                    "items": {}
+                                                    "items": []
                                                 },
                                                 "mfa_enabled": {
                                                     "type": "boolean"
@@ -2624,12 +2624,36 @@
                         }
                     },
                     "401": {
-                        "description": "",
+                        "description": "Problem `two-factor-required` (credentials valid, second factor needed) carrying a single-use challenge, or `invalid-credentials` / `two-factor-invalid` / `challenge-expired`.",
                         "content": {
                             "application/problem+json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {}
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "example": "https://docs.opeshotelsoft.test/problems/two-factor-required"
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "challenge_token": {
+                                            "type": "string",
+                                            "description": "Encrypted, single-use, valid 300 s. Send to /v1/auth/token/two-factor."
+                                        },
+                                        "challenge_expires_in": {
+                                            "type": "integer",
+                                            "example": 300
+                                        },
+                                        "challenge_url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -2640,15 +2664,40 @@
                             "application/problem+json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "423": {
+                        "description": "Account locked after 10 consecutive failures (15 minutes); audited as `account-locked`.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "description": "Legacy first-party login returning token + profile. Same throttling, lockout and two-factor rules as /v1/auth/token; send the second factor as `mfa_code` or use the challenge flow."
             }
         },
         "/v1/blocks": {
@@ -2688,7 +2737,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -3186,7 +3235,7 @@
                                             "type": "array",
                                             "items": {
                                                 "type": "array",
-                                                "items": {}
+                                                "items": []
                                             }
                                         }
                                     },
@@ -3311,7 +3360,7 @@
                                                 },
                                                 "benefits": {
                                                     "type": "array",
-                                                    "items": {}
+                                                    "items": []
                                                 }
                                             },
                                             "required": [
@@ -3328,7 +3377,7 @@
                                                     "hotel": {
                                                         "type": "string"
                                                     },
-                                                    "offers": {}
+                                                    "offers": []
                                                 },
                                                 "required": [
                                                     "hotel",
@@ -3572,7 +3621,7 @@
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
@@ -3633,7 +3682,7 @@
                                             "type": "string",
                                             "const": "cancelled"
                                         },
-                                        "cancellation_fee": {}
+                                        "cancellation_fee": []
                                     },
                                     "required": [
                                         "status",
@@ -3708,7 +3757,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -3866,7 +3915,7 @@
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
@@ -4055,7 +4104,7 @@
                                     "type": "array",
                                     "items": {
                                         "type": "array",
-                                        "items": {}
+                                        "items": []
                                     }
                                 }
                             }
@@ -4078,7 +4127,7 @@
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
@@ -4307,7 +4356,7 @@
                                                             "date": {
                                                                 "type": "string"
                                                             },
-                                                            "availability": {},
+                                                            "availability": [],
                                                             "currency": {
                                                                 "type": "string"
                                                             },
@@ -4393,7 +4442,7 @@
                                                     },
                                                     "headers": {
                                                         "type": "array",
-                                                        "items": {}
+                                                        "items": []
                                                     },
                                                     "body": {
                                                         "type": "string"
@@ -5132,7 +5181,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -5956,7 +6005,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -6084,7 +6133,7 @@
                                         },
                                         "rooms": {
                                             "type": "array",
-                                            "items": {}
+                                            "items": []
                                         },
                                         "occupied": {
                                             "type": "integer",
@@ -6564,7 +6613,7 @@
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
@@ -7342,7 +7391,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -7986,7 +8035,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -8377,7 +8426,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -8696,7 +8745,7 @@
                         "description": "",
                         "content": {
                             "application/json": {
-                                "schema": {}
+                                "schema": []
                             }
                         }
                     },
@@ -9221,7 +9270,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -9419,12 +9468,12 @@
                         "description": "",
                         "content": {
                             "application/xml": {
-                                "schema": {}
+                                "schema": []
                             },
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
@@ -9765,7 +9814,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -10145,7 +10194,7 @@
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
@@ -10219,7 +10268,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -11173,7 +11222,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -11969,7 +12018,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -12236,7 +12285,7 @@
                                     "properties": {
                                         "stations": {
                                             "type": "array",
-                                            "items": {}
+                                            "items": []
                                         }
                                     },
                                     "required": [
@@ -12954,11 +13003,11 @@
                                         },
                                         "by_settlement": {
                                             "type": "array",
-                                            "items": {}
+                                            "items": []
                                         },
                                         "payments": {
                                             "type": "array",
-                                            "items": {}
+                                            "items": []
                                         },
                                         "voids": {
                                             "type": "integer",
@@ -13042,7 +13091,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -13530,7 +13579,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -13638,7 +13687,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -14368,7 +14417,7 @@
                                                             "type": "integer",
                                                             "minimum": 0
                                                         },
-                                                        "rooms_available": {},
+                                                        "rooms_available": [],
                                                         "rooms_sold": {
                                                             "type": "integer",
                                                             "minimum": 0
@@ -14434,7 +14483,7 @@
                                                     "type": "array",
                                                     "items": {
                                                         "type": "array",
-                                                        "items": {}
+                                                        "items": []
                                                     }
                                                 }
                                             },
@@ -14460,7 +14509,7 @@
                                                             "type": "integer",
                                                             "minimum": 0
                                                         },
-                                                        "rooms_available": {},
+                                                        "rooms_available": [],
                                                         "rooms_sold": {
                                                             "type": "integer",
                                                             "minimum": 0
@@ -14557,7 +14606,7 @@
                                             "type": "array",
                                             "items": {
                                                 "type": "array",
-                                                "items": {}
+                                                "items": []
                                             }
                                         },
                                         "total": {
@@ -14766,7 +14815,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -16008,7 +16057,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -17067,7 +17116,7 @@
                                         },
                                         "links": {
                                             "type": "object",
-                                            "additionalProperties": {}
+                                            "additionalProperties": []
                                         },
                                         "next_page_url": {
                                             "type": "string"
@@ -17470,7 +17519,7 @@
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {}
+                                    "items": []
                                 }
                             }
                         }
@@ -17753,6 +17802,317 @@
                     }
                 }
             }
+        },
+        "/v1/auth/token": {
+            "post": {
+                "operationId": "auth.token",
+                "tags": [
+                    "Auth"
+                ],
+                "security": [],
+                "summary": "Issue an API access token (step 1)",
+                "description": "For users with two-factor enabled a token is never issued from the password alone. Either send `code` (TOTP or recovery code) with the credentials, or call without it, receive 401 `two-factor-required` with a `challenge_token`, then POST that token and a code to `/v1/auth/token/two-factor`. Recovery codes are single use.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "maxLength": 20,
+                                        "description": "Optional TOTP or recovery code"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token issued",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "expires_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "token_type",
+                                        "access_token"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Problem `two-factor-required` (credentials valid, second factor needed) carrying a single-use challenge, or `invalid-credentials` / `two-factor-invalid` / `challenge-expired`.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "example": "https://docs.opeshotelsoft.test/problems/two-factor-required"
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "challenge_token": {
+                                            "type": "string",
+                                            "description": "Encrypted, single-use, valid 300 s. Send to /v1/auth/token/two-factor."
+                                        },
+                                        "challenge_expires_in": {
+                                            "type": "integer",
+                                            "example": 300
+                                        },
+                                        "challenge_url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "423": {
+                        "description": "Account locked after 10 consecutive failures (15 minutes); audited as `account-locked`.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many attempts: 5 failures per email+IP per 5 minutes, or 10 requests per minute per IP.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/auth/token/two-factor": {
+            "post": {
+                "operationId": "auth.tokenTwoFactor",
+                "tags": [
+                    "Auth"
+                ],
+                "security": [],
+                "summary": "Complete the two-factor challenge (step 2)",
+                "description": "Exchange the challenge token from step 1 and a TOTP or unused recovery code for an access token. The challenge is single use and allows at most 5 wrong codes.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "challenge_token",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "challenge_token": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "maxLength": 20
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token issued",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "expires_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "token_type",
+                                        "access_token"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Problem `two-factor-required` (credentials valid, second factor needed) carrying a single-use challenge, or `invalid-credentials` / `two-factor-invalid` / `challenge-expired`.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "example": "https://docs.opeshotelsoft.test/problems/two-factor-required"
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "challenge_token": {
+                                            "type": "string",
+                                            "description": "Encrypted, single-use, valid 300 s. Send to /v1/auth/token/two-factor."
+                                        },
+                                        "challenge_expires_in": {
+                                            "type": "integer",
+                                            "example": 300
+                                        },
+                                        "challenge_url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "423": {
+                        "description": "Account locked after 10 consecutive failures (15 minutes); audited as `account-locked`.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many attempts: 5 failures per email+IP per 5 minutes, or 10 requests per minute per IP.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -18002,14 +18362,14 @@
                             "array",
                             "null"
                         ],
-                        "items": {}
+                        "items": []
                     },
                     "counted": {
                         "type": [
                             "array",
                             "null"
                         ],
-                        "items": {}
+                        "items": []
                     },
                     "variance": {
                         "type": "integer"
@@ -18217,7 +18577,7 @@
                     },
                     "modifiers": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "notes": {
                         "type": [
@@ -18332,7 +18692,7 @@
                     },
                     "settings": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "last_push_at": {
                         "type": [
@@ -18586,7 +18946,7 @@
                     },
                     "allowances": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "leave_days_per_month": {
                         "type": "number"
@@ -18781,7 +19141,7 @@
                     },
                     "tax_breakdown": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "account": {
                         "type": [
@@ -19065,7 +19425,7 @@
                     },
                     "preferences": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "notes": {
                         "type": [
@@ -19347,11 +19707,11 @@
                     },
                     "checklist": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "consumables": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "notes": {
                         "type": [
@@ -19488,7 +19848,7 @@
                     },
                     "settings": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "created_at": {
                         "type": [
@@ -19608,11 +19968,11 @@
                     },
                     "lines": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "taxes": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "status": {
                         "type": "string"
@@ -19929,7 +20289,7 @@
                     },
                     "links": {
                         "type": "object",
-                        "additionalProperties": {}
+                        "additionalProperties": []
                     },
                     "next_page_url": {
                         "type": "string"
@@ -20292,11 +20652,11 @@
                     },
                     "lines": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "inputs": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "created_at": {
                         "type": [
@@ -20474,7 +20834,7 @@
                     },
                     "eligible_departments": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "enrolment_bonus": {
                         "type": "integer"
@@ -21049,7 +21409,7 @@
                     },
                     "params": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "certified": {
                         "type": "boolean"
@@ -21440,11 +21800,11 @@
                     },
                     "goods_receipt_ids": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "expense_lines": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "match_variance": {
                         "type": "integer"
@@ -21766,7 +22126,7 @@
                     },
                     "event_types": {
                         "type": "array",
-                        "items": {}
+                        "items": []
                     },
                     "active": {
                         "type": "boolean"

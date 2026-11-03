@@ -1,0 +1,16 @@
+# /etc/systemd/system/opeshotelsoft-scheduler.service
+# Runs `php artisan schedule:run` (fired every minute by opeshotelsoft-scheduler.timer).
+[Unit]
+Description=OpesHotelSoft scheduler tick
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/opeshotelsoft/current
+ExecStart=/usr/bin/php artisan schedule:run --no-interaction
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal

@@ -5,10 +5,13 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import { openPdf } from '@/Pages/Onboarding/shared';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 
 interface InvoiceLine { business_date: string; description: string; quantity: number | string | null; amount: number; tax_amount: number; department?: string | null }
 interface Invoice {
     id: number;
+    kind?: string;
     number: string;
     folio_id: number;
     company_id: number | null;
@@ -115,7 +118,20 @@ export default function InvoiceShow({ id }: { id: string }) {
             actions={
                 <div className="flex gap-2 no-print">
                     <Link href="/billing/invoices" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('billing.invoice.back')}</Link>
-                    <button className="btn-primary" onClick={() => window.print()} disabled={!i}><Printer className="w-4 h-4" /> {t('billing.invoice.print')}</button>
+                    {i && i.kind !== 'credit_note' && i.status !== 'cancelled' && (
+                        <button className="btn-secondary" onClick={async () => {
+                            const reason = window.prompt(t('documents3.credit_reason'));
+                            if (!reason) return;
+                            try {
+                                const note = await api<{ id: number }>('documents/money/credit-notes', { method: 'POST', body: JSON.stringify({ invoice_id: i.id, reason }) });
+                                window.location.href = `/billing/invoices/${note.id}`;
+                            } catch (err) {
+                                setMessage({ ok: false, text: err instanceof ApiError ? err.message : String(err) });
+                            }
+                        }}>{t('documents3.credit_note')}</button>
+                    )}
+                    {i?.kind === 'credit_note' && <PrintPdfButton path={`credit-note/${i.id}`} label={t('documents3.print_credit_note')} className="btn-primary inline-flex items-center gap-1" />}
+                    <button className="btn-primary" onClick={() => i && openPdf(`documents/invoices/${i.id}`).catch(() => undefined)} disabled={!i || i.kind === 'credit_note'}><Printer className="w-4 h-4" /> {t('billing.invoice.print')}</button>
                 </div>
             }
         >
@@ -128,7 +144,7 @@ export default function InvoiceShow({ id }: { id: string }) {
                 </div>
             )}
 
-            {!i ? (!inv.error && <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-400" />) : (
+            {!i ? (!inv.error && <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-500" />) : (
                 <div className="grid xl:grid-cols-[1fr_320px] gap-6 items-start">
                     <div id="invoice-print" className="card bg-white text-slate-900 px-6 sm:px-10 py-8 mx-auto w-full max-w-[210mm] overflow-x-auto">
                         <div className="flex flex-col sm:flex-row sm:justify-between gap-6 border-b border-slate-200 pb-6">
@@ -157,7 +173,7 @@ export default function InvoiceShow({ id }: { id: string }) {
                             {i.bill_to_tax_id && <div className="text-sm text-slate-600">NIU : {i.bill_to_tax_id}</div>}
                         </div>
 
-                        <table className="w-full text-sm border-collapse min-w-[520px]">
+                        <div className="table-wrap"><table className="table-auto">
                             <thead>
                                 <tr className="border-y border-slate-300 text-left">
                                     <th className="py-2 pr-2 font-semibold">Date</th>
@@ -180,19 +196,19 @@ export default function InvoiceShow({ id }: { id: string }) {
                                     </tr>
                                 ))}
                             </tbody>
-                        </table>
+                        </table></div>
 
                         <div className="flex flex-col sm:flex-row sm:justify-between gap-6 mt-6">
                             <div className="sm:w-1/2">
                                 {i.taxes.length > 0 && (
-                                    <table className="w-full text-sm">
+                                    <div className="table-wrap"><table className="table-auto">
                                         <thead><tr className="border-b border-slate-300 text-left"><th className="py-1 font-semibold">Code</th><th className="py-1 font-semibold">Taxe</th><th className="py-1 font-semibold text-right">Montant</th></tr></thead>
                                         <tbody>
                                             {i.taxes.map((tx) => (
                                                 <tr key={tx.code}><td className="py-1 font-mono text-xs">{tx.code}</td><td className="py-1">{tx.name}</td><td className="py-1 text-right">{formatCurrency(tx.amount)}</td></tr>
                                             ))}
                                         </tbody>
-                                    </table>
+                                    </table></div>
                                 )}
                             </div>
                             <div className="sm:w-2/5 text-sm space-y-1">
@@ -215,16 +231,16 @@ export default function InvoiceShow({ id }: { id: string }) {
                             <p className="text-xs text-slate-500">{t('billing.invoice.settlement', { amount: formatCurrency(due) })}</p>
                             {due <= 0 ? <p className="text-sm text-emerald-700">{t('billing.invoice.fully_paid')}</p> : (
                                 <form className="space-y-3" onSubmit={recordPayment}>
-                                    <select className="input" required value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })}>
+                                    <select className="input" required value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })} aria-label={t('billing.invoice.method')}>
                                         <option value="" disabled>{t('billing.invoice.method')}</option>
                                         {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                                     </select>
                                     <div className="flex gap-2">
-                                        <input className="input" type="number" min={1} max={due} required placeholder={t('billing.folios.amount_fcfa')} value={pay.amount}
+                                        <input className="input" type="number" min={1} max={due} required aria-label={t('billing.folios.amount_fcfa')} placeholder={t('billing.folios.amount_fcfa')} value={pay.amount}
                                             onChange={(e) => setPay({ ...pay, amount: e.target.value })} />
                                         <button type="button" className="btn-secondary text-xs whitespace-nowrap" onClick={() => setPay({ ...pay, amount: String(due) })}>{t('billing.invoice.full')}</button>
                                     </div>
-                                    <input className="input" placeholder={t('billing.invoice.reference')} value={pay.reference} onChange={(e) => setPay({ ...pay, reference: e.target.value })} />
+                                    <input className="input" aria-label={t('billing.invoice.reference')} placeholder={t('billing.invoice.reference')} value={pay.reference} onChange={(e) => setPay({ ...pay, reference: e.target.value })} />
                                     <button className="btn-primary w-full justify-center" disabled={busy}>{busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('billing.invoice.record_payment')}</button>
                                 </form>
                             )}

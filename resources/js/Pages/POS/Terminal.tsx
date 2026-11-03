@@ -6,6 +6,7 @@ import { formatCurrency, formatDateTime } from '@/lib/utils';
 import FloorPlan, { FloorTable } from './FloorPlan';
 import { Banner, Check, Code, errText, MenuItem, Msg, Paginated } from './shared';
 import { useT } from '@/lib/i18n';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 
 type Panel = null | 'discount' | 'split' | 'settle' | 'room' | 'void' | 'comp' | 'transfer' | { voidLine: number } | { compLine: number };
 
@@ -157,14 +158,14 @@ export default function Terminal({ outletId }: { outletId: number }) {
                     </button>
                 </div>
             )}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 [&>*]:min-w-0">
                 {/* Open checks */}
                 <div className="card p-4 lg:col-span-3">
                     <div className="flex justify-between items-center mb-3">
                         <h3 className="font-semibold text-slate-700">{view === 'floor' ? t('pos.term.tables') : t('pos.term.open_checks')}</h3>
                         <div className="flex gap-1">
-                            <button title={t('pos.term.floor_plan')} className={view === 'floor' ? 'btn-primary px-2' : 'btn-secondary px-2'} onClick={() => setView('floor')}><LayoutGrid className="w-4 h-4" /></button>
-                            <button title={t('pos.term.list')} className={view === 'list' ? 'btn-primary px-2' : 'btn-secondary px-2'} onClick={() => setView('list')}><List className="w-4 h-4" /></button>
+                            <button title={t('pos.term.floor_plan')} className={view === 'floor' ? 'btn-primary btn-icon' : 'btn-secondary btn-icon'} onClick={() => setView('floor')} aria-label={t('pos.term.floor_plan')}><LayoutGrid className="w-4 h-4" /></button>
+                            <button title={t('pos.term.list')} className={view === 'list' ? 'btn-primary btn-icon' : 'btn-secondary btn-icon'} onClick={() => setView('list')} aria-label={t('pos.term.list')}><List className="w-4 h-4" /></button>
                         </div>
                     </div>
                     {view === 'floor' && <FloorPlan outletId={outletId} refresh={refresh} selectedId={selectedId} onTable={openTable} onCheck={(id) => { setSelectedId(id); setPanel(null); }} />}
@@ -180,24 +181,24 @@ export default function Terminal({ outletId }: { outletId: number }) {
                             });
                         }}
                     >
-                        <input className="input w-full" placeholder={t('pos.term.table_ph')} value={table} onChange={(e) => setTable(e.target.value)} maxLength={10} />
+                        <input className="input w-full" placeholder={t('pos.term.table_ph')} aria-label={t('pos.term.table_ph')} value={table} onChange={(e) => setTable(e.target.value)} maxLength={10} />
                         <input className="input w-16" type="number" min={1} max={200} title={t('pos.term.covers')} value={covers} onChange={(e) => setCovers(e.target.value)} />
-                        <button className="btn-primary px-3" disabled={busy === 'open'} title={t('pos.term.open_check')}><Plus className="w-4 h-4" /></button>
+                        <button className="btn-primary btn-icon" aria-label={t('pos.term.open_check')} disabled={busy === 'open'} title={t('pos.term.open_check')}><Plus className="w-4 h-4" /></button>
                     </form>
-                    {checks.loading && !checks.data && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                    {checks.loading && !checks.data && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
                     {checks.error && <p className="text-sm text-red-600">{checks.error.message}</p>}
-                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto">
+                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto [&>*]:min-w-0">
                         {checks.data?.data.map((k) => (
                             <button
                                 key={k.id}
                                 onClick={() => { setSelectedId(k.id); setPanel(null); }}
-                                className={`text-left rounded-lg border p-3 min-h-[64px] ${selectedId === k.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                                className={`text-left rounded-lg border p-3 min-h-[64px] ${selectedId === k.id ? 'border-navy-900 bg-navy-50' : 'border-slate-200 hover:bg-slate-50'}`}
                             >
                                 <div className="flex justify-between font-medium text-slate-800"><span>{t('pos.kot.table', { name: k.table_number ?? '-' })}</span><span>{formatCurrency(k.total)}</span></div>
                                 <div className="text-xs text-slate-500">{k.number} · {t('pos.common.covers_short', { count: k.covers })} · {t('pos.term.items_n', { count: k.lines.filter((l) => !l.voided).length })}</div>
                             </button>
                         ))}
-                        {checks.data && checks.data.data.length === 0 && <p className="text-sm text-slate-400">{t('pos.term.no_open')}</p>}
+                        {checks.data && checks.data.data.length === 0 && <p className="text-sm text-slate-500">{t('pos.term.no_open')}</p>}
                     </div>
                     </>}
                 </div>
@@ -206,21 +207,21 @@ export default function Terminal({ outletId }: { outletId: number }) {
                 <div className="card p-4 lg:col-span-5">
                     <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
                         {['', ...categories].map((cat) => (
-                            <button key={cat || 'all'} onClick={() => setCategory(cat)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${category === cat ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                            <button key={cat || 'all'} onClick={() => setCategory(cat)} className={`shrink-0 whitespace-nowrap ${category === cat ? 'btn-primary' : 'btn-secondary'}`}>
                                 {cat === 'Other' ? t('pos.term.other') : cat || t('pos.term.all')}
                             </button>
                         ))}
                     </div>
-                    {menu.loading && !menu.data && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                    {menu.loading && !menu.data && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
                     {!c && <p className="text-sm text-amber-600 mb-2">{t('pos.term.select_hint')}</p>}
-                    <input className="input w-full mb-2" placeholder={t('pos.term.note_ph')} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={255} />
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <input className="input w-full mb-2" placeholder={t('pos.term.note_ph')} aria-label={t('pos.term.note_ph')} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={255} />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 [&>*]:min-w-0">
                         {shown.map((m) => (
                             <button
                                 key={m.id}
                                 disabled={!c || busy === `add${m.id}`}
                                 onClick={() => c && run('add' + m.id, `pos/checks/${c.id}/items`, { menu_item_id: m.id, quantity: 1, notes: notes || null }, t('pos.term.item_added', { name: m.name }), () => setNotes(''))}
-                                className="rounded-lg border border-slate-200 p-3 min-h-[80px] text-left hover:bg-emerald-50 disabled:opacity-50"
+                                className="rounded-lg border border-slate-200 p-3 min-h-[80px] text-left hover:bg-slate-50 disabled:opacity-50"
                             >
                                 <div className="font-medium text-slate-800 text-sm">{m.name}</div>
                                 <div className="text-xs text-slate-500">{formatCurrency(m.price)}</div>
@@ -231,8 +232,8 @@ export default function Terminal({ outletId }: { outletId: number }) {
 
                 {/* Current check */}
                 <div className="card p-4 lg:col-span-4">
-                    {!selectedId && <p className="text-sm text-slate-400">{t('pos.term.no_selected')}</p>}
-                    {selectedId && !c && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                    {!selectedId && <p className="text-sm text-slate-500">{t('pos.term.no_selected')}</p>}
+                    {selectedId && !c && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
                     {c && (
                         <>
                             <div className="flex justify-between items-start mb-3">
@@ -240,21 +241,21 @@ export default function Terminal({ outletId }: { outletId: number }) {
                                     <h3 className="font-semibold text-slate-800">{t('pos.term.check_header', { number: c.number, table: c.table_number ?? '-' })}</h3>
                                     <p className="text-xs text-slate-500">{t('pos.term.covers_n', { count: c.covers })} · {formatDateTime(c.created_at)} · {c.status}</p>
                                 </div>
-                                <button onClick={() => setSelectedId(null)} className="text-slate-400"><X className="w-4 h-4" /></button>
+                                <button onClick={() => setSelectedId(null)} className="text-slate-500"><X className="w-4 h-4" /></button>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="table-auto w-full text-sm">
                                     <tbody>
                                         {c.lines.map((l) => (
-                                            <tr key={l.id} className={l.voided ? 'line-through text-slate-400' : ''}>
+                                            <tr key={l.id} className={l.voided ? 'line-through text-slate-500' : ''}>
                                                 <td className="py-1">
                                                     {!l.voided && !l.fired_at && c.status === 'open' ? (
                                                         <span className="inline-flex items-center gap-1 mr-1">
-                                                            <button title={t('pos.term.less')} className="btn-secondary px-2 py-1" disabled={l.quantity <= 1 || busy === `q${l.id}`}
+                                                            <button title={t('pos.term.less')} className="btn-secondary btn-icon" aria-label={t('pos.term.less')} disabled={l.quantity <= 1 || busy === `q${l.id}`}
                                                                 onClick={() => lineCall(`q${l.id}`, `pos/checks/${c.id}/lines/${l.id}`, 'PATCH', { quantity: l.quantity - 1 })}><Minus className="w-3 h-3" /></button>
                                                             <span className="w-6 text-center">{l.quantity}</span>
-                                                            <button title={t('pos.term.more')} className="btn-secondary px-2 py-1" disabled={busy === `q${l.id}`}
-                                                                onClick={() => lineCall(`q${l.id}`, `pos/checks/${c.id}/lines/${l.id}`, 'PATCH', { quantity: l.quantity + 1 })}><Plus className="w-3 h-3" /></button>
+                                                            <button title={t('pos.term.more')} className="btn-secondary btn-icon" disabled={busy === `q${l.id}`}
+                                                                onClick={() => lineCall(`q${l.id}`, `pos/checks/${c.id}/lines/${l.id}`, 'PATCH', { quantity: l.quantity + 1 })} aria-label={t('pos.term.more')}><Plus className="w-3 h-3" /></button>
                                                         </span>
                                                     ) : <>{l.quantity} × </>}
                                                     {l.name}{l.fired_at ? <ChefHat className="inline w-3 h-3 ml-1 text-emerald-600" /> : null}
@@ -268,10 +269,10 @@ export default function Terminal({ outletId }: { outletId: number }) {
                                                         <button title={t('pos.term.remove_line')} disabled={busy === `rm${l.id}`} onClick={() => lineCall(`rm${l.id}`, `pos/checks/${c.id}/lines/${l.id}/remove`, 'POST')} className="text-slate-500"><X className="w-4 h-4" /></button>
                                                     )}
                                                     {!l.voided && c.status === 'open' && !l.comp_status && (
-                                                        <button title={t('pos.term.comp_item')} onClick={() => setPanel({ compLine: l.id })} className="text-slate-500 mr-1"><Gift className="w-4 h-4" /></button>
+                                                        <button title={t('pos.term.comp_item')} onClick={() => setPanel({ compLine: l.id })} className="btn-ghost btn-icon" aria-label={t('pos.term.comp_item')}><Gift className="w-4 h-4" /></button>
                                                     )}
                                                     {!l.voided && c.status === 'open' && l.fired_at && (
-                                                        <button title={t('pos.term.void_line')} onClick={() => setPanel({ voidLine: l.id })} className="text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                                        <button title={t('pos.term.void_line')} onClick={() => setPanel({ voidLine: l.id })} className="btn-ghost btn-icon text-red-700" aria-label={t('pos.term.void_line')}><Trash2 className="w-4 h-4" /></button>
                                                     )}
                                                 </td>
                                             </tr>
@@ -286,7 +287,7 @@ export default function Terminal({ outletId }: { outletId: number }) {
                                 <div className="flex justify-between font-semibold text-lg"><span>{t('pos.term.total')}</span><span>{formatCurrency(c.total)}</span></div>
                             </div>
                             {c.status === 'open' && (
-                                <div className="grid grid-cols-3 gap-2 mt-3">
+                                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 [&>*]:min-w-0">
                                     <button className="btn-primary py-3 flex items-center justify-center gap-1" disabled={!unfired || busy === 'fire'}
                                         onClick={() => run<{ stations: unknown }>('fire', `pos/checks/${c.id}/fire`, {}, t('pos.term.fired', { count: unfired }))}>
                                         <ChefHat className="w-4 h-4" /> {t('pos.term.fire')}
@@ -298,6 +299,7 @@ export default function Terminal({ outletId }: { outletId: number }) {
                                     <button className="btn-secondary py-3 flex items-center justify-center gap-1 text-red-600" onClick={() => setPanel('void')}><Ban className="w-4 h-4" /> {t('pos.term.void')}</button>
                                     <button className="btn-secondary py-3 flex items-center justify-center gap-1" disabled={!liveLines.length} onClick={() => setPanel('comp')}><Gift className="w-4 h-4" /> {t('pos.term.comp')}</button>
                                     <button className="btn-secondary py-3 flex items-center justify-center gap-1" onClick={() => setPanel('transfer')}><ArrowRightLeft className="w-4 h-4" /> {t('pos.term.move')}</button>
+                                    <PrintPdfButton path={`pos-receipt/${c.id}`} label={t('documents3.print_receipt')} className="btn-secondary py-3 flex items-center justify-center gap-1" />
                                     <a className="btn-secondary py-3 flex items-center justify-center gap-1" href={`/pos/checks/${c.id}/kot`} target="_blank" rel="noreferrer"><Printer className="w-4 h-4" /> {t('pos.term.kot')}</a>
                                 </div>
                             )}
@@ -347,8 +349,8 @@ function ReasonForm({ label, withAmount, busy, onSubmit, onCancel }: { label: st
     return (
         <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); onSubmit(reason, Number(amount) || 0); }}>
             <p className="text-sm font-medium text-slate-700">{label}</p>
-            {withAmount && <input className="input w-full" type="number" min={0} placeholder={t('pos.term.amount_fcfa')} value={amount} onChange={(e) => setAmount(e.target.value)} required />}
-            <input className="input w-full" placeholder={t('pos.term.reason')} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={255} required />
+            {withAmount && <input className="input w-full" type="number" min={0} placeholder={t('pos.term.amount_fcfa')} aria-label={t('pos.term.amount_fcfa')} value={amount} onChange={(e) => setAmount(e.target.value)} required />}
+            <input className="input w-full" placeholder={t('pos.term.reason')} aria-label={t('pos.term.reason')} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={255} required />
             <div className="flex gap-2">
                 <button className="btn-primary" disabled={busy}>{busy ? t('pos.common.saving') : t('pos.common.confirm')}</button>
                 <button type="button" className="btn-secondary" onClick={onCancel}>{t('pos.common.cancel')}</button>
@@ -365,7 +367,7 @@ function SplitForm({ check, busy, onSubmit, onCancel }: { check: Check; busy: bo
             <p className="text-sm font-medium text-slate-700">{t('pos.term.split_title')}</p>
             {check.lines.filter((l) => !l.voided).map((l) => (
                 <label key={l.id} className="flex items-center gap-2 text-sm py-1">
-                    <input type="checkbox" className="w-5 h-5" checked={ids.includes(l.id)} onChange={(e) => setIds(e.target.checked ? [...ids, l.id] : ids.filter((x) => x !== l.id))} />
+                    <input type="checkbox" className="h-5 w-5 shrink-0" checked={ids.includes(l.id)} onChange={(e) => setIds(e.target.checked ? [...ids, l.id] : ids.filter((x) => x !== l.id))} />
                     {l.quantity} × {l.name} · {formatCurrency(l.amount)}
                 </label>
             ))}
@@ -392,15 +394,15 @@ function SettleForm({ total, busy, onSubmit, onCancel }: { total: number; busy: 
         <div className="space-y-2">
             <p className="text-sm font-medium text-slate-700">{t('pos.term.settle_amount', { amount: formatCurrency(total) })}</p>
             {rows.map((r, i) => (
-                <div key={i} className="grid grid-cols-2 gap-2 border border-slate-200 rounded-lg p-2">
+                <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-2 border border-slate-200 rounded-lg p-2 [&>*]:min-w-0">
                     <select className="input" value={r.method} onChange={(e) => set(i, { method: e.target.value })}>
                         {active.length === 0 && <option value={r.method}>{r.method}</option>}
                         {active.map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                     </select>
-                    <input className="input" type="number" min={1} placeholder={t('pos.term.amount')} value={r.amount} onChange={(e) => set(i, { amount: e.target.value })} />
-                    <input className="input" type="number" min={0} placeholder={t('pos.term.tendered')} value={r.tendered} onChange={(e) => set(i, { tendered: e.target.value })} />
+                    <input className="input" type="number" min={1} placeholder={t('pos.term.amount')} aria-label={t('pos.term.amount')} value={r.amount} onChange={(e) => set(i, { amount: e.target.value })} />
+                    <input className="input" type="number" min={0} placeholder={t('pos.term.tendered')} aria-label={t('pos.term.tendered')} value={r.tendered} onChange={(e) => set(i, { tendered: e.target.value })} />
                     <div className="flex gap-1">
-                        <input className="input w-full" placeholder={t('pos.term.reference')} value={r.reference} onChange={(e) => set(i, { reference: e.target.value })} />
+                        <input className="input w-full" placeholder={t('pos.term.reference')} aria-label={t('pos.term.reference')} value={r.reference} onChange={(e) => set(i, { reference: e.target.value })} />
                         {rows.length > 1 && <button className="text-red-500" onClick={() => setRows(rows.filter((_, j) => j !== i))}><X className="w-4 h-4" /></button>}
                     </div>
                 </div>
@@ -429,9 +431,9 @@ function TransferForm({ outletId, busy, onSubmit, onCancel }: { outletId: number
     return (
         <div className="space-y-2">
             <p className="text-sm font-medium text-slate-700">{t('pos.term.move_title')}</p>
-            {tables.loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+            {tables.loading && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
             {tables.error && <p className="text-sm text-red-600">{tables.error.message}</p>}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 [&>*]:min-w-0">
                 {tables.data?.data.map((tb) => <button key={tb.id} className="btn-secondary py-3" disabled={busy} onClick={() => onSubmit(tb.id)}>{tb.name}</button>)}
             </div>
             <button className="btn-secondary" onClick={onCancel}>{t('pos.common.cancel')}</button>
@@ -447,19 +449,19 @@ function RoomForm({ busy, onSubmit, onCancel }: { busy: boolean; onSubmit: (id: 
         <div className="space-y-2">
             <p className="text-sm font-medium text-slate-700">{t('pos.term.room_title')}</p>
             <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                <input className="input w-full pl-9" placeholder={t('pos.term.room_search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                <input className="input w-full pl-9" placeholder={t('pos.term.room_search')} aria-label={t('pos.term.room_search')} value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            {list.loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+            {list.loading && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
             {list.error && <p className="text-sm text-red-600">{list.error.message}</p>}
             <div className="max-h-60 overflow-y-auto space-y-1">
                 {list.data?.data.map((r) => (
-                    <button key={r.id} disabled={busy} onClick={() => onSubmit(r.id)} className="w-full text-left border border-slate-200 rounded-lg p-3 hover:bg-emerald-50">
+                    <button key={r.id} disabled={busy} onClick={() => onSubmit(r.id)} className="w-full text-left border border-slate-200 rounded-lg p-3 hover:bg-slate-50">
                         <div className="font-medium text-sm">{t('pos.term.room_n', { number: r.room?.number ?? '-' })} · {r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : t('pos.term.guest')}</div>
                         <div className="text-xs text-slate-500">{r.number} · {t('pos.term.departs', { date: r.departure })}</div>
                     </button>
                 ))}
-                {list.data && list.data.data.length === 0 && <p className="text-sm text-slate-400">{t('pos.term.no_guests')}</p>}
+                {list.data && list.data.data.length === 0 && <p className="text-sm text-slate-500">{t('pos.term.no_guests')}</p>}
             </div>
             <button className="btn-secondary" onClick={onCancel}>{t('pos.common.cancel')}</button>
         </div>

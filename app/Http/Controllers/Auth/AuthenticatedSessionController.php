@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Modules\Admin\Application\LoginGuard;
 use App\Modules\Admin\Application\TwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +19,21 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required'],
         ]);
 
+        $guard = app(LoginGuard::class);
+        $user = User::where('email', $credentials['email'])->first();
+        if ($guard->throttled($credentials['email'], $request->ip())) {
+            throw ValidationException::withMessages(['email' => __('auth.throttle', ['seconds' => $guard->retryAfter($credentials['email'], $request->ip())])])->status(429);
+        }
+        if ($guard->locked($user)) {
+            $guard->blocked($user, $request->ip());
+            throw ValidationException::withMessages(['email' => __('This account is temporarily locked after repeated failed sign-ins.')])->status(423);
+        }
         if (! Auth::guard('web')->validate($credentials)) {
+            $guard->failed($credentials['email'], $request->ip(), $user);
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
         }
-        $user = User::where('email', $credentials['email'])->firstOrFail();
 
         // Enrolled users must pass the TOTP challenge before the session is authenticated.
         if ($twoFactor->enabled($user)) {
@@ -34,6 +44,7 @@ class AuthenticatedSessionController extends Controller
 
         Auth::guard('web')->login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+        $guard->succeeded($user->email, $request->ip(), $user, 'web');
 
         return redirect()->intended(route('dashboard'));
     }

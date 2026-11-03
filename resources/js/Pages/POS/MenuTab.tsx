@@ -68,11 +68,11 @@ export default function MenuTab({ outlets }: { outlets: Outlet[] }) {
             <Banner msg={msg} />
             <div className="flex flex-wrap gap-2 mb-4">
                 <div className="relative flex-1 min-w-[180px]">
-                    <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                    <input className="input w-full pl-9" placeholder={t('pos.menu.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                    <input className="input w-full pl-9" placeholder={t('pos.menu.search')} aria-label={t('pos.menu.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </div>
-                <input className="input w-40" placeholder={t('pos.menu.category')} value={cat} onChange={(e) => setCat(e.target.value)} />
-                <select className="input w-44" value={outlet} onChange={(e) => setOutlet(e.target.value)}>
+                <input className="input w-full sm:w-40" placeholder={t('pos.menu.category')} aria-label={t('pos.menu.category')} value={cat} onChange={(e) => setCat(e.target.value)} />
+                <select className="input w-full sm:w-44" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('pos.menu.any_outlet')}>
                     <option value="">{t('pos.menu.any_outlet')}</option>
                     {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </select>
@@ -80,7 +80,7 @@ export default function MenuTab({ outlets }: { outlets: Outlet[] }) {
             </div>
 
             {form && (
-                <form onSubmit={save} className="card p-4 mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <form onSubmit={save} className="card p-4 mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 [&>*]:min-w-0">
                     {field('code', t('pos.menu.code'), { required: true, maxLength: 20 })}
                     {field('name', t('pos.menu.name'), { required: true, maxLength: 150 })}
                     {field('name_en', t('pos.menu.name_en'), { maxLength: 150 })}
@@ -90,13 +90,13 @@ export default function MenuTab({ outlets }: { outlets: Outlet[] }) {
                     {field('kitchen_station', t('pos.menu.station_full'), { maxLength: 30, placeholder: t('pos.menu.station_ph') })}
                     <label className="text-sm">
                         <span className="text-slate-600">{t('pos.menu.outlet')}</span>
-                        <select className="input w-full" value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })}>
+                        <select className="input w-full" value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} aria-label={t('pos.common.all_outlets')}>
                             <option value="">{t('pos.common.all_outlets')}</option>
                             {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                         </select>
                     </label>
                     <label className="text-sm flex items-center gap-2 mt-5">
-                        <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> {t('pos.common.active')}
+                        <input type="checkbox" className="h-5 w-5 shrink-0" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> {t('pos.common.active')}
                     </label>
                     <div className="sm:col-span-3 flex gap-2">
                         <button className="btn-primary" disabled={busy}>{busy ? t('pos.common.saving') : t('pos.common.save')}</button>
@@ -106,7 +106,7 @@ export default function MenuTab({ outlets }: { outlets: Outlet[] }) {
             )}
 
             <div className="card overflow-x-auto">
-                {list.loading && !list.data && <Loader2 className="w-5 h-5 animate-spin text-slate-400 m-4" />}
+                {list.loading && !list.data && <Loader2 className="w-5 h-5 animate-spin text-slate-500 m-4" />}
                 {list.error && <p className="text-sm text-red-600 p-4">{list.error.message}</p>}
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-3">{t('pos.menu.code')}</th><th>{t('pos.menu.name')}</th><th>{t('pos.menu.category')}</th><th>{t('pos.menu.outlet')}</th><th>{t('pos.menu.station')}</th><th className="text-right">{t('pos.menu.price')}</th><th>{t('pos.menu.status')}</th><th /></tr></thead>
@@ -119,17 +119,17 @@ export default function MenuTab({ outlets }: { outlets: Outlet[] }) {
                                 <td>{outletName(m.outlet_id)}</td>
                                 <td>{m.kitchen_station ?? '-'}</td>
                                 <td className="text-right">{formatCurrency(m.price)}</td>
-                                <td>{m.active ? <span className="text-emerald-700">{t('pos.common.active')}</span> : <span className="text-slate-400">{t('pos.common.inactive')}</span>}</td>
+                                <td>{m.active ? <span className="text-emerald-700">{t('pos.common.active')}</span> : <span className="text-slate-500">{t('pos.common.inactive')}</span>}</td>
                                 <td className="text-right whitespace-nowrap pr-3">
-                                    <button className="text-slate-500 mr-2" title={t('pos.common.edit')} onClick={() => {
+                                    <button className="btn-ghost btn-icon" title={t('pos.common.edit')} onClick={() => {
                                         setEditId(m.id);
                                         setForm({ code: m.code, name: m.name, name_en: m.name_en ?? '', outlet_id: m.outlet_id ? String(m.outlet_id) : '', category: m.category ?? '', price: String(m.price), charge_code: m.charge_code, kitchen_station: m.kitchen_station ?? '', active: m.active });
-                                    }}><Pencil className="w-4 h-4" /></button>
-                                    <button className="text-red-500" title={t('pos.common.delete')} onClick={() => remove(m)}><Trash2 className="w-4 h-4" /></button>
+                                    }} aria-label={t('pos.common.edit')}><Pencil className="w-4 h-4" /></button>
+                                    <button className="btn-ghost btn-icon text-red-700" title={t('pos.common.delete')} onClick={() => remove(m)} aria-label={t('pos.common.delete')}><Trash2 className="w-4 h-4" /></button>
                                 </td>
                             </tr>
                         ))}
-                        {list.data && list.data.data.length === 0 && <tr><td colSpan={8} className="p-4 text-slate-400">{t('pos.menu.empty')}</td></tr>}
+                        {list.data && list.data.data.length === 0 && <tr><td colSpan={8} className="p-4 text-slate-500">{t('pos.menu.empty')}</td></tr>}
                     </tbody>
                 </table>
             </div>

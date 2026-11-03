@@ -6,7 +6,7 @@ export interface Paged<T> { data: T[]; total: number; current_page: number; last
 export interface Department { id: number; code: string; name: string; cost_center: string | null }
 export interface Position { id: number; department_id: number; title: string; category: string | null }
 export interface Employee {
-    id: number; number: string; first_name: string; last_name: string; status: string;
+    id: number; number: string; first_name: string; last_name: string; status: string; photo_url?: string | null;
     gender: string | null; phone: string | null; email: string | null; address: string | null;
     department_id: number | null; position_id: number | null; department?: { id: number; name: string } | null;
     hire_date: string; termination_date: string | null; termination_reason: string | null;

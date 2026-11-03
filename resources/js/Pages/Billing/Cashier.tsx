@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 
 interface Shift {
     id: number;
@@ -50,7 +51,7 @@ export default function Cashier() {
             <CashierBar onChange={() => setRefresh((n) => n + 1)} refresh={refresh} />
 
             <div className="flex flex-wrap gap-3 mb-4 items-center">
-                <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('billing.cashier.all_shifts')}>
                     <option value="">{t('billing.cashier.all_shifts')}</option>
                     <option value="open">{t('billing.status.open')}</option>
                     <option value="closed">{t('billing.status.closed')}</option>
@@ -61,7 +62,7 @@ export default function Cashier() {
                 </select>
                 <label className="text-sm text-slate-600 flex items-center gap-2">{t('billing.cashier.from')} <input type="date" className="input w-auto" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
                 <label className="text-sm text-slate-600 flex items-center gap-2">{t('billing.cashier.to')} <input type="date" className="input w-auto" value={to} onChange={(e) => setTo(e.target.value)} /></label>
-                <label className="text-sm text-slate-600 flex items-center gap-2">
+                <label className="min-h-11 text-sm text-slate-600 flex items-center gap-2">
                     <input type="checkbox" checked={onlyVariance} onChange={(e) => setOnlyVariance(e.target.checked)} /> {t('billing.cashier.only_variance')}
                 </label>
             </div>
@@ -69,17 +70,17 @@ export default function Cashier() {
             {shifts.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{shifts.error.message}</div>}
 
             <div className="card overflow-x-auto">
-                <table className="table-auto w-full">
+                <table className="table-auto">
                     <thead><tr><th></th><th>{t('billing.cashier.shift')}</th><th>{t('billing.cashier.cashier')}</th><th>{t('billing.cashier.station')}</th><th>{t('billing.cashier.business_date')}</th><th>{t('billing.cashier.opened')}</th><th>{t('billing.cashier.closed')}</th><th className="text-right">{t('billing.cashier.float')}</th><th className="text-right">{t('billing.cashier.variance')}</th></tr></thead>
                     <tbody>
-                        {shifts.loading && !shifts.data && <tr><td colSpan={9} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" /></td></tr>}
-                        {shifts.data && rows.length === 0 && <tr><td colSpan={9} className="text-center py-10 text-slate-400 text-sm">{t('billing.cashier.no_shifts')}</td></tr>}
+                        {shifts.loading && !shifts.data && <tr><td colSpan={9} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
+                        {shifts.data && rows.length === 0 && <tr><td colSpan={9} className="text-center py-10 text-slate-500 text-sm">{t('billing.cashier.no_shifts')}</td></tr>}
                         {rows.map((s) => {
                             const v = s.variance ?? 0;
                             const methods = Array.from(new Set([...Object.keys(s.expected ?? {}), ...Object.keys(s.counted ?? {})]));
                             return [
                                 <tr key={s.id} className={cn('cursor-pointer hover:bg-slate-50', s.status === 'closed' && v !== 0 && 'bg-red-50/50')} onClick={() => setExpanded(expanded === s.id ? null : s.id)}>
-                                    <td>{expanded === s.id ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}</td>
+                                    <td>{expanded === s.id ? <ChevronDown className="w-4 h-4 text-slate-500" /> : <ChevronRight className="w-4 h-4 text-slate-500" />}</td>
                                     <td className="text-sm">#{s.id} <span className={cn('ml-1 text-xs px-2 py-0.5 rounded', s.status === 'open' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500')}>{statusLabel(s.status)}</span></td>
                                     <td className="text-sm whitespace-nowrap">{s.user_name ?? t('billing.cashier.user_n', { id: s.user_id })}</td>
                                     <td className="text-sm">{s.station ?? '—'}</td>
@@ -95,8 +96,9 @@ export default function Cashier() {
                                     <tr key={`${s.id}-d`}>
                                         <td />
                                         <td colSpan={8} className="pb-4">
-                                            {methods.length === 0 ? <p className="text-sm text-slate-400">{s.status === 'open' ? t('billing.cashier.no_takings_open') : t('billing.cashier.no_takings')}</p> : (
-                                                <table className="w-full max-w-xl text-sm">
+                                            <div className="mb-2" onClick={(e) => e.stopPropagation()}><PrintPdfButton path={`shift-report/${s.id}`} label={t('documents3.print_z')} /></div>
+                                            {methods.length === 0 ? <p className="text-sm text-slate-500">{s.status === 'open' ? t('billing.cashier.no_takings_open') : t('billing.cashier.no_takings')}</p> : (
+                                                <div className="table-wrap"><table className="table-auto">
                                                     <thead><tr className="text-left text-xs text-slate-500"><th className="py-1">{t('billing.cashier.method')}</th><th className="py-1 text-right">{t('billing.cashier.expected')}</th><th className="py-1 text-right">{t('billing.cashier.counted')}</th><th className="py-1 text-right">{t('billing.cashier.variance')}</th></tr></thead>
                                                     <tbody>
                                                         {methods.map((m) => {
@@ -108,14 +110,14 @@ export default function Cashier() {
                                                                     <td className="py-1 font-mono text-xs">{m}</td>
                                                                     <td className="py-1 text-right">{formatCurrency(exp)}</td>
                                                                     <td className="py-1 text-right">{cnt === undefined ? '—' : formatCurrency(cnt)}</td>
-                                                                    <td className={cn('py-1 text-right font-medium', d === null ? 'text-slate-400' : d < 0 ? 'text-red-600' : d > 0 ? 'text-amber-600' : 'text-emerald-600')}>
+                                                                    <td className={cn('py-1 text-right font-medium', d === null ? 'text-slate-500' : d < 0 ? 'text-red-600' : d > 0 ? 'text-amber-600' : 'text-emerald-600')}>
                                                                         {d === null ? '—' : formatCurrency(d)}
                                                                     </td>
                                                                 </tr>
                                                             );
                                                         })}
                                                     </tbody>
-                                                </table>
+                                                </table></div>
                                             )}
                                         </td>
                                     </tr>

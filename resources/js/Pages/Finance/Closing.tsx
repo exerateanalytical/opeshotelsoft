@@ -48,8 +48,8 @@ export default function Closing() {
             <Banner error={error} success={ok} />
 
             <section className="card p-4">
-                <div className="mb-3 grid grid-cols-2 gap-2 sm:flex sm:items-end">
-                    <h4 className="col-span-2 font-semibold sm:mr-auto">{t('fin.closing.cash_flow')}</h4>
+                <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:items-end [&>*]:min-w-0">
+                    <h4 className="sm:col-span-2 font-semibold sm:mr-auto">{t('fin.closing.cash_flow')}</h4>
                     <Field label={t('fin.from')}><input type="date" className="input w-full" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
                     <Field label={t('fin.to')}><input type="date" className="input w-full" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
                 </div>
@@ -135,7 +135,7 @@ export default function Closing() {
                                         <td className="p-2 text-right">{M(p.book_balance)}</td><td className="p-2 text-right">{M(p.revalued)}</td><td className="p-2 text-right">{M(p.difference)}</td>
                                     </tr>
                                 ))}
-                                {fx.data.positions.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-slate-400">{t('fin.closing.fx_empty')}</td></tr>}
+                                {fx.data.positions.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-slate-500">{t('fin.closing.fx_empty')}</td></tr>}
                             </tbody>
                         </table>
                         <p className="mt-2 text-sm">{t('fin.closing.gain')} {M(fx.data.gain)} · {t('fin.closing.loss')} {M(fx.data.loss)}</p>

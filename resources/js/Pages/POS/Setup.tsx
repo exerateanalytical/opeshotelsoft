@@ -40,21 +40,21 @@ export default function Setup({ outlets, outletId }: { outlets: Outlet[]; outlet
     return (
         <div>
             <Banner msg={msg} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 [&>*]:min-w-0">
                 <div className="card p-4">
                     <h3 className="font-semibold text-slate-800 mb-2">{tr('pos.setup.tables', { name: outletName(outletId) })}</h3>
-                    <form className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3" onSubmit={(e) => {
+                    <form className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3 [&>*]:min-w-0" onSubmit={(e) => {
                         e.preventDefault();
                         call('pos/tables', 'POST', { outlet_id: outletId, name: t.name, seats: Number(t.seats), pos_x: Number(t.pos_x), pos_y: Number(t.pos_y) }, tr('pos.setup.table_added'), () => setT({ ...t, name: '' }));
                     }}>
-                        <input className="input" placeholder={tr('pos.menu.name')} required maxLength={10} value={t.name} onChange={(e) => setT({ ...t, name: e.target.value })} />
+                        <input className="input" placeholder={tr('pos.menu.name')} aria-label={tr('pos.menu.name')} required maxLength={10} value={t.name} onChange={(e) => setT({ ...t, name: e.target.value })} />
                         <input className="input" type="number" min={1} max={50} title={tr('pos.setup.seats')} value={t.seats} onChange={(e) => setT({ ...t, seats: e.target.value })} />
                         <input className="input" type="number" min={0} max={30} title={tr('pos.setup.column')} value={t.pos_x} onChange={(e) => setT({ ...t, pos_x: e.target.value })} />
                         <input className="input" type="number" min={0} max={30} title={tr('pos.setup.row')} value={t.pos_y} onChange={(e) => setT({ ...t, pos_y: e.target.value })} />
                         <button className="btn-primary"><Plus className="w-4 h-4" /> {tr('pos.common.add')}</button>
                     </form>
                     <p className="text-xs text-slate-500 mb-2">{tr('pos.setup.grid_hint')}</p>
-                    {tables.loading && !tables.data && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+                    {tables.loading && !tables.data && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
                     {tables.error && <p className="text-sm text-red-600">{tables.error.message}</p>}
                     <div className="overflow-x-auto">
                         <table className="table-auto w-full text-sm"><tbody>
@@ -82,8 +82,8 @@ export default function Setup({ outlets, outletId }: { outlets: Outlet[]; outlet
                                 percent_off: Number(pl.percent_off) || 0, items: pl.items.filter((i) => i.pos_menu_item_id).map((i) => ({ pos_menu_item_id: Number(i.pos_menu_item_id), price: Number(i.price) })),
                             }, tr('pos.setup.level_saved'), () => setPl(null));
                         }}>
-                            <input className="input w-full" placeholder={tr('pos.setup.level_name_ph')} required value={pl.name} onChange={(e) => setPl({ ...pl, name: e.target.value })} />
-                            <select className="input w-full" value={pl.outlet_id} onChange={(e) => setPl({ ...pl, outlet_id: e.target.value })}>
+                            <input className="input w-full" placeholder={tr('pos.setup.level_name_ph')} aria-label={tr('pos.setup.level_name_ph')} required value={pl.name} onChange={(e) => setPl({ ...pl, name: e.target.value })} />
+                            <select className="input w-full" value={pl.outlet_id} onChange={(e) => setPl({ ...pl, outlet_id: e.target.value })} aria-label={tr('pos.common.all_outlets')}>
                                 <option value="">{tr('pos.common.all_outlets')}</option>
                                 {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                             </select>
@@ -94,7 +94,7 @@ export default function Setup({ outlets, outletId }: { outlets: Outlet[]; outlet
                                 })}
                             </div>
                             <p className="text-xs text-slate-500">{tr('pos.setup.days_hint')}</p>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 [&>*]:min-w-0">
                                 <label className="label">{tr('pos.setup.from')}<input className="input w-full" type="time" required value={pl.starts_at} onChange={(e) => setPl({ ...pl, starts_at: e.target.value })} /></label>
                                 <label className="label">{tr('pos.setup.to')}<input className="input w-full" type="time" required value={pl.ends_at} onChange={(e) => setPl({ ...pl, ends_at: e.target.value })} /></label>
                                 <label className="label">{tr('pos.setup.percent_off')}<input className="input w-full" type="number" min={0} max={100} value={pl.percent_off} onChange={(e) => setPl({ ...pl, percent_off: e.target.value })} /></label>
@@ -102,11 +102,11 @@ export default function Setup({ outlets, outletId }: { outlets: Outlet[]; outlet
                             <p className="text-xs text-slate-500">{tr('pos.setup.fixed_hint')}</p>
                             {pl.items.map((it, i) => (
                                 <div key={i} className="flex gap-2">
-                                    <select className="input w-full" value={it.pos_menu_item_id} onChange={(e) => setPl({ ...pl, items: pl.items.map((x, j) => (j === i ? { ...x, pos_menu_item_id: e.target.value } : x)) })}>
+                                    <select className="input w-full" value={it.pos_menu_item_id} onChange={(e) => setPl({ ...pl, items: pl.items.map((x, j) => (j === i ? { ...x, pos_menu_item_id: e.target.value } : x)) })} aria-label={tr('pos.setup.item_ph')}>
                                         <option value="">{tr('pos.setup.item_ph')}</option>
                                         {menu.data?.data.map((m) => <option key={m.id} value={m.id}>{m.name} ({formatCurrency(m.price)})</option>)}
                                     </select>
-                                    <input className="input w-28" type="number" min={0} placeholder={tr('pos.menu.price')} required value={it.price} onChange={(e) => setPl({ ...pl, items: pl.items.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)) })} />
+                                    <input className="input w-28" type="number" min={0} placeholder={tr('pos.menu.price')} aria-label={tr('pos.menu.price')} required value={it.price} onChange={(e) => setPl({ ...pl, items: pl.items.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)) })} />
                                     <button type="button" title={tr('pos.common.remove')} className="text-slate-500" onClick={() => setPl({ ...pl, items: pl.items.filter((_, j) => j !== i) })}><X className="w-4 h-4" /></button>
                                 </div>
                             ))}
@@ -127,7 +127,7 @@ export default function Setup({ outlets, outletId }: { outlets: Outlet[]; outlet
                             {l.active && <button className="btn-secondary" onClick={() => call(`pos/price-lists/${l.id}`, 'DELETE', undefined, tr('pos.setup.level_deactivated'))}>{tr('pos.common.deactivate')}</button>}
                         </div>
                     ))}
-                    {lists.data?.data.length === 0 && <p className="text-sm text-slate-400">{tr('pos.setup.no_levels')}</p>}
+                    {lists.data?.data.length === 0 && <p className="text-sm text-slate-500">{tr('pos.setup.no_levels')}</p>}
                 </div>
             </div>
         </div>

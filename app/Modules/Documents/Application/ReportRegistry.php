@@ -13,6 +13,16 @@ final class ReportRegistry
     /** @return array<string, array{title: string, path: string, rows: callable, columns: ?array}> */
     public static function all(): array
     {
+        // Titles follow the request locale (srv.report.<key>), falling back to the bilingual default.
+        return collect(self::definitions())->map(function (array $def, string $key) {
+            $t = __("srv.report.$key");
+
+            return ['title' => $t === "srv.report.$key" ? $def['title'] : $t] + $def;
+        })->all();
+    }
+
+    private static function definitions(): array
+    {
         $sections = fn (array $keys) => function (array $d) use ($keys) {
             $out = [];
             foreach ($keys as $key => $label) {

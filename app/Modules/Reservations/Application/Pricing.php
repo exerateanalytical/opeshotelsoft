@@ -5,6 +5,7 @@ namespace App\Modules\Reservations\Application;
 use App\Modules\Property\Domain\RoomType;
 use App\Modules\Reservations\Domain\RatePlan;
 use App\Modules\Reservations\Domain\RatePlanSeason;
+use App\Modules\Reservations\Revenue\Application\StayRules;
 use App\Platform\Domain\DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -56,6 +57,13 @@ class Pricing
             }
         }
 
+        // R-A hooks: LOS / advance purchase / arrival-day rules and the package supplement.
+        $rules = app(StayRules::class);
+        if ($enforce) {
+            $rules->assert($plan, $arrival, $departure);
+        }
+        $packageNight = $rules->packageNight($plan, $adults, $children);
+
         $nights = [];
         $total = 0;
         for ($d = $arrival->copy(); $d->lt($departure); $d->addDay()) {
@@ -74,14 +82,14 @@ class Pricing
             } else {
                 $base = $parent->amount ?? $type->base_rate;
                 if ($plan->parent_rate_plan_id) {
-                    $base = (int) round($base * (1 + $plan->derived_adjust_percent / 100));
+                    $base = (int) round($base * (1 + $plan->derived_adjust_percent / 100)) + $rules->derivedAmount($plan);
                 }
                 $base = $this->applySeason($seasons, $key, (int) $base);
                 $extraA = $parent->extra_adult ?? 0;
                 $extraC = $parent->extra_child ?? 0;
             }
 
-            $amount = $base + max(0, $adults - 2) * $extraA + $children * $extraC;
+            $amount = $base + max(0, $adults - 2) * $extraA + $children * $extraC + $packageNight;
             if ($amount <= 0) {
                 throw new DomainException("No rate is loaded for {$type->code} on $key.", 'no-rate');
             }
@@ -121,7 +129,7 @@ class Pricing
             $parent = $parentRows[$key] ?? null;
             $amount = $parent->amount ?? $type->base_rate;
             if ($parentId) {
-                $amount = (int) round($amount * (1 + $plan->derived_adjust_percent / 100));
+                $amount = (int) round($amount * (1 + $plan->derived_adjust_percent / 100)) + app(StayRules::class)->derivedAmount($plan);
             }
             $amount = $this->applySeason($seasons, $key, (int) $amount);
             $out[] = [

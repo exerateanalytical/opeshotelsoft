@@ -1,0 +1,19 @@
+{
+    "ui.skip": "Skip to main content",
+    "ui.nav.main": "Main navigation",
+    "ui.nav.more": "More",
+    "ui.nav.more_title": "All sections",
+    "ui.nav.close": "Close",
+    "ui.nav.primary": "Primary tabs",
+    "ui.filters": "Filters",
+    "ui.filters.apply": "Show results",
+    "ui.filters.clear": "Clear filters",
+    "ui.filters.active": ":count active",
+    "ui.empty.title": "Nothing to show yet",
+    "ui.loading": "Loading…",
+    "ui.modal.close": "Close dialog",
+    "ui.toast.dismiss": "Dismiss notification",
+    "ui.table.scroll_hint": "Scroll sideways to see more columns",
+    "ui.sidebar.collapse": "Collapse sidebar",
+    "ui.sidebar.expand": "Expand sidebar"
+}

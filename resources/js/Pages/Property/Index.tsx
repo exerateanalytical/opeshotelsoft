@@ -151,14 +151,14 @@ function BulkRooms({ types, onDone }: { types: [string, string][]; onDone: () =>
                     <ul className="list-disc pl-5">{skipped.map((s) => <li key={s.number}>{s.number}: {s.reason}</li>)}</ul>
                 </div>
             )}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-                <select className="input" required value={f.room_type_id} onChange={(e) => setF({ ...f, room_type_id: e.target.value })}>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 [&>*]:min-w-0">
+                <select className="input" required value={f.room_type_id} onChange={(e) => setF({ ...f, room_type_id: e.target.value })} aria-label={t('prop.bulk.room_type_pick')}>
                     <option value="">{t('prop.bulk.room_type_pick')}</option>
                     {types.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
-                <input className="input" type="number" min={1} required placeholder={t('prop.bulk.from_ph')} value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} />
-                <input className="input" type="number" min={1} required placeholder={t('prop.bulk.to_ph')} value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} />
-                <input className="input" placeholder={t('prop.bulk.floor_ph')} value={f.floor} onChange={(e) => setF({ ...f, floor: e.target.value })} />
+                <input className="input" type="number" min={1} required placeholder={t('prop.bulk.from_ph')} aria-label={t('prop.bulk.from_ph')} value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} />
+                <input className="input" type="number" min={1} required placeholder={t('prop.bulk.to_ph')} aria-label={t('prop.bulk.to_ph')} value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} />
+                <input className="input" placeholder={t('prop.bulk.floor_ph')} aria-label={t('prop.bulk.floor_ph')} value={f.floor} onChange={(e) => setF({ ...f, floor: e.target.value })} />
             </div>
             <div className="mt-3 flex gap-2">
                 <button className="btn-primary" disabled={busy}>{t('prop.bulk.create')}</button>
@@ -192,10 +192,10 @@ export default function PropertyIndex() {
     return (
         <AppLayout title={t('prop.title')} subtitle={t('prop.subtitle')}>
             <Head title={t('prop.title')} />
-            <div className="mb-5 flex gap-1 overflow-x-auto border-b border-slate-200">
+            <div className="tabs mb-5">
                 {TABS.map(([k, l]) => (
                     <button key={k} onClick={() => setTab(k)}
-                        className={cn('whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium', tab === k ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700')}>
+                        className={cn('tab', tab === k && 'active')} aria-current={tab === k ? 'page' : undefined}>
                         {t(l)}
                     </button>
                 ))}

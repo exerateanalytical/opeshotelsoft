@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatDate, formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 const STATUSES = ['vacant_clean', 'vacant_dirty', 'occupied_clean', 'occupied_dirty', 'inspected', 'out_of_order', 'out_of_service'] as const;
 const STATUS_STYLE: Record<string, string> = {
@@ -88,22 +89,22 @@ function RoomBoard({ setMsg }: { setMsg: (m: Msg) => void }) {
             <div className="flex flex-wrap gap-2">
                 <button className={cn('px-3 py-1 rounded-full border text-xs', !filter ? 'bg-slate-800 text-white' : 'bg-white')} onClick={() => setFilter('')}>{t('hk.all_count', { count: board.data?.length ?? 0 })}</button>
                 {STATUSES.map((s) => (
-                    <button key={s} className={cn('px-3 py-1 rounded-full border text-xs capitalize', STATUS_STYLE[s], filter === s && 'ring-2 ring-slate-500')} onClick={() => setFilter(filter === s ? '' : s)}>
+                    <button key={s} className={cn('px-3 py-1 rounded-full border text-xs capitalize', STATUS_STYLE[s], filter === s && 'outline-2 outline-slate-700')} onClick={() => setFilter(filter === s ? '' : s)}>
                         {tl(s)} ({counts[s] ?? 0})
                     </button>
                 ))}
             </div>
-            {board.loading && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+            {board.loading && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             {board.error && <Banner msg={{ ok: false, text: board.error.message }} />}
 
             {editing && (
                 <div className="card p-4 space-y-3">
                     <div className="font-semibold">{t('hk.room_no', { number: editing.number })} <span className="text-xs text-slate-500">{editing.occupied ? t('hk.occupied') : t('hk.vacant')} · {t('hk.now', { status: tl(editing.hk_status) })}</span></div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         <select className="input capitalize" value={status} onChange={(e) => setStatus(e.target.value)}>
                             {STATUSES.map((s) => <option key={s} value={s} disabled={editing.occupied && s.startsWith('vacant')}>{tl(s)}</option>)}
                         </select>
-                        <input className="input sm:col-span-2" placeholder={t('hk.reason_optional')} value={reason} onChange={(e) => setReason(e.target.value)} />
+                        <input className="input sm:col-span-2" aria-label={t('hk.reason_optional')} placeholder={t('hk.reason_optional')} value={reason} onChange={(e) => setReason(e.target.value)} />
                     </div>
                     <div className="flex gap-2">
                         <button className="btn-primary" disabled={busy !== null || status === editing.hk_status}
@@ -121,16 +122,16 @@ function RoomBoard({ setMsg }: { setMsg: (m: Msg) => void }) {
                     <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-2">
                         {rooms.map((r) => (
                             <button key={r.id} onClick={() => open(r)} title={tl(r.hk_status)}
-                                className={cn('border rounded-lg p-2 text-left hover:border-slate-400', STATUS_STYLE[r.hk_status] ?? 'bg-white', editing?.id === r.id && 'ring-2 ring-slate-600')}>
+                                className={cn('border rounded-lg p-2 text-left hover:border-slate-400', STATUS_STYLE[r.hk_status] ?? 'bg-white', editing?.id === r.id && 'outline-2 outline-slate-700')}>
                                 <div className="font-bold flex items-center gap-1">{r.number}{r.occupied && <BedDouble className="w-3 h-3" />}</div>
-                                <div className="text-[10px] uppercase">{r.room_type?.code}</div>
-                                <div className="text-[10px] capitalize truncate">{tl(r.hk_status)}</div>
+                                <div className="text-xs uppercase">{r.room_type?.code}</div>
+                                <div className="text-xs capitalize truncate">{tl(r.hk_status)}</div>
                             </button>
                         ))}
                     </div>
                 </div>
             ))}
-            {!board.loading && floors.length === 0 && <p className="text-sm text-slate-400">{t('hk.no_rooms')}</p>}
+            {!board.loading && floors.length === 0 && <p className="text-sm text-slate-500">{t('hk.no_rooms')}</p>}
         </div>
     );
 }
@@ -170,13 +171,13 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
         <div className="space-y-4">
             <div className="card p-4 flex flex-wrap gap-2 items-end">
                 <div><div className="text-xs text-slate-500">{t('hk.date_hint')}</div><input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-                <input className="input w-32" placeholder={t('hk.room_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
-                <select className="input w-40" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <input className="input w-32" aria-label={t('hk.room_ph')} placeholder={t('hk.room_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
+                <select className="input w-40" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label={t('hk.all_statuses')}>
                     <option value="">{t('hk.all_statuses')}</option>
                     {Object.keys(TASK_STYLE).map((s) => <option key={s} value={s}>{tl(s)}</option>)}
                 </select>
-                <label className="text-sm flex items-center gap-1"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> {t('hk.mine_only')}</label>
-                <label className="text-sm flex items-center gap-1"><input type="checkbox" checked={allStaff} onChange={(e) => setAllStaff(e.target.checked)} /> {t('hk.any_staff')}</label>
+                <label className="min-h-11 text-sm flex items-center gap-1"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> {t('hk.mine_only')}</label>
+                <label className="min-h-11 text-sm flex items-center gap-1"><input type="checkbox" checked={allStaff} onChange={(e) => setAllStaff(e.target.checked)} /> {t('hk.any_staff')}</label>
                 <button className="btn-primary flex items-center gap-1 ml-auto" disabled={busy !== null}
                     onClick={() => api<{ created: number }>('housekeeping/tasks/generate', { method: 'POST', body: JSON.stringify(date ? { date } : {}) })
                         .then((r) => { setMsg({ ok: true, text: t('hk.tasks_created', { count: r.created }) }); reload(); })
@@ -195,7 +196,7 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
                             </label>
                         ))}
                     </div>
-                    <textarea className="input w-full" rows={2} placeholder={t('guests.field.notes')} value={notes} onChange={(e) => setNotes(e.target.value)} />
+                    <textarea className="input w-full" rows={2} aria-label={t('guests.field.notes')} placeholder={t('guests.field.notes')} value={notes} onChange={(e) => setNotes(e.target.value)} />
                     <div className="flex gap-2">
                         <button className="btn-primary" disabled={busy !== null}
                             onClick={() => run('finish', `housekeeping/tasks/${finishing.id}/finish`, { checklist, notes: notes || null }, t('hk.room_cleaned', { number: finishing.room?.number ?? '' }), () => { setFinishing(null); reload(); })}>{t('hk.mark_done')}</button>
@@ -207,7 +208,7 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
             {inspecting && (
                 <div className="card p-4 space-y-3">
                     <div className="font-semibold">{t('hk.inspect_room', { number: inspecting.room?.number ?? '' })}</div>
-                    <textarea className="input w-full" rows={2} placeholder={t('hk.insp_notes')} value={inspNotes} onChange={(e) => setInspNotes(e.target.value)} />
+                    <textarea className="input w-full" rows={2} aria-label={t('hk.insp_notes')} placeholder={t('hk.insp_notes')} value={inspNotes} onChange={(e) => setInspNotes(e.target.value)} />
                     <div className="flex gap-2">
                         <button className="btn-primary" disabled={busy !== null} onClick={() => run('insp', `housekeeping/tasks/${inspecting.id}/inspect`, { passed: true, notes: inspNotes || null }, t('hk.insp_passed'), () => { setInspecting(null); reload(); })}>{t('hk.pass')}</button>
                         <button className="btn-secondary text-red-700" disabled={busy !== null} onClick={() => run('insp', `housekeeping/tasks/${inspecting.id}/inspect`, { passed: false, notes: inspNotes || null }, t('hk.insp_failed'), () => { setInspecting(null); reload(); })}>{t('hk.fail')}</button>
@@ -218,13 +219,13 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
 
             {tasks.error && <Banner msg={{ ok: false, text: tasks.error.message }} />}
             <div className="card overflow-x-auto">
-                <table className="table-auto w-full text-sm">
+                <table className="table-auto">
                     <thead><tr className="text-left"><th>{t('guests.show.room')}</th><th>{t('guests.companies.kind')}</th><th>{t('hk.prio')}</th><th>{t('guests.status')}</th><th>{t('hk.assigned')}</th><th>{t('hk.times')}</th><th>{t('hk.actions')}</th></tr></thead>
                     <tbody>
                         {tasks.loading && <tr><td colSpan={7}><Loader2 className="w-4 h-4 animate-spin" /></td></tr>}
                         {rows.map((x) => (
                             <tr key={x.id} className="border-t">
-                                <td className="font-semibold">{x.room?.number} <span className="text-xs text-slate-400">{x.room?.floor != null && t('hk.floor_short', { floor: x.room.floor })}</span></td>
+                                <td className="font-semibold">{x.room?.number} <span className="text-xs text-slate-500">{x.room?.floor != null && t('hk.floor_short', { floor: x.room.floor })}</span></td>
                                 <td className="capitalize">{tl(x.kind)}</td>
                                 <td>{x.priority}</td>
                                 <td><span className={cn('px-2 py-0.5 rounded text-xs capitalize', TASK_STYLE[x.status])}>{tl(x.status)}</span></td>
@@ -255,7 +256,7 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
                                 </td>
                             </tr>
                         ))}
-                        {!tasks.loading && rows.length === 0 && <tr><td colSpan={7} className="text-slate-400 py-4 text-center">{t('hk.no_tasks')}</td></tr>}
+                        {!tasks.loading && rows.length === 0 && <tr><td colSpan={7} className="text-slate-500 py-4 text-center">{t('hk.no_tasks')}</td></tr>}
                     </tbody>
                 </table>
             </div>
@@ -291,13 +292,13 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
 
     return (
         <div className="space-y-4">
-            <form className="card p-4 grid grid-cols-1 sm:grid-cols-5 gap-2" onSubmit={(e) => {
+            <form className="card p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2" onSubmit={(e) => {
                 e.preventDefault();
                 run('log', 'housekeeping/lost-found', { description: form.description, location: form.location || null, room_id: form.room_id ? Number(form.room_id) : null, found_on: form.found_on || null }, t('hk.lf.logged'), () => { setForm({ description: '', location: '', room_id: '', found_on: '' }); list.reload(); });
             }}>
-                <input className="input sm:col-span-2" required maxLength={255} placeholder={t('hk.lf.description')} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                <input className="input" placeholder={t('hk.lf.location_found')} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-                <select className="input" value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })}>
+                <input className="input sm:col-span-2" required maxLength={255} aria-label={t('hk.lf.description')} placeholder={t('hk.lf.description')} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                <input className="input" aria-label={t('hk.lf.location_found')} placeholder={t('hk.lf.location_found')} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+                <select className="input" value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })} aria-label={t('hk.lf.no_room')}>
                     <option value="">{t('hk.lf.no_room')}</option>
                     {rooms.data?.map((r) => <option key={r.id} value={r.id}>{r.number}</option>)}
                 </select>
@@ -306,8 +307,8 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
             </form>
 
             <div className="flex flex-wrap gap-2">
-                <input className="input w-48" placeholder={t('hk.lf.search')} value={q} onChange={(e) => filter(() => setQ(e.target.value))} />
-                <select className="input w-40" value={show} onChange={(e) => filter(() => setShow(e.target.value))}>
+                <input className="input w-48" aria-label={t('hk.lf.search')} placeholder={t('hk.lf.search')} value={q} onChange={(e) => filter(() => setQ(e.target.value))} />
+                <select className="input w-40" value={show} onChange={(e) => filter(() => setShow(e.target.value))} aria-label={t('common.all')}>
                     <option value="">{t('common.all')}</option><option value="stored">{t('hk.lf.stored')}</option><option value="returned">{t('hk.lf.returned')}</option><option value="disposed">{t('hk.lf.disposed')}</option>
                 </select>
                 <input type="date" className="input" title={t('hk.lf.from')} value={from} onChange={(e) => filter(() => setFrom(e.target.value))} />
@@ -315,7 +316,7 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
             </div>
             {list.error && <Banner msg={{ ok: false, text: list.error.message }} />}
             <div className="card overflow-x-auto">
-                <table className="table-auto w-full text-sm">
+                <table className="table-auto">
                     <thead><tr className="text-left"><th>{t('hk.lf.found')}</th><th>{t('hk.lf.item')}</th><th>{t('hk.lf.location')}</th><th>{t('guests.show.room')}</th><th>{t('guests.status')}</th><th></th></tr></thead>
                     <tbody>
                         {rows.map((i) => (
@@ -330,9 +331,10 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
                                     ? <span className="text-slate-500 text-xs">{t('hk.lf.disposed')}{i.disposal_reason && `: ${i.disposal_reason}`}{i.disposed_at && ` · ${formatDate(i.disposed_at)}`}</span>
                                     : <span className="text-amber-700 text-xs capitalize">{i.status === 'stored' ? t('hk.lf.stored') : i.status}</span>}</td>
                                 <td className="whitespace-nowrap">
+                                    <span className="inline-flex gap-1 mr-1 align-middle"><OpsPrintButton path={`lost-found-handin/${i.id}`} label={t('documents4.lost_in')} />{i.status === 'returned' && <OpsPrintButton path={`lost-found-return/${i.id}`} label={t('documents4.lost_out')} />}</span>
                                     {i.status === 'stored' && disposing === i.id && (
                                         <span className="flex gap-1">
-                                            <input className="input text-xs w-36" placeholder={t('hk.lf.disposal_reason')} maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)} />
+                                            <input className="input text-xs w-36" aria-label={t('hk.lf.disposal_reason')} placeholder={t('hk.lf.disposal_reason')} maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)} />
                                             <button className="btn-primary text-xs" disabled={!reason || busy !== null}
                                                 onClick={() => run('disp', `housekeeping/lost-found/${i.id}/dispose`, { reason }, t('hk.lf.item_disposed'), () => { setDisposing(null); list.reload(); })}>OK</button>
                                             <button className="btn-secondary text-xs" onClick={() => setDisposing(null)}>×</button>
@@ -340,7 +342,7 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
                                     )}
                                     {i.status === 'stored' && disposing !== i.id && (returning === i.id ? (
                                         <span className="flex gap-1">
-                                            <input className="input text-xs w-36" placeholder={t('hk.lf.returned_to_ph')} value={returnedTo} onChange={(e) => setReturnedTo(e.target.value)} />
+                                            <input className="input text-xs w-36" aria-label={t('hk.lf.returned_to_ph')} placeholder={t('hk.lf.returned_to_ph')} value={returnedTo} onChange={(e) => setReturnedTo(e.target.value)} />
                                             <button className="btn-primary text-xs" disabled={!returnedTo || busy !== null}
                                                 onClick={() => run('ret', `housekeeping/lost-found/${i.id}/return`, { returned_to: returnedTo }, t('hk.lf.marked_returned'), () => { setReturning(null); list.reload(); })}>OK</button>
                                             <button className="btn-secondary text-xs" onClick={() => setReturning(null)}>×</button>
@@ -354,7 +356,7 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
                                 </td>
                             </tr>
                         ))}
-                        {!list.loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-400 py-4">{t('hk.lf.none')}</td></tr>}
+                        {!list.loading && rows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-500 py-4">{t('hk.lf.none')}</td></tr>}
                     </tbody>
                 </table>
             </div>
@@ -387,7 +389,7 @@ export default function Housekeeping() {
             <div className="flex gap-1 mb-4 overflow-x-auto">
                 {TABS.map((tb) => (
                     <button key={tb.key} onClick={() => { setTab(tb.key); setMsg(null); }}
-                        className={cn('flex items-center gap-1 px-3 py-2 rounded-lg text-sm whitespace-nowrap', tab === tb.key ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-600')}>
+                        className={cn('flex items-center gap-1 px-3 py-2 rounded-lg text-sm whitespace-nowrap', tab === tb.key ? 'bg-navy-800 text-white' : 'bg-white border text-slate-600')}>
                         <tb.icon className="w-4 h-4" /> {t(tb.label)}
                     </button>
                 ))}

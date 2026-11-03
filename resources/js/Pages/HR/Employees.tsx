@@ -1,9 +1,12 @@
 import { api, useApi } from '@/lib/api';
+import Avatar from '@/Components/ui/Avatar';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Loader2, Plus, Search, UserMinus, Wallet, X } from 'lucide-react';
 import { useState } from 'react';
 import { Badge, Banner, Department, Employee, errMsg, Field, Paged, Position } from './shared';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
+import { Link } from '@inertiajs/react';
 
 const emptyHire = {
     first_name: '', last_name: '', gender: '', date_of_birth: '', phone: '', email: '', address: '',
@@ -21,7 +24,7 @@ export default function EmployeesTab() {
     const [q, setQ] = useState('');
     const [status, setStatus] = useState('');
     const [dept, setDept] = useState('');
-    const [selected, setSelected] = useState<number | null>(null);
+    const [selected, setSelected] = useState<number | null>(() => Number(new URLSearchParams(window.location.search).get('employee')) || null);
     const [hiring, setHiring] = useState(false);
     const [ok, setOk] = useState<string | null>(null);
     const [err, setErr] = useState<string | null>(null);
@@ -39,14 +42,14 @@ export default function EmployeesTab() {
             <Banner ok={ok} err={err ?? list.error?.message} />
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="relative min-w-[200px] flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('hr.emp.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9" aria-label={t('hr.emp.search')} placeholder={t('hr.emp.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </div>
-                <select className="input w-40" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="input w-full sm:w-40" aria-label={t('hr.common.all_statuses')} value={status} onChange={(e) => setStatus(e.target.value)}>
                     <option value="">{t('hr.common.all_statuses')}</option>
                     {['active', 'on_leave', 'suspended', 'terminated'].map((s) => <option key={s} value={s}>{t(`hr.status.${s}`)}</option>)}
                 </select>
-                <select className="input w-44" value={dept} onChange={(e) => setDept(e.target.value)}>
+                <select className="input w-full sm:w-44" aria-label={t('hr.common.all_departments')} value={dept} onChange={(e) => setDept(e.target.value)}>
                     <option value="">{t('hr.common.all_departments')}</option>
                     {depts.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
@@ -66,12 +69,12 @@ export default function EmployeesTab() {
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-3">{t('hr.common.no')}</th><th>{t('hr.common.name')}</th><th>{t('hr.common.department')}</th><th>{t('hr.emp.hired_on')}</th><th>{t('hr.common.base_salary')}</th><th>{t('hr.common.status')}</th></tr></thead>
                     <tbody>
-                        {list.loading && <tr><td colSpan={6} className="p-6 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></td></tr>}
-                        {!list.loading && list.data?.data.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-slate-400">{t('hr.emp.none')}</td></tr>}
+                        {list.loading && <tr><td colSpan={6} className="p-6 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-500" /></td></tr>}
+                        {!list.loading && list.data?.data.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-slate-500">{t('hr.emp.none')}</td></tr>}
                         {list.data?.data.map((e) => (
                             <tr key={e.id} className="cursor-pointer border-t hover:bg-slate-50" onClick={() => (setSelected(e.id), setHiring(false))}>
                                 <td className="p-3 font-mono text-xs">{e.number}</td>
-                                <td className="font-medium">{e.last_name} {e.first_name}</td>
+                                <td className="font-medium"><span className="flex items-center gap-2"><Avatar src={e.photo_url} name={`${e.first_name} ${e.last_name}`} size={32} /><Link href={`/hr/employees/${e.id}`} onClick={(ev) => ev.stopPropagation()} className="underline decoration-slate-300 hover:decoration-slate-700">{e.last_name} {e.first_name}</Link></span></td>
                                 <td>{e.department?.name ?? '—'}</td>
                                 <td>{formatDate(e.hire_date)}</td>
                                 <td>{formatCurrency(e.base_salary)}</td>
@@ -80,7 +83,7 @@ export default function EmployeesTab() {
                         ))}
                     </tbody>
                 </table>
-                {list.data && <p className="p-3 text-xs text-slate-400">{t('hr.emp.count', { count: list.data.total })}{list.data.last_page > 1 ? t('hr.emp.first_50') : ''}</p>}
+                {list.data && <p className="p-3 text-xs text-slate-500">{t('hr.emp.count', { count: list.data.total })}{list.data.last_page > 1 ? t('hr.emp.first_50') : ''}</p>}
             </div>
         </div>
     );
@@ -199,13 +202,14 @@ function EmployeeDetail({ id, depts, positions, onClose, onDone, onError }: Form
     return (
         <div className="card mb-5">
             <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-semibold">{e ? `${e.first_name} ${e.last_name} · ${e.number}` : t('hr.emp.employee')}</h3>
+                <h3 className="flex items-center gap-3 font-semibold">{e && <Avatar src={e.photo_url} name={`${e.first_name} ${e.last_name}`} size={48} />}{e ? `${e.first_name} ${e.last_name} · ${e.number}` : t('hr.emp.employee')}{e && <Link href={`/hr/employees/${e.id}`} className="btn-secondary inline-flex min-h-[44px] items-center text-sm font-normal">{t('profile.open')}</Link>}</h3>
                 <button onClick={onClose}><X className="h-4 w-4" /></button>
             </div>
-            {emp.loading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
+            {emp.loading && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
             {emp.error && <p className="text-sm text-red-600">{emp.error.message}</p>}
             {e && (
                 <>
+                    <div className="mb-3 flex flex-wrap gap-2"><OpsPrintButton path={`offer-letter/${id}`} label={t('documents4.offer')} /><OpsPrintButton path={`employment-attestation/${id}`} label={t('documents4.attestation')} /><OpsPrintButton path={`salary-certificate/${id}`} label={t('documents4.salary_cert')} /><OpsPrintButton path={`staff-id-card/${id}`} label={t('documents4.id_card')} /></div>
                     <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                         <div><dt className="text-slate-500">{t('hr.common.status')}</dt><dd><Badge s={e.status} /></dd></div>
                         <div><dt className="text-slate-500">{t('hr.common.department')}</dt><dd>{e.department?.name ?? '—'}</dd></div>

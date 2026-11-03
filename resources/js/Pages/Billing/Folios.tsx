@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 
 interface Line {
     id: number;
@@ -77,19 +78,19 @@ export default function Folios() {
 
             <div className="card px-4 py-3 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <label className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('billing.folios.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9" aria-label={t('billing.folios.search')} placeholder={t('billing.folios.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </label>
-                <select className="input" value={kind} onChange={(e) => setKind(e.target.value)}>
+                <select className="input" value={kind} onChange={(e) => setKind(e.target.value)} aria-label={t('billing.folios.all_kinds')}>
                     <option value="">{t('billing.folios.all_kinds')}</option>
                     {KINDS.map((k) => <option key={k} value={k}>{lbl('billing.kind', k)}</option>)}
                 </select>
-                <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('billing.folios.all_statuses')}>
                     <option value="">{t('billing.folios.all_statuses')}</option>
                     <option value="open">{t('billing.status.open')}</option>
                     <option value="closed">{t('billing.status.closed')}</option>
                 </select>
-                <select className="input" value={company} onChange={(e) => setCompany(e.target.value)}>
+                <select className="input" value={company} onChange={(e) => setCompany(e.target.value)} aria-label={t('billing.folios.all_companies')}>
                     <option value="">{t('billing.folios.all_companies')}</option>
                     {companies.data?.data.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -99,16 +100,16 @@ export default function Folios() {
 
             <div className={cn('grid gap-6', selected && 'xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]')}>
                 <div className="card overflow-x-auto self-start">
-                    <table className="table-auto w-full">
+                    <table className="table-auto">
                         <thead><tr><th>{t('billing.folios.number')}</th><th>{t('billing.folios.kind')}</th><th>{t('billing.folios.name')}</th><th>{t('billing.folios.status')}</th><th className="text-right">{t('billing.folios.balance')}</th></tr></thead>
                         <tbody>
-                            {list.loading && !list.data && <tr><td colSpan={5} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" /></td></tr>}
-                            {list.data && rows.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-slate-400 text-sm">{t('billing.folios.no_match')}</td></tr>}
+                            {list.loading && !list.data && <tr><td colSpan={5} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
+                            {list.data && rows.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-slate-500 text-sm">{t('billing.folios.no_match')}</td></tr>}
                             {rows.map((f) => (
                                 <tr key={f.id} onClick={() => setSelected(f.id)} className={cn('cursor-pointer hover:bg-slate-50', selected === f.id && 'bg-sky-50')}>
                                     <td className="font-mono text-sm">{f.number}</td>
                                     <td className="text-xs">{lbl('billing.kind', f.kind)}</td>
-                                    <td className="text-sm">{f.name}{f.company_id && companyName(f.company_id) && <span className="block text-xs text-slate-400">{companyName(f.company_id)}</span>}</td>
+                                    <td className="text-sm">{f.name}{f.company_id && companyName(f.company_id) && <span className="block text-xs text-slate-500">{companyName(f.company_id)}</span>}</td>
                                     <td><span className={cn('text-xs px-2 py-0.5 rounded', f.status === 'open' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500')}>{lbl('billing.status', f.status)}</span></td>
                                     <td className={cn('text-right text-sm', f.balance > 0 && 'text-red-600')}>{formatCurrency(f.balance)}</td>
                                 </tr>
@@ -150,7 +151,7 @@ function OpenFolioForm({ companies, onDone }: { companies: Company[]; onDone: (i
                 setBusy(false);
             }
         }}>
-            <label className="text-xs text-slate-500">{t('billing.folios.kind')}
+            <label className="label">{t('billing.folios.kind')}
                 <select className="input mt-1" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                     <option value="house">{lbl('billing.kind', 'house')}</option>
                     <option value="master">{lbl('billing.kind', 'master')}</option>
@@ -158,17 +159,17 @@ function OpenFolioForm({ companies, onDone }: { companies: Company[]; onDone: (i
                     <option value="walk_in">{lbl('billing.kind', 'walk_in')}</option>
                 </select>
             </label>
-            <label className="text-xs text-slate-500">{t('billing.folios.name')}
-                <input className="input mt-1" required maxLength={150} placeholder={form.kind === 'house' ? t('billing.folios.name_house_ph') : t('billing.folios.name_ph')} value={form.name}
+            <label className="label">{t('billing.folios.name')}
+                <input className="input mt-1" required maxLength={150} aria-label={form.kind === 'house' ? t('billing.folios.name_house_ph') : t('billing.folios.name_ph')} placeholder={form.kind === 'house' ? t('billing.folios.name_house_ph') : t('billing.folios.name_ph')} value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </label>
-            <label className="text-xs text-slate-500">{t('billing.folios.company_optional')}
+            <label className="label">{t('billing.folios.company_optional')}
                 <select className="input mt-1" value={form.company_id} onChange={(e) => setForm({ ...form, company_id: e.target.value })}>
                     <option value="">—</option>
                     {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
             </label>
-            <label className="text-xs text-slate-500">{t('billing.folios.reservation_optional')}
+            <label className="label">{t('billing.folios.reservation_optional')}
                 <input className="input mt-1" type="number" min={1} value={form.reservation_id} onChange={(e) => setForm({ ...form, reservation_id: e.target.value })} />
             </label>
             <button className="btn-primary justify-center" disabled={busy}>{busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('billing.folios.open')}</button>
@@ -220,9 +221,11 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                 <h3 className="font-semibold text-slate-800">{f ? `${f.number} · ${f.name}` : t('billing.folios.folio')}</h3>
                 {f && <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">{lbl('billing.kind', f.kind)} · {lbl('billing.status', f.status)}</span>}
                 {f?.reservation_id && <Link href={`/reservations/${f.reservation_id}`} className="text-xs text-sky-700 hover:underline">{t('billing.folios.reservation')}</Link>}
+                {f && <PrintPdfButton path={`proforma/${f.id}`} label={t('documents3.print_proforma')} />}
+                {f?.guest_id && <PrintPdfButton path={`guest-statement/${f.guest_id}`} label={t('documents3.print_statement')} />}
                 <span className="ml-auto text-sm text-slate-500">{t('billing.folios.balance')}</span>
                 {f && <span className={cn('text-lg font-semibold', f.balance > 0 ? 'text-red-600' : 'text-emerald-600')}>{formatCurrency(f.balance)}</span>}
-                <button className="text-slate-400 hover:text-slate-700" title={t('billing.folios.close_panel')} onClick={onClose}><X className="w-4 h-4" /></button>
+                <button className="text-slate-500 hover:text-slate-700" title={t('billing.folios.close_panel')} onClick={onClose}><X className="w-4 h-4" /></button>
             </div>
 
             {(message || folio.error) && (
@@ -232,13 +235,13 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                 </div>
             )}
 
-            {!f ? <Loader2 className="w-6 h-6 mx-auto my-12 animate-spin text-slate-400" /> : (
+            {!f ? <Loader2 className="w-6 h-6 mx-auto my-12 animate-spin text-slate-500" /> : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="table-auto w-full">
+                        <table className="table-auto">
                             <thead><tr><th>{t('billing.folios.date')}</th><th>{t('billing.folios.code')}</th><th>{t('billing.folios.description')}</th><th className="text-right">{t('billing.folios.tax')}</th><th className="text-right">{t('billing.folios.amount')}</th><th></th></tr></thead>
                             <tbody>
-                                {(f.lines ?? []).length === 0 && <tr><td colSpan={6} className="text-center py-8 text-slate-400 text-sm">{t('billing.folios.no_postings')}</td></tr>}
+                                {(f.lines ?? []).length === 0 && <tr><td colSpan={6} className="text-center py-8 text-slate-500 text-sm">{t('billing.folios.no_postings')}</td></tr>}
                                 {(f.lines ?? []).map((l) => (
                                     <tr key={l.id} className={cn(l.reversed && 'opacity-50 line-through')}>
                                         <td className="text-sm whitespace-nowrap">{formatDate(l.business_date)}</td>
@@ -246,9 +249,12 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                         <td className="text-sm">{l.description}</td>
                                         <td className="text-right text-sm text-slate-500">{l.tax_amount ? formatCurrency(l.tax_amount) : ''}</td>
                                         <td className={cn('text-right text-sm', l.amount < 0 && 'text-emerald-700')}>{formatCurrency(l.amount)}</td>
-                                        <td className="text-right">
+                                        <td className="text-right whitespace-nowrap">
+                                            {l.type === 'payment' && <PrintPdfButton path={`payment-receipt/${l.id}`} label={t('documents3.print_receipt')} className="text-slate-500 hover:text-sky-700 inline-flex items-center gap-1 text-xs mr-2" />}
+                                            {l.type === 'refund' && <PrintPdfButton path={`refund-voucher/${l.id}`} label={t('documents3.print_receipt')} className="text-slate-500 hover:text-sky-700 inline-flex items-center gap-1 text-xs mr-2" />}
+                                            {l.type === 'reversal' && <PrintPdfButton path={`void-slip/${l.id}`} label={t('documents3.print_receipt')} className="text-slate-500 hover:text-sky-700 inline-flex items-center gap-1 text-xs mr-2" />}
                                             {open && !l.reversed && l.type !== 'reversal' && (
-                                                <button title={t('billing.folios.reverse')} className="text-slate-400 hover:text-red-600" onClick={() => setReversing({ id: l.id, reason: '' })}>
+                                                <button title={t('billing.folios.reverse')} className="text-slate-500 hover:text-red-600" onClick={() => setReversing({ id: l.id, reason: '' })}>
                                                     <Undo2 className="w-4 h-4" />
                                                 </button>
                                             )}
@@ -264,7 +270,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                             e.preventDefault();
                             if (await run(`rev`, `folios/${f.id}/lines/${reversing.id}/reverse`, { reason: reversing.reason }, t('billing.folios.line_reversed'))) setReversing(null);
                         }}>
-                            <input className="input" required autoFocus placeholder={t('billing.folios.reversal_reason')} value={reversing.reason} onChange={(e) => setReversing({ ...reversing, reason: e.target.value })} />
+                            <input className="input" required autoFocus aria-label={t('billing.folios.reversal_reason')} placeholder={t('billing.folios.reversal_reason')} value={reversing.reason} onChange={(e) => setReversing({ ...reversing, reason: e.target.value })} />
                             <button className="btn-primary" disabled={busy === 'rev'}>{t('billing.folios.reverse')}</button>
                             <button type="button" className="btn-secondary" onClick={() => setReversing(null)}>{t('common.cancel')}</button>
                         </form>
@@ -288,12 +294,12 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                         if (await run('charge', `folios/${f.id}/charges`, { ...charge, amount: Number(charge.amount) }, t('billing.folios.charge_posted')))
                                             setCharge({ charge_code: '', amount: '', description: '' });
                                     }}>
-                                        <select className="input" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })}>
+                                        <select className="input" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })} aria-label={t('billing.folios.charge_code')}>
                                             <option value="" disabled>{t('billing.folios.charge_code')}</option>
                                             {chargeCodes.data?.filter((c) => c.code !== 'ROOM').map((c) => <option key={c.code} value={c.code}>{c.code} · {c.name}</option>)}
                                         </select>
-                                        <input className="input" type="number" min={1} required placeholder={t('billing.folios.amount_tax')} value={charge.amount} onChange={(e) => setCharge({ ...charge, amount: e.target.value })} />
-                                        <input className="input" placeholder={t('billing.folios.description_optional')} value={charge.description} onChange={(e) => setCharge({ ...charge, description: e.target.value })} />
+                                        <input className="input" type="number" min={1} required aria-label={t('billing.folios.amount_tax')} placeholder={t('billing.folios.amount_tax')} value={charge.amount} onChange={(e) => setCharge({ ...charge, amount: e.target.value })} />
+                                        <input className="input" aria-label={t('billing.folios.description_optional')} placeholder={t('billing.folios.description_optional')} value={charge.description} onChange={(e) => setCharge({ ...charge, description: e.target.value })} />
                                         <button className="btn-secondary w-full justify-center" disabled={busy === 'charge'}>{t('billing.folios.post_charge')}</button>
                                     </form>
                                 )}
@@ -308,10 +314,10 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                             {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                                         </select>
                                         <div className="flex gap-2">
-                                            <input className="input" type="number" min={1} required placeholder={t('billing.folios.amount_fcfa')} value={payment.amount} onChange={(e) => setPayment({ ...payment, amount: e.target.value })} />
+                                            <input className="input" type="number" min={1} required aria-label={t('billing.folios.amount_fcfa')} placeholder={t('billing.folios.amount_fcfa')} value={payment.amount} onChange={(e) => setPayment({ ...payment, amount: e.target.value })} />
                                             {f.balance > 0 && <button type="button" className="btn-secondary text-xs whitespace-nowrap" onClick={() => setPayment({ ...payment, amount: String(f.balance) })}>{t('billing.folios.full_balance')}</button>}
                                         </div>
-                                        <input className="input" placeholder={t('billing.folios.reference')} value={payment.reference} onChange={(e) => setPayment({ ...payment, reference: e.target.value })} />
+                                        <input className="input" aria-label={t('billing.folios.reference')} placeholder={t('billing.folios.reference')} value={payment.reference} onChange={(e) => setPayment({ ...payment, reference: e.target.value })} />
                                         <button className="btn-primary w-full justify-center" disabled={busy === 'pay'}>{t('billing.folios.record_payment')}</button>
                                     </form>
                                 )}
@@ -322,14 +328,14 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                         if (await run('xfer', `folios/${f.id}/transfer`, { to_folio_id: Number(transfer.to_folio_id), amount: Number(transfer.amount), description: transfer.description || null }, t('billing.folios.transferred')))
                                             setTransfer({ to_folio_id: '', amount: '', description: '' });
                                     }}>
-                                        <select className="input" required value={transfer.to_folio_id} onChange={(e) => setTransfer({ ...transfer, to_folio_id: e.target.value })}>
+                                        <select className="input" required value={transfer.to_folio_id} onChange={(e) => setTransfer({ ...transfer, to_folio_id: e.target.value })} aria-label={t('billing.folios.destination')}>
                                             <option value="" disabled>{t('billing.folios.destination')}</option>
                                             {openFolios.map((o) => <option key={o.id} value={o.id}>{o.number} · {o.name} ({lbl('billing.kind', o.kind)})</option>)}
                                         </select>
-                                        <input className="input" type="number" min={1} required placeholder={t('billing.folios.amount_fcfa')} value={transfer.amount} onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })} />
-                                        <input className="input" placeholder={t('billing.folios.description_optional')} value={transfer.description} onChange={(e) => setTransfer({ ...transfer, description: e.target.value })} />
+                                        <input className="input" type="number" min={1} required aria-label={t('billing.folios.amount_fcfa')} placeholder={t('billing.folios.amount_fcfa')} value={transfer.amount} onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })} />
+                                        <input className="input" aria-label={t('billing.folios.description_optional')} placeholder={t('billing.folios.description_optional')} value={transfer.description} onChange={(e) => setTransfer({ ...transfer, description: e.target.value })} />
                                         <button className="btn-secondary w-full justify-center" disabled={busy === 'xfer'}>{t('billing.folios.transfer')}</button>
-                                        <p className="text-xs text-slate-400">{t('billing.folios.transfer_hint')}</p>
+                                        <p className="text-xs text-slate-500">{t('billing.folios.transfer_hint')}</p>
                                     </form>
                                 )}
 
@@ -339,7 +345,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                         if (confirm(t('billing.folios.ledger_confirm')))
                                             await run('cl', `folios/${f.id}/city-ledger`, { company_id: Number(ledgerCompany || f.company_id) }, t('billing.folios.moved_ledger'));
                                     }}>
-                                        <select className="input" required value={ledgerCompany || (f.company_id ? String(f.company_id) : '')} onChange={(e) => setLedgerCompany(e.target.value)}>
+                                        <select className="input" required value={ledgerCompany || (f.company_id ? String(f.company_id) : '')} onChange={(e) => setLedgerCompany(e.target.value)} aria-label={t('billing.folios.company')}>
                                             <option value="" disabled>{t('billing.folios.company')}</option>
                                             {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>

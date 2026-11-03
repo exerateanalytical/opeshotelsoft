@@ -46,6 +46,11 @@ return [
             'driver' => 'passport',
             'provider' => 'users',
         ],
+        // Loyalty-club members (customer portal): session based, separate session key from staff.
+        'member' => [
+            'driver' => 'session',
+            'provider' => 'members',
+        ],
     ],
 
     /*
@@ -69,6 +74,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'members' => [
+            'driver' => 'eloquent',
+            'model' => \App\Modules\MemberPortal\Domain\MemberAccount::class,
         ],
 
         // 'users' => [

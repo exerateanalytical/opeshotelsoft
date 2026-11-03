@@ -49,12 +49,12 @@ class HrService
     public function orgChart(): array
     {
         $employees = Employee::with('department:id,name')->where('status', '!=', 'terminated')->orderBy('last_name')
-            ->get(['id', 'number', 'first_name', 'last_name', 'department_id', 'position_id', 'reports_to', 'status']);
+            ->get(['id', 'number', 'first_name', 'last_name', 'photo_path', 'department_id', 'position_id', 'reports_to', 'status']);
         $positions = Position::pluck('title', 'id');
         $ids = $employees->pluck('id')->flip();
         $byManager = $employees->groupBy(fn ($e) => $e->reports_to && isset($ids[$e->reports_to]) ? $e->reports_to : 0);
         $node = function ($e) use (&$node, $byManager, $positions) {
-            return ['id' => $e->id, 'number' => $e->number, 'name' => $e->full_name, 'position' => $positions[$e->position_id] ?? null,
+            return ['id' => $e->id, 'number' => $e->number, 'name' => $e->full_name, 'photo_url' => $e->photo_url, 'position' => $positions[$e->position_id] ?? null,
                 'department_id' => $e->department_id, 'reports' => ($byManager[$e->id] ?? collect())->map($node)->values()->all()];
         };
 
@@ -115,6 +115,7 @@ class HrService
                 'base_salary' => $contract['base_salary'],
             ]);
             $e->contracts()->create($contract);
+            \App\Modules\HR\Domain\Lifecycle\SalaryHistory::create(['hotel_id' => $e->hotel_id, 'employee_id' => $e->id, 'base_salary' => $e->base_salary, 'position_id' => $e->position_id, 'effective_date' => $contract['start_date'], 'source' => 'hire', 'recorded_by' => $this->ctx->actor()?->id]);
             $this->startOnboarding($e);
             $this->bus->record('hr.employee_hired', ['id' => $e->id, 'number' => $e->number, 'name' => $e->full_name, 'department_id' => $e->department_id], 'employee', $e->id);
 

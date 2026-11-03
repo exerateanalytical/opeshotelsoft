@@ -1,8 +1,9 @@
 import { Head } from '@inertiajs/react';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 interface Ticket { fired_at: string; station: string; items: { name: string; quantity: number; modifiers: { name: string }[] | null; notes: string | null; voided: boolean }[] }
 interface Kot { check: { number: string; table: string | null; covers: number; outlet: string }; server: string | null; tickets: Ticket[] }
@@ -17,7 +18,7 @@ export default function KotPage({ id, firedAt }: { id: string; firedAt?: string 
             <Head title={t('pos.kot.title')} />
             <style>{'@media print { .no-print { display: none } @page { size: 80mm auto; margin: 2mm } body { background: #fff } } .kot { width: 76mm; max-width: 100%; }'}</style>
             <div className="no-print flex gap-2 mb-4">
-                <button className="btn-primary" onClick={() => window.print()} disabled={!d}><Printer className="w-4 h-4" /> {t('pos.kot.print')}</button>
+                <OpsPrintButton className="btn-primary inline-flex items-center gap-1" label={t('pos.kot.print_pdf')} path={`kot/${id}${firedAt ? `?fired_at=${encodeURIComponent(firedAt)}` : ''}`} />
                 <button className="btn-secondary" onClick={() => window.close()}>{t('pos.kot.close')}</button>
             </div>
             {kot.loading && !d && <Loader2 className="w-5 h-5 animate-spin" />}

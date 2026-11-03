@@ -115,7 +115,7 @@ export default function MaintenanceIndex() {
             <div className="mb-4 flex gap-2 border-b border-slate-200">
                 {(['orders', 'schedules'] as const).map((k) => (
                     <button key={k} onClick={() => setTab(k)}
-                        className={cn('px-3 py-2 text-sm font-medium -mb-px border-b-2', tab === k ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500')}>
+                        className={cn('px-3 py-2 text-sm font-medium -mb-px border-b-2', tab === k ? 'border-navy-800 text-emerald-700' : 'border-transparent text-slate-500')}>
                         {k === 'orders' ? t('maint.tab.orders') : t('maint.tab.schedules')}
                     </button>
                 ))}
@@ -128,43 +128,43 @@ export default function MaintenanceIndex() {
                             onSubmit={(body) => run(() => api('maintenance/work-orders', { method: 'POST', body: JSON.stringify(body) }), t('maint.wo_created')).then((ok) => ok && setShowCreate(false))} />
                     )}
                     <div className="mb-3 flex flex-wrap gap-2">
-                        <input className="input w-auto" placeholder={t('maint.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-                        <select className="input w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+                        <input className="input w-auto" aria-label={t('maint.search')} placeholder={t('maint.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+                        <select className="input w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label={t('hk.all_statuses')}>
                             <option value="">{t('hk.all_statuses')}</option>
                             {STATUSES.map((s) => <option key={s} value={s}>{tl(s)}</option>)}
                         </select>
-                        <select className="input w-auto" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1); }}>
+                        <select className="input w-auto" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1); }} aria-label={t('maint.all_priorities')}>
                             <option value="">{t('maint.all_priorities')}</option>
                             {PRIORITIES.map((s) => <option key={s} value={s}>{tl(s)}</option>)}
                         </select>
                     </div>
                     <div className="grid gap-4 lg:grid-cols-3">
                         <div className={cn('card overflow-x-auto', selected ? 'lg:col-span-2' : 'lg:col-span-3')}>
-                            {orders.loading ? <Loader2 className="w-5 h-5 animate-spin m-6 text-slate-400" /> : orders.error ? (
+                            {orders.loading ? <Loader2 className="w-5 h-5 animate-spin m-6 text-slate-500" /> : orders.error ? (
                                 <p className="p-4 text-sm text-red-600">{orders.error.message}</p>
                             ) : list.length === 0 ? (
-                                <div className="p-8 text-center text-slate-400 text-sm"><Wrench className="w-8 h-8 mx-auto mb-2" />{t('maint.no_wo')}</div>
+                                <div className="p-8 text-center text-slate-500 text-sm"><Wrench className="w-8 h-8 mx-auto mb-2" />{t('maint.no_wo')}</div>
                             ) : (
-                                <table className="table-auto w-full text-sm">
-                                    <thead><tr className="text-left text-slate-500">
-                                        <th className="p-2">#</th><th className="p-2">{t('maint.f.title')}</th><th className="p-2">{t('hk.lf.location')}</th><th className="p-2">{t('maint.priority')}</th>
-                                        <th className="p-2">{t('guests.status')}</th><th className="p-2">{t('hk.assigned')}</th><th className="p-2">{t('maint.opened')}</th>
+                                <div className="table-wrap"><table className="table-auto">
+                                    <thead><tr>
+                                        <th>#</th><th>{t('maint.f.title')}</th><th>{t('hk.lf.location')}</th><th>{t('maint.priority')}</th>
+                                        <th>{t('guests.status')}</th><th>{t('hk.assigned')}</th><th>{t('maint.opened')}</th>
                                     </tr></thead>
                                     <tbody>
                                         {list.map((w) => (
                                             <tr key={w.id} onClick={() => setSelected(w.id)}
                                                 className={cn('border-t border-slate-100 cursor-pointer hover:bg-slate-50', selected === w.id && 'bg-emerald-50')}>
-                                                <td className="p-2 font-mono text-xs">{w.number}</td>
-                                                <td className="p-2">{w.title}{w.room_out_of_order && <span className="ml-1 text-xs text-red-600">{t('maint.ooo')}</span>}</td>
-                                                <td className="p-2">{w.room ? t('hk.room_no', { number: w.room.number }) : assetName(w.asset_id) || '—'}</td>
-                                                <td className="p-2"><Badge cls={PRIO_BADGE[w.priority]} text={w.priority} /></td>
-                                                <td className="p-2"><Badge cls={STATUS_BADGE[w.status]} text={w.status} /></td>
-                                                <td className="p-2">{w.assignee?.name ?? userName(w.assigned_to)}</td>
-                                                <td className="p-2 whitespace-nowrap">{formatDate(w.created_at)}</td>
+                                                <td className="font-mono text-xs">{w.number}</td>
+                                                <td>{w.title}{w.room_out_of_order && <span className="ml-1 text-xs text-red-600">{t('maint.ooo')}</span>}</td>
+                                                <td>{w.room ? t('hk.room_no', { number: w.room.number }) : assetName(w.asset_id) || '—'}</td>
+                                                <td><Badge cls={PRIO_BADGE[w.priority]} text={w.priority} /></td>
+                                                <td><Badge cls={STATUS_BADGE[w.status]} text={w.status} /></td>
+                                                <td>{w.assignee?.name ?? userName(w.assigned_to)}</td>
+                                                <td className="whitespace-nowrap">{formatDate(w.created_at)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
-                                </table>
+                                </table></div>
                             )}
                             {orders.data && orders.data.total > 0 && (
                                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 p-2 text-xs text-slate-500">
@@ -194,20 +194,20 @@ export default function MaintenanceIndex() {
                             onSubmit={(body) => run(() => api('maintenance/schedules', { method: 'POST', body: JSON.stringify(body) }), t('maint.sched_created')).then((ok) => ok && setShowSchedule(false))} />
                     )}
                     <div className="card overflow-x-auto">
-                        {schedules.loading ? <Loader2 className="w-5 h-5 animate-spin m-6 text-slate-400" /> : schedules.error ? (
+                        {schedules.loading ? <Loader2 className="w-5 h-5 animate-spin m-6 text-slate-500" /> : schedules.error ? (
                             <p className="p-4 text-sm text-red-600">{schedules.error.message}</p>
                         ) : (schedules.data ?? []).length === 0 ? (
-                            <p className="p-8 text-center text-sm text-slate-400">{t('maint.no_schedules')}</p>
+                            <p className="p-8 text-center text-sm text-slate-500">{t('maint.no_schedules')}</p>
                         ) : (
-                            <table className="table-auto w-full text-sm">
-                                <thead><tr className="text-left text-slate-500">
-                                    <th className="p-2">{t('maint.f.title')}</th><th className="p-2">{t('maint.asset')}</th><th className="p-2">{t('maint.category')}</th><th className="p-2">{t('maint.every')}</th><th className="p-2">{t('maint.next_due')}</th><th className="p-2">{t('guests.status.active')}</th><th className="p-2"></th>
+                            <div className="table-wrap"><table className="table-auto">
+                                <thead><tr>
+                                    <th>{t('maint.f.title')}</th><th>{t('maint.asset')}</th><th>{t('maint.category')}</th><th>{t('maint.every')}</th><th>{t('maint.next_due')}</th><th>{t('guests.status.active')}</th><th></th>
                                 </tr></thead>
                                 <tbody>
                                     {schedules.data!.map((s) => {
                                         if (editing === s.id) {
                                             return (
-                                                <tr key={s.id} className="border-t border-slate-100"><td colSpan={7} className="p-2">
+                                                <tr key={s.id}><td colSpan={7}>
                                                     <CreateSchedule assets={assetList} initial={s} onClose={() => setEditing(null)}
                                                         onSubmit={(body) => run(() => api(`maintenance/schedules/${s.id}`, { method: 'PATCH', body: JSON.stringify(body) }), t('maint.sched_updated')).then((ok) => ok && setEditing(null))} />
                                                 </td></tr>
@@ -215,22 +215,22 @@ export default function MaintenanceIndex() {
                                         }
                                         const overdue = s.next_due.slice(0, 10) <= new Date().toISOString().slice(0, 10);
                                         return (
-                                            <tr key={s.id} className="border-t border-slate-100">
-                                                <td className="p-2">{s.title}</td>
-                                                <td className="p-2">{assetName(s.asset_id) || '—'}</td>
-                                                <td className="p-2">{tl(s.category)}</td>
-                                                <td className="p-2">{t('maint.days', { count: s.every_days })}</td>
+                                            <tr key={s.id}>
+                                                <td>{s.title}</td>
+                                                <td>{assetName(s.asset_id) || '—'}</td>
+                                                <td>{tl(s.category)}</td>
+                                                <td>{t('maint.days', { count: s.every_days })}</td>
                                                 <td className={cn('p-2 whitespace-nowrap', overdue && 'text-amber-700 font-medium')}>{formatDate(s.next_due)}{overdue && ` ${t('maint.due_suffix')}`}</td>
-                                                <td className="p-2">
-                                                    <label className="flex items-center gap-1"><input type="checkbox" checked={s.active}
+                                                <td>
+                                                    <label className="min-h-11 flex items-center gap-1"><input type="checkbox" checked={s.active}
                                                         onChange={(e) => run(() => api(`maintenance/schedules/${s.id}`, { method: 'PATCH', body: JSON.stringify({ active: e.target.checked }) }), e.target.checked ? t('maint.sched_activated') : t('maint.sched_paused'))} />{s.active ? t('guests.yes') : t('guests.no')}</label>
                                                 </td>
-                                                <td className="p-2"><button title={t('common.edit')} onClick={() => setEditing(s.id)}><Pencil className="w-4 h-4 text-slate-500" /></button></td>
+                                                <td><button title={t('common.edit')} onClick={() => setEditing(s.id)}><Pencil className="w-4 h-4 text-slate-500" /></button></td>
                                             </tr>
                                         );
                                     })}
                                 </tbody>
-                            </table>
+                            </table></div>
                         )}
                     </div>
                 </>
@@ -241,7 +241,7 @@ export default function MaintenanceIndex() {
 
 function TechPicker({ techs, value, onChange, className, placeholder }: { techs: Staff[] | null; value: string; onChange: (v: string) => void; className: string; placeholder: string }) {
     const t = useT();
-    if (!techs) return <input className={className} type="number" placeholder={t('maint.user_id_ph', { label: placeholder })} value={value} onChange={(e) => onChange(e.target.value)} />;
+    if (!techs) return <input className={className} type="number" aria-label={t('maint.user_id_ph', { label: placeholder })} placeholder={t('maint.user_id_ph', { label: placeholder })} value={value} onChange={(e) => onChange(e.target.value)} />;
     return (
         <select className={className} value={value} onChange={(e) => onChange(e.target.value)}>
             <option value="">{placeholder}</option>
@@ -276,19 +276,19 @@ function CreateOrder({ rooms, assets, techs, onClose, onSubmit }: {
         <form onSubmit={submit} className="card p-4 mb-4 space-y-3">
             <div className="flex items-center justify-between"><h3 className="font-semibold">{t('maint.new_wo')}</h3><button type="button" onClick={onClose}><X className="w-4 h-4" /></button></div>
             <div className="grid gap-3 sm:grid-cols-2">
-                <input className="input sm:col-span-2" placeholder={t('maint.f.title')} required maxLength={150} value={f.title} onChange={(e) => set('title', e.target.value)} />
-                <textarea className="input sm:col-span-2" rows={2} placeholder={t('loyalty.members.description')} value={f.description} onChange={(e) => set('description', e.target.value)} />
+                <input className="input sm:col-span-2" aria-label={t('maint.f.title')} placeholder={t('maint.f.title')} required maxLength={150} value={f.title} onChange={(e) => set('title', e.target.value)} />
+                <textarea className="input sm:col-span-2" rows={2} aria-label={t('loyalty.members.description')} placeholder={t('loyalty.members.description')} value={f.description} onChange={(e) => set('description', e.target.value)} />
                 <div className="flex gap-3 text-sm items-center sm:col-span-2">
                     <label><input type="radio" checked={f.target === 'room'} onChange={() => set('target', 'room')} /> {t('guests.show.room')}</label>
                     <label><input type="radio" checked={f.target === 'asset'} onChange={() => set('target', 'asset')} /> {t('maint.asset')}</label>
                 </div>
                 {f.target === 'room' ? (
-                    <select className="input" value={f.room_id} onChange={(e) => set('room_id', e.target.value)}>
+                    <select className="input" value={f.room_id} onChange={(e) => set('room_id', e.target.value)} aria-label={t('maint.no_room')}>
                         <option value="">{t('maint.no_room')}</option>
                         {rooms.map((r) => <option key={r.id} value={r.id}>{t('hk.room_no', { number: r.number })}</option>)}
                     </select>
                 ) : (
-                    <select className="input" value={f.asset_id} required onChange={(e) => set('asset_id', e.target.value)}>
+                    <select className="input" value={f.asset_id} required onChange={(e) => set('asset_id', e.target.value)} aria-label={t('maint.select_asset')}>
                         <option value="">{t('maint.select_asset')}</option>
                         {assets.map((a) => <option key={a.id} value={a.id}>{a.name}{a.tag ? ` (${a.tag})` : ''}</option>)}
                     </select>
@@ -300,12 +300,12 @@ function CreateOrder({ rooms, assets, techs, onClose, onSubmit }: {
                     {PRIORITIES.map((c) => <option key={c} value={c}>{tl(c)}</option>)}
                 </select>
                 <TechPicker techs={techs} className="input" placeholder={t('hk.unassigned')} value={f.assigned_to} onChange={(v) => set('assigned_to', v)} />
-                <label className="text-sm">{t('maint.due')}<input className="input" type="datetime-local" value={f.due_at} onChange={(e) => set('due_at', e.target.value)} /></label>
+                <label className="label">{t('maint.due')}<input className="input" type="datetime-local" value={f.due_at} onChange={(e) => set('due_at', e.target.value)} /></label>
                 {f.target === 'room' && f.room_id && (
                     <div className="sm:col-span-2 rounded border border-amber-200 bg-amber-50 p-2 text-sm space-y-2">
-                        <label className="flex items-center gap-2"><input type="checkbox" checked={f.room_out_of_order} onChange={(e) => set('room_out_of_order', e.target.checked)} />{t('maint.take_ooo')}</label>
+                        <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={f.room_out_of_order} onChange={(e) => set('room_out_of_order', e.target.checked)} />{t('maint.take_ooo')}</label>
                         {f.room_out_of_order && (
-                            <label className="block">{t('maint.ooo_until')}<input className="input" type="date" min={new Date().toISOString().slice(0, 10)} value={f.out_of_order_until} onChange={(e) => set('out_of_order_until', e.target.value)} /></label>
+                            <label className="label">{t('maint.ooo_until')}<input className="input" type="date" min={new Date().toISOString().slice(0, 10)} value={f.out_of_order_until} onChange={(e) => set('out_of_order_until', e.target.value)} /></label>
                         )}
                     </div>
                 )}
@@ -391,7 +391,7 @@ function Detail({ id, techs, assetName, userName, onClose, run }: {
                                     e.preventDefault();
                                     act(reasonFor, { reason }, reasonFor === 'hold' ? t('maint.wo_held') : t('maint.wo_cancelled'));
                                 }}>
-                                    <input className="input flex-1" required maxLength={255} placeholder={reasonFor === 'hold' ? t('maint.hold_reason') : t('maint.cancel_reason')} value={reason} onChange={(e) => setReason(e.target.value)} />
+                                    <input className="input flex-1" required maxLength={255} aria-label={reasonFor === 'hold' ? t('maint.hold_reason') : t('maint.cancel_reason')} placeholder={reasonFor === 'hold' ? t('maint.hold_reason') : t('maint.cancel_reason')} value={reason} onChange={(e) => setReason(e.target.value)} />
                                     <button className="btn-primary">{reasonFor === 'hold' ? t('maint.put_on_hold') : t('maint.cancel_order')}</button>
                                 </form>
                             )}
@@ -403,13 +403,13 @@ function Detail({ id, techs, assetName, userName, onClose, run }: {
                                         ...(parts.length ? { parts: parts.filter((p) => p.stock_item_id).map((p) => ({ stock_item_id: Number(p.stock_item_id), quantity: Number(p.quantity) })) } : {}),
                                     }, t('maint.wo_completed'));
                                 }}>
-                                    <textarea className="input" rows={2} required placeholder={t('maint.resolution_ph')} value={resolution} onChange={(e) => setResolution(e.target.value)} />
-                                    <input className="input" type="number" min={0} placeholder={t('maint.minutes_ph')} value={minutes} onChange={(e) => setMinutes(e.target.value)} />
-                                    <input className="input" type="number" min={0} step={1} placeholder={t('maint.labour_ph')} value={labour} onChange={(e) => setLabour(e.target.value)} />
+                                    <textarea className="input" rows={2} required aria-label={t('maint.resolution_ph')} placeholder={t('maint.resolution_ph')} value={resolution} onChange={(e) => setResolution(e.target.value)} />
+                                    <input className="input" type="number" min={0} aria-label={t('maint.minutes_ph')} placeholder={t('maint.minutes_ph')} value={minutes} onChange={(e) => setMinutes(e.target.value)} />
+                                    <input className="input" type="number" min={0} step={1} aria-label={t('maint.labour_ph')} placeholder={t('maint.labour_ph')} value={labour} onChange={(e) => setLabour(e.target.value)} />
                                     <p className="text-xs text-slate-500">{t('maint.parts_hint')}</p>
                                     {parts.map((p, i) => (
                                         <div key={i} className="flex gap-1">
-                                            <select className="input flex-1" value={p.stock_item_id} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, stock_item_id: e.target.value } : x)))}>
+                                            <select className="input flex-1" value={p.stock_item_id} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, stock_item_id: e.target.value } : x)))} aria-label={t('maint.item_ph')}>
                                                 <option value="">{t('maint.item_ph')}</option>
                                                 {(items.data?.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.unit ? ` (${s.unit})` : ''}</option>)}
                                             </select>
@@ -443,16 +443,16 @@ function CreateSchedule({ assets, initial, onClose, onSubmit }: { assets: Asset[
         }}>
             <div className="flex items-center justify-between"><h3 className="font-semibold">{initial ? t('maint.edit_pm') : t('maint.new_pm')}</h3><button type="button" onClick={onClose}><X className="w-4 h-4" /></button></div>
             <div className="grid gap-3 sm:grid-cols-2">
-                <input className="input sm:col-span-2" required placeholder={t('maint.pm_title_ph')} value={f.title} onChange={(e) => set('title', e.target.value)} />
-                <select className="input" value={f.asset_id} onChange={(e) => set('asset_id', e.target.value)}>
+                <input className="input sm:col-span-2" required aria-label={t('maint.pm_title_ph')} placeholder={t('maint.pm_title_ph')} value={f.title} onChange={(e) => set('title', e.target.value)} />
+                <select className="input" value={f.asset_id} onChange={(e) => set('asset_id', e.target.value)} aria-label={t('maint.no_asset')}>
                     <option value="">{t('maint.no_asset')}</option>
                     {assets.map((a) => <option key={a.id} value={a.id}>{a.name}{a.tag ? ` (${a.tag})` : ''}</option>)}
                 </select>
                 <select className="input" value={f.category} onChange={(e) => set('category', e.target.value)}>
                     {CATEGORIES.map((c) => <option key={c} value={c}>{tl(c)}</option>)}
                 </select>
-                <label className="text-sm">{t('maint.every_days')}<input className="input" type="number" min={1} max={730} required value={f.every_days} onChange={(e) => set('every_days', e.target.value)} /></label>
-                <label className="text-sm">{t('maint.next_due')}<input className="input" type="date" required value={f.next_due} onChange={(e) => set('next_due', e.target.value)} /></label>
+                <label className="label">{t('maint.every_days')}<input className="input" type="number" min={1} max={730} required value={f.every_days} onChange={(e) => set('every_days', e.target.value)} /></label>
+                <label className="label">{t('maint.next_due')}<input className="input" type="date" required value={f.next_due} onChange={(e) => set('next_due', e.target.value)} /></label>
             </div>
             <div className="flex justify-end gap-2">
                 <button type="button" className="btn-secondary" onClick={onClose}>{t('common.cancel')}</button>

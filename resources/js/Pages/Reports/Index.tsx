@@ -1,11 +1,12 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-import { BarChart3, Building2, CalendarDays, Download, Printer, RefreshCw, Radio, ShieldCheck, TrendingUp, Wallet, BedDouble } from 'lucide-react';
+import { BarChart3, Building2, CalendarDays, Download, RefreshCw, Radio, ShieldCheck, TrendingUp, Wallet, BedDouble } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { cn, formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import { activeHotelId, api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 interface Kpis {
     business_date: string; rooms_total: number; out_of_order: number; rooms_available: number; rooms_sold: number;
@@ -50,13 +51,13 @@ function Banner({ error, success }: { error?: string | null; success?: string | 
     if (success) return <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{success}</div>;
     return null;
 }
-function Loading() { const t = useT(); return <div className="py-10 text-center text-sm text-slate-400">{t('common.loading')}</div>; }
+function Loading() { const t = useT(); return <div className="py-10 text-center text-sm text-slate-500">{t('common.loading')}</div>; }
 function Kpi({ label, value, icon: Icon, hint }: { label: string; value: string; icon: typeof Wallet; hint?: string }) {
     return (
-        <div className="card p-4">
-            <div className="flex items-center justify-between text-xs font-medium uppercase text-slate-500">{label}<Icon className="h-4 w-4 text-emerald-600" /></div>
-            <div className="mt-2 text-2xl font-semibold text-slate-800">{value}</div>
-            {hint && <div className="mt-1 text-xs text-slate-400">{hint}</div>}
+        <div className="card min-w-0 p-4">
+            <div className="flex items-center justify-between gap-2 text-sm font-medium text-slate-600">{label}<Icon className="h-4 w-4 text-navy-700" /></div>
+            <div className="mt-2 break-words text-xl font-semibold text-slate-800 tabular-nums sm:text-2xl">{value}</div>
+            {hint && <div className="mt-1 text-sm text-slate-600">{hint}</div>}
         </div>
     );
 }
@@ -72,7 +73,7 @@ function Daily() {
     return (
         <div className="space-y-4">
             <p className="text-sm text-slate-500">{t('reports.business_date')} <b>{formatDate(k.business_date)}</b></p>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
                 <Kpi label={t('reports.occupancy')} value={`${k.occupancy_percent}%`} icon={BedDouble} hint={t('reports.rooms_hint', { sold: k.rooms_sold, available: k.rooms_available, ooo: k.out_of_order })} />
                 <Kpi label={t('reports.adr')} value={formatCurrency(k.adr)} icon={TrendingUp} />
                 <Kpi label={t('reports.revpar')} value={formatCurrency(k.revpar)} icon={TrendingUp} />
@@ -90,18 +91,18 @@ function Daily() {
             </div>
             <div className="card p-4">
                 <h3 className="mb-3 text-sm font-semibold text-slate-700">{t('reports.last_30')}</h3>
-                {data.last_30_days.length === 0 ? <p className="text-sm text-slate-400">{t('reports.no_closed_days')}</p> : (
+                {data.last_30_days.length === 0 ? <p className="text-sm text-slate-500">{t('reports.no_closed_days')}</p> : (
                     <div className="h-64">
                         <ResponsiveContainer>
                             <AreaChart data={data.last_30_days}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                                <YAxis yAxisId="r" tickFormatter={short} tick={{ fontSize: 11 }} />
-                                <YAxis yAxisId="o" orientation="right" unit="%" tick={{ fontSize: 11 }} />
+                                <XAxis dataKey="date" tick={{ fontSize: 13 }} />
+                                <YAxis yAxisId="r" tickFormatter={short} tick={{ fontSize: 13 }} />
+                                <YAxis yAxisId="o" orientation="right" unit="%" tick={{ fontSize: 13 }} />
                                 <Tooltip formatter={(v, n) => (n === t('reports.occupancy') ? `${v}%` : formatCurrency(Number(v)))} />
-                                <Legend />
-                                <Area yAxisId="r" dataKey="room_revenue" name={t('reports.room_revenue')} stroke="#059669" fill="#d1fae5" />
-                                <Area yAxisId="o" dataKey="occupancy_percent" name={t('reports.occupancy')} stroke="#d97706" fill="none" />
+                                <Legend formatter={(v) => <span className="text-slate-700">{v}</span>} />
+                                <Area yAxisId="r" dataKey="room_revenue" name={t('reports.room_revenue')} stroke="#1a3a6b" fill="#e8edf5" />
+                                <Area yAxisId="o" dataKey="occupancy_percent" name={t('reports.occupancy')} stroke="#b45309" fill="none" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -135,13 +136,13 @@ function Forecast() {
                         <ResponsiveContainer>
                             <AreaChart data={data}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                                <YAxis yAxisId="o" unit="%" tick={{ fontSize: 11 }} />
-                                <YAxis yAxisId="r" orientation="right" tickFormatter={short} tick={{ fontSize: 11 }} />
+                                <XAxis dataKey="date" tick={{ fontSize: 13 }} />
+                                <YAxis yAxisId="o" unit="%" tick={{ fontSize: 13 }} />
+                                <YAxis yAxisId="r" orientation="right" tickFormatter={short} tick={{ fontSize: 13 }} />
                                 <Tooltip formatter={(v, n) => (n === t('reports.occupancy') ? `${v}%` : formatCurrency(Number(v)))} />
-                                <Legend />
-                                <Area yAxisId="o" dataKey="occupancy_percent" name={t('reports.occupancy')} stroke="#059669" fill="#d1fae5" />
-                                <Area yAxisId="r" dataKey="room_revenue" name={t('reports.room_revenue')} stroke="#d97706" fill="none" />
+                                <Legend formatter={(v) => <span className="text-slate-700">{v}</span>} />
+                                <Area yAxisId="o" dataKey="occupancy_percent" name={t('reports.occupancy')} stroke="#1a3a6b" fill="#e8edf5" />
+                                <Area yAxisId="r" dataKey="room_revenue" name={t('reports.room_revenue')} stroke="#b45309" fill="none" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -164,13 +165,13 @@ function Group() {
                 <ResponsiveContainer>
                     <BarChart data={chart}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                        <YAxis yAxisId="o" unit="%" tick={{ fontSize: 11 }} />
-                        <YAxis yAxisId="r" orientation="right" tickFormatter={short} tick={{ fontSize: 11 }} />
+                        <XAxis dataKey="name" tick={{ fontSize: 13 }} />
+                        <YAxis yAxisId="o" unit="%" tick={{ fontSize: 13 }} />
+                        <YAxis yAxisId="r" orientation="right" tickFormatter={short} tick={{ fontSize: 13 }} />
                         <Tooltip formatter={(v, n) => (n === t('reports.occupancy') ? `${v}%` : formatCurrency(Number(v)))} />
-                        <Legend />
-                        <Bar yAxisId="o" dataKey="occupancy" name={t('reports.occupancy')} fill="#059669" />
-                        <Bar yAxisId="r" dataKey="revpar" name={t('reports.revpar')} fill="#d97706" />
+                        <Legend formatter={(v) => <span className="text-slate-700">{v}</span>} />
+                        <Bar yAxisId="o" dataKey="occupancy" name={t('reports.occupancy')} fill="#1a3a6b" />
+                        <Bar yAxisId="r" dataKey="revpar" name={t('reports.revpar')} fill="#b45309" />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
@@ -180,7 +181,7 @@ function Group() {
                     <tbody>
                         {data.hotels.map((h) => (
                             <tr key={h.hotel.id} className="border-t">
-                                <td className="p-2 font-medium">{h.hotel.name}<div className="text-xs text-slate-400">{h.hotel.city}</div></td>
+                                <td className="p-2 font-medium">{h.hotel.name}<div className="text-xs text-slate-500">{h.hotel.city}</div></td>
                                 <td>{h.business_date ? formatDate(h.business_date) : '—'}</td>
                                 <td>{h.occupancy_percent}%</td><td>{h.rooms_sold}/{h.rooms_available}</td>
                                 <td>{formatCurrency(h.adr ?? 0)}</td><td>{formatCurrency(h.revpar ?? 0)}</td>
@@ -224,16 +225,16 @@ function Channels() {
         <div className="space-y-4">
             <Range from={from} to={to} setFrom={setFrom} setTo={setTo} />
             <Banner error={error?.message} />
-            {loading && !data ? <Loading /> : rows.length === 0 ? <p className="text-sm text-slate-400">{t('reports.no_production')}</p> : (
+            {loading && !data ? <Loading /> : rows.length === 0 ? <p className="text-sm text-slate-500">{t('reports.no_production')}</p> : (
                 <>
                     <div className="card h-64 p-4">
                         <ResponsiveContainer>
                             <BarChart data={rows}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
-                                <YAxis tickFormatter={short} tick={{ fontSize: 11 }} />
+                                <XAxis dataKey="channel" tick={{ fontSize: 13 }} />
+                                <YAxis tickFormatter={short} tick={{ fontSize: 13 }} />
                                 <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                                <Bar dataKey="revenue" name={t('reports.revenue')} fill="#059669" />
+                                <Bar dataKey="revenue" name={t('reports.revenue')} fill="#1a3a6b" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -291,7 +292,7 @@ function BusinessDays() {
                         return (
                             <tr key={d.id} className="border-t">
                                 <td className="p-2">{formatDate(d.date)}</td>
-                                <td><span className={cn('rounded px-2 py-0.5 text-xs', d.status === 'closed' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-700')}>{d.status}</span></td>
+                                <td><span className={d.status === 'closed' ? 'badge-slate' : 'badge-green'}>{d.status}</span></td>
                                 <td>{d.closed_at ? formatDateTime(d.closed_at) : '—'}</td>
                                 <td>{s.occupancy_percent != null ? `${s.occupancy_percent}%` : '—'}</td>
                                 <td>{s.adr != null ? formatCurrency(num(s.adr)) : '—'}</td>
@@ -301,7 +302,7 @@ function BusinessDays() {
                             </tr>
                         );
                     })}
-                    {data?.data.length === 0 && <tr><td colSpan={8} className="p-4 text-center text-slate-400">{t('reports.no_days')}</td></tr>}
+                    {data?.data.length === 0 && <tr><td colSpan={8} className="p-4 text-center text-slate-500">{t('reports.no_days')}</td></tr>}
                 </tbody>
             </table>
         </div>
@@ -338,12 +339,12 @@ function Police() {
         <div className="space-y-4">
             <Range from={from} to={to} setFrom={setFrom} setTo={setTo}>
                 <button className="btn-secondary inline-flex items-center gap-1" disabled={!from || !to} onClick={downloadCsv}><Download className="h-4 w-4" /> {t('reports.download_csv')}</button>
-                <button className="btn-secondary inline-flex items-center gap-1" onClick={() => window.print()}><Printer className="h-4 w-4" /> {t('reports.print')}</button>
+                <OpsPrintButton className="btn-secondary inline-flex items-center gap-1" label={t('documents4.police')} path={`police-register?from=${from}&to=${to}`} />
             </Range>
             <Banner error={error?.message ?? csvError} />
             <div className="hidden print:block"><h2 className="text-lg font-semibold">{t('reports.police_title')}</h2><p className="text-sm">{d(from)} – {d(to)}</p></div>
             {loading && !data ? <Loading /> : (
-                <div className="card overflow-x-auto print:shadow-none">
+                <div className="card overflow-x-auto">
                     <table className="table-auto w-full text-xs">
                         <thead><tr className="text-left text-slate-500"><th className="p-2">{t('reports.room')}</th><th>{t('reports.name')}</th><th>{t('reports.nat')}</th><th>{t('reports.born')}</th><th>{t('reports.profession')}</th><th>{t('reports.id')}</th><th>{t('reports.from')}</th><th>{t('reports.to')}</th><th>{t('reports.purpose')}</th><th>{t('reports.arrival')}</th><th>{t('reports.departure')}</th></tr></thead>
                         <tbody>
@@ -355,7 +356,7 @@ function Police() {
                                     <td>{e.coming_from}</td><td>{e.going_to}</td><td>{e.purpose}</td><td>{d(e.arrival)}</td><td>{d(e.departure)}</td>
                                 </tr>
                             ))}
-                            {data?.length === 0 && <tr><td colSpan={11} className="p-4 text-center text-slate-400">{t('reports.no_guests')}</td></tr>}
+                            {data?.length === 0 && <tr><td colSpan={11} className="p-4 text-center text-slate-500">{t('reports.no_guests')}</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -390,8 +391,8 @@ function Connections() {
                     <tbody>
                         {(data ?? []).map((c) => (
                             <tr key={c.id} className="border-t">
-                                <td className="p-2 font-medium">{c.name}<div className="text-xs text-slate-400">{c.provider}{!c.has_credentials && ` · ${t('reports.no_credentials')}`}{c.dry_run && ` · ${t('reports.dry_run')}`}</div></td>
-                                <td><span className={cn('rounded px-2 py-0.5 text-xs', c.status === 'active' ? 'bg-emerald-100 text-emerald-700' : c.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700')}>{c.status}</span></td>
+                                <td className="p-2 font-medium">{c.name}<div className="text-xs text-slate-500">{c.provider}{!c.has_credentials && ` · ${t('reports.no_credentials')}`}{c.dry_run && ` · ${t('reports.dry_run')}`}</div></td>
+                                <td><span className={c.status === 'active' ? 'badge-green' : c.status === 'suspended' ? 'badge-red' : 'badge-yellow'}>{c.status}</span></td>
                                 <td>{c.environment}</td>
                                 <td className="text-xs">{[c.push_availability && t('reports.push.avail'), c.push_rates && t('reports.push.rates'), c.receive_reservations && t('reports.push.res')].filter(Boolean).join(' · ')}</td>
                                 <td>{c.last_push_at ? formatDateTime(c.last_push_at) : '—'}</td>
@@ -402,7 +403,7 @@ function Connections() {
                                 </td>
                             </tr>
                         ))}
-                        {data?.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-slate-400">{t('reports.no_connections')}</td></tr>}
+                        {data?.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-slate-500">{t('reports.no_connections')}</td></tr>}
                     </tbody>
                 </table>
             </div>
@@ -416,10 +417,10 @@ export default function Page() {
     return (
         <AppLayout title={t('reports.title')} subtitle={t('reports.subtitle')}>
             <Head title={t('reports.title')} />
-            <div className="mb-4 flex gap-1 overflow-x-auto border-b print:hidden">
+            <div className="tabs mb-4 print:hidden">
                 {TABS.map((tb) => (
                     <button key={tb.key} onClick={() => setTab(tb.key)}
-                        className={cn('flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-sm', tab === tb.key ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700')}>
+                        className={cn('tab', tab === tb.key && 'active')} aria-current={tab === tb.key ? 'page' : undefined}>
                         <tb.icon className="h-4 w-4" />{t(tb.label)}
                     </button>
                 ))}

@@ -7,6 +7,8 @@ use App\Modules\Guests\Domain\Company;
 use App\Modules\Notifications\Application\ChannelManager;
 use App\Modules\Notifications\Application\Console\RetryNotificationsCommand;
 use App\Modules\Notifications\Application\Console\SendPreArrivalCommand;
+use App\Modules\Notifications\Application\Console\WhatsAppJourneyCommand;
+use App\Modules\Notifications\Application\WhatsApp\GuestJourney;
 use App\Modules\Notifications\Application\Notifier;
 use App\Platform\Events\EventBus;
 use App\Platform\Events\StoredEvent;
@@ -17,7 +19,7 @@ class NotificationsModule
     public static function subscribe(EventBus $bus): void
     {
         app()->singletonIf(ChannelManager::class);
-        Artisan::starting(fn (Artisan $a) => $a->resolveCommands([SendPreArrivalCommand::class, RetryNotificationsCommand::class]));
+        Artisan::starting(fn (Artisan $a) => $a->resolveCommands([SendPreArrivalCommand::class, RetryNotificationsCommand::class, WhatsAppJourneyCommand::class]));
 
         $reservation = fn (string $template) => function (StoredEvent $e) use ($template) {
             $p = $e->payload;
@@ -55,5 +57,13 @@ class NotificationsModule
             app(Notifier::class)->notify('staff.password_reset', ['email' => $p['email'] ?? null, 'locale' => $p['locale'] ?? null, 'name' => $p['name'] ?? ''],
                 ['name' => $p['name'] ?? '', 'url' => $p['url'] ?? ''], ['type' => 'user', 'id' => $p['user_id'] ?? null, 'source_event_id' => $e->id]);
         });
+        // WhatsApp guest journey (Q6). Each step is a no-op unless the journey is enabled and the guest opted in.
+        $step = fn (string $journey, string $key = 'id', bool $once = true) => fn (StoredEvent $e) => app(GuestJourney::class)->step($journey, (int) ($e->payload[$key] ?? 0), [], $once);
+        $bus->subscribe('reservation.created', 'whatsapp.booking_confirmation', $step('booking_confirmation'));
+        $bus->subscribe('frontoffice.guest_checked_in', 'whatsapp.welcome', $step('welcome'));
+        $bus->subscribe('frontoffice.guest_checked_out', 'whatsapp.review', $step('review'));
+        $bus->subscribe('guest_portal.order_placed', 'whatsapp.order_confirmation', fn (StoredEvent $e) => app(GuestJourney::class)->step('order_confirmation', (int) $e->payload['reservation_id'], [
+            'number' => $e->payload['check_number'] ?? '', 'total' => number_format((int) ($e->payload['total'] ?? 0), 0, ',', ' '), 'currency' => $e->payload['currency'] ?? 'XAF',
+        ], false));
     }
 }

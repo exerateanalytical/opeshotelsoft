@@ -4,6 +4,7 @@ import { useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Outlet } from './shared';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 interface Report {
     date: string; checks: number; covers: number; gross: number; discounts: number; net: number; voids: number;
@@ -26,7 +27,7 @@ export default function DayReport({ outlets }: { outlets: Outlet[] }) {
             <table className="table-auto w-full text-sm">
                 <tbody>
                     {Object.entries(rows).map(([k, v]) => <tr key={k} className="border-t"><td className="py-2">{k.replace('_', ' ')}</td><td className="text-right">{formatCurrency(Number(v))}</td></tr>)}
-                    {Object.keys(rows).length === 0 && <tr><td className="text-slate-400 py-2">{t('pos.report.nothing_yet')}</td></tr>}
+                    {Object.keys(rows).length === 0 && <tr><td className="text-slate-500 py-2">{t('pos.report.nothing_yet')}</td></tr>}
                 </tbody>
             </table>
         </div>
@@ -34,21 +35,22 @@ export default function DayReport({ outlets }: { outlets: Outlet[] }) {
     return (
         <div>
             <div className="flex flex-wrap gap-2 mb-4">
-                <input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} />
-                <select className="input w-48" value={outlet} onChange={(e) => setOutlet(e.target.value)}>
+                <input type="date" className="input" aria-label={t('fin.col.date')} value={date} onChange={(e) => setDate(e.target.value)} />
+                <select className="input w-full sm:w-48" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('pos.common.all_outlets')}>
                     <option value="">{t('pos.common.all_outlets')}</option>
                     {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </select>
+                <OpsPrintButton path={`pos-day-report?date=${date}${outlet ? `&outlet_id=${outlet}` : ''}`} label={t('documents4.day_report')} />
             </div>
-            {r.loading && !d && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+            {r.loading && !d && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             {r.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{r.error.message}</div>}
             {d && (
                 <>
                     <p className="text-sm text-slate-500 mb-3">{t('pos.report.settled_for', { date: formatDate(d.date) })}</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4 [&>*]:min-w-0">
                         {stats.map(([k, v]) => <div key={k} className="card p-4"><div className="text-xs text-slate-500">{k}</div><div className="text-lg font-semibold text-slate-800">{v}</div></div>)}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 [&>*]:min-w-0">
                         {table(t('pos.report.by_settlement'), d.by_settlement)}
                         {table(t('pos.report.by_payment'), d.payments)}
                     </div>

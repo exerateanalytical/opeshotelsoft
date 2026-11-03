@@ -2,6 +2,7 @@
 
 namespace App\Modules\HR\Application;
 
+use App\Modules\HR\Application\Lifecycle\LifecycleService;
 use App\Modules\HR\Application\Payroll\CameroonRulePack;
 use App\Modules\HR\Application\Payroll\PayslipCalculator;
 use App\Modules\HR\Domain\OvertimeEntry;
@@ -43,8 +44,10 @@ class PayrollService
         [$year, $month] = array_map('intval', explode('-', $period));
         $start = Carbon::create($year, $month, 1);
         $end = $start->copy()->endOfMonth();
+        app(LifecycleService::class)->applyDue(); // Q2: raises/transfers due by today
 
         return DB::transaction(function () use ($pack, $period, $inputs, $start, $end) {
+            $elements = LifecycleService::earningsFor($period); // Q2: bonuses, allowances, service-charge shares
             $run = PayrollRun::firstOrCreate(['period' => $period], ['payroll_rule_pack_id' => $pack->id, 'prepared_by' => $this->ctx->actor()?->id])->refresh();
             if ($run->status !== 'draft') {
                 throw new DomainException("Payroll $period is already {$run->status}.", 'invalid-state');
@@ -64,7 +67,7 @@ class PayrollService
                 $advance = (int) SalaryAdvance::where('employee_id', $e->id)->where('status', 'active')->get()->sum(fn ($a) => min($a->monthly_deduction, $a->balance));
                 $base = $this->proratedBase($e, $start, $end);
 
-                $slip = $calc->compute($base, $e->allowances ?? [], $overtime, (int) ($in['bonuses'] ?? 0), (int) ($in['service_charge'] ?? 0), $advance);
+                $slip = $calc->compute($base, array_merge($e->allowances ?? [], $elements[$e->id] ?? []), $overtime, (int) ($in['bonuses'] ?? 0), (int) ($in['service_charge'] ?? 0), $advance);
                 $run->payslips()->create(['employee_id' => $e->id, 'inputs' => $in + ['overtime_hours' => $overtime]] + $slip);
                 foreach ($totals as $k => $_) {
                     $totals[$k] += $slip[$k];
@@ -91,6 +94,8 @@ class PayrollService
         if ($run->prepared_by && $run->prepared_by === $this->ctx->actor()?->id) {
             throw new DomainException('The payroll must be approved by someone other than the preparer.', 'sod');
         }
+        // H-B: variance and audit checklist; blocks only when the hotel configured payroll_review_required.
+        app(\App\Modules\HR\Talent\Application\PayrollChecks::class)->assertReviewed($run);
         $pack = RulePack::findOrFail($run->payroll_rule_pack_id);
         if (! $pack->certified && app()->isProduction()) {
             throw new DomainException("Payroll rule pack {$pack->version} is not certified by an accountant.", 'rule-pack-uncertified');

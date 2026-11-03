@@ -1,9 +1,10 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Loader2, Search } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Loader2, Search } from 'lucide-react';
+import Field from '@/Components/ui/Field';
 import { useEffect, useState } from 'react';
 import { activeHotelId, api, ApiError, Problem } from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 
 interface Offer {
@@ -191,128 +192,140 @@ export default function ReservationCreate() {
     const canSubmit = !!offer && !!guest && !saving && (!walkIn || !!roomId);
 
     return (
-        <AppLayout>
+        <AppLayout
+            title={walkIn ? t('res.create.walk_in') : t('res.create.title')}
+            actions={<Link href="/reservations" className="btn-secondary"><ArrowLeft className="h-4 w-4" aria-hidden="true" /> {t('res.title')}</Link>}
+        >
             <Head title={t('res.create.title')} />
-            <div className="mx-auto max-w-4xl space-y-4 p-4">
-                <div className="flex items-center justify-between">
-                    <Link href="/reservations" className="btn-secondary inline-flex items-center gap-1"><ArrowLeft className="h-4 w-4" /> {t('res.title')}</Link>
-                    <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={walkIn} onChange={(e) => setWalkIn(e.target.checked)} /> {t('res.create.walk_in_now')}
-                    </label>
-                </div>
-                <h1 className="text-xl font-semibold">{walkIn ? t('res.create.walk_in') : t('res.create.title')}</h1>
+            <div className="mx-auto max-w-4xl space-y-4">
+                <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-slate-800">
+                    <input type="checkbox" className="h-5 w-5" checked={walkIn} onChange={(e) => setWalkIn(e.target.checked)} /> {t('res.create.walk_in_now')}
+                </label>
 
                 {hotels.length > 1 && (
                     <section className="card p-4">
-                        <label className="label" htmlFor="hotel">{t('res.create.hotel')}</label>
-                        <select id="hotel" className="input w-full" value={hotelId ?? ''} onChange={(e) => (setHotelId(+e.target.value), setOffer(null), setAgentId(null))}>
-                            {hotels.map((h) => <option key={h.id} value={h.id}>{h.name}{h.city ? ` · ${h.city}` : ''}</option>)}
-                        </select>
-                        {hotelId !== (property?.id ?? null) && <p className="mt-1 text-sm text-amber-700">{t('res.create.sister_hotel')}</p>}
+                        <Field label={t('res.create.hotel')}>
+                            <select className="select" value={hotelId ?? ''} onChange={(e) => (setHotelId(+e.target.value), setOffer(null), setAgentId(null))}>
+                                {hotels.map((h) => <option key={h.id} value={h.id}>{h.name}{h.city ? ` · ${h.city}` : ''}</option>)}
+                            </select>
+                        </Field>
+                        {hotelId !== (property?.id ?? null) && <p className="mt-2 flex items-center gap-1 text-sm text-amber-800"><AlertTriangle className="h-4 w-4" aria-hidden="true" />{t('res.create.sister_hotel')}</p>}
                     </section>
                 )}
 
-                <section className="card grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
+                <section className="card grid grid-cols-1 gap-3 p-4 min-[480px]:grid-cols-2 md:grid-cols-4">
                     {walkIn ? (
-                        <label className="text-sm">{t('res.nights')}<input className="input" type="number" min={1} max={90} value={nights} onChange={(e) => setNights(Math.max(1, +e.target.value))} /></label>
+                        <Field label={t('res.nights')}><input className="input" type="number" inputMode="numeric" min={1} max={90} value={nights} onChange={(e) => setNights(Math.max(1, +e.target.value))} /></Field>
                     ) : (
                         <>
-                            <label className="text-sm">{t('res.arrival')}<input className="input" type="date" value={arrival} onChange={(e) => setArrival(e.target.value)} /></label>
-                            <label className="text-sm">{t('res.departure')}<input className="input" type="date" value={departure} min={arrival} onChange={(e) => setDeparture(e.target.value)} /></label>
+                            <Field label={t('res.arrival')}><input className="input" type="date" value={arrival} onChange={(e) => setArrival(e.target.value)} /></Field>
+                            <Field label={t('res.departure')}><input className="input" type="date" value={departure} min={arrival} onChange={(e) => setDeparture(e.target.value)} /></Field>
                         </>
                     )}
-                    <label className="text-sm">{t('res.adults')}<input className="input" type="number" min={1} max={12} value={adults} onChange={(e) => setAdults(Math.max(1, +e.target.value))} /></label>
-                    <label className="text-sm">{t('res.children')}<input className="input" type="number" min={0} max={12} value={children} onChange={(e) => setChildren(Math.max(0, +e.target.value))} /></label>
+                    <Field label={t('res.adults')}><input className="input" type="number" inputMode="numeric" min={1} max={12} value={adults} onChange={(e) => setAdults(Math.max(1, +e.target.value))} /></Field>
+                    <Field label={t('res.children')}><input className="input" type="number" inputMode="numeric" min={0} max={12} value={children} onChange={(e) => setChildren(Math.max(0, +e.target.value))} /></Field>
                 </section>
 
                 <section className="card p-4">
-                    <h2 className="mb-2 font-medium">{t('res.create.availability')}</h2>
+                    <h2 className="mb-3 text-base font-semibold">{t('res.create.availability')}</h2>
                     {loadingOffers ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" aria-label="..." />
                     ) : offers && offers.length === 0 ? (
-                        <p className="text-sm text-gray-500">{t('res.create.no_availability')}</p>
+                        <p className="text-sm text-slate-600">{t('res.create.no_availability')}</p>
                     ) : (
-                        <table className="w-full text-sm">
-                            <thead><tr className="text-left text-gray-500"><th /><th>{t('res.room_type')}</th><th>{t('res.rate_plan')}</th><th>{t('res.create.left')}</th><th className="text-right">{t('res.create.per_night')}</th><th className="text-right">{t('res.total')}</th></tr></thead>
-                            <tbody>
-                                {offers?.map((o) => {
-                                    const sel = offer?.room_type.id === o.room_type.id && offer?.rate_plan.id === o.rate_plan.id;
-                                    return (
-                                        <tr key={`${o.room_type.id}-${o.rate_plan.id}`} className={sel ? 'bg-blue-50' : 'cursor-pointer hover:bg-gray-50'} onClick={() => setOffer(o)}>
-                                            <td><input type="radio" checked={sel} onChange={() => setOffer(o)} /></td>
-                                            <td>{o.room_type.name}</td>
-                                            <td>{o.rate_plan.name} {!o.rate_plan.refundable && <span className="text-xs text-amber-700">{t('res.create.non_refundable')}</span>}</td>
-                                            <td>{o.available}</td>
-                                            <td className="text-right">{formatCurrency(Math.round(o.total / Math.max(1, o.nights.length)), o.currency)}</td>
-                                            <td className="text-right font-medium">{formatCurrency(o.total, o.currency)}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                        <div role="radiogroup" aria-label={t('res.create.availability')} className="grid gap-2">
+                            {offers?.map((o) => {
+                                const sel = offer?.room_type.id === o.room_type.id && offer?.rate_plan.id === o.rate_plan.id;
+                                return (
+                                    <label key={`${o.room_type.id}-${o.rate_plan.id}`}
+                                        className={cn('flex min-h-14 cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border-2 px-3 py-2', sel ? 'border-navy-800 bg-navy-50' : 'border-slate-300 bg-white hover:border-navy-400')}>
+                                        <input type="radio" name="offer" className="h-5 w-5 shrink-0" checked={sel} onChange={() => setOffer(o)} />
+                                        <span className="min-w-0 flex-1 basis-40">
+                                            <span className="block font-medium text-slate-900">{o.room_type.name}</span>
+                                            <span className="block text-sm text-slate-600">{o.rate_plan.name} {!o.rate_plan.refundable && <span className="font-medium text-amber-800">{t('res.create.non_refundable')}</span>}</span>
+                                        </span>
+                                        <span className="text-sm text-slate-600">{t('res.create.left')}: <b className="text-slate-900">{o.available}</b></span>
+                                        <span className="text-sm tabular-nums text-slate-600">{formatCurrency(Math.round(o.total / Math.max(1, o.nights.length)), o.currency)} / {t('res.create.per_night')}</span>
+                                        <span className="ml-auto text-base font-semibold tabular-nums text-slate-900">{formatCurrency(o.total, o.currency)}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
                     )}
                 </section>
 
                 {walkIn && offer && (
-                    <section className="card p-4">
-                        <h2 className="mb-2 font-medium">{t('res.room')}</h2>
-                        {vacant.length === 0 ? <p className="text-sm text-gray-500">{t('res.create.no_vacant')}</p> : (
-                            <select className="input" value={roomId ?? ''} onChange={(e) => setRoomId(e.target.value ? +e.target.value : null)}>
-                                <option value="">{t('res.create.choose_room')}</option>
-                                {vacant.map((r) => <option key={r.id} value={r.id}>{r.number}{r.hk_status ? ` (${r.hk_status})` : ''}</option>)}
-                            </select>
+                    <section className="card space-y-3 p-4">
+                        <h2 className="text-base font-semibold">{t('res.room')}</h2>
+                        {vacant.length === 0 ? <p className="text-sm text-slate-600">{t('res.create.no_vacant')}</p> : (
+                            <Field label={t('res.create.choose_room')}>
+                                <select className="select" value={roomId ?? ''} onChange={(e) => setRoomId(e.target.value ? +e.target.value : null)} aria-label={t('res.create.choose_room')}>
+                                    <option value="">{t('res.create.choose_room')}</option>
+                                    {vacant.map((r) => <option key={r.id} value={r.id}>{r.number}{r.hk_status ? ` (${r.hk_status})` : ''}</option>)}
+                                </select>
+                            </Field>
                         )}
                         {guest && !guest.id_number && (
-                            <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-                                <p className="col-span-3 text-amber-800">{t('res.create.id_required')}</p>
-                                <select className="input" value={idDoc.id_type} onChange={(e) => setIdDoc({ ...idDoc, id_type: e.target.value })}>
-                                    {['national_id', 'passport', 'residence_permit', 'driving_licence', 'other'].map((ty) => <option key={ty} value={ty}>{t(`res.id_type.${ty}`)}</option>)}
-                                </select>
-                                <input className="input" placeholder={t('res.create.id_number')} value={idDoc.id_number} onChange={(e) => setIdDoc({ ...idDoc, id_number: e.target.value })} />
-                                <input className="input" placeholder={t('res.create.nationality')} maxLength={2} value={idDoc.nationality} onChange={(e) => setIdDoc({ ...idDoc, nationality: e.target.value })} />
+                            <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-3">
+                                <p className="flex items-center gap-1 text-sm text-amber-800 min-[480px]:col-span-3"><AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />{t('res.create.id_required')}</p>
+                                <Field label={t('res.id_type.national_id')}>
+                                    <select className="select" value={idDoc.id_type} onChange={(e) => setIdDoc({ ...idDoc, id_type: e.target.value })}>
+                                        {['national_id', 'passport', 'residence_permit', 'driving_licence', 'other'].map((ty) => <option key={ty} value={ty}>{t(`res.id_type.${ty}`)}</option>)}
+                                    </select>
+                                </Field>
+                                <Field label={t('res.create.id_number')}><input className="input" value={idDoc.id_number} onChange={(e) => setIdDoc({ ...idDoc, id_number: e.target.value })} /></Field>
+                                <Field label={t('res.create.nationality')}><input className="input" maxLength={2} value={idDoc.nationality} onChange={(e) => setIdDoc({ ...idDoc, nationality: e.target.value })} /></Field>
                             </div>
                         )}
                     </section>
                 )}
 
-                <section className="card space-y-2 p-4">
-                    <h2 className="font-medium">{t('res.guest')}</h2>
+                <section className="card space-y-3 p-4">
+                    <h2 className="text-base font-semibold">{t('res.guest')}</h2>
                     {guest ? (
-                        <div className="flex items-center justify-between text-sm">
-                            <span>{guest.first_name} {guest.last_name} {guest.email && <span className="text-gray-500">· {guest.email}</span>}</span>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span>{guest.first_name} {guest.last_name} {guest.email && <span className="text-slate-600">· {guest.email}</span>}</span>
                             <button type="button" className="btn-secondary" onClick={() => (setGuest(null), setDupes([]))}>{t('res.create.change')}</button>
                         </div>
                     ) : newGuest ? (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
                             {(['first_name', 'last_name', 'email', 'phone'] as const).map((f) => (
-                                <input key={f} className="input" placeholder={t(`res.create.field.${f}`)} value={newGuest[f]} onChange={(e) => setNewGuest({ ...newGuest, [f]: e.target.value })} />
+                                <Field key={f} label={t(`res.create.field.${f}`)}>
+                                    <input className="input" type={f === 'email' ? 'email' : f === 'phone' ? 'tel' : 'text'} value={newGuest[f]} onChange={(e) => setNewGuest({ ...newGuest, [f]: e.target.value })} />
+                                </Field>
                             ))}
-                            <div className="col-span-2 flex gap-2">
+                            <div className="btn-row min-[480px]:col-span-2">
                                 <button type="button" className="btn-primary" disabled={!newGuest.first_name || !newGuest.last_name} onClick={createGuest}>{t('res.create.create_guest')}</button>
                                 <button type="button" className="btn-secondary" onClick={() => setNewGuest(null)}>{t('common.cancel')}</button>
                             </div>
                         </div>
                     ) : (
                         <>
-                            <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                                    <input className="input w-full pl-8" placeholder={t('res.create.search_guest')} value={guestQ} onChange={(e) => setGuestQ(e.target.value)} />
+                            <div className="flex flex-wrap gap-2">
+                                <div className="relative min-w-0 flex-1 basis-56">
+                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                                    <input type="search" className="input pl-9" placeholder={t('res.create.search_guest')} aria-label={t('res.create.search_guest')} value={guestQ} onChange={(e) => setGuestQ(e.target.value)} />
                                 </div>
                                 <button type="button" className="btn-secondary" onClick={() => setNewGuest({ first_name: '', last_name: '', email: '', phone: '' })}>{t('res.create.new_guest')}</button>
                             </div>
-                            {guestHits.map((g) => (
-                                <button key={g.id} type="button" className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-gray-50" onClick={() => (setGuest(g), setGuestQ(''))}>
-                                    {g.first_name} {g.last_name} <span className="text-gray-500">{g.email ?? g.phone ?? ''}</span>
-                                </button>
-                            ))}
+                            {guestHits.length > 0 && (
+                                <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200">
+                                    {guestHits.map((g) => (
+                                        <li key={g.id}>
+                                            <button type="button" className="flex min-h-11 w-full flex-wrap items-center gap-x-2 px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={() => (setGuest(g), setGuestQ(''))}>
+                                                <span className="font-medium">{g.first_name} {g.last_name}</span> <span className="text-slate-600">{g.email ?? g.phone ?? ''}</span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </>
                     )}
                     {dupes.length > 0 && (
-                        <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900">
-                            {t('res.create.duplicates')}
+                        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                            <p className="font-medium">{t('res.create.duplicates')}</p>
                             {dupes.map((d) => (
-                                <button key={d.id} type="button" className="ml-2 underline" onClick={() => (setGuest(d), setDupes([]))}>
+                                <button key={d.id} type="button" className="mt-1 block min-h-11 text-left font-medium underline" onClick={() => (setGuest(d), setDupes([]))}>
                                     {t('res.create.use_profile', { name: `${d.first_name} ${d.last_name}`, id: d.id })}
                                 </button>
                             ))}
@@ -321,44 +334,48 @@ export default function ReservationCreate() {
                 </section>
 
                 {!walkIn && (
-                    <section className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
-                        <div className="text-sm">
-                            {t('res.company')}
+                    <section className="card grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
+                        <div className="min-w-0">
+                            <span className="label">{t('res.company')}</span>
                             {company ? (
-                                <div className="flex items-center justify-between">{company.name}<button type="button" className="btn-secondary" onClick={() => setCompany(null)}>{t('res.create.clear')}</button></div>
+                                <div className="flex items-center justify-between gap-2">{company.name}<button type="button" className="btn-secondary" onClick={() => setCompany(null)}>{t('res.create.clear')}</button></div>
                             ) : (
                                 <>
-                                    <input className="input w-full" placeholder={t('res.create.search_company')} value={companyQ} onChange={(e) => setCompanyQ(e.target.value)} />
-                                    {companyHits.map((c) => (
-                                        <button key={c.id} type="button" className="block w-full px-2 py-1 text-left hover:bg-gray-50" onClick={() => (setCompany(c), setCompanyQ(''))}>{c.name}</button>
-                                    ))}
+                                    <input className="input" aria-label={t('res.company')} placeholder={t('res.create.search_company')} value={companyQ} onChange={(e) => setCompanyQ(e.target.value)} />
+                                    {companyHits.length > 0 && (
+                                        <ul className="mt-1 divide-y divide-slate-200 rounded-lg border border-slate-200">
+                                            {companyHits.map((c) => (
+                                                <li key={c.id}><button type="button" className="min-h-11 w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={() => (setCompany(c), setCompanyQ(''))}>{c.name}</button></li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </>
                             )}
                         </div>
-                        <label className="text-sm">{t('res.travel_agent')}
-                            <select className="input w-full" value={agentId ?? ''} onChange={(e) => setAgentId(e.target.value ? +e.target.value : null)}>
+                        <Field label={t('res.travel_agent')}>
+                            <select className="select" value={agentId ?? ''} onChange={(e) => setAgentId(e.target.value ? +e.target.value : null)} aria-label={t('common.none')}>
                                 <option value="">{t('common.none')}</option>
                                 {agents.map((a) => <option key={a.id} value={a.id}>{a.name}{a.iata_number ? ` (IATA ${a.iata_number})` : ''} · {Number(a.commission_percent)}%</option>)}
                             </select>
-                        </label>
-                        <label className="text-sm">{t('res.channel')}
-                            <select className="input w-full" value={channel} onChange={(e) => setChannel(e.target.value)}>{CHANNELS.map((c) => <option key={c} value={c}>{t(`res.channel.${c}`)}</option>)}</select>
-                        </label>
-                        <label className="text-sm">{t('res.guarantee')}
-                            <select className="input w-full" value={guarantee} onChange={(e) => setGuarantee(e.target.value)}>{GUARANTEES.map((g) => <option key={g} value={g}>{g ? t(`res.guarantee.${g}`) : '—'}</option>)}</select>
-                        </label>
-                        <label className="text-sm">{t('res.eta')}<input className="input w-full" type="time" value={eta} onChange={(e) => setEta(e.target.value)} /></label>
-                        <label className="text-sm">{t('res.rooms')}<input className="input w-full" type="number" min={1} max={50} value={rooms} onChange={(e) => setRooms(Math.max(1, +e.target.value))} /></label>
-                        <label className="text-sm sm:col-span-2">{t('res.special_requests')}<textarea className="input w-full" rows={2} value={requests} onChange={(e) => setRequests(e.target.value)} /></label>
+                        </Field>
+                        <Field label={t('res.channel')}>
+                            <select className="select" value={channel} onChange={(e) => setChannel(e.target.value)}>{CHANNELS.map((c) => <option key={c} value={c}>{t(`res.channel.${c}`)}</option>)}</select>
+                        </Field>
+                        <Field label={t('res.guarantee')}>
+                            <select className="select" value={guarantee} onChange={(e) => setGuarantee(e.target.value)}>{GUARANTEES.map((g) => <option key={g} value={g}>{g ? t(`res.guarantee.${g}`) : '-'}</option>)}</select>
+                        </Field>
+                        <Field label={t('res.eta')}><input className="input" type="time" value={eta} onChange={(e) => setEta(e.target.value)} /></Field>
+                        <Field label={t('res.rooms')}><input className="input" type="number" inputMode="numeric" min={1} max={50} value={rooms} onChange={(e) => setRooms(Math.max(1, +e.target.value))} /></Field>
+                        <Field label={t('res.special_requests')} className="md:col-span-2"><textarea className="textarea" rows={2} value={requests} onChange={(e) => setRequests(e.target.value)} /></Field>
                     </section>
                 )}
 
                 <ProblemBox problem={problem} />
 
-                <div className="flex items-center justify-end gap-3">
-                    {offer && <span className="text-sm">{t('res.total')}: <b>{formatCurrency(offer.total * (walkIn ? 1 : rooms), offer.currency)}</b></span>}
-                    <button type="button" className="btn-primary inline-flex items-center gap-1" disabled={!canSubmit} onClick={submit}>
-                        {saving && <Loader2 className="h-4 w-4 animate-spin" />} {walkIn ? t('res.create.check_in_walk_in') : t('res.create.book')}
+                <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 bg-white px-1 py-3">
+                    {offer && <span className="mr-auto text-base">{t('res.total')}: <b className="tabular-nums">{formatCurrency(offer.total * (walkIn ? 1 : rooms), offer.currency)}</b></span>}
+                    <button type="button" className="btn-primary btn-lg w-full sm:w-auto" disabled={!canSubmit} onClick={submit}>
+                        {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />} {walkIn ? t('res.create.check_in_walk_in') : t('res.create.book')}
                     </button>
                 </div>
             </div>

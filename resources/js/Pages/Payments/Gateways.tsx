@@ -27,7 +27,7 @@ export default function PaymentGateways() {
             actions={<Link href="/payments" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('payments.gateways.back')}</Link>}>
             <Head title={t('payments.gateways.title')} />
             {list.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{list.error.message}</div>}
-            {list.loading && !list.data && <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" />}
+            {list.loading && !list.data && <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" />}
             <div className="grid gap-6 lg:grid-cols-3">
                 {list.data?.map((g) => <GatewayCard key={g.provider} gateway={g} onSaved={() => list.reload()} />)}
             </div>
@@ -64,10 +64,10 @@ function GatewayCard({ gateway, onSaved }: { gateway: Gateway; onSaved: () => vo
                 <span className={gateway.configured ? 'badge-green' : 'badge-slate'}>{gateway.configured ? t('payments.gateways.configured') : t('payments.dry_run')}</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-                <label className="label flex items-center gap-2">
+                <label className="min-h-11 label flex items-center gap-2">
                     <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} /> {t('payments.gateways.enabled')}
                 </label>
-                <select className="input" value={mode} onChange={(e) => setMode(e.target.value as Gateway['mode'])}>
+                <select className="input" value={mode} onChange={(e) => setMode(e.target.value as Gateway['mode'])} aria-label={t('payments.gateways.sandbox')}>
                     <option value="sandbox">{t('payments.gateways.sandbox')}</option>
                     <option value="live">{t('payments.gateways.live')}</option>
                 </select>
@@ -75,7 +75,7 @@ function GatewayCard({ gateway, onSaved }: { gateway: Gateway; onSaved: () => vo
             {gateway.fields.map((f) => (
                 <label key={f.name} className="label block">{f.name.replace(/_/g, ' ')}
                     <input className="input mt-1" type={f.secret ? 'password' : 'text'} autoComplete="off"
-                        placeholder={gateway.credentials[f.name] ?? (f.secret ? t('payments.gateways.not_set') : '')}
+                        aria-label={gateway.credentials[f.name] ?? (f.secret ? t('payments.gateways.not_set') : '')} placeholder={gateway.credentials[f.name] ?? (f.secret ? t('payments.gateways.not_set') : '')}
                         value={values[f.name] ?? ''} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })} />
                 </label>
             ))}

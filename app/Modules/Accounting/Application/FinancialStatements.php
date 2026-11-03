@@ -115,22 +115,22 @@ class FinancialStatements
         return [
             'from' => $from, 'to' => $to,
             'sections' => [
-                ['key' => 'operating', 'label' => 'Flux de trésorerie des activités opérationnelles', 'total' => $operating, 'lines' => [
-                    ['label' => 'Résultat net', 'amount' => $result],
-                    ['label' => 'Dotations nettes aux amortissements et provisions', 'amount' => $dotations],
-                    ['label' => 'Moins-values (+) / plus-values (−) de cession', 'amount' => $disposals],
-                    ['label' => 'Capacité d\'autofinancement globale (CAFG)', 'amount' => $cafg, 'subtotal' => true],
-                    ['label' => 'Variation des stocks', 'amount' => $stocks],
-                    ['label' => 'Variation des créances', 'amount' => $receivables],
-                    ['label' => 'Variation des dettes circulantes', 'amount' => $payables],
+                ['key' => 'operating', 'label' => __('srv.cashflow.operating'), 'total' => $operating, 'lines' => [
+                    ['label' => __('srv.cashflow.net_result'), 'amount' => $result],
+                    ['label' => __('srv.cashflow.depreciation'), 'amount' => $dotations],
+                    ['label' => __('srv.cashflow.disposal_gains'), 'amount' => $disposals],
+                    ['label' => __('srv.cashflow.cafg'), 'amount' => $cafg, 'subtotal' => true],
+                    ['label' => __('srv.cashflow.stocks'), 'amount' => $stocks],
+                    ['label' => __('srv.cashflow.receivables'), 'amount' => $receivables],
+                    ['label' => __('srv.cashflow.payables'), 'amount' => $payables],
                 ]],
-                ['key' => 'investing', 'label' => 'Flux de trésorerie des activités d\'investissement', 'total' => $investing, 'lines' => [
-                    ['label' => 'Acquisitions d\'immobilisations (nettes)', 'amount' => $acquisitions],
-                    ['label' => 'Cessions d\'immobilisations', 'amount' => $proceeds],
+                ['key' => 'investing', 'label' => __('srv.cashflow.investing'), 'total' => $investing, 'lines' => [
+                    ['label' => __('srv.cashflow.acquisitions'), 'amount' => $acquisitions],
+                    ['label' => __('srv.cashflow.proceeds'), 'amount' => $proceeds],
                 ]],
-                ['key' => 'financing', 'label' => 'Flux de trésorerie des activités de financement', 'total' => $financing, 'lines' => [
-                    ['label' => 'Capitaux propres', 'amount' => $equity],
-                    ['label' => 'Emprunts et dettes financières', 'amount' => $debt],
+                ['key' => 'financing', 'label' => __('srv.cashflow.financing'), 'total' => $financing, 'lines' => [
+                    ['label' => __('srv.cashflow.equity'), 'amount' => $equity],
+                    ['label' => __('srv.cashflow.debt'), 'amount' => $debt],
                 ]],
             ],
             'net_change' => $operating + $investing + $financing,
@@ -164,7 +164,7 @@ class FinancialStatements
             }
             [$ref, $label, $statement] = $map;
             $signed = in_array($statement, ['actif', 'charges'], true) ? $amount : -$amount;
-            $lines[$ref] ??= ['ref' => $ref, 'label' => $label, 'statement' => $statement, 'amount' => 0, 'accounts' => []];
+            $lines[$ref] ??= ['ref' => $ref, 'label' => self::trans("srv.dsf.$ref", $label), 'statement' => $statement, 'amount' => 0, 'accounts' => []];
             $lines[$ref]['amount'] += $signed;
             $lines[$ref]['accounts'][] = $code;
             $accounts[] = ['account' => $code, 'name' => $names[$code] ?? '?', 'debit' => $b['debit'], 'credit' => $b['credit'], 'balance' => $amount, 'dsf_ref' => $ref];
@@ -173,7 +173,7 @@ class FinancialStatements
 
         return [
             'from' => $from, 'to' => $to,
-            'gate' => 'GATE-3: DSF mapping to be validated by the chartered accountant before filing.',
+            'gate' => __('srv.dsf.gate'),
             'lines' => array_values($lines), 'accounts' => $accounts, 'unmapped_accounts' => $unmapped,
         ];
     }
@@ -188,6 +188,14 @@ class FinancialStatements
         rewind($out);
 
         return "\xEF\xBB\xBF".stream_get_contents($out);
+    }
+
+    /** Translated label, or the fallback when the key is missing. */
+    private static function trans(string $key, string $fallback): string
+    {
+        $t = __($key);
+
+        return $t === $key ? $fallback : $t;
     }
 
     private function mapAccount(string $code, int $balance): ?array

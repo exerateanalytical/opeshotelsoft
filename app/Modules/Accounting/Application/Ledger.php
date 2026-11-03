@@ -90,7 +90,9 @@ class Ledger
                 'created_by' => $this->ctx->actor()?->id,
                 'approved_by' => $meta['approved_by'] ?? null,
             ]);
+            $dims = app(Core\DimensionDefaults::class);
             foreach ($normalized as $l) {
+                $l = $dims->fill($l);
                 $entry->lines()->create([
                     'hotel_id' => $hotelId,
                     'account_code' => $l['account'],
@@ -99,6 +101,9 @@ class Ledger
                     'partner_type' => $l['partner_type'] ?? null,
                     'partner_id' => $l['partner_id'] ?? null,
                     'department' => $l['department'] ?? null,
+                    'outlet' => $l['outlet'] ?? null,
+                    'project' => $l['project'] ?? null,
+                    'cost_centre' => $l['cost_centre'] ?? null,
                     'description' => $l['description'] ?? null,
                     'date' => $date->toDateString(),
                     'currency' => isset($l['currency']) ? strtoupper($l['currency']) : null,
@@ -106,6 +111,7 @@ class Ledger
                     'fx_rate' => $l['fx_rate'] ?? null,
                 ]);
             }
+            app(Core\AuditTrail::class)->record('posted', 'journal_entry', $entry->id, ['number' => $entry->number, 'journal' => $journal, 'total' => $debit, 'source_type' => $meta['source_type'] ?? null]);
             $this->bus->record('accounting.entry_posted', ['id' => $entry->id, 'number' => $entry->number, 'journal' => $journal, 'total' => $debit, 'date' => $date->toDateString()], 'journal_entry', $entry->id);
 
             return $entry;
@@ -120,11 +126,13 @@ class Ledger
         $lines = $entry->lines->map(fn ($l) => [
             'account' => $l->account_code, 'debit' => $l->credit, 'credit' => $l->debit,
             'partner_type' => $l->partner_type, 'partner_id' => $l->partner_id, 'department' => $l->department,
+            'outlet' => $l->outlet, 'project' => $l->project, 'cost_centre' => $l->cost_centre,
         ])->all();
 
         return DB::transaction(function () use ($entry, $reason, $date, $lines) {
             $rev = $this->post($entry->journal_code, $date ?? $entry->date, "Extourne {$entry->number}: $reason", $lines, ['reverses_entry_id' => $entry->id, 'source_type' => 'reversal', 'source_id' => $entry->id]);
             $entry->forceFill(['reversed' => true])->save();
+            app(Core\AuditTrail::class)->record('reversed', 'journal_entry', $entry->id, ['reason' => $reason, 'reversal_entry_id' => $rev?->id]);
 
             return $rev;
         });

@@ -1,0 +1,12 @@
+# /etc/systemd/system/opeshotelsoft-scheduler.timer
+# Enable: systemctl enable --now opeshotelsoft-scheduler.timer
+[Unit]
+Description=Run the OpesHotelSoft scheduler every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=1s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

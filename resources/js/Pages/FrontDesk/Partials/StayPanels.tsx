@@ -42,7 +42,7 @@ export function CheckOutPanel({ id, onDone, notify }: { id: number | string; onD
     return (
         <div className="card px-5 py-4 space-y-3">
             <h3 className="font-semibold text-slate-800">{t('fo.stay.check_out_title')}</h3>
-            {!q ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : (
+            {!q ? <Loader2 className="w-4 h-4 animate-spin text-slate-500" /> : (
                 <>
                     {q.early && <p className="text-sm text-slate-600">{t('fo.stay.early_departure', { count: q.nights_released })}</p>}
                     {q.fee && (
@@ -55,7 +55,7 @@ export function CheckOutPanel({ id, onDone, notify }: { id: number | string; onD
                             <button className="btn-secondary" disabled={busy === 'fee'} onClick={() => post('fee', `reservations/${id}/check-out/fee`, {}, t('fo.stay.fee_posted'))}>
                                 {busy === 'fee' && <Loader2 className="w-4 h-4 animate-spin" />} {t('fo.stay.post_fee')}
                             </button>
-                            <label className="text-sm text-slate-600 flex items-center gap-2">
+                            <label className="min-h-11 text-sm text-slate-600 flex items-center gap-2">
                                 <input type="checkbox" checked={waive} onChange={(e) => setWaive(e.target.checked)} /> {t('fo.stay.waive_fee')}
                             </label>
                         </div>
@@ -109,7 +109,7 @@ export function RoomMovePanel({ id, onDone, notify }: { id: number | string; onD
                 <option value="" disabled>{rooms.loading ? t('common.loading') : t('fo.stay.vacant_room')}</option>
                 {rooms.data?.map((r) => <option key={r.id} value={r.id}>{r.number} · {r.room_type?.code} · {t(`fo.hk.${r.hk_status}`) === `fo.hk.${r.hk_status}` ? r.hk_status.replace(/_/g, ' ') : t(`fo.hk.${r.hk_status}`)}</option>)}
             </select>
-            <input className="input" required maxLength={255} placeholder={t('fo.stay.reason')} value={reason} onChange={(e) => setReason(e.target.value)} />
+            <input className="input" required maxLength={255} aria-label={t('fo.stay.reason')} placeholder={t('fo.stay.reason')} value={reason} onChange={(e) => setReason(e.target.value)} />
             <button className="btn-secondary w-full justify-center" disabled={busy}>{busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('fo.stay.move_guest')}</button>
         </form>
     );
@@ -157,7 +157,7 @@ export function RoutingPanel({ id, companyId, chargeCodes, notify }: { id: numbe
                     <li key={r.id} className="flex items-center gap-2 text-sm">
                         <span className="badge-blue">{r.match_type === 'all' ? t('fo.stay.all_charges_badge') : r.match_type === 'department' ? t('fo.stay.dept_badge', { value: label('fo.dept', r.match_value ?? '') }) : t('fo.stay.code_badge', { value: r.match_value ?? '' })}</span>
                         <span className="truncate">→ {r.target ? `${r.target.number} ${r.target.name}` : t('fo.stay.missing_folio')}</span>
-                        <button type="button" title={t('fo.stay.remove_rule')} className="ml-auto text-slate-400 hover:text-red-600" disabled={busy}
+                        <button type="button" title={t('fo.stay.remove_rule')} className="ml-auto text-slate-500 hover:text-red-600" disabled={busy}
                             onClick={() => call(`reservations/${id}/routing-rules/${r.id}`, { method: 'DELETE' }, t('fo.stay.rule_removed'))}>
                             <Trash2 className="w-4 h-4" />
                         </button>
@@ -169,7 +169,7 @@ export function RoutingPanel({ id, companyId, chargeCodes, notify }: { id: numbe
                 call(`reservations/${id}/routing-rules`, { method: 'POST', body: JSON.stringify({ ...form, target_folio_id: Number(form.target_folio_id), match_value: form.match_type === 'all' ? null : form.match_value }) }, t('fo.stay.rule_added'));
             }}>
                 <div className="flex gap-2">
-                    <select className="input" value={form.match_type} onChange={(e) => setForm({ ...form, match_type: e.target.value, match_value: e.target.value === 'department' ? 'rooms' : e.target.value === 'charge_code' ? (chargeCodes[0]?.code ?? '') : '' })}>
+                    <select className="input" value={form.match_type} onChange={(e) => setForm({ ...form, match_type: e.target.value, match_value: e.target.value === 'department' ? 'rooms' : e.target.value === 'charge_code' ? (chargeCodes[0]?.code ?? '') : '' })} aria-label={t('fo.stay.department')}>
                         <option value="department">{t('fo.stay.department')}</option>
                         <option value="charge_code">{t('fo.stay.charge_code')}</option>
                         <option value="all">{t('fo.stay.all_charges')}</option>
@@ -305,7 +305,7 @@ export function RegistrationCardPanel({ id, editable, notify }: { id: number | s
     return (
         <div className="card px-5 py-4 space-y-3">
             <h3 className="font-semibold text-slate-800">{t('fo.stay.card')}</h3>
-            {!c ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : (
+            {!c ? <Loader2 className="w-4 h-4 animate-spin text-slate-500" /> : (
                 <>
                     <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
                         <dt className="label">{t('fo.stay.name')}</dt><dd>{c.full_name}</dd>
@@ -317,17 +317,17 @@ export function RegistrationCardPanel({ id, editable, notify }: { id: number | s
                         <div>
                             <div className="label mb-1">{t('fo.stay.id_photo')}</div>
                             {photo ? <img src={photo} alt={t('fo.stay.id_photo_alt')} className="w-full rounded border border-slate-200 object-contain max-h-40" />
-                                : <div className="text-sm text-slate-400">{t('fo.stay.none')}</div>}
+                                : <div className="text-sm text-slate-500">{t('fo.stay.none')}</div>}
                         </div>
                         <div>
                             <div className="label mb-1">{t('fo.stay.signature')}</div>
                             {signature ? <img src={signature} alt={t('fo.stay.signature_alt')} className="w-full rounded border border-slate-200 bg-white object-contain max-h-40" />
-                                : <div className="text-sm text-slate-400">{t('fo.stay.none')}</div>}
+                                : <div className="text-sm text-slate-500">{t('fo.stay.none')}</div>}
                         </div>
                     </div>
                     {editable && (
                         <div className="space-y-2 border-t border-slate-100 pt-3">
-                            <label className="label block" htmlFor="id-photo">{t('fo.stay.upload_id')}</label>
+                            <label className="label" htmlFor="id-photo">{t('fo.stay.upload_id')}</label>
                             <input id="id-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="text-sm w-full"
                                 onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
                             <div className="flex items-center">

@@ -18,11 +18,38 @@ class Employee extends Model
         return ['date_of_birth' => 'date', 'hire_date' => 'date', 'termination_date' => 'date', 'allowances' => 'array', 'leave_days_per_month' => 'float'];
     }
 
-    protected $appends = ['full_name'];
+    protected $appends = ['full_name', 'photo_url'];
 
     public function getFullNameAttribute(): string
     {
         return $this->first_name.' '.$this->last_name;
+    }
+
+    /** Web address of the profile photo, or null. */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        $p = $this->photo_path;
+        if (! $p) {
+            return null;
+        }
+
+        return str_starts_with($p, '/') || str_starts_with($p, 'http') ? $p : \Illuminate\Support\Facades\Storage::disk('public')->url($p);
+    }
+
+    /** The photo inlined as a data URI, for PDFs. */
+    public function photoDataUri(): ?string
+    {
+        $p = $this->photo_path;
+        if (! $p) {
+            return null;
+        }
+        $file = str_starts_with($p, '/') ? public_path(ltrim($p, '/')) : \Illuminate\Support\Facades\Storage::disk('public')->path($p);
+        if (! is_file($file)) {
+            return null;
+        }
+        $mime = str_ends_with(strtolower($file), '.png') ? 'image/png' : 'image/jpeg';
+
+        return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($file));
     }
 
     public function contracts()

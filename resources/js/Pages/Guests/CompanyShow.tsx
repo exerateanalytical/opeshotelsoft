@@ -54,7 +54,7 @@ export default function CompanyShow({ id }: { id: string }) {
         >
             <Head title={d?.company.name ?? t('guests.company')} />
             {(error || o.error) && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{error ?? o.error?.message}</div>}
-            {o.loading && !d && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+            {o.loading && !d && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             {d && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="card p-4">
@@ -64,15 +64,15 @@ export default function CompanyShow({ id }: { id: string }) {
                         </div>
                         {form && (
                             <form className="space-y-2 mb-3" onSubmit={(e) => { e.preventDefault(); call(`companies/${id}/contacts`, 'POST', { ...form, role: form.role || null, email: form.email || null, phone: form.phone || null }).then((ok) => ok && setForm(null)); }}>
-                                <input className="input w-full" placeholder={t('guests.companies.name')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                                <input className="input w-full" placeholder={t('guests.company.role_ph')} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
-                                <input className="input w-full" type="email" placeholder={t('guests.field.email')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                                <input className="input w-full" placeholder={t('guests.field.phone')} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.primary} onChange={(e) => setForm({ ...form, primary: e.target.checked })} /> {t('guests.company.primary_contact')}</label>
+                                <input className="input w-full" aria-label={t('guests.companies.name')} placeholder={t('guests.companies.name')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                                <input className="input w-full" aria-label={t('guests.company.role_ph')} placeholder={t('guests.company.role_ph')} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
+                                <input className="input w-full" type="email" aria-label={t('guests.field.email')} placeholder={t('guests.field.email')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                                <input className="input w-full" aria-label={t('guests.field.phone')} placeholder={t('guests.field.phone')} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                                <label className="min-h-11 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.primary} onChange={(e) => setForm({ ...form, primary: e.target.checked })} /> {t('guests.company.primary_contact')}</label>
                                 <div className="flex gap-2"><button className="btn-primary" disabled={busy}>{t('common.save')}</button><button type="button" className="btn-secondary" onClick={() => setForm(null)}>{t('common.cancel')}</button></div>
                             </form>
                         )}
-                        {d.contacts.length === 0 && <p className="text-sm text-slate-400">{t('guests.company.no_contacts')}</p>}
+                        {d.contacts.length === 0 && <p className="text-sm text-slate-500">{t('guests.company.no_contacts')}</p>}
                         {d.contacts.map((c) => (
                             <div key={c.id} className="border-t border-slate-100 py-2 text-sm flex justify-between gap-2">
                                 <div>
@@ -84,18 +84,18 @@ export default function CompanyShow({ id }: { id: string }) {
                                         <button className="btn-secondary text-red-600" disabled={busy} onClick={() => call(`companies/${id}/contacts/${c.id}`, 'DELETE').then(() => setConfirmDel(null))}>{t('guests.remove')}</button>
                                         <button className="btn-secondary" onClick={() => setConfirmDel(null)}>{t('guests.keep')}</button>
                                     </span>
-                                ) : <button title={t('guests.company.remove_contact')} className="text-slate-400" onClick={() => setConfirmDel(c.id)}><Trash2 className="w-4 h-4" /></button>}
+                                ) : <button title={t('guests.company.remove_contact')} className="text-slate-500" onClick={() => setConfirmDel(c.id)}><Trash2 className="w-4 h-4" /></button>}
                             </div>
                         ))}
                     </div>
                     <div className="lg:col-span-2 space-y-4">
                         <div className="card p-4">
                             <h3 className="font-semibold text-slate-800 mb-2">{t('guests.company.rate_plans')}</h3>
-                            {d.rate_plans.length === 0 && <p className="text-sm text-slate-400">{t('guests.company.no_rate_plans')}</p>}
+                            {d.rate_plans.length === 0 && <p className="text-sm text-slate-500">{t('guests.company.no_rate_plans')}</p>}
                             <div className="overflow-x-auto">
-                                <table className="table-auto w-full text-sm"><tbody>
+                                <table className="table-auto"><tbody>
                                     {d.rate_plans.map((p) => (
-                                        <tr key={p.id} className="border-t border-slate-100">
+                                        <tr key={p.id}>
                                             <td className="py-1 pr-2 font-medium">{p.code}</td><td className="pr-2">{p.name}</td><td className="pr-2">{p.meal_plan}</td><td className="pr-2">{p.hotel_name}</td>
                                             <td>{p.active ? <span className="badge-green">{t('guests.status.active')}</span> : <span className="badge-slate">{t('guests.status.inactive')}</span>}</td>
                                         </tr>
@@ -106,17 +106,17 @@ export default function CompanyShow({ id }: { id: string }) {
                         <div className="card p-4">
                             <h3 className="font-semibold text-slate-800 mb-2">{t('guests.company.bookings')}</h3>
                             <div className="overflow-x-auto">
-                                <table className="table-auto w-full text-sm"><tbody>
+                                <table className="table-auto"><tbody>
                                     {d.bookings.map((b) => (
-                                        <tr key={b.id} className="border-t border-slate-100">
-                                            <td className="py-1 pr-2"><Link href={`/reservations/${b.id}`} className="text-emerald-700 hover:underline">{b.number}</Link></td>
+                                        <tr key={b.id}>
+                                            <td className="py-1 pr-2"><Link href={`/reservations/${b.id}`} className="text-navy-600 underline-offset-2 hover:underline">{b.number}</Link></td>
                                             <td className="pr-2">{b.guest_name}</td><td className="pr-2">{b.hotel_name}</td>
                                             <td className="pr-2 whitespace-nowrap">{formatDate(b.arrival)} → {formatDate(b.departure)}</td>
                                             <td className="pr-2"><span className="badge-slate">{b.status.replace('_', ' ')}</span></td>
                                             <td className="text-right">{formatCurrency(b.total_amount)}</td>
                                         </tr>
                                     ))}
-                                    {d.bookings.length === 0 && <tr><td className="py-3 text-slate-400">{t('guests.company.no_bookings')}</td></tr>}
+                                    {d.bookings.length === 0 && <tr><td className="py-3 text-slate-500">{t('guests.company.no_bookings')}</td></tr>}
                                 </tbody></table>
                             </div>
                         </div>

@@ -1,0 +1,20 @@
+{
+    "nav.arrivals": "Today's arrivals",
+    "nav.budgets": "Budgets and analytics",
+    "nav.channel_health": "Channel health",
+    "nav.edge": "Local server (offline)",
+    "nav.fastconfigure": "Fast configure",
+    "nav.group_booking": "Multi-room booking",
+    "nav.letterhead": "Letterhead and templates",
+    "nav.messaging": "Guest messaging",
+    "nav.my_space": "My space",
+    "nav.onboarding": "Hotel setup",
+    "nav.payables_workflow": "Payables and tax",
+    "nav.people": "Performance and tasks",
+    "nav.rooming_import": "Rooming list import",
+    "nav.service_requests": "Service requests",
+    "nav.stock_control": "Stock control",
+    "nav.stock_ops": "Stock operations",
+    "nav.talent": "Talent and training",
+    "nav.workforce": "Workforce planning"
+}

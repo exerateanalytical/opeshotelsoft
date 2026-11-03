@@ -39,7 +39,7 @@ export default function CashierBar({ onChange, refresh = 0 }: { onChange?: () =>
         <div className="card px-5 py-3 mb-6">
             <div className="flex items-center gap-3 flex-wrap">
                 <Wallet className="w-4 h-4 text-slate-500" />
-                {shift.loading && !s ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : s ? (
+                {shift.loading && !s ? <Loader2 className="w-4 h-4 animate-spin text-slate-500" /> : s ? (
                     <>
                         <span className="text-sm text-slate-700">
                             {t('cashier.open_since', { id: s.id, time: new Date(s.opened_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}
@@ -63,7 +63,7 @@ export default function CashierBar({ onChange, refresh = 0 }: { onChange?: () =>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {Object.entries(s.expected ?? {}).map(([code, amount]) => (
                             <label key={code} className="text-xs text-slate-500">
-                                {code} <span className="text-slate-400">({t('cashier.expected', { amount: formatCurrency(amount) })})</span>
+                                {code} <span className="text-slate-500">({t('cashier.expected', { amount: formatCurrency(amount) })})</span>
                                 <input type="number" min={0} className="input mt-1" value={counted[code] ?? ''}
                                     onChange={(e) => setCounted({ ...counted, [code]: e.target.value })} />
                             </label>

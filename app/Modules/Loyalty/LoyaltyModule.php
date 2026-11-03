@@ -10,11 +10,17 @@ use App\Modules\Loyalty\Domain\Program;
 use App\Modules\Reservations\Domain\Reservation;
 use App\Platform\Events\EventBus;
 use App\Platform\Events\StoredEvent;
+use App\Modules\Loyalty\Application\Console\LoyaltyDailyCommand;
+use Illuminate\Console\Application as Artisan;
+use Illuminate\Support\Facades\View;
 
 class LoyaltyModule
 {
     public static function subscribe(EventBus $bus): void
     {
+        View::addNamespace('loyalty', __DIR__.'/Resources/views');
+        Artisan::starting(fn ($artisan) => $artisan->resolveCommands([LoyaltyDailyCommand::class]));
+
         // Earn on check-out: all eligible charges on the stay's folios (rooms, F&B charged to room...).
         $bus->subscribe('frontoffice.guest_checked_out', 'loyalty.earn_stay', function (StoredEvent $e) {
             $program = Program::where('active', true)->first();
@@ -38,7 +44,12 @@ class LoyaltyModule
             $member = Membership::where('guest_id', $p['guest_id'])->where('status', 'active')->first();
             if ($member) {
                 $net = (int) collect($p['revenue'])->sum('net');
-                app(LoyaltyService::class)->earn($member, $net, 0, 'pos_check', $p['id'], "Point de vente {$p['outlet']} #{$p['number']}");
+                // No points are earned on the part paid with points.
+                $pts = (int) collect($p['payments'])->where('method', 'PTS')->sum('amount');
+                if ($pts > 0 && ($p['total'] ?? 0) > 0) {
+                    $net = (int) floor($net * max(0, $p['total'] - $pts) / $p['total']);
+                }
+                app(LoyaltyService::class)->earn($member, $net, 0, 'pos_check', $p['id'], "Point de vente {$p['outlet']} #{$p['number']}", $p['outlet_id'] ?? null);
             }
         });
     }

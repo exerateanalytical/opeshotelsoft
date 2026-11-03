@@ -194,6 +194,9 @@ class PosService
                 if (in_array($method->kind, ['cash', 'card', 'mobile_money'], true) && ! $shift) {
                     throw new DomainException('Open a cashier shift before taking payments.', 'shift-required');
                 }
+                if ($method->kind === 'loyalty_points') { // points as tender: the Loyalty module validates and deducts
+                    app(\App\Modules\Loyalty\Application\PosLoyalty::class)->redeemTender($check, (int) $p['amount'], $p['reference'] ?? null);
+                }
                 $tendered = $p['tendered'] ?? $p['amount'];
                 $check->payments()->create([
                     'hotel_id' => $check->hotel_id, 'method_code' => $method->code, 'amount' => $p['amount'],

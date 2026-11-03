@@ -101,7 +101,7 @@ export default function SettingsHotels() {
                         <form onSubmit={save} className="card px-5 py-4 mb-6 space-y-4">
                             <div className="flex items-center">
                                 <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('settings.hotels.new') : t('settings.hotels.edit', { name: editing.name })}</h3>
-                                <button type="button" className="ml-auto text-slate-400 hover:text-slate-600" onClick={() => setEditing(null)}><X className="w-5 h-5" /></button>
+                                <button type="button" className="ml-auto text-slate-500 hover:text-slate-600" onClick={() => setEditing(null)}><X className="w-5 h-5" /></button>
                             </div>
                             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <Field label={t('settings.hotels.code')}><input className="input w-full" required maxLength={12} value={draft.code} onChange={set('code')} /></Field>
@@ -147,17 +147,17 @@ export default function SettingsHotels() {
                         <table className="table-auto w-full">
                             <thead><tr><th>{t('settings.hotels.hotel')}</th><th>{t('settings.hotels.location')}</th><th>{t('settings.hotels.stars')}</th><th>{t('settings.hotels.currency')}</th><th>{t('settings.hotels.check_in_out')}</th><th>{t('settings.hotels.business_date')}</th><th></th></tr></thead>
                             <tbody>
-                                {hotels.loading && !hotels.data && <tr><td colSpan={7}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-400" /></td></tr>}
-                                {hotels.data?.data.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-slate-400 text-sm">{t('settings.hotels.empty')}</td></tr>}
+                                {hotels.loading && !hotels.data && <tr><td colSpan={7}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
+                                {hotels.data?.data.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-slate-500 text-sm">{t('settings.hotels.empty')}</td></tr>}
                                 {hotels.data?.data.map((h) => (
                                     <tr key={h.id}>
                                         <td><div className="text-sm font-medium text-slate-800">{h.name}</div><div className="text-xs font-mono text-slate-500">{h.code}{h.legal_name ? ` · ${h.legal_name}` : ''}</div></td>
                                         <td className="text-sm">{[h.city, COUNTRIES[h.country] ?? h.country].filter(Boolean).join(', ')}</td>
-                                        <td>{h.stars ? <span className="flex text-amber-500">{Array.from({ length: h.stars }, (_, i) => <Star key={i} className="w-3.5 h-3.5 fill-current" />)}</span> : <span className="text-xs text-slate-400">—</span>}</td>
+                                        <td>{h.stars ? <span className="flex text-amber-500">{Array.from({ length: h.stars }, (_, i) => <Star key={i} className="w-3.5 h-3.5 fill-current" />)}</span> : <span className="text-xs text-slate-500">—</span>}</td>
                                         <td className="text-sm">{h.currency}</td>
                                         <td className="text-sm">{hm(h.check_in_time) || '—'} / {hm(h.check_out_time) || '—'}</td>
                                         <td className="text-sm font-medium">{h.business_date ? formatDate(h.business_date) : '—'}</td>
-                                        <td className="text-right"><button title={t('common.edit')} className="text-slate-400 hover:text-indigo-600" onClick={() => open(h)}><Pencil className="w-4 h-4" /></button></td>
+                                        <td className="text-right"><button title={t('common.edit')} className="text-slate-500 hover:text-indigo-600" onClick={() => open(h)}><Pencil className="w-4 h-4" /></button></td>
                                     </tr>
                                 ))}
                             </tbody>

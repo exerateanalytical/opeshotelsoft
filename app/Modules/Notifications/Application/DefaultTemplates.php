@@ -37,6 +37,14 @@ final class DefaultTemplates
                     "Hello {{guest_name}},\n\nWe look forward to welcoming you tomorrow {{arrival}} at {{hotel_name}} (booking {{number}}). Check-in from {{check_in_time}}.\n\n{{hotel_phone}}",
                     '{{hotel_name}}: see you tomorrow ({{arrival}}), booking {{number}}.'],
             ]],
+            'reservation.deposit_reminder' => ['transactional', [ // R-B deposit automation
+                'fr' => ['Acompte à régler pour la réservation {{number}}',
+                    "Bonjour {{guest_name}},\n\nL'acompte de {{amount_due}} {{currency}} pour votre réservation {{number}} est à régler avant le {{deadline}}, faute de quoi la chambre sera remise en vente.\nPayer : {{pay_url}}\n\n{{hotel_name}} {{hotel_phone}}",
+                    '{{hotel_name}} : acompte {{amount_due}} {{currency}} à régler avant le {{deadline}} (réservation {{number}}). {{pay_url}}'],
+                'en' => ['Deposit due for booking {{number}}',
+                    "Hello {{guest_name}},\n\nThe deposit of {{amount_due}} {{currency}} for your booking {{number}} is due before {{deadline}}, otherwise the room will be released.\nPay: {{pay_url}}\n\n{{hotel_name}} {{hotel_phone}}",
+                    '{{hotel_name}}: deposit {{amount_due}} {{currency}} due before {{deadline}} (booking {{number}}). {{pay_url}}'],
+            ]],
             'invoice.issued' => ['transactional', [
                 'fr' => ['Facture {{number}}',
                     "Bonjour {{guest_name}},\n\nVeuillez trouver votre facture {{number}} d'un montant de {{total}} {{currency}}.\n\n{{hotel_name}}",

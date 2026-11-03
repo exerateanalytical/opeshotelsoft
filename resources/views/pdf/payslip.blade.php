@@ -5,6 +5,8 @@
 @section('title', $L['title'])
 @section('content')
 <h1>{{ $L['title'] }}</h1>
+@php($photo = ! empty($emp['id']) ? \App\Modules\HR\Domain\Employee::find($emp['id'])?->photoDataUri() : null)
+@if($photo)<img src="{{ $photo }}" alt="" style="float:right;width:70px;height:70px;border:1px solid #cbd5e1">@endif
 <table class="kv" style="width:100%">
     <tr><td class="k">{{ $L['employee'] }}</td><td>{{ trim(($emp['first_name'] ?? '').' '.($emp['last_name'] ?? '')) }}</td></tr>
     <tr><td class="k">{{ $L['number'] }}</td><td>{{ $emp['number'] ?? '' }}</td></tr>

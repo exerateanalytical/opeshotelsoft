@@ -13,7 +13,7 @@ class RoomType extends Model
 
     protected function casts(): array
     {
-        return ['amenities' => 'array', 'active' => 'boolean'];
+        return ['amenities' => 'array', 'active' => 'boolean', 'bed_config' => 'array', 'smoking' => 'boolean', 'weekend_uplift_percent' => 'float', 'high_season_uplift_percent' => 'float'];
     }
 
     public function rooms()

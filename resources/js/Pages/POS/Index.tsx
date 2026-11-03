@@ -24,7 +24,7 @@ export default function Page() {
     }, [outlets.data]);
 
     const actions = (
-        <select className="input w-48" value={outletId ?? ''} onChange={(e) => setOutletId(Number(e.target.value))}>
+        <select className="input w-full sm:w-48" aria-label={t('pos.menu.outlet')} value={outletId ?? ''} onChange={(e) => setOutletId(Number(e.target.value))}>
             {posOutlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
         </select>
     );
@@ -34,11 +34,11 @@ export default function Page() {
             <Head title={t('pos.index.title')} />
             <div className="flex gap-2 mb-4 overflow-x-auto">
                 {([['terminal', t('pos.index.tab_terminal')], ['menu', t('pos.index.tab_menu')], ['report', t('pos.index.tab_report')], ['setup', t('pos.index.tab_setup')]] as [Tab, string][]).map(([k, label]) => (
-                    <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${tab === k ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'}`}>{label}</button>
+                    <button key={k} onClick={() => setTab(k)} className={`shrink-0 whitespace-nowrap ${tab === k ? 'btn-primary' : 'btn-secondary'}`}>{label}</button>
                 ))}
             </div>
             {outlets.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{outlets.error.message}</div>}
-            {tab === 'terminal' && (outletId ? <Terminal key={outletId} outletId={outletId} /> : outlets.loading ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" /> : <p className="text-sm text-amber-600">{t('pos.index.no_outlet')}</p>)}
+            {tab === 'terminal' && (outletId ? <Terminal key={outletId} outletId={outletId} /> : outlets.loading ? <Loader2 className="w-5 h-5 animate-spin text-slate-500" /> : <p className="text-sm text-amber-600">{t('pos.index.no_outlet')}</p>)}
             {tab === 'menu' && <MenuTab outlets={posOutlets} />}
             {tab === 'report' && <DayReport outlets={posOutlets} />}
             {tab === 'setup' && outletId && <Setup outlets={posOutlets} outletId={outletId} />}

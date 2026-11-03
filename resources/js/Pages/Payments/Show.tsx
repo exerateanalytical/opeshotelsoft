@@ -25,7 +25,7 @@ export default function PaymentShow({ id }: { id: string }) {
             actions={<Link href="/payments" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('payments.show.all')}</Link>}>
             <Head title={t('payments.show.title')} />
             {intent.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{intent.error.message}</div>}
-            {!i && intent.loading && <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" />}
+            {!i && intent.loading && <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" />}
             {i && (
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
                     <div className="card px-5 py-4 self-start">
@@ -68,10 +68,10 @@ export default function PaymentShow({ id }: { id: string }) {
                     <div className="space-y-6">
                         {i.status === 'succeeded' && (i.refundable ?? 0) > 0 && <RefundForm intent={i} onDone={() => intent.reload()} />}
                         <div className="card overflow-x-auto">
-                            <table className="table-auto w-full">
+                            <table className="table-auto">
                                 <thead><tr><th>{t('payments.show.refund')}</th><th>{t('payments.reason')}</th><th className="text-right">{t('payments.amount')}</th></tr></thead>
                                 <tbody>
-                                    {(i.refunds ?? []).length === 0 && <tr><td colSpan={3} className="text-center py-6 text-slate-400 text-sm">{t('payments.show.no_refunds')}</td></tr>}
+                                    {(i.refunds ?? []).length === 0 && <tr><td colSpan={3} className="text-center py-6 text-slate-500 text-sm">{t('payments.show.no_refunds')}</td></tr>}
                                     {(i.refunds ?? []).map((r) => (
                                         <tr key={r.id}>
                                             <td className="text-sm whitespace-nowrap">{formatDateTime(r.created_at)}</td>
@@ -122,10 +122,10 @@ function RefundForm({ intent, onDone }: { intent: Intent; onDone: () => void }) 
             }
         }}>
             <div className="font-medium text-sm">{t('payments.show.refund_gateway')}</div>
-            <label className="label block">{t('payments.show.amount_max', { amount: formatCurrency(intent.refundable ?? 0, intent.currency) })}
+            <label className="label">{t('payments.show.amount_max', { amount: formatCurrency(intent.refundable ?? 0, intent.currency) })}
                 <input className="input mt-1" type="number" min={1} max={intent.refundable} required value={amount} onChange={(e) => setAmount(e.target.value)} />
             </label>
-            <label className="label block">{t('payments.reason')}
+            <label className="label">{t('payments.reason')}
                 <input className="input mt-1" required maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)} />
             </label>
             <button className="btn-primary w-full justify-center" disabled={busy}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4" />} {t('payments.show.refund_btn')}</button>

@@ -4,6 +4,7 @@ import { Check, ChevronLeft, ChevronRight, LogIn, LogOut, Plus, X } from 'lucide
 import { useState } from 'react';
 import { Badge, Banner, Department, Employee, errMsg, Field, Paged, Position } from './shared';
 import { useLocale, useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 function useMsg() {
     const [ok, setOk] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export function OrgTab() {
                         <input className="input" placeholder={t('hr.org.cost_center')} value={d.cost_center} onChange={(e) => setD({ ...d, cost_center: e.target.value })} />
                         <button className="btn-primary"><Plus className="h-4 w-4" /> {t('common.save')}</button>
                     </form>
-                    <p className="mb-2 text-xs text-slate-400">{t('hr.org.dept_hint')}</p>
+                    <p className="mb-2 text-xs text-slate-500">{t('hr.org.dept_hint')}</p>
                     <div className="overflow-x-auto">
                         <table className="table-auto w-full text-sm">
                             <thead><tr className="text-left text-slate-500"><th>{t('hr.common.code')}</th><th>{t('hr.common.name')}</th><th>{t('hr.org.cost_center')}</th></tr></thead>
@@ -138,14 +139,14 @@ export function ShiftsTab() {
                         <button className="btn-secondary" disabled={clockBusy} onClick={() => clock('out')}><LogOut className="h-4 w-4" /> {t('hr.shift.clock_out')}</button></>
                     : <><span className="text-sm text-slate-500">{t('hr.shift.not_clocked')}</span>
                         <button className="btn-primary" disabled={clockBusy} onClick={() => clock('in')}><LogIn className="h-4 w-4" /> {t('hr.shift.clock_in')}</button></>)}
-                {!linked && <span className="text-xs text-slate-400">{status.error?.message}</span>}
+                {!linked && <span className="text-xs text-slate-500">{status.error?.message}</span>}
             </div>
             <form onSubmit={add} className="card mb-5 grid grid-cols-1 gap-2 sm:grid-cols-6">
                 <select className="input sm:col-span-2" required value={f.employee_id} onChange={(e) => setF({ ...f, employee_id: e.target.value })}>
                     <option value="">{t('hr.shift.employee_pick')}</option>{people.map((p) => <option key={p.id} value={p.id}>{p.last_name} {p.first_name}</option>)}
                 </select>
                 <input type="date" className="input" required value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
-                <div className="flex gap-1"><input type="time" className="input" required value={f.starts_at} onChange={(e) => setF({ ...f, starts_at: e.target.value })} /><input type="time" className="input" required value={f.ends_at} onChange={(e) => setF({ ...f, ends_at: e.target.value })} /></div>
+                <div className="flex flex-wrap gap-1"><input type="time" className="input" required value={f.starts_at} onChange={(e) => setF({ ...f, starts_at: e.target.value })} /><input type="time" className="input" required value={f.ends_at} onChange={(e) => setF({ ...f, ends_at: e.target.value })} /></div>
                 <input className="input" placeholder={t('hr.shift.role_ph')} value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} />
                 <button className="btn-primary"><Plus className="h-4 w-4" /> {t('hr.shift.add')}</button>
             </form>
@@ -159,7 +160,7 @@ export function ShiftsTab() {
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-3">{t('hr.emp.employee')}</th>{days.map((d) => <th key={d} className="whitespace-nowrap px-2">{new Date(d).toLocaleDateString(locale, { weekday: 'short', day: 'numeric' })}</th>)}</tr></thead>
                     <tbody>
-                        {rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-slate-400">{t('hr.shift.none')}</td></tr>}
+                        {rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-slate-500">{t('hr.shift.none')}</td></tr>}
                         {rows.map((p) => (
                             <tr key={p.id} className="border-t align-top">
                                 <td className="p-3 whitespace-nowrap font-medium">{p.name}</td>
@@ -180,7 +181,7 @@ export function ShiftsTab() {
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th>{t('hr.emp.employee')}</th><th>{t('hr.common.date')}</th><th>{t('hr.shift.in')}</th><th>{t('hr.shift.out')}</th><th>{t('hr.shift.worked')}</th><th>{t('hr.shift.overtime')}</th></tr></thead>
                     <tbody>
-                        {att.data?.data.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-slate-400">{t('hr.shift.no_attendance')}</td></tr>}
+                        {att.data?.data.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-slate-500">{t('hr.shift.no_attendance')}</td></tr>}
                         {att.data?.data.map((a) => (
                             <tr key={a.id} className="border-t">
                                 <td className="py-2">{a.employee ? `${a.employee.last_name} ${a.employee.first_name}` : `#${a.employee_id}`}</td>
@@ -251,7 +252,7 @@ export function LeaveTab() {
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-3">{t('hr.emp.employee')}</th><th>{t('hr.common.type')}</th><th>{t('hr.common.from')}</th><th>{t('hr.common.to')}</th><th>{t('hr.common.days')}</th><th>{t('hr.common.reason')}</th><th>{t('hr.common.status')}</th><th></th></tr></thead>
                     <tbody>
-                        {list.data?.data.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-slate-400">{t('hr.leave.none')}</td></tr>}
+                        {list.data?.data.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-slate-500">{t('hr.leave.none')}</td></tr>}
                         {list.data?.data.map((l) => (
                             <tr key={l.id} className="border-t">
                                 <td className="p-3">{l.employee ? `${l.employee.last_name} ${l.employee.first_name}` : '—'}</td>
@@ -259,7 +260,7 @@ export function LeaveTab() {
                                 <td>{formatDate(l.start_date)}</td><td>{formatDate(l.end_date)}</td><td>{l.days}</td>
                                 <td className="max-w-[200px] truncate">{l.reason ?? ''}</td>
                                 <td><Badge s={l.status} /></td>
-                                <td className="whitespace-nowrap pr-3">{l.status === 'pending' && <>
+                                <td className="whitespace-nowrap pr-3">{l.status === 'approved' && <OpsPrintButton path={`leave-slip/${l.id}`} label={t('documents4.leave_slip')} />}{l.status === 'pending' && <>
                                     <button className="btn-primary mr-1 px-2 py-1 text-xs" onClick={() => decide(l, true)}><Check className="h-3 w-3" /> {t('hr.common.approve')}</button>
                                     <button className="btn-secondary px-2 py-1 text-xs text-red-600" onClick={() => decide(l, false)}><X className="h-3 w-3" /> {t('hr.common.reject')}</button>
                                 </>}</td>

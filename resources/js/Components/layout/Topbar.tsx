@@ -1,6 +1,7 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { Bell, Search, ChevronDown, PanelLeftClose, PanelLeftOpen, Check, LogOut, UserCircle, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import BrandLogo from '@/Components/ui/BrandLogo';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import type { PageProps } from '@/types';
@@ -29,7 +30,7 @@ function useOutside(ref: React.RefObject<HTMLElement | null>, onOut: () => void)
     }, [ref, onOut]);
 }
 
-function GlobalSearch() {
+function GlobalSearch({ full = false, onDone }: { full?: boolean; onDone?: () => void }) {
     const t = useT();
     const [q, setQ] = useState('');
     const [open, setOpen] = useState(false);
@@ -42,6 +43,7 @@ function GlobalSearch() {
     useOutside(box, () => setOpen(false));
 
     useEffect(() => {
+        if (full) { input.current?.focus(); return; }
         const k = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
@@ -50,7 +52,7 @@ function GlobalSearch() {
         };
         window.addEventListener('keydown', k);
         return () => window.removeEventListener('keydown', k);
-    }, []);
+    }, [full]);
 
     useEffect(() => {
         const term = q.trim();
@@ -60,7 +62,7 @@ function GlobalSearch() {
             return;
         }
         let cancelled = false;
-        const t = setTimeout(async () => {
+        const timer = setTimeout(async () => {
             setLoading(true);
             setError(null);
             const enc = encodeURIComponent(term);
@@ -73,23 +75,25 @@ function GlobalSearch() {
         }, 250);
         return () => {
             cancelled = true;
-            clearTimeout(t);
+            clearTimeout(timer);
         };
     }, [q]);
 
     const go = (href: string) => {
         setOpen(false);
+        onDone?.();
         router.visit(href);
     };
     const term = q.trim();
 
     return (
-        <div ref={box} className="relative hidden sm:block w-44 md:w-64">
+        <div ref={box} className={cn('relative', full ? 'w-full' : 'hidden xl:block w-56 flex-shrink-0')}>
             <form
-                className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2"
+                role="search"
+                className="flex items-center gap-2 bg-white border border-[var(--c-border-control)] rounded-lg px-3 min-h-[44px] md:min-h-[40px]"
                 onSubmit={(e) => { e.preventDefault(); if (term) go(`/reservations?q=${encodeURIComponent(term)}`); }}
             >
-                <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                <Search className="w-4 h-4 text-slate-600 flex-shrink-0" aria-hidden="true" />
                 <input
                     ref={input}
                     value={q}
@@ -97,37 +101,37 @@ function GlobalSearch() {
                     onFocus={() => setOpen(true)}
                     onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
                     placeholder={t('shell.search.placeholder')}
-                    className="bg-transparent text-sm outline-none flex-1 min-w-0 placeholder:text-slate-400"
+                    className="bg-transparent text-base md:text-sm outline-none flex-1 min-w-0"
                     aria-label={t('shell.search.label')}
                 />
                 {q ? (
-                    <button type="button" onClick={() => setQ('')} aria-label={t('shell.search.clear')}><X className="w-3.5 h-3.5 text-slate-400" /></button>
+                    <button type="button" onClick={() => setQ('')} aria-label={t('shell.search.clear')} className="p-1"><X className="w-4 h-4 text-slate-600" aria-hidden="true" /></button>
                 ) : (
-                    <span className="hidden md:inline text-xs text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded">Ctrl K</span>
+                    <span className="hidden lg:inline text-xs text-slate-700 bg-slate-200 px-1.5 py-0.5 rounded" aria-hidden="true">Ctrl K</span>
                 )}
             </form>
             {open && term.length >= 2 && (
-                <div className="absolute right-0 mt-1 w-80 max-w-[90vw] bg-white border border-slate-200 rounded-lg  z-50 text-sm overflow-hidden">
-                    {error && <p className="px-3 py-2 text-red-600 bg-red-50">{error}</p>}
-                    {loading && <p className="px-3 py-2 text-slate-500">{t('shell.search.searching')}</p>}
-                    <p className="px-3 pt-2 pb-1 text-xs uppercase font-semibold text-slate-400">{t('shell.search.reservations')}</p>
-                    {res.length === 0 && !loading && <p className="px-3 py-1 text-slate-400 text-xs">{t('shell.search.no_matches')}</p>}
+                <div className={cn('absolute mt-1 bg-white border border-slate-300 rounded-lg z-[40] text-sm overflow-hidden', full ? 'left-0 right-0' : 'right-0 w-80 max-w-[90vw]')}>
+                    {error && <p className="px-3 py-2 text-red-700 bg-red-50">{error}</p>}
+                    {loading && <p className="px-3 py-2 text-slate-600">{t('shell.search.searching')}</p>}
+                    <p className="px-3 pt-2 pb-1 text-xs uppercase font-semibold text-slate-600">{t('shell.search.reservations')}</p>
+                    {res.length === 0 && !loading && <p className="px-3 py-1 text-slate-600 text-xs">{t('shell.search.no_matches')}</p>}
                     {res.map((r) => (
-                        <button key={r.id} onClick={() => go(`/reservations/${r.id}`)} className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex justify-between gap-2">
+                        <button key={r.id} onClick={() => go(`/reservations/${r.id}`)} className="w-full text-left px-3 py-2 hover:bg-slate-50 flex justify-between gap-2">
                             <span className="font-mono text-xs">{r.number}</span>
-                            <span className="truncate text-slate-600">{[r.guest?.first_name, r.guest?.last_name].filter(Boolean).join(' ')}</span>
+                            <span className="truncate text-slate-700">{[r.guest?.first_name, r.guest?.last_name].filter(Boolean).join(' ')}</span>
                         </button>
                     ))}
-                    <button onClick={() => go(`/reservations?q=${encodeURIComponent(term)}`)} className="w-full text-left px-3 py-1 text-xs text-blue-700 hover:underline">{t('shell.search.all_reservations')}</button>
-                    <p className="px-3 pt-2 pb-1 text-xs uppercase font-semibold text-slate-400 border-t border-slate-100">{t('shell.search.guests')}</p>
-                    {guests.length === 0 && !loading && <p className="px-3 py-1 text-slate-400 text-xs">{t('shell.search.no_matches')}</p>}
+                    <button onClick={() => go(`/reservations?q=${encodeURIComponent(term)}`)} className="w-full text-left px-3 py-2 text-xs text-blue-800 underline">{t('shell.search.all_reservations')}</button>
+                    <p className="px-3 pt-2 pb-1 text-xs uppercase font-semibold text-slate-600 border-t border-slate-100">{t('shell.search.guests')}</p>
+                    {guests.length === 0 && !loading && <p className="px-3 py-1 text-slate-600 text-xs">{t('shell.search.no_matches')}</p>}
                     {guests.map((g) => (
-                        <button key={g.id} onClick={() => go(`/guests?q=${encodeURIComponent(`${g.first_name ?? ''} ${g.last_name ?? ''}`.trim())}`)} className="w-full text-left px-3 py-1.5 hover:bg-slate-50">
+                        <button key={g.id} onClick={() => go(`/guests?q=${encodeURIComponent(`${g.first_name ?? ''} ${g.last_name ?? ''}`.trim())}`)} className="w-full text-left px-3 py-2 hover:bg-slate-50">
                             <span>{[g.first_name, g.last_name].filter(Boolean).join(' ')}</span>
-                            <span className="block text-xs text-slate-400 truncate">{g.email ?? g.phone ?? ''}</span>
+                            <span className="block text-xs text-slate-600 truncate">{g.email ?? g.phone ?? ''}</span>
                         </button>
                     ))}
-                    <button onClick={() => go(`/guests?q=${encodeURIComponent(term)}`)} className="w-full text-left px-3 py-1 pb-2 text-xs text-blue-700 hover:underline">{t('shell.search.all_guests')}</button>
+                    <button onClick={() => go(`/guests?q=${encodeURIComponent(term)}`)} className="w-full text-left px-3 py-2 text-xs text-blue-800 underline">{t('shell.search.all_guests')}</button>
                 </div>
             )}
         </div>
@@ -150,23 +154,23 @@ function HotelSwitcher() {
     };
 
     if (hotels.length <= 1) {
-        return <span className="hidden md:block pl-3 border-l border-slate-200 text-sm font-medium text-slate-600 truncate max-w-[140px]">{current?.name ?? ''}</span>;
+        return <span className="hidden 2xl:block pl-3 border-l border-slate-300 text-sm font-medium text-slate-700 truncate max-w-[160px]">{current?.name ?? ''}</span>;
     }
     return (
-        <div ref={box} className="relative">
-            <button onClick={() => setOpen(!open)} className="flex items-center gap-1.5 pl-3 border-l border-slate-200 text-sm text-slate-600 hover:text-slate-900">
-                <span className="font-medium truncate max-w-[90px] md:max-w-[140px]">{current?.name ?? t('shell.select_hotel')}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+        <div ref={box} className="relative hidden md:block">
+            <button onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} className="flex items-center gap-1.5 pl-3 min-h-[40px] border-l border-slate-300 text-sm text-slate-700 hover:text-slate-900">
+                <span className="font-medium truncate max-w-[100px] lg:max-w-[160px]">{current?.name ?? t('shell.select_hotel')}</span>
+                <ChevronDown className="w-4 h-4 text-slate-600" aria-hidden="true" />
             </button>
             {open && (
-                <div className="absolute right-0 mt-2 w-64 max-w-[90vw] bg-white border border-slate-200 rounded-lg  z-50 py-1 max-h-80 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-64 max-w-[90vw] bg-white border border-slate-300 rounded-lg z-[40] py-1 max-h-80 overflow-y-auto">
                     {hotels.map((h) => (
-                        <button key={h.id} onClick={() => pick(h.id)} className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-sm">
+                        <button key={h.id} onClick={() => pick(h.id)} className="w-full text-left px-3 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-sm">
                             <span className="flex-1 min-w-0">
                                 <span className="block truncate">{h.name}</span>
-                                <span className="block text-xs text-slate-400">{h.code}{h.city ? ` · ${h.city}` : ''}</span>
+                                <span className="block text-xs text-slate-600">{h.code}{h.city ? ` · ${h.city}` : ''}</span>
                             </span>
-                            {current?.id === h.id && <Check className="w-4 h-4 text-emerald-600" />}
+                            {current?.id === h.id && <Check className="w-4 h-4 text-emerald-700" aria-hidden="true" />}
                         </button>
                     ))}
                 </div>
@@ -184,21 +188,22 @@ function UserMenu() {
     if (!user) return null;
 
     return (
-        <div ref={box} className="relative">
-            <button onClick={() => setOpen(!open)} aria-label={t('shell.user_menu')} className="w-8 h-8 rounded-full bg-[#0f2044] text-white text-xs font-bold flex items-center justify-center">
+        <div ref={box} className="relative flex-shrink-0">
+            <button onClick={() => setOpen(!open)} aria-label={t('shell.user_menu')} aria-haspopup="menu" aria-expanded={open}
+                className="w-11 h-11 rounded-full bg-[var(--c-primary)] text-white text-xs font-bold flex items-center justify-center">
                 {user.name?.slice(0, 2).toUpperCase()}
             </button>
             {open && (
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg  z-50 py-1 text-sm">
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-300 rounded-lg z-[40] py-1 text-sm">
                     <div className="px-3 py-2 border-b border-slate-100">
                         <p className="font-semibold text-slate-900 truncate">{user.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{user.roles?.[0] ?? t('shell.staff')}</p>
+                        <p className="text-xs text-slate-600 truncate">{user.roles?.[0] ?? t('shell.staff')}</p>
                     </div>
-                    <Link href="/profile" className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50" onClick={() => setOpen(false)}>
-                        <UserCircle className="w-4 h-4" /> {t('shell.profile')}
+                    <Link href="/profile" className="flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50" onClick={() => setOpen(false)}>
+                        <UserCircle className="w-4 h-4" aria-hidden="true" /> {t('shell.profile')}
                     </Link>
-                    <Link href="/logout" method="post" as="button" className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-red-600">
-                        <LogOut className="w-4 h-4" /> {t('shell.logout')}
+                    <Link href="/logout" method="post" as="button" className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 text-red-700">
+                        <LogOut className="w-4 h-4" aria-hidden="true" /> {t('shell.logout')}
                     </Link>
                 </div>
             )}
@@ -206,30 +211,48 @@ function UserMenu() {
     );
 }
 
+/**
+ * Top app bar. Phone: logo, page title (the h1), search and user menu. Desktop: sidebar toggle, title, search,
+ * actions, notifications, language, hotel and user. The h1 is focused after each navigation (see AppLayout).
+ */
 export default function Topbar({ title, subtitle, collapsed, onToggle, actions }: Props) {
     const t = useT();
+    const [phoneSearch, setPhoneSearch] = useState(false);
     return (
-        <header className="h-[60px] bg-white border-b border-slate-200 flex items-center px-3 sm:px-5 gap-2 sm:gap-4 flex-shrink-0">
-            <button onClick={onToggle} className="text-slate-400 hover:text-slate-700 transition-colors" aria-label={t('shell.toggle_sidebar')}>
-                {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-            </button>
+        <header className="flex-shrink-0 bg-white border-b border-slate-300 z-[30] pt-[var(--safe-top)] pl-[var(--safe-left)] pr-[var(--safe-right)]">
+            <div className="min-h-[var(--bar-top-h)] flex items-center px-3 md:px-5 gap-2 md:gap-4">
+                <span className="md:hidden flex-shrink-0"><BrandLogo variant="emblem" size={28} /></span>
+                <button onClick={onToggle} className="hidden lg:inline-flex btn-ghost btn-icon" aria-label={t('shell.toggle_sidebar')} aria-expanded={!collapsed}>
+                    {collapsed ? <PanelLeftOpen className="w-5 h-5" aria-hidden="true" /> : <PanelLeftClose className="w-5 h-5" aria-hidden="true" />}
+                </button>
 
-            <div className="flex-1 min-w-0">
-                {title && <h1 className="text-[15px] font-semibold text-slate-900 truncate leading-tight">{title}</h1>}
-                {subtitle && <p className="text-xs text-slate-500 truncate">{subtitle}</p>}
+                <div className="flex-1 min-w-[7rem]">
+                    {title && <h1 id="page-title" tabIndex={-1} data-page-title className="text-base md:text-xl font-semibold text-slate-900 truncate leading-tight">{title}</h1>}
+                    {subtitle && <p className="text-xs md:text-sm text-slate-600 truncate">{subtitle}</p>}
+                </div>
+
+                <GlobalSearch />
+
+                {actions && <div className="hidden 2xl:flex flex-shrink-0 items-center gap-2">{actions}</div>}
+
+                <button type="button" className="xl:hidden flex-shrink-0 btn-ghost btn-icon" onClick={() => setPhoneSearch(!phoneSearch)} aria-expanded={phoneSearch} aria-label={t('shell.search.label')}>
+                    {phoneSearch ? <X className="w-5 h-5" aria-hidden="true" /> : <Search className="w-5 h-5" aria-hidden="true" />}
+                </button>
+
+                <button type="button" className="hidden md:inline-flex flex-shrink-0 btn-ghost btn-icon" aria-label={t('shell.notifications')}>
+                    <Bell className="w-5 h-5" aria-hidden="true" />
+                </button>
+
+                <span className="hidden md:block flex-shrink-0"><LanguageSwitch /></span>
+                <HotelSwitcher />
+                <UserMenu />
             </div>
-
-            <GlobalSearch />
-
-            {actions && <div className={cn('flex items-center gap-2')}>{actions}</div>}
-
-            <button className="relative text-slate-400 hover:text-slate-700 transition-colors hidden sm:block" aria-label={t('shell.notifications')}>
-                <Bell className="w-5 h-5" />
-            </button>
-
-            <LanguageSwitch />
-            <HotelSwitcher />
-            <UserMenu />
+            {phoneSearch && (
+                <div className="xl:hidden px-3 md:px-5 pb-3">
+                    <GlobalSearch full onDone={() => setPhoneSearch(false)} />
+                </div>
+            )}
+            {actions && <div className="2xl:hidden flex flex-wrap items-center gap-2 px-3 md:px-5 pb-3">{actions}</div>}
         </header>
     );
 }
@@ -239,10 +262,10 @@ export function LanguageSwitch({ dark = false }: { dark?: boolean }) {
     const t = useT();
     const locale = useLocale();
     return (
-        <div role="group" aria-label={t('shell.language')} className={cn('flex items-center rounded-lg border text-xs font-semibold overflow-hidden', dark ? 'border-[#1a3a6b]' : 'border-slate-200')}>
+        <div role="group" aria-label={t('shell.language')} className={cn('flex items-center rounded-lg border text-xs font-semibold overflow-hidden', dark ? 'border-[var(--c-on-chrome-muted)]' : 'border-[var(--c-border-control)]')}>
             {(['fr', 'en'] as const).map((l) => (
                 <button key={l} type="button" onClick={() => l !== locale && setLocale(l)} aria-pressed={l === locale}
-                    className={cn('px-2 py-1 uppercase', l === locale ? (dark ? 'bg-[#1a3a6b] text-white' : 'bg-slate-900 text-white') : (dark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'))}>
+                    className={cn('px-3 min-w-[44px] min-h-[44px] lg:min-h-[32px] uppercase', l === locale ? (dark ? 'bg-white text-[var(--c-primary)]' : 'bg-[var(--c-primary)] text-white') : (dark ? 'text-[var(--c-on-chrome-muted)] hover:text-white' : 'text-slate-700 hover:bg-slate-100'))}>
                     {l}
                 </button>
             ))}

@@ -12,3 +12,31 @@ Route::prefix('notifications')->group(function () {
     Route::get('preferences/{guest}', [N::class, 'preferences'])->whereNumber('guest');
     Route::put('preferences/{guest}', [N::class, 'updatePreferences'])->whereNumber('guest');
 });
+
+// Q6 WhatsApp staff inbox, quick replies, template registry.
+use App\Modules\Notifications\Http\MessagingController as M;
+
+Route::prefix('messaging')->group(function () {
+    Route::middleware('can:messaging.view')->group(function () {
+        Route::get('conversations', [M::class, 'conversations']);
+        Route::get('conversations/{id}', [M::class, 'show'])->whereNumber('id');
+        Route::get('quick-replies', [M::class, 'quickReplies']);
+        Route::get('templates', [M::class, 'templates']);
+        Route::get('staff', [M::class, 'staff']);
+    });
+    Route::middleware('can:messaging.reply')->group(function () {
+        Route::post('conversations/{id}/reply', [M::class, 'reply'])->whereNumber('id');
+        Route::post('conversations/{id}/media', [M::class, 'media'])->whereNumber('id');
+        Route::post('conversations/{id}/template', [M::class, 'template'])->whereNumber('id');
+        Route::post('conversations/{id}/assign', [M::class, 'assign'])->whereNumber('id');
+        Route::post('conversations/{id}/status', [M::class, 'status'])->whereNumber('id');
+    });
+    Route::middleware('can:messaging.manage')->group(function () {
+        Route::post('quick-replies', [M::class, 'storeQuickReply']);
+        Route::put('quick-replies/{id}', [M::class, 'updateQuickReply'])->whereNumber('id');
+        Route::delete('quick-replies/{id}', [M::class, 'destroyQuickReply'])->whereNumber('id');
+        Route::put('templates/{id}', [M::class, 'updateTemplate'])->whereNumber('id');
+        Route::get('accounts', [M::class, 'accounts']);
+        Route::post('accounts', [M::class, 'storeAccount']);
+    });
+});

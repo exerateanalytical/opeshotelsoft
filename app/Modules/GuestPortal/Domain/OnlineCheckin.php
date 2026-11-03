@@ -13,6 +13,6 @@ class OnlineCheckin extends Model
 
     protected function casts(): array
     {
-        return ['submitted_at' => 'datetime'];
+        return ['submitted_at' => 'datetime', 'signed_at' => 'datetime', 'id_expiry' => 'date', 'birth_date' => 'date', 'card_accepted' => 'boolean'];
     }
 }

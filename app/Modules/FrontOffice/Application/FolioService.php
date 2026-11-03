@@ -141,6 +141,11 @@ class FolioService
                 'cashier_shift_id' => $line->cashier_shift_id,
             ]);
             $line->forceFill(['reversed' => true])->save();
+            // D-B: the receipts printed for the reversed payment/refund must say so on their verify page (never deleted).
+            $docs = app(\App\Modules\Documents\Application\IssuedDocuments::class);
+            foreach (['payment_receipt', 'deposit_receipt', 'refund_voucher'] as $type) {
+                $docs->voidSource($type, 'folio_line', $line->id, $reason);
+            }
 
             return $rev;
         });

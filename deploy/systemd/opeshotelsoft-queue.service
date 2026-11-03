@@ -1,0 +1,26 @@
+# /etc/systemd/system/opeshotelsoft-queue.service
+# Laravel queue worker. Enable: systemctl enable --now opeshotelsoft-queue
+# For several workers copy to opeshotelsoft-queue@.service and use %i.
+[Unit]
+Description=OpesHotelSoft queue worker
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/opeshotelsoft/current
+ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --memory=256
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=90
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

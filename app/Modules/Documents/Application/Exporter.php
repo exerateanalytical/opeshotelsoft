@@ -5,7 +5,6 @@ namespace App\Modules\Documents\Application;
 use App\Modules\Tenancy\Domain\Hotel;
 use App\Platform\Domain\DomainException;
 use App\Platform\Tenancy\TenantContext;
-use Barryvdh\DomPDF\Facade\Pdf;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 
@@ -32,17 +31,34 @@ final class Exporter
         $rows = array_map(fn ($r) => (array) $r, array_values(($def['rows'])($data)));
         $columns = $def['columns'] ?? array_keys($rows[0] ?? []);
         $matrix = array_map(fn ($r) => array_map(fn ($c) => self::cell($r[$c] ?? null), $columns), $rows);
+        // Human-facing formats get translated headers; CSV keeps the column codes for re-import.
+        $headers = array_map(fn ($c) => self::header((string) $c), $columns);
 
         $content = match ($format) {
             'csv' => $this->csv($columns, $matrix),
-            'xlsx' => $this->xlsx($columns, $matrix),
-            'pdf' => Pdf::loadView('pdf.report', [
-                'title' => $def['title'], 'columns' => $columns, 'rows' => $matrix, 'params' => $query,
-                'hotel' => $this->ctx->hotelId() ? Hotel::find($this->ctx->hotelId()) : null,
-            ])->setPaper('a4', count($columns) > 7 ? 'landscape' : 'portrait')->output(),
+            'xlsx' => $this->xlsx($headers, $matrix),
+            'pdf' => $this->reportPdf($report, $def, $headers, $matrix, $query, count($columns) > 7),
         };
 
         return ['content' => $content, 'mime' => self::MIME[$format], 'filename' => $report.'-'.now()->format('Ymd-His').'.'.$format];
+    }
+
+    /** Reports go through the engine: every export is a new issued document (number = report + timestamp). */
+    private function reportPdf(string $report, array $def, array $headers, array $matrix, array $query, bool $wide): string
+    {
+        $lang = app()->getLocale() === 'en' ? 'en' : 'fr';
+
+        return app(DocumentRenderer::class)->render('report', ['title' => $def['title'], 'columns' => $headers, 'rows' => $matrix, 'params' => $query], [
+            'view' => 'pdf.report', 'size' => $wide ? 'a4-landscape' : 'a4', 'lang' => $lang, 'title' => (string) $def['title'],
+            'number' => strtoupper($report).'-'.now()->format('Ymd-His'), 'filename' => $report.'-'.now()->format('Ymd-His'),
+        ])->pdf;
+    }
+
+    private static function header(string $column): string
+    {
+        $t = __("srv.col.$column");
+
+        return $t === "srv.col.$column" ? $column : $t;
     }
 
     private static function cell(mixed $v): string|int|float|null

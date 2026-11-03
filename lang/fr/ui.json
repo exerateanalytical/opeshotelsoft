@@ -1,0 +1,19 @@
+{
+    "ui.skip": "Aller au contenu principal",
+    "ui.nav.main": "Navigation principale",
+    "ui.nav.more": "Plus",
+    "ui.nav.more_title": "Toutes les rubriques",
+    "ui.nav.close": "Fermer",
+    "ui.nav.primary": "Onglets principaux",
+    "ui.filters": "Filtres",
+    "ui.filters.apply": "Afficher les résultats",
+    "ui.filters.clear": "Effacer les filtres",
+    "ui.filters.active": ":count actif(s)",
+    "ui.empty.title": "Rien à afficher pour l'instant",
+    "ui.loading": "Chargement…",
+    "ui.modal.close": "Fermer la fenêtre",
+    "ui.toast.dismiss": "Fermer la notification",
+    "ui.table.scroll_hint": "Faites défiler horizontalement pour voir plus de colonnes",
+    "ui.sidebar.collapse": "Réduire le menu",
+    "ui.sidebar.expand": "Développer le menu"
+}

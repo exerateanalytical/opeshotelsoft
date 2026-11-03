@@ -36,16 +36,16 @@ export default function PaymentsIndex() {
             <Head title={t('payments.index.title')} />
             {creating && <CreateIntent onDone={(id) => (id ? router.visit(`/payments/${id}`) : setCreating(false))} />}
 
-            <div className="card px-4 py-3 mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="card px-4 py-3 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <label className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('payments.index.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9" aria-label={t('payments.index.search')} placeholder={t('payments.index.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </label>
-                <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('payments.index.all_statuses')}>
                     <option value="">{t('payments.index.all_statuses')}</option>
                     {Object.keys(STATUS_BADGE).map((s) => <option key={s} value={s}>{t(`payments.status.${s}`)}</option>)}
                 </select>
-                <select className="input" value={provider} onChange={(e) => setProvider(e.target.value)}>
+                <select className="input" value={provider} onChange={(e) => setProvider(e.target.value)} aria-label={t('payments.index.all_methods')}>
                     <option value="">{t('payments.index.all_methods')}</option>
                     {Object.entries(PROVIDERS).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
                 </select>
@@ -54,11 +54,11 @@ export default function PaymentsIndex() {
             {list.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{list.error.message}</div>}
 
             <div className="card overflow-x-auto">
-                <table className="table-auto w-full">
+                <table className="table-auto">
                     <thead><tr><th>{t('payments.index.date')}</th><th>{t('payments.method')}</th><th>{t('payments.target')}</th><th>{t('payments.payer')}</th><th>{t('payments.index.status')}</th><th className="text-right">{t('payments.amount')}</th></tr></thead>
                     <tbody>
-                        {list.loading && !list.data && <tr><td colSpan={6} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" /></td></tr>}
-                        {list.data && list.data.data.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-slate-400 text-sm">{t('payments.index.no_match')}</td></tr>}
+                        {list.loading && !list.data && <tr><td colSpan={6} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
+                        {list.data && list.data.data.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-slate-500 text-sm">{t('payments.index.no_match')}</td></tr>}
                         {list.data?.data.map((i) => (
                             <tr key={i.id} className="cursor-pointer" onClick={() => router.visit(`/payments/${i.id}`)}>
                                 <td className="text-sm whitespace-nowrap">{formatDateTime(i.created_at)}</td>
@@ -110,7 +110,7 @@ function CreateIntent({ onDone }: { onDone: (id?: number) => void }) {
             </label>
             <div className="grid grid-cols-2 gap-2">
                 <label className="label">{t('payments.target')}
-                    <select className="input mt-1" value={form.target} onChange={(e) => setForm({ ...form, target: e.target.value })}>
+                    <select className="input mt-1" value={form.target} onChange={(e) => setForm({ ...form, target: e.target.value })} aria-label={t('payments.index.folio_id')}>
                         <option value="folio">{t('payments.index.folio_id')}</option>
                         <option value="reservation">{t('payments.index.reservation_id')}</option>
                     </select>
@@ -120,7 +120,7 @@ function CreateIntent({ onDone }: { onDone: (id?: number) => void }) {
                 </label>
             </div>
             <label className="label">{t('payments.index.payer_phone')}
-                <input className="input mt-1" inputMode="tel" placeholder="+2376..." value={form.payer_phone} onChange={(e) => setForm({ ...form, payer_phone: e.target.value })} />
+                <input className="input mt-1" inputMode="tel" aria-label="+2376..." placeholder="+2376..." value={form.payer_phone} onChange={(e) => setForm({ ...form, payer_phone: e.target.value })} />
             </label>
             <label className="label">{t('payments.index.payer_email')}
                 <input className="input mt-1" type="email" value={form.payer_email} onChange={(e) => setForm({ ...form, payer_email: e.target.value })} />

@@ -4,8 +4,11 @@ namespace App\Modules\Stock;
 
 use App\Modules\POS\Domain\ItemComponent;
 use App\Modules\Stock\Application\StockService;
+use App\Modules\Stock\Control\Application\RecipeService;
+use App\Modules\Stock\Control\ControlModule;
 use App\Modules\Stock\Domain\StockItem;
 use App\Modules\Stock\Domain\Store;
+use App\Modules\Stock\Operations\OperationsModule;
 use App\Platform\Events\EventBus;
 use App\Platform\Events\StoredEvent;
 
@@ -21,7 +24,14 @@ class StockModule
                 return;
             }
             $service = app(StockService::class);
+            $recipes = app(RecipeService::class);
             foreach ($p['items'] as $line) {
+                // I-A: a dish with a recipe consumes through it (yield %, sub-recipes); otherwise the flat bill of materials applies.
+                if ($recipes->consumeSale($line['pos_menu_item_id'], (float) $line['quantity'], $store, [
+                    'reference' => "POS {$p['number']}", 'source_type' => 'pos_check', 'source_id' => $p['id'], 'date' => $p['business_date'],
+                ])) {
+                    continue;
+                }
                 foreach (ItemComponent::where('pos_menu_item_id', $line['pos_menu_item_id'])->get() as $c) {
                     $item = StockItem::find($c->stock_item_id);
                     if ($item) {
@@ -32,5 +42,8 @@ class StockModule
                 }
             }
         });
+
+        ControlModule::subscribe($bus);
+        OperationsModule::subscribe($bus);
     }
 }

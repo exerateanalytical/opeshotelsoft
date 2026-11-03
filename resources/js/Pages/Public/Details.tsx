@@ -2,7 +2,7 @@ import { router } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import { money, t } from './i18n';
 import PublicLayout, { Notice, publicApi, url, type PublicProps } from './PublicLayout';
-import type { Offer } from './Search';
+import { nightCount, type Offer } from './Search';
 import { storedMember } from './SearchForm';
 
 export interface BookingResult { confirmation: string; status: string; total: number; currency: string; deposit_required: number; manage_token: string }
@@ -52,7 +52,7 @@ export default function Details(p: PublicProps) {
     return (
         <PublicLayout p={p} title={d.yourDetails}>
             <div className="grid gap-6 md:grid-cols-3">
-                <form onSubmit={submit} className="space-y-4 rounded-lg border border-[#e5dfd0] bg-white p-5 md:col-span-2">
+                <form onSubmit={submit} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 md:col-span-2">
                     {error && <Notice kind="error">{error}</Notice>}
                     <div className="grid gap-4 sm:grid-cols-2">
                         {field('first_name', d.firstName)}
@@ -71,18 +71,18 @@ export default function Details(p: PublicProps) {
                     <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} required className="mt-1" /> {d.acceptTerms}</label>
                     <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-1" /> {d.marketing}</label>
                     <div className="flex flex-wrap gap-3">
-                        <button type="submit" disabled={busy || !terms} className="rounded-md bg-[#b8923a] px-6 py-3 text-base font-semibold text-white hover:bg-[#a07e2f] disabled:opacity-50">{d.confirmBooking}</button>
+                        <button type="submit" disabled={busy || !terms} className="btn-accent min-h-11 px-6">{d.confirmBooking}</button>
                         <button type="button" onClick={() => window.history.back()} className="btn-secondary">{d.back}</button>
                     </div>
                 </form>
-                <aside className="h-fit space-y-2 rounded-lg border border-[#e5dfd0] bg-white p-5">
+                <aside className="h-fit space-y-2 rounded-lg border border-slate-200 bg-white p-5">
                     <p className="text-sm text-slate-500">{q.arrival} → {q.departure}</p>
                     {offer && (
                         <>
                             <p className="text-lg font-semibold">{offer.room_type.name}</p>
                             <p className="text-sm text-slate-600">{offer.rate_plan.name}</p>
-                            <p className="text-sm">{offer.nights} {d.nights}</p>
-                            <p className="border-t border-[#e5dfd0] pt-2 text-xl font-semibold">{d.total}: {money(offer.total, offer.currency, p.lang)}</p>
+                            <p className="text-sm">{nightCount(offer)} {d.nights}</p>
+                            <p className="border-t border-slate-200 pt-2 text-xl font-semibold">{d.total}: {money(offer.total, offer.currency, p.lang)}</p>
                             {offer.rate_plan.deposit_required && <p className="text-sm"><span className="badge-blue">{d.depositRequired}</span></p>}
                         </>
                     )}

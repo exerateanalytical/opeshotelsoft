@@ -21,24 +21,24 @@ export default function Hotels(p: PublicProps) {
 
     return (
         <PublicLayout p={p} title={d.ourHotels}>
-            <section className="mb-8 rounded-lg border border-[#e5dfd0] bg-white p-5">
+            <section className="mb-8 rounded-lg border border-slate-200 bg-white p-5">
                 <SearchForm p={p} hotels={hotels ?? []} />
             </section>
             {error && <Notice kind="error">{error}</Notice>}
             {!hotels && !error && <p className="text-sm text-slate-500">{d.loading}</p>}
             <div className="grid gap-6 md:grid-cols-2">
                 {hotels?.map((h) => (
-                    <article key={h.id} className="overflow-hidden rounded-lg border border-[#e5dfd0] bg-white">
+                    <article key={h.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                         {h.photos[0] && <img src={h.photos[0]} alt={h.name} className="h-48 w-full object-cover" />}
                         <div className="space-y-2 p-5">
                             <h2 className="font-serif text-2xl">{h.name}</h2>
                             <p className="text-sm text-slate-600">
                                 {[h.address, h.city].filter(Boolean).join(', ')}
-                                {h.stars ? <span className="ml-2 text-[#b8923a]">{'★'.repeat(h.stars)}</span> : null}
+                                {h.stars ? <span className="ml-2 text-brand-800">{'★'.repeat(h.stars)}</span> : null}
                             </p>
                             {h.description && <p className="text-base text-slate-700">{h.description}</p>}
                             <p className="text-sm text-slate-600">{h.room_types.map((r) => r.name).join(' · ')}</p>
-                            <Link href={url(p, '/search', { hotel: h.code })} className="inline-block rounded-md bg-[#b8923a] px-5 py-2 text-base font-semibold text-white hover:bg-[#a07e2f]">
+                            <Link href={url(p, '/search', { hotel: h.code })} className="inline-block btn-accent min-h-11 px-6">
                                 {d.book}
                             </Link>
                         </div>

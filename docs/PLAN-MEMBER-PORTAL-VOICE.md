@@ -1,0 +1,36 @@
+# Plan: member portal and voice notifications
+
+Owner request (2026-11-03): customers with a hotel membership (the loyalty club) log in from the login page and see their account: loyalty card, points, bookings, hotels where the card is accepted, a direct line to reception. Separately, when a guest asks for something, the system speaks to staff: "Chambre 204 : serviettes".
+
+Two agents, built in parallel, joined by the contract below. Same hard rules as PLAN-PHASE-3.md (flat UI, FR/EN, tenant isolation, `can:` guards, tests, own test database, no edits to Navigation.php or routes/console.php).
+
+## M1 Member portal (agent "M1")
+
+Owns: customer authentication, the `/account` area, the loyalty-card view, member bookings, card-acceptance directory, web chat with reception, guest-facing service-request screen, login page changes.
+
+- **Login page**: tabs "Équipe / Staff" and "Membre / Member". Staff login is untouched. Demo login buttons for members when DEMO_LOGINS is on.
+- **Customer accounts**: new table `member_accounts` (guest_id, group_id, email, phone, password hash, verified_at, locale, failed attempts, locked until). A separate auth guard `member` (session based), never able to open any staff page and staff never able to open `/account`. Sign up with email or phone, verified by a one-time code (SMS, WhatsApp or email through Notifications) **before** linking to an existing guest profile (match on verified contact only, to prevent account takeover); sign in by password or by one-time code; password reset; throttling and lockout like staff login; optional two-factor not required.
+- **`/account` pages** (mobile first, FR/EN): home (greeting, tier, points, next stay, quick actions); **card** (digital loyalty card with QR from the existing Loyalty module, tier, expiry, block/replace request); **points** (balance, history, points expiring soon, how to earn); **bookings** (upcoming and past, view, modify and cancel within rules through the existing booking engine, download invoice and receipt PDFs through the document engine); **book** (search and book using the existing booking engine and member rates, pre-filled guest details, pay deposit by the existing pay-link flow); **hotels** (directory of every hotel where the card is accepted: all hotels of the loyalty programme's group, with city, address, phone, stars, a "book here" button, and what members get there); **reception chat** (see below); **requests** (during a stay: ask for towels, cleaning, maintenance, room service, call reception); **profile** (details, language, consent, password).
+- **Reception chat**: extend the Notifications module conversations (`whatsapp_conversations` and `whatsapp_messages`) with a channel column (`whatsapp` default, `web`) so web chat from the portal appears in the existing staff inbox at `/messaging`, and staff replies appear in the portal (poll every 5 seconds). Emit event `messaging.guest_message` (payload: hotel_id, conversation_id, guest_id, room_number if in house, text preview) on each guest message.
+- **Seed**: `DemoMembersSeeder` creates member accounts for 20 of the demo loyalty members (password in `DemoUsersSeeder` style, local only).
+- **Security**: PII minimal in responses; every endpoint scoped to the logged-in member's guest and group; no enumeration (same response whether or not an email exists); tests prove one member cannot read another's data.
+
+## V1 Voice and service requests (agent "V1")
+
+Owns: a new module `app/Modules/ServiceRequests`, staff screens, the live feed and the voice engine.
+
+- **Service requests**: table `service_requests` (hotel_id, reservation_id, room_id, room_number, guest_id, category, items json, note, priority, source `member_portal|whatsapp|reception|room_phone|staff`, status `new|acknowledged|in_progress|done|cancelled`, assigned_to, timestamps, due_at). Categories: housekeeping (towels, cleaning, amenities, extra bed), maintenance, room service, reception, concierge, laundry, other. Each category maps to a department (housekeeping, maintenance, F&B, front office) with an SLA in minutes (hotel-tunable).
+- **Contract with M1** (both sides build to this):
+  - Application service `App\Modules\ServiceRequests\Application\ServiceRequestService::create(array $data): ServiceRequest` with keys `hotel_id, reservation_id (nullable), room_number, guest_id (nullable), category, items (array), note, source`. It validates the guest is in house when `source` is `member_portal`, de-duplicates identical open requests from the same room within 5 minutes, records an outbox event `servicerequests.created`, and returns the model.
+  - Event `servicerequests.created` payload: `id, hotel_id, room_number, category, department, items, note, priority, source`.
+  - M1's portal endpoints call this service; if the class does not exist yet when M1 finishes, M1 reports that and V1 delivers it.
+  - V1 also subscribes to `messaging.guest_message` (from M1) and raises a voice alert "Message de la chambre 204".
+- **Staff screens**: `/service-requests` board (new / in progress / done, filter by department, SLA timers, assign, acknowledge, complete with note), manual entry by reception (phone request), and a settings page for voice.
+- **Voice engine** (browser Web Speech API `speechSynthesis`, no new dependency): a global listener in the staff layout polls `GET /api/v1/service-requests/feed?since=<id>` every 4 seconds (transport kept behind one function so SSE or websockets can replace it later); when a new request in the user's departments arrives it speaks in the user's language, for example FR "Chambre deux cent quatre. Demande de serviettes." and EN "Room 204. Towels requested."; chime before speech; queue and de-duplicate; repeat every N seconds until acknowledged (configurable, off by default); quiet hours; volume, speech rate, voice choice with a "test voice" button; per-user choice of which departments to hear; a visible "enable sound" control because browsers block audio until the user clicks once, and a clear state indicator (sound on or off, last request heard); fall back to a visual toast plus chime when no voice for the language exists. Settings are stored per user on the server so they follow the user to any device.
+- **Escalation**: unacknowledged past half the SLA, speak again with "En retard"; past the SLA raise a manager-level alert and an Insights-style notice through Notifications.
+- **Hooks**: also speak for events already in the system when enabled per category: `messaging.guest_message`, new waitlist or walk-in arrival at the desk is out of scope.
+- **Tests**: create and dedupe, department routing, SLA and escalation, feed returns only the user's departments after `since`, tenant isolation, permission guards, spoken text builder for FR and EN (pure function, unit tested, numbers read in words by language rules).
+- **Permissions**: `servicerequests.view`, `servicerequests.manage`, `servicerequests.voice` (hear alerts); grant to housekeeping, maintenance, F&B and front-office roles as fits.
+
+## Lead checks after both finish
+Full test suite, role matrix with the new nav entries, browser pass (member login on a phone width, request from the portal heard on the staff screen), update register, commit and push.

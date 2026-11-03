@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 /* Purchasing and payables extras: requisitions, price lists, returns, wastage, payment runs, AP ageing. */
 
@@ -57,14 +58,14 @@ function Table({ head, children, empty }: { head: string[]; children: ReactNode;
                 <thead><tr className="text-left text-xs uppercase text-slate-500">{head.map((h) => <th key={h} className="px-2 py-2">{h}</th>)}</tr></thead>
                 <tbody className="divide-y divide-slate-100">{children}</tbody>
             </table>
-            {empty && <p className="py-6 text-center text-sm text-slate-400">{t('stock.common.nothing')}</p>}
+            {empty && <p className="py-6 text-center text-sm text-slate-500">{t('stock.common.nothing')}</p>}
         </div>
     );
 }
 function Select({ value, onChange, list, placeholder }: { value: string; onChange: (v: string) => void; list: Ref[]; placeholder?: string }) {
     const t = useT();
     return (
-        <select className="input w-full" value={value} onChange={(e) => onChange(e.target.value)}>
+        <select className="input w-full" value={value} onChange={(e) => onChange(e.target.value)} aria-label={placeholder ?? t('stock.common.select')}>
             <option value="">{placeholder ?? t('stock.common.select')}</option>
             {list.map((r) => <option key={r.id} value={r.id}>{r.code} — {r.name}</option>)}
         </select>
@@ -101,18 +102,18 @@ export function Requisitions({ items, stores, suppliers, notify }: ExtrasProps) 
         <div className="space-y-4">
             <div className="card space-y-3 p-4">
                 <h3 className="font-semibold">{t('stock.req.new')}</h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 [&>*]:min-w-0">
                     <Field label={t('stock.req.department')}><input className="input w-full" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} placeholder={t('stock.req.department_ph')} /></Field>
                     <Field label={t('stock.req.deliver_to')}><Select value={form.store_id} onChange={(v) => setForm({ ...form, store_id: v })} list={stores} /></Field>
                     <Field label={t('stock.req.needed_by')}><input className="input w-full" type="date" value={form.needed_by} onChange={(e) => setForm({ ...form, needed_by: e.target.value })} /></Field>
                     <Field label={t('stock.common.notes')}><input className="input w-full" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
                 </div>
                 {lines.map((l, i) => (
-                    <div key={i} className="grid grid-cols-12 gap-2">
-                        <div className="col-span-12 sm:col-span-5"><Select value={l.stock_item_id} onChange={(v) => setLine(i, { stock_item_id: v })} list={items} placeholder={t('stock.common.item_ph')} /></div>
-                        <input className="input col-span-4 sm:col-span-2" type="number" step="any" placeholder={t('stock.common.qty')} value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} />
-                        <div className="col-span-7 sm:col-span-4"><Select value={l.supplier_id} onChange={(v) => setLine(i, { supplier_id: v })} list={suppliers} placeholder={t('stock.req.supplier_auto')} /></div>
-                        <button className="col-span-1 text-red-600" aria-label={t('stock.common.remove_line')} onClick={() => setLines(lines.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></button>
+                    <div key={i} className="grid grid-cols-2 items-center gap-2 sm:grid-cols-12 [&>*]:min-w-0">
+                        <div className="col-span-2 sm:col-span-5"><Select value={l.stock_item_id} onChange={(v) => setLine(i, { stock_item_id: v })} list={items} placeholder={t('stock.common.item_ph')} /></div>
+                        <input className="input sm:col-span-2" type="number" step="any" placeholder={t('stock.common.qty')} aria-label={t('stock.common.qty')} value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} />
+                        <div className="sm:col-span-4"><Select value={l.supplier_id} onChange={(v) => setLine(i, { supplier_id: v })} list={suppliers} placeholder={t('stock.req.supplier_auto')} /></div>
+                        <button className="btn-ghost btn-icon justify-self-end text-red-700 sm:col-span-1" aria-label={t('stock.common.remove_line')} onClick={() => setLines(lines.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></button>
                     </div>
                 ))}
                 <div className="flex flex-wrap gap-2">
@@ -123,7 +124,7 @@ export function Requisitions({ items, stores, suppliers, notify }: ExtrasProps) 
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-end gap-2">
                     <Field label={t('stock.common.status')}>
-                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock.common.all')}>
                             <option value="">{t('stock.common.all')}</option>{['draft', 'submitted', 'approved', 'rejected', 'converted'].map((s) => <option key={s} value={s}>{t(`stock.status.${s}`)}</option>)}
                         </select>
                     </Field>
@@ -132,8 +133,8 @@ export function Requisitions({ items, stores, suppliers, notify }: ExtrasProps) 
                 <Table head={['', t('stock.common.number'), t('stock.req.department'), t('stock.common.store'), t('stock.common.lines'), t('stock.common.status'), '']} empty={!list.loading && !list.data?.data.length}>
                     {(list.data?.data ?? []).map((r) => (
                         <tr key={r.id}>
-                            <td className="px-2 py-1">{r.status === 'approved' && <input type="checkbox" aria-label={t('stock.common.select_n', { name: r.number })} checked={selected.includes(r.id)} onChange={(e) => setSelected(e.target.checked ? [...selected, r.id] : selected.filter((x) => x !== r.id))} />}</td>
-                            <td className="px-2 py-1 font-medium">{r.number}</td><td className="px-2 py-1">{r.department}</td><td className="px-2 py-1">{nameOf(stores, r.store_id)}</td>
+                            <td className="px-2 py-1">{r.status === 'approved' && <input type="checkbox" className="h-5 w-5 shrink-0" aria-label={t('stock.common.select_n', { name: r.number })} checked={selected.includes(r.id)} onChange={(e) => setSelected(e.target.checked ? [...selected, r.id] : selected.filter((x) => x !== r.id))} />}</td>
+                            <td className="px-2 py-1 font-medium">{r.number} <OpsPrintButton path={`requisition/${r.id}`} label={t('documents4.requisition')} /></td><td className="px-2 py-1">{r.department}</td><td className="px-2 py-1">{nameOf(stores, r.store_id)}</td>
                             <td className="px-2 py-1">{r.lines.map((l) => `${nameOf(items, l.stock_item_id)} × ${Number(l.quantity)}`).join(', ')}</td>
                             <td className="px-2 py-1"><Badge s={r.status} /></td>
                             <td className="whitespace-nowrap px-2 py-1">
@@ -167,7 +168,7 @@ export function PriceLists({ items, suppliers, notify }: ExtrasProps) {
         <div className="space-y-4">
             <div className="card space-y-3 p-4">
                 <h3 className="font-semibold">{editing ? t('stock.price.edit') : t('stock.price.add')}</h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-6 [&>*]:min-w-0">
                     <Field label={t('stock.common.supplier')}><Select value={form.supplier_id} onChange={(v) => setForm({ ...form, supplier_id: v })} list={suppliers} /></Field>
                     <Field label={t('stock.common.item')}><Select value={form.stock_item_id} onChange={(v) => setForm({ ...form, stock_item_id: v })} list={items} /></Field>
                     <Field label={t('stock.price.unit_price')}><input className="input w-full" type="number" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} /></Field>
@@ -191,7 +192,7 @@ export function PriceLists({ items, suppliers, notify }: ExtrasProps) {
                             <td className="px-2 py-1">{active(p) ? <span className="badge-green">{t('stock.common.active')}</span> : <span className="badge-slate">{t('stock.common.inactive')}</span>}</td>
                             <td className="whitespace-nowrap px-2 py-1">
                                 <button className="btn-secondary mr-1" onClick={() => { setEditing(p.id); setForm({ supplier_id: String(p.supplier_id), stock_item_id: String(p.stock_item_id), unit_price: String(p.unit_price), min_quantity: String(p.min_quantity), valid_from: p.valid_from.slice(0, 10), valid_to: p.valid_to?.slice(0, 10) ?? '' }); }}>{t('stock.common.edit')}</button>
-                                <button className="text-red-600" aria-label={t('stock.price.delete')} onClick={() => run(notify, () => post(`purchasing/prices/${p.id}`, {}, 'DELETE'), t('stock.price.removed'), list.reload)}><Trash2 className="inline h-4 w-4" /></button>
+                                <button className="btn-ghost btn-icon text-red-700" aria-label={t('stock.price.delete')} onClick={() => run(notify, () => post(`purchasing/prices/${p.id}`, {}, 'DELETE'), t('stock.price.removed'), list.reload)}><Trash2 className="inline h-4 w-4" /></button>
                             </td>
                         </tr>
                     ))}
@@ -230,9 +231,9 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
         <div className="space-y-4">
             <div className="card space-y-3 p-4">
                 <h3 className="font-semibold">{t('stock.ret.title')}</h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                     <Field label={t('stock.ret.grn')}>
-                        <select className="input w-full" value={grnId} onChange={(e) => { setGrnId(e.target.value); setQty({}); }}>
+                        <select className="input w-full" value={grnId} onChange={(e) => { setGrnId(e.target.value); setQty({}); }} aria-label={t('stock.common.select')}>
                             <option value="">{t('stock.common.select')}</option>
                             {(grns.data?.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.number} — {nameOf(suppliers, g.supplier_id)} — {formatDate(g.date)}</option>)}
                         </select>
@@ -257,7 +258,7 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
                 <Table head={[t('stock.common.number'), t('stock.common.date'), t('stock.common.supplier'), t('stock.common.lines'), t('stock.ret.credit'), t('stock.ret.applied'), t('stock.common.status'), '']} empty={!returns.loading && !returns.data?.data.length}>
                     {(returns.data?.data ?? []).map((r) => (
                         <tr key={r.id}>
-                            <td className="px-2 py-1 font-medium">{r.number}</td><td className="px-2 py-1">{formatDate(r.date)}</td><td className="px-2 py-1">{nameOf(suppliers, r.supplier_id)}</td>
+                            <td className="px-2 py-1 font-medium">{r.number} <OpsPrintButton path={`supplier-return/${r.id}`} label={t('documents4.supplier_return')} /></td><td className="px-2 py-1">{formatDate(r.date)}</td><td className="px-2 py-1">{nameOf(suppliers, r.supplier_id)}</td>
                             <td className="px-2 py-1">{r.lines.map((l) => `${l.item} × ${l.quantity}`).join(', ')}</td>
                             <td className="px-2 py-1">{formatCurrency(r.total)}</td><td className="px-2 py-1">{formatCurrency(r.credit_applied)}</td>
                             <td className="px-2 py-1"><Badge s={r.credit_status} /></td>
@@ -268,7 +269,7 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
                 {applying && (
                     <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-3">
                         <Field label={t('stock.ret.apply_label', { number: applying.number })}>
-                            <select className="input" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)}>
+                            <select className="input" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} aria-label={t('stock.ret.select_invoice')}>
                                 <option value="">{t('stock.ret.select_invoice')}</option>
                                 {(invoices.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.reference} — {t('stock.ret.due_amount', { amount: formatCurrency(i.due) })}</option>)}
                             </select>
@@ -336,11 +337,11 @@ export function PaymentRun({ suppliers, notify }: ExtrasProps) {
     return (
         <div className="space-y-4">
             <div className="card space-y-3 p-4">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 [&>*]:min-w-0">
                     <Field label={t('stock.pay.due_by')}><input className="input w-full" type="date" value={dueBy} onChange={(e) => setDueBy(e.target.value)} /></Field>
                     <Field label={t('stock.common.supplier')}><Select value={supplierId} onChange={setSupplierId} list={suppliers} placeholder={t('stock.common.all_suppliers')} /></Field>
                     <Field label={t('stock.pay.pay_from')}>
-                        <select className="input w-full" value={account} onChange={(e) => setAccount(e.target.value)}>
+                        <select className="input w-full" value={account} onChange={(e) => setAccount(e.target.value)} aria-label={t('stock.pay.treasury_ph')}>
                             <option value="">{t('stock.pay.treasury_ph')}</option>
                             {(accounts.data ?? []).map((a) => <option key={a.id} value={a.code}>{a.code} — {a.name}</option>)}
                         </select>
@@ -350,7 +351,7 @@ export function PaymentRun({ suppliers, notify }: ExtrasProps) {
                 <Table head={['', t('stock.common.supplier'), t('stock.pay.invoice'), t('stock.common.date'), t('stock.pay.due_date'), t('stock.common.total'), t('stock.pay.paid_col'), t('stock.pay.due')]} empty={!due.loading && !rows.length}>
                     {rows.map((i) => (
                         <tr key={i.id}>
-                            <td className="px-2 py-1"><input type="checkbox" aria-label={t('stock.common.select_n', { name: i.reference })} checked={selected.includes(i.id)} onChange={(e) => setSelected(e.target.checked ? [...selected, i.id] : selected.filter((x) => x !== i.id))} /></td>
+                            <td className="px-2 py-1"><input type="checkbox" className="h-5 w-5 shrink-0" aria-label={t('stock.common.select_n', { name: i.reference })} checked={selected.includes(i.id)} onChange={(e) => setSelected(e.target.checked ? [...selected, i.id] : selected.filter((x) => x !== i.id))} /></td>
                             <td className="px-2 py-1">{i.supplier_name ?? nameOf(suppliers, i.supplier_id)}</td><td className="px-2 py-1 font-medium">{i.reference}</td>
                             <td className="px-2 py-1">{formatDate(i.date)}</td><td className="px-2 py-1">{i.due_date ? formatDate(i.due_date) : '—'}</td>
                             <td className="px-2 py-1">{formatCurrency(i.total)}</td><td className="px-2 py-1">{formatCurrency(i.paid)}</td><td className="px-2 py-1 font-medium">{formatCurrency(i.due)}</td>

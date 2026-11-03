@@ -81,8 +81,8 @@ export default function ReservationShow({ id }: { id: string }) {
             title={r ? `${r.guest.first_name} ${r.guest.last_name}` : t('res.show.title')}
             subtitle={r ? `${r.number} · ${r.room ? t('res.show.room_n', { number: r.room.number }) : r.room_type.name} · ${formatDate(r.arrival)} → ${formatDate(r.departure)}` : ''}
             actions={
-                <div className="flex gap-2">
-                    <Link href="/reservations" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('res.back')}</Link>
+                <div className="btn-row">
+                    <Link href="/reservations" className="btn-secondary"><ArrowLeft className="w-4 h-4" aria-hidden="true" /> {t('res.back')}</Link>
                     {f && f.status !== 'open' && (
                         <button className="btn-secondary" disabled={busy === 'inv'} onClick={() => run('inv', `folios/${f.id}/invoice`, {}, t('res.show.invoice_issued'))}>
                             {t('res.show.issue_invoice')}
@@ -98,26 +98,26 @@ export default function ReservationShow({ id }: { id: string }) {
             )}
 
             {(message || res.error || folio.error) && (
-                <div className={cn('mb-4 rounded-lg text-sm px-4 py-3', message?.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>
+                <div role="status" className={cn('mb-4 rounded-lg text-sm px-4 py-3', message?.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>
                     {message?.text ?? res.error?.message ?? folio.error?.message}
                 </div>
             )}
 
-            {!r || !f ? <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-400" /> : (
+            {!r || !f ? <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-500" aria-label="..." /> : (
                 <div className="grid lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 card overflow-x-auto">
-                        <div className="flex items-center px-5 py-4 border-b border-slate-100">
+                    <div className="lg:col-span-2 card overflow-hidden">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 border-b border-slate-200">
                             <h3 className="font-semibold text-slate-800">{t('res.show.folio', { number: f.number })}</h3>
-                            <span className="ml-3 text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">{t(`res.folio_status.${f.status}`)}</span>
+                            <span className="text-xs px-2 py-0.5 rounded border border-slate-300 bg-slate-100 text-slate-700">{t(`res.folio_status.${f.status}`)}</span>
                             <span className="ml-auto text-sm text-slate-500">{t('res.show.balance')}</span>
-                            <span className={cn('ml-2 text-lg font-semibold', f.balance > 0 ? 'text-red-600' : 'text-emerald-600')}>{formatCurrency(f.balance)}</span>
+                            <span className={cn('ml-2 text-lg font-semibold', f.balance > 0 ? 'text-red-700' : 'text-emerald-700')}>{formatCurrency(f.balance)}</span>
                         </div>
-                        <table className="table-auto w-full">
+                        <div className="table-wrap"><table className="table-auto">
                             <thead><tr><th>{t('res.show.date')}</th><th>{t('res.show.code')}</th><th>{t('res.show.description')}</th><th className="text-right">{t('res.show.tax')}</th><th className="text-right">{t('res.amount')}</th><th></th></tr></thead>
                             <tbody>
-                                {f.lines.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-slate-400 text-sm">{t('res.show.no_postings')}</td></tr>}
+                                {f.lines.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-slate-500 text-sm">{t('res.show.no_postings')}</td></tr>}
                                 {f.lines.map((l) => (
-                                    <tr key={l.id} className={cn(l.reversed && 'opacity-50 line-through')}>
+                                    <tr key={l.id} className={cn(l.reversed && 'text-slate-600 line-through')}>
                                         <td className="text-sm">{formatDate(l.business_date)}</td>
                                         <td className="font-mono text-xs">{l.code}</td>
                                         <td className="text-sm">{l.description}</td>
@@ -125,25 +125,25 @@ export default function ReservationShow({ id }: { id: string }) {
                                         <td className={cn('text-right text-sm', l.amount < 0 && 'text-emerald-700')}>{formatCurrency(l.amount)}</td>
                                         <td className="text-right">
                                             {f.status === 'open' && !l.reversed && l.type !== 'reversal' && (reversing?.id === l.id ? (
-                                                <form className="flex gap-1 justify-end" onSubmit={async (e) => {
+                                                <form className="flex flex-wrap gap-2 justify-end" onSubmit={async (e) => {
                                                     e.preventDefault();
                                                     if (await run(`rev-${l.id}`, `folios/${f.id}/lines/${l.id}/reverse`, { reason: reversing.reason }, t('res.show.line_reversed'))) setReversing(null);
                                                 }}>
-                                                    <input className="input w-36" required autoFocus placeholder={t('res.reason')} value={reversing.reason}
+                                                    <input className="input w-44" required autoFocus aria-label={t('res.reason')} placeholder={t('res.reason')} value={reversing.reason}
                                                         onChange={(e) => setReversing({ id: l.id, reason: e.target.value })} />
-                                                    <button className="btn-secondary" disabled={busy === `rev-${l.id}`}>{t('res.show.reverse')}</button>
-                                                    <button type="button" className="btn-secondary" onClick={() => setReversing(null)}>{t('common.cancel')}</button>
+                                                    <button className="btn-secondary btn-sm" disabled={busy === `rev-${l.id}`}>{t('res.show.reverse')}</button>
+                                                    <button type="button" className="btn-secondary btn-sm" onClick={() => setReversing(null)}>{t('common.cancel')}</button>
                                                 </form>
                                             ) : (
-                                                <button title={t('res.show.reverse')} className="text-slate-400 hover:text-red-600" onClick={() => setReversing({ id: l.id, reason: '' })}>
-                                                    <Undo2 className="w-4 h-4" />
+                                                <button type="button" title={t('res.show.reverse')} aria-label={t('res.show.reverse')} className="btn-ghost btn-icon text-slate-700" onClick={() => setReversing({ id: l.id, reason: '' })}>
+                                                    <Undo2 className="w-4 h-4" aria-hidden="true" />
                                                 </button>
                                             ))}
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
-                        </table>
+                        </table></div>
                     </div>
 
                     <div className="space-y-6">
@@ -156,15 +156,15 @@ export default function ReservationShow({ id }: { id: string }) {
                                     setCharge({ charge_code: '', amount: '', description: '' });
                             }}>
                                 <h3 className="font-semibold text-slate-800">{t('res.show.post_charge_title')}</h3>
-                                <select className="input" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })}>
+                                <select className="input" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })} aria-label={t('res.show.charge_code')}>
                                     <option value="" disabled>{t('res.show.charge_code')}</option>
                                     {chargeCodes.data?.filter((c) => c.code !== 'ROOM').map((c) => <option key={c.code} value={c.code}>{c.code} · {c.name}</option>)}
                                 </select>
-                                <input className="input" type="number" min={1} required placeholder={t('res.show.amount_ttc')} value={charge.amount}
+                                <input className="input" type="number" min={1} required aria-label={t('res.show.amount_ttc')} placeholder={t('res.show.amount_ttc')} value={charge.amount}
                                     onChange={(e) => setCharge({ ...charge, amount: e.target.value })} />
-                                <input className="input" placeholder={t('res.show.description_opt')} value={charge.description}
+                                <input className="input" aria-label={t('res.show.description_opt')} placeholder={t('res.show.description_opt')} value={charge.description}
                                     onChange={(e) => setCharge({ ...charge, description: e.target.value })} />
-                                <button className="btn-secondary w-full justify-center" disabled={busy === 'charge'}>{t('res.show.post_charge')}</button>
+                                <button className="btn-secondary btn-lg w-full justify-center" disabled={busy === 'charge'}>{t('res.show.post_charge')}</button>
                             </form>
 
                             <form className="card px-5 py-4 space-y-3" onSubmit={async (e) => {
@@ -176,17 +176,17 @@ export default function ReservationShow({ id }: { id: string }) {
                                 <select className="input" value={payment.method} onChange={(e) => setPayment({ ...payment, method: e.target.value })}>
                                     {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                                 </select>
-                                <div className="flex gap-2">
-                                    <input className="input" type="number" min={1} required placeholder={t('res.show.amount_fcfa')} value={payment.amount}
+                                <div className="flex flex-wrap gap-2">
+                                    <input className="input min-w-0 flex-1" inputMode="numeric" type="number" min={1} required aria-label={t('res.show.amount_fcfa')} placeholder={t('res.show.amount_fcfa')} value={payment.amount}
                                         onChange={(e) => setPayment({ ...payment, amount: e.target.value })} />
                                     {f.balance > 0 && (
-                                        <button type="button" className="btn-secondary text-xs whitespace-nowrap"
+                                        <button type="button" className="btn-secondary btn-sm whitespace-nowrap"
                                             onClick={() => setPayment({ ...payment, amount: String(f.balance) })}>{t('res.show.full_balance')}</button>
                                     )}
                                 </div>
-                                <input className="input" placeholder={t('res.show.reference')} value={payment.reference}
+                                <input className="input" aria-label={t('res.show.reference')} placeholder={t('res.show.reference')} value={payment.reference}
                                     onChange={(e) => setPayment({ ...payment, reference: e.target.value })} />
-                                <button className="btn-primary w-full justify-center" disabled={busy === 'pay'}>{t('res.show.record_payment')}</button>
+                                <button className="btn-primary btn-lg w-full justify-center" disabled={busy === 'pay'}>{t('res.show.record_payment')}</button>
                             </form>
                         </div>
                     )}

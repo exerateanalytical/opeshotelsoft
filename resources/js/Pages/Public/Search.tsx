@@ -7,9 +7,12 @@ import SearchForm, { storedMember } from './SearchForm';
 export interface Offer {
     room_type: { id: number; code: string; name: string; max_adults: number; amenities: string[] | null };
     rate_plan: { id: number; code: string; name: string; meal_plan: string | null; refundable: boolean; cancellation_hours: number | null; members_only: boolean; deposit_required: boolean; deposit_percent: number | null };
-    rooms_left: number; total: number; currency: string; nights: number;
+    rooms_left: number; total: number; currency: string; nights: { date: string; amount: number }[] | number;
 }
 interface Results { member: { name: string } | null; results: { hotel: { code: string; name: string; city: string | null }; offers: Offer[] }[] }
+
+/** The API returns one entry per night; older payloads sent a bare count. */
+export const nightCount = (o: Pick<Offer, 'nights'>) => (Array.isArray(o.nights) ? o.nights.length : o.nights);
 
 export default function Search(p: PublicProps) {
     const d = t(p.lang);
@@ -40,7 +43,7 @@ export default function Search(p: PublicProps) {
 
     return (
         <PublicLayout p={p} title={d.search}>
-            <section className="mb-8 rounded-lg border border-[#e5dfd0] bg-white p-5"><SearchForm p={p} hotels={hotels} /></section>
+            <section className="mb-8 rounded-lg border border-slate-200 bg-white p-5"><SearchForm p={p} hotels={hotels} /></section>
             {error && <Notice kind="error">{error}</Notice>}
             {q.arrival && !data && !error && <p className="text-sm text-slate-500">{d.loading}</p>}
             {data?.member && <p className="mb-4"><span className="badge-yellow">{d.membersOnly}: {data.member.name}</span></p>}
@@ -51,7 +54,7 @@ export default function Search(p: PublicProps) {
                         {offers.length === 0 && <p className="text-sm text-slate-600">{d.noOffers}</p>}
                         <ul className="space-y-3">
                             {offers.map((o) => (
-                                <li key={`${o.room_type.id}-${o.rate_plan.id}`} className="flex flex-col gap-3 rounded-lg border border-[#e5dfd0] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                                <li key={`${o.room_type.id}-${o.rate_plan.id}`} className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="space-y-1">
                                         <p className="text-lg font-semibold">{o.room_type.name}</p>
                                         <p className="text-sm text-slate-600">{o.rate_plan.name}{o.rate_plan.meal_plan ? ` · ${o.rate_plan.meal_plan}` : ''}</p>
@@ -63,8 +66,8 @@ export default function Search(p: PublicProps) {
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                                        <p className="text-right"><span className="block text-xl font-semibold">{money(o.total, o.currency, p.lang)}</span><span className="text-sm text-slate-500">{o.nights} {d.nights}</span></p>
-                                        <button type="button" onClick={() => choose(hotel.code, o)} className="rounded-md bg-[#b8923a] px-5 py-2 text-base font-semibold text-white hover:bg-[#a07e2f]">{d.select}</button>
+                                        <p className="text-right"><span className="block text-xl font-semibold">{money(o.total, o.currency, p.lang)}</span><span className="text-sm text-slate-500">{nightCount(o)} {d.nights}</span></p>
+                                        <button type="button" onClick={() => choose(hotel.code, o)} className="btn-accent min-h-11 px-6">{d.select}</button>
                                     </div>
                                 </li>
                             ))}

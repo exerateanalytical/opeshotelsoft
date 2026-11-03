@@ -14,7 +14,7 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
-    Route::get('/login', fn () => Inertia::render('Auth/Login', ['demoAccounts' => DemoLoginController::accounts()]))->name('login');
+    Route::get('/login', fn () => auth('member')->check() && ! request()->query('tab') ? redirect('/account') : Inertia::render('Auth/Login', ['demoAccounts' => DemoLoginController::accounts(), 'memberDemoAccounts' => \App\Http\Controllers\Auth\DemoMemberLoginController::accounts(), 'tab' => request()->query('tab') === 'member' ? 'member' : 'staff']))->name('login');
     Route::post('/demo-login/{login}', [DemoLoginController::class, 'store'])->middleware('throttle:20,1')->name('demo-login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:10,1');
     Route::get('/forgot-password', fn () => Inertia::render('Auth/ForgotPassword'))->name('password.request');
@@ -29,6 +29,9 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 // Language switch (guests and staff).
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale');
 
+// Landing page for visitors; signed-in staff go straight to the dashboard.
+Route::get('/', fn () => auth('web')->check() ? redirect()->route('dashboard') : Inertia::render('Landing/Index'))->name('home');
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated Application Routes
@@ -38,7 +41,6 @@ Route::post('/locale', [LocaleController::class, 'update'])->name('locale');
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard (all staff; widgets hide what the role cannot see)
-    Route::get('/', fn () => redirect()->route('dashboard'));
     Route::get('/dashboard', fn () => Inertia::render('Dashboard/Index'))->name('dashboard');
 
     // Reservations

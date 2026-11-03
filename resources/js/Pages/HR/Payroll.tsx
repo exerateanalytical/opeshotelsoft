@@ -4,6 +4,7 @@ import { AlertTriangle, BadgeCheck, Calculator, Download, FileText, Loader2, X }
 import { Fragment, useState } from 'react';
 import { Badge, Banner, downloadCsv, downloadJson, errMsg, Field, Paged } from './shared';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 interface Run {
     id: number; period: string; status: string; payroll_rule_pack_id: number; gross: number; net: number;
@@ -63,14 +64,14 @@ function Runs() {
             <form onSubmit={compute} className="card mb-5 flex flex-wrap items-end gap-3">
                 <Field label={t('hr.pay.period')}><input type="month" className="input" required value={period} onChange={(e) => setPeriod(e.target.value)} /></Field>
                 <button className="btn-primary" disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />} {t('hr.pay.compute')}</button>
-                <p className="text-xs text-slate-400">{t('hr.pay.compute_hint')}</p>
+                <p className="text-xs text-slate-500">{t('hr.pay.compute_hint')}</p>
             </form>
             {open && <RunDetail id={open} onClose={() => setOpen(null)} onChanged={(m) => (setOk(m), setErr(null), runs.reload())} onError={(m) => (setErr(m), setOk(null))} />}
             <div className="card overflow-x-auto p-0">
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-3">{t('hr.pay.period')}</th><th>{t('hr.common.status')}</th><th>{t('hr.pay.gross')}</th><th>{t('hr.pay.employee_social')}</th><th>{t('hr.pay.taxes')}</th><th>{t('hr.pay.employer_cost')}</th><th>{t('hr.pay.net')}</th></tr></thead>
                     <tbody>
-                        {runs.data?.data.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-slate-400">{t('hr.pay.no_runs')}</td></tr>}
+                        {runs.data?.data.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-slate-500">{t('hr.pay.no_runs')}</td></tr>}
                         {runs.data?.data.map((r) => (
                             <tr key={r.id} className="cursor-pointer border-t hover:bg-slate-50" onClick={() => setOpen(r.id)}>
                                 <td className="p-3 font-medium">{r.period}</td><td><Badge s={r.status} /></td>
@@ -113,10 +114,10 @@ function RunDetail({ id, onClose, onChanged, onError }: { id: number; onClose: (
     return (
         <div className="card mb-5">
             <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-semibold">{t('hr.pay.title', { period: r?.period ?? '' })} {r && <Badge s={r.status} />}</h3>
+                <h3 className="flex flex-wrap items-center gap-2 font-semibold">{t('hr.pay.title', { period: r?.period ?? '' })} {r && <Badge s={r.status} />} {r && <OpsPrintButton path={`payroll-journal/${r.id}`} label={t('documents4.journal')} />}</h3>
                 <button onClick={onClose}><X className="h-4 w-4" /></button>
             </div>
-            {run.loading && !r && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
+            {run.loading && !r && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
             {run.error && <p className="text-sm text-red-600">{run.error.message}</p>}
             {r && (
                 <>
@@ -175,7 +176,7 @@ function SlipView({ slip, onClose }: { slip: Payslip; onClose: () => void }) {
                     <thead><tr className="text-left text-slate-500"><th>{t('hr.common.code')}</th><th>{t('hr.pay.label')}</th><th>{t('hr.pay.basis')}</th><th>{t('hr.pay.rate')}</th><th className="text-right">{t('hr.common.amount')}</th></tr></thead>
                     {sections.map((sec) => (
                         <tbody key={sec}>
-                            <tr><td colSpan={5} className="pt-3 text-xs font-semibold uppercase text-slate-400">{t(`hr.pay.section.${sec}`) === `hr.pay.section.${sec}` ? sec.replace('_', ' ') : t(`hr.pay.section.${sec}`)}</td></tr>
+                            <tr><td colSpan={5} className="pt-3 text-xs font-semibold uppercase text-slate-500">{t(`hr.pay.section.${sec}`) === `hr.pay.section.${sec}` ? sec.replace('_', ' ') : t(`hr.pay.section.${sec}`)}</td></tr>
                             {slip.lines.filter((l) => l.section === sec).map((l, i) => (
                                 <tr key={i} className="border-t"><td className="font-mono text-xs">{l.code}</td><td>{l.label}</td><td>{l.basis != null ? formatCurrency(l.basis) : ''}</td><td>{l.rate != null ? `${+(l.rate * 100).toFixed(3)}%` : ''}</td><td className="text-right">{formatCurrency(l.amount)}</td></tr>
                             ))}
@@ -192,14 +193,14 @@ function Mine() {
     const t = useT();
     const mine = useApi<Payslip[]>('payroll/payslips/mine');
     const [slip, setSlip] = useState<Payslip | null>(null);
-    if (mine.error) return <Banner err={mine.error.status === 404 ? t('hr.pay.not_linked') : mine.error.message} />;
+    if (mine.error) return <Banner err={mine.error.problem.status === 404 ? t('hr.pay.not_linked') : mine.error.message} />;
     return (
         <div className="card overflow-x-auto">
             <table className="table-auto w-full text-sm">
                 <thead><tr className="text-left text-slate-500"><th>{t('hr.pay.period')}</th><th>{t('hr.common.status')}</th><th>{t('hr.pay.gross')}</th><th>{t('hr.pay.deductions')}</th><th>{t('hr.pay.net')}</th></tr></thead>
                 <tbody>
-                    {mine.loading && <tr><td colSpan={6} className="p-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></td></tr>}
-                    {mine.data?.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-slate-400">{t('hr.pay.no_slips')}</td></tr>}
+                    {mine.loading && <tr><td colSpan={6} className="p-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-500" /></td></tr>}
+                    {mine.data?.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-slate-500">{t('hr.pay.no_slips')}</td></tr>}
                     {mine.data?.map((s) => (
                         <tr key={s.id} className="cursor-pointer border-t hover:bg-slate-50" onClick={() => setSlip(s)}>
                             <td className="py-2">{s.run ? `${formatDate(s.run.period_start)} – ${formatDate(s.run.period_end)}` : t('hr.pay.run_no', { id: s.payroll_run_id })}</td><td>{s.run && <Badge s={s.run.status} />}</td>
@@ -261,7 +262,7 @@ function Packs() {
                                             <Field label={t('hr.pay.certified_by_label')}><input className="input w-80 max-w-full" required maxLength={150} value={by} onChange={(e) => setBy(e.target.value)} /></Field>
                                             <button className="btn-primary">{t('hr.pay.certify')}</button>
                                             <button type="button" className="btn-secondary" onClick={() => setCertifying(null)}>{t('common.cancel')}</button>
-                                            <span className="text-xs text-slate-400">{t('hr.pay.cert_who')}</span>
+                                            <span className="text-xs text-slate-500">{t('hr.pay.cert_who')}</span>
                                         </form>
                                     </td></tr>
                                 )}

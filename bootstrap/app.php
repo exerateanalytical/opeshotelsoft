@@ -18,11 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotent' => \App\Platform\Http\Idempotency::class,
         ]);
         $middleware->trustProxies(at: '*');
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         // Tenant context must exist before route-model binding applies tenant scopes.
         $middleware->prependToPriorityList(
             before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
             prepend: \App\Platform\Tenancy\ResolveTenant::class,
         );
+        // API labels (problem+json, statements, exports) follow the user's or the client's language.
+        $middleware->api(append: [\App\Http\Middleware\SetRequestLocale::class]);
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             // Gives signed-in web users an API cookie so the staff UI consumes the same public API.

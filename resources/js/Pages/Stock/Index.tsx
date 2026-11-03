@@ -6,6 +6,7 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Ageing, PaymentRun, PriceLists, Requisitions, Returns, Wastage } from './Extras';
 import { useT } from '@/lib/i18n';
+import OpsPrintButton from '@/Components/OpsPrintButton';
 
 interface Page<T> { data: T[]; total: number; current_page: number; last_page: number }
 interface Balance { store_id: number; store: string; stock_item_id: number; code: string; name: string; unit: string; quantity: number; avg_cost: number; value: number; reorder_level: number }
@@ -27,10 +28,10 @@ const TABS = [['balances', 'stock.tab.balances'], ['items', 'stock.tab.items'], 
 type Tab = (typeof TABS)[number][0];
 
 const BADGE: Record<string, string> = {
-    draft: 'bg-slate-100 text-slate-600', submitted: 'bg-blue-50 text-blue-700', approved: 'bg-emerald-50 text-emerald-700',
-    partially_received: 'bg-amber-50 text-amber-700', received: 'bg-emerald-100 text-emerald-800', cancelled: 'bg-red-50 text-red-700',
-    pending: 'bg-amber-50 text-amber-700', partially_paid: 'bg-blue-50 text-blue-700', paid: 'bg-emerald-100 text-emerald-800',
-    open: 'bg-amber-50 text-amber-700', posted: 'bg-emerald-50 text-emerald-700',
+    draft: 'badge-slate', submitted: 'badge-blue', approved: 'badge-green',
+    partially_received: 'badge-yellow', received: 'badge-green', cancelled: 'badge-red',
+    pending: 'badge-yellow', partially_paid: 'badge-blue', paid: 'badge-green',
+    open: 'badge-yellow', posted: 'badge-green',
 };
 const WASTAGE_REASONS = ['expired', 'spoiled', 'breakage', 'damaged', 'theft', 'kitchen_error', 'guest_complaint', 'other'];
 const CATEGORIES = ['food', 'beverage', 'supplies', 'amenities', 'linen', 'cleaning', 'maintenance'];
@@ -48,7 +49,7 @@ function Badge({ s }: { s: string }) {
     const t = useT();
     const key = `stock.status.${s}`;
     const label = t(key);
-    return <span className={cn('rounded px-2 py-0.5 text-xs font-medium', BADGE[s] ?? 'bg-slate-100 text-slate-600')}>{label === key ? s.replace(/_/g, ' ') : label}</span>;
+    return <span className={BADGE[s] ?? 'badge-slate'}>{label === key ? s.replace(/_/g, ' ') : label}</span>;
 }
 function Banner({ msg, onClose }: { msg: { ok: boolean; text: string } | null; onClose: () => void }) {
     if (!msg) return null;
@@ -70,12 +71,12 @@ function Table({ head, children, empty }: { head: string[]; children: ReactNode;
                 <thead><tr className="text-left text-xs uppercase text-slate-500">{head.map((h) => <th key={h} className="px-2 py-2">{h}</th>)}</tr></thead>
                 <tbody className="divide-y divide-slate-100">{children}</tbody>
             </table>
-            {empty && <p className="py-6 text-center text-sm text-slate-400">{t('stock.common.nothing')}</p>}
+            {empty && <p className="py-6 text-center text-sm text-slate-500">{t('stock.common.nothing')}</p>}
         </div>
     );
 }
 function Loading({ on }: { on: boolean }) {
-    return on ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : null;
+    return on ? <Loader2 className="h-4 w-4 animate-spin text-slate-500" /> : null;
 }
 
 type Notify = (ok: boolean, text: string) => void;
@@ -100,17 +101,17 @@ function LinesEditor({ lines, setLines, items, price }: { lines: Line[]; setLine
     return (
         <div className="space-y-2">
             {lines.map((l, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2">
-                    <select className={cn('input', price ? 'col-span-6' : 'col-span-8')} value={l.stock_item_id} onChange={(e) => set(i, { stock_item_id: e.target.value })}>
+                <div key={i} className="grid grid-cols-2 items-center gap-2 sm:grid-cols-12 [&>*]:min-w-0">
+                    <select className={cn('input col-span-2', price ? 'sm:col-span-6' : 'sm:col-span-8')} value={l.stock_item_id} onChange={(e) => set(i, { stock_item_id: e.target.value })} aria-label={t('stock.common.item_ph')}>
                         <option value="">{t('stock.common.item_ph')}</option>
                         {items.map((it) => <option key={it.id} value={it.id}>{it.code} — {it.name} ({it.unit})</option>)}
                     </select>
-                    <input className={cn('input', price ? 'col-span-2' : 'col-span-3')} type="number" step="any" placeholder={t('stock.common.qty')} value={l.quantity} onChange={(e) => set(i, { quantity: e.target.value })} />
-                    {price && <input className="input col-span-3" type="number" placeholder={t('stock.po.price_ph')} value={l.unit_price ?? ''} onChange={(e) => set(i, { unit_price: e.target.value })} />}
-                    <button className="col-span-1 text-red-600" onClick={() => setLines(lines.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></button>
+                    <input className={cn('input', price ? 'sm:col-span-2' : 'sm:col-span-3')} type="number" step="any" placeholder={t('stock.common.qty')} aria-label={t('stock.common.qty')} value={l.quantity} onChange={(e) => set(i, { quantity: e.target.value })} />
+                    {price && <input className="input sm:col-span-3" type="number" placeholder={t('stock.po.price_ph')} aria-label={t('stock.po.price_ph')} value={l.unit_price ?? ''} onChange={(e) => set(i, { unit_price: e.target.value })} />}
+                    <button className="btn-ghost btn-icon justify-self-end text-red-700 sm:col-span-1" aria-label={t('stock.common.remove_line')} onClick={() => setLines(lines.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></button>
                 </div>
             ))}
-            <button className="btn-secondary text-xs" onClick={() => setLines([...lines, { stock_item_id: '', quantity: '', unit_price: '' }])}><Plus className="mr-1 inline h-3 w-3" />{t('stock.common.add_line')}</button>
+            <button className="btn-secondary btn-sm" onClick={() => setLines([...lines, { stock_item_id: '', quantity: '', unit_price: '' }])}><Plus className="mr-1 inline h-3 w-3" />{t('stock.common.add_line')}</button>
         </div>
     );
 }
@@ -144,10 +145,10 @@ function Balances({ stores, items }: Refs) {
             )}
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <select className="input w-auto" value={storeId} onChange={(e) => setStoreId(e.target.value)}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={storeId} onChange={(e) => setStoreId(e.target.value)} aria-label={t('stock.common.all_stores')}>
                         <option value="">{t('stock.common.all_stores')}</option>{stores.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
                     </select>
-                    <select className="input w-auto" value={category} onChange={(e) => setCategory(e.target.value)}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={category} onChange={(e) => setCategory(e.target.value)} aria-label={t('stock.common.all_categories')}>
                         <option value="">{t('stock.common.all_categories')}</option>{CATEGORIES.map((c) => <option key={c} value={c}>{t(`stock.cat.${c}`)}</option>)}
                     </select>
                     <Loading on={bal.loading} />
@@ -205,13 +206,13 @@ function Crud<T extends { id: number; active?: boolean }>({ title, plural, path,
         <div className="card p-4">
             <div className="mb-3 flex flex-wrap items-center gap-2">
                 <h3 className="font-semibold">{plural}</h3>
-                <input className="input w-48" placeholder={t('stock.common.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+                <input className="input w-full sm:w-48" placeholder={t('stock.common.search')} aria-label={t('stock.common.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
                 <Loading on={list.loading} />
                 <button className="btn-primary ml-auto" onClick={() => open()}><Plus className="mr-1 inline h-4 w-4" />{t('stock.crud.new', { name: title.toLowerCase() })}</button>
             </div>
             {editing && (
                 <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
                         {fields.map((f) => (
                             <Field key={f.key} label={f.label}>
                                 {f.type === 'select' || f.type === 'bool' ? (
@@ -230,11 +231,11 @@ function Crud<T extends { id: number; active?: boolean }>({ title, plural, path,
             {list.error && <p className="text-sm text-red-700">{list.error.message}</p>}
             <Table head={[...cols.map((c) => c[0]), '']} empty={!list.loading && !list.data?.data.length}>
                 {(list.data?.data ?? []).map((r) => (
-                    <tr key={r.id} className={r.active === false ? 'text-slate-400' : ''}>
+                    <tr key={r.id} className={r.active === false ? 'text-slate-500' : ''}>
                         {cols.map(([h, fn]) => <td key={h} className="px-2 py-1">{fn(r)}</td>)}
                         <td className="whitespace-nowrap px-2 py-1 text-right">
-                            <button className="btn-secondary text-xs" onClick={() => open(r)}>{t('stock.common.edit')}</button>{' '}
-                            <button className="text-xs text-red-600" onClick={() => remove(r)}>{t('stock.common.delete')}</button>
+                            <button className="btn-secondary btn-sm" onClick={() => open(r)}>{t('stock.common.edit')}</button>{' '}
+                            <button className="btn-ghost btn-sm text-red-700" onClick={() => remove(r)}>{t('stock.common.delete')}</button>
                         </td>
                     </tr>
                 ))}
@@ -299,14 +300,14 @@ function Movements({ items, stores }: Refs) {
     return (
         <div className="card p-4">
             <div className="mb-3 flex flex-wrap items-center gap-2">
-                <select className="input w-auto" value={itemId} onChange={(e) => { setItemId(e.target.value); setPage(1); }}>
+                <select className="input w-full sm:w-auto sm:max-w-xs" value={itemId} onChange={(e) => { setItemId(e.target.value); setPage(1); }} aria-label={t('stock.common.all_items')}>
                     <option value="">{t('stock.common.all_items')}</option>{items.map((i) => <option key={i.id} value={i.id}>{i.code} — {i.name}</option>)}
                 </select>
-                <select className="input w-auto" value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }}>
+                <select className="input w-full sm:w-auto sm:max-w-xs" value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }} aria-label={t('stock.mov.all_kinds')}>
                     <option value="">{t('stock.mov.all_kinds')}</option>{['receipt', 'issue', 'wastage', 'transfer_in', 'transfer_out', 'adjustment', 'sale'].map((k) => <option key={k} value={k}>{t(`stock.status.${k}`)}</option>)}
                 </select>
-                <input type="date" className="input w-auto" value={from} onChange={(e) => setFrom(e.target.value)} />
-                <input type="date" className="input w-auto" value={to} onChange={(e) => setTo(e.target.value)} />
+                <input type="date" aria-label={t('stock.common.from')} className="input w-full sm:w-auto" value={from} onChange={(e) => setFrom(e.target.value)} />
+                <input type="date" aria-label={t('stock.common.to')} className="input w-full sm:w-auto" value={to} onChange={(e) => setTo(e.target.value)} />
                 <Loading on={list.loading} />
             </div>
             {list.error && <p className="text-sm text-red-700">{list.error.message}</p>}
@@ -338,13 +339,13 @@ function TransferIssue({ items, stores, notify }: Refs) {
     const [iss, setIss] = useState({ kind: 'issue', store: '', reference: '', reason: '' });
     const [iLines, setILines] = useState<Line[]>([{ stock_item_id: '', quantity: '' }]);
     const storeSel = (v: string, on: (v: string) => void) => (
-        <select className="input" value={v} onChange={(e) => on(e.target.value)}><option value="">{tr('stock.common.select')}</option>{stores.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}</select>
+        <select className="input" value={v} onChange={(e) => on(e.target.value)} aria-label={tr('stock.common.select')}><option value="">{tr('stock.common.select')}</option>{stores.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}</select>
     );
     return (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 [&>*]:min-w-0">
             <div className="card space-y-3 p-4">
                 <h3 className="font-semibold">{tr('stock.tr.title')}</h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 [&>*]:min-w-0">
                     <Field label={tr('stock.common.from')}>{storeSel(t.from, (v) => setT({ ...t, from: v }))}</Field>
                     <Field label={tr('stock.common.to')}>{storeSel(t.to, (v) => setT({ ...t, to: v }))}</Field>
                     <Field label={tr('stock.common.reference')}><input className="input" value={t.reference} onChange={(e) => setT({ ...t, reference: e.target.value })} /></Field>
@@ -354,12 +355,12 @@ function TransferIssue({ items, stores, notify }: Refs) {
             </div>
             <div className="card space-y-3 p-4">
                 <h3 className="font-semibold">{tr('stock.iss.title')}</h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                     <Field label={tr('stock.common.kind')}><select className="input" value={iss.kind} onChange={(e) => setIss({ ...iss, kind: e.target.value })}><option value="issue">{tr('stock.status.issue')}</option><option value="wastage">{tr('stock.status.wastage')}</option></select></Field>
                     <Field label={tr('stock.common.store')}>{storeSel(iss.store, (v) => setIss({ ...iss, store: v }))}</Field>
                     <Field label={tr('stock.common.reference')}><input className="input" value={iss.reference} onChange={(e) => setIss({ ...iss, reference: e.target.value })} /></Field>
                     <Field label={tr('stock.common.reason')}>{iss.kind === 'wastage'
-                        ? <select className="input" value={iss.reason} onChange={(e) => setIss({ ...iss, reason: e.target.value })}><option value="">{tr('stock.iss.select_reason')}</option>{WASTAGE_REASONS.map((w) => <option key={w} value={w}>{tr(`stock.waste.${w}`)}</option>)}</select>
+                        ? <select className="input" value={iss.reason} onChange={(e) => setIss({ ...iss, reason: e.target.value })} aria-label={tr('stock.iss.select_reason')}><option value="">{tr('stock.iss.select_reason')}</option>{WASTAGE_REASONS.map((w) => <option key={w} value={w}>{tr(`stock.waste.${w}`)}</option>)}</select>
                         : <input className="input" value={iss.reason} onChange={(e) => setIss({ ...iss, reason: e.target.value })} />}</Field>
                 </div>
                 <LinesEditor lines={iLines} setLines={setILines} items={items} />
@@ -421,7 +422,7 @@ function Counts({ items, stores, notify }: Refs) {
                     <b>{t('stock.cnt.open')}</b>
                     <div className="flex flex-wrap gap-2">
                         {open.data.data.map((c) => (
-                            <button key={c.id} className={cn('btn-secondary text-xs', count?.id === c.id && 'ring-2 ring-slate-400')} onClick={() => resume(c.id)}>
+                            <button key={c.id} className={cn('btn-secondary text-xs', count?.id === c.id && 'outline-2 outline-slate-700')} onClick={() => resume(c.id)}>
                                 #{c.id} · {sCode(c.store_id)} · {formatDate(c.date)}{c.lines_count != null && ` · ${t('stock.cnt.lines_n', { count: c.lines_count })}`}
                             </button>
                         ))}
@@ -523,10 +524,10 @@ function Orders({ items, stores, suppliers, notify }: Refs) {
         <div className="space-y-4">
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock.common.all_statuses')}>
                         <option value="">{t('stock.common.all_statuses')}</option>{['draft', 'submitted', 'approved', 'partially_received', 'received', 'cancelled'].map((s) => <option key={s} value={s}>{t(`stock.status.${s}`)}</option>)}
                     </select>
-                    <select className="input w-auto" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} aria-label={t('stock.common.all_suppliers')}>
                         <option value="">{t('stock.common.all_suppliers')}</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                     <Loading on={list.loading} />
@@ -534,7 +535,7 @@ function Orders({ items, stores, suppliers, notify }: Refs) {
                 </div>
                 {creating && (
                     <div className="mb-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
                             <Field label={t('stock.common.supplier')}><select className="input" value={form.supplier_id} onChange={(e) => setForm({ ...form, supplier_id: e.target.value })}><option value="">{t('stock.common.select')}</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
                             <Field label={t('stock.req.deliver_to')}><select className="input" value={form.store_id} onChange={(e) => setForm({ ...form, store_id: e.target.value })}><option value="">{t('stock.common.select')}</option>{stores.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}</select></Field>
                             <Field label={t('stock.po.expected_date')}><input type="date" className="input" value={form.expected_date} onChange={(e) => setForm({ ...form, expected_date: e.target.value })} /></Field>
@@ -556,10 +557,10 @@ function Orders({ items, stores, suppliers, notify }: Refs) {
                                 <td className="px-2 py-1">{formatCurrency(Number(po.total))}</td><td className="px-2 py-1"><Badge s={po.status} /></td>
                                 <td className="whitespace-nowrap px-2 py-1 text-right">
                                     {busy === po.id && <Loader2 className="mr-1 inline h-4 w-4 animate-spin" />}
-                                    {po.status === 'draft' && <button className="btn-secondary text-xs" onClick={() => act(po, 'submit')}>{t('stock.common.submit')}</button>}{' '}
-                                    {po.status === 'submitted' && <button className="btn-primary text-xs" onClick={() => act(po, 'approve')}>{t('stock.common.approve')}</button>}{' '}
-                                    {['approved', 'partially_received'].includes(po.status) && <button className="btn-primary text-xs" onClick={() => openReceive(po)}>{t('stock.po.receive')}</button>}{' '}
-                                    {['draft', 'submitted', 'approved'].includes(po.status) && <button className="text-xs text-red-600" onClick={() => act(po, 'cancel')}>{t('stock.common.cancel')}</button>}
+                                    {po.status === 'draft' && <button className="btn-secondary btn-sm" onClick={() => act(po, 'submit')}>{t('stock.common.submit')}</button>}{' '}
+                                    {po.status === 'submitted' && <button className="btn-primary btn-sm" onClick={() => act(po, 'approve')}>{t('stock.common.approve')}</button>}{' '}
+                                    {['approved', 'partially_received'].includes(po.status) && <button className="btn-primary btn-sm" onClick={() => openReceive(po)}>{t('stock.po.receive')}</button>}{' '}
+                                    {['draft', 'submitted', 'approved'].includes(po.status) && <button className="btn-ghost btn-sm text-red-700" onClick={() => act(po, 'cancel')}>{t('stock.common.cancel')}</button>}
                                 </td>
                             </tr>
                             {poError?.id === po.id && (
@@ -606,7 +607,7 @@ function Receipts({ items, stores, suppliers }: Refs) {
                         <td className="px-2 py-1">{stores.find((s) => s.id === g.store_id)?.code ?? `#${g.store_id}`}</td><td className="px-2 py-1">{g.delivery_note ?? '—'}</td>
                         <td className="px-2 py-1 text-xs">{g.lines.map((l) => `${iName(l.stock_item_id)} × ${Number(l.quantity)}`).join(', ')}</td>
                         <td className="px-2 py-1">{formatCurrency(Number(g.net_total))}</td>
-                        <td className="px-2 py-1">{g.invoiced ? <Badge s="paid" /> : <span className="text-xs text-amber-700">{t('stock.grn.not_yet')}</span>}</td>
+                        <td className="px-2 py-1">{g.invoiced ? <Badge s="paid" /> : <span className="text-xs text-amber-700">{t('stock.grn.not_yet')}</span>} <OpsPrintButton path={`goods-receipt/${g.id}`} label={t('documents4.grn')} /></td>
                     </tr>
                 ))}
             </Table>
@@ -670,10 +671,10 @@ function Invoices({ suppliers, notify }: Refs) {
         <div className="space-y-4">
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock.common.all_statuses')}>
                         <option value="">{t('stock.common.all_statuses')}</option>{['pending', 'approved', 'partially_paid', 'paid'].map((s) => <option key={s} value={s}>{t(`stock.status.${s}`)}</option>)}
                     </select>
-                    <select className="input w-auto" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} aria-label={t('stock.common.all_suppliers')}>
                         <option value="">{t('stock.common.all_suppliers')}</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                     <Loading on={list.loading} />
@@ -681,7 +682,7 @@ function Invoices({ suppliers, notify }: Refs) {
                 </div>
                 {creating && (
                     <div className="mb-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-6 [&>*]:min-w-0">
                             <Field label={t('stock.common.supplier')}><select className="input" value={form.supplier_id} onChange={(e) => { setForm({ ...form, supplier_id: e.target.value }); setGrnIds([]); }}><option value="">{t('stock.common.select')}</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
                             <Field label={t('stock.inv.supplier_ref')}><input className="input" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} /></Field>
                             <Field label={t('stock.common.date')}><input type="date" className="input" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></Field>
@@ -691,11 +692,11 @@ function Invoices({ suppliers, notify }: Refs) {
                         </div>
                         <div>
                             <p className="mb-1 text-xs font-medium text-slate-600">{t('stock.inv.grns_to_match')} <Loading on={grns.loading} /></p>
-                            {openGrns.length === 0 && <p className="text-xs text-slate-400">{t('stock.inv.no_grns')}</p>}
+                            {openGrns.length === 0 && <p className="text-xs text-slate-500">{t('stock.inv.no_grns')}</p>}
                             <div className="flex flex-wrap gap-3">
                                 {openGrns.map((g) => (
                                     <label key={g.id} className="flex items-center gap-1 text-sm">
-                                        <input type="checkbox" checked={grnIds.includes(g.id)} onChange={(e) => setGrnIds(e.target.checked ? [...grnIds, g.id] : grnIds.filter((x) => x !== g.id))} />
+                                        <input type="checkbox" className="h-5 w-5 shrink-0" checked={grnIds.includes(g.id)} onChange={(e) => setGrnIds(e.target.checked ? [...grnIds, g.id] : grnIds.filter((x) => x !== g.id))} />
                                         {g.number} ({formatCurrency(Number(g.net_total))})
                                     </label>
                                 ))}
@@ -704,14 +705,14 @@ function Invoices({ suppliers, notify }: Refs) {
                         <div className="space-y-2">
                             <p className="text-xs font-medium text-slate-600">{t('stock.inv.expense_lines')}</p>
                             {expenses.map((x, i) => (
-                                <div key={i} className="grid grid-cols-12 gap-2">
-                                    <input className="input col-span-3" placeholder={t('stock.pay.account')} value={x.account} onChange={(e) => setExpenses(expenses.map((y, j) => (j === i ? { ...y, account: e.target.value } : y)))} />
-                                    <input className="input col-span-3" type="number" placeholder={t('stock.common.amount')} value={x.amount} onChange={(e) => setExpenses(expenses.map((y, j) => (j === i ? { ...y, amount: e.target.value } : y)))} />
-                                    <input className="input col-span-5" placeholder={t('stock.common.description')} value={x.description} onChange={(e) => setExpenses(expenses.map((y, j) => (j === i ? { ...y, description: e.target.value } : y)))} />
-                                    <button className="col-span-1 text-red-600" onClick={() => setExpenses(expenses.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></button>
+                                <div key={i} className="grid grid-cols-2 items-center gap-2 sm:grid-cols-12 [&>*]:min-w-0">
+                                    <input className="input sm:col-span-3" placeholder={t('stock.pay.account')} aria-label={t('stock.pay.account')} value={x.account} onChange={(e) => setExpenses(expenses.map((y, j) => (j === i ? { ...y, account: e.target.value } : y)))} />
+                                    <input className="input sm:col-span-3" type="number" placeholder={t('stock.common.amount')} aria-label={t('stock.common.amount')} value={x.amount} onChange={(e) => setExpenses(expenses.map((y, j) => (j === i ? { ...y, amount: e.target.value } : y)))} />
+                                    <input className="input col-span-2 sm:col-span-5" placeholder={t('stock.common.description')} aria-label={t('stock.common.description')} value={x.description} onChange={(e) => setExpenses(expenses.map((y, j) => (j === i ? { ...y, description: e.target.value } : y)))} />
+                                    <button className="btn-ghost btn-icon justify-self-end text-red-700 sm:col-span-1" aria-label={t('stock.common.remove_line')} onClick={() => setExpenses(expenses.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></button>
                                 </div>
                             ))}
-                            <button className="btn-secondary text-xs" onClick={() => setExpenses([...expenses, { account: '', amount: '', description: '' }])}><Plus className="mr-1 inline h-3 w-3" />{t('stock.inv.add_expense')}</button>
+                            <button className="btn-secondary btn-sm" onClick={() => setExpenses([...expenses, { account: '', amount: '', description: '' }])}><Plus className="mr-1 inline h-3 w-3" />{t('stock.inv.add_expense')}</button>
                         </div>
                         <div className="text-sm">
                             {t('stock.inv.match_expected')} <b>{formatCurrency(expected)}</b>, {t('stock.inv.match_net')} <b>{formatCurrency(Number(form.net_total || 0))}</b>
@@ -736,8 +737,8 @@ function Invoices({ suppliers, notify }: Refs) {
                             <td className="px-2 py-1">{inv.match_variance ? formatCurrency(Number(inv.match_variance)) : '—'}</td>
                             <td className="px-2 py-1"><Badge s={inv.status} /></td>
                             <td className="whitespace-nowrap px-2 py-1 text-right">
-                                {inv.status === 'pending' && <button className="btn-primary text-xs" onClick={() => run(notify, () => post(`payables/invoices/${inv.id}/approve`), t('stock.inv.approved', { ref: inv.reference }), list.reload)}>{t('stock.common.approve')}</button>}
-                                {['approved', 'partially_paid'].includes(inv.status) && <button className="btn-primary text-xs" onClick={() => { setPaying(inv); setPay({ amount: String(Number(inv.total) - Number(inv.paid ?? 0)), account: defaultAccount, reference: '' }); }}>{t('stock.inv.pay')}</button>}
+                                {inv.status === 'pending' && <button className="btn-primary btn-sm" onClick={() => run(notify, () => post(`payables/invoices/${inv.id}/approve`), t('stock.inv.approved', { ref: inv.reference }), list.reload)}>{t('stock.common.approve')}</button>}
+                                {['approved', 'partially_paid'].includes(inv.status) && <button className="btn-primary btn-sm" onClick={() => { setPaying(inv); setPay({ amount: String(Number(inv.total) - Number(inv.paid ?? 0)), account: defaultAccount, reference: '' }); }}>{t('stock.inv.pay')}</button>}
                             </td>
                         </tr>
                     ))}
@@ -746,7 +747,7 @@ function Invoices({ suppliers, notify }: Refs) {
             {paying && (
                 <div className="card space-y-3 p-4">
                     <h3 className="font-semibold">{t('stock.inv.pay_title', { ref: paying.reference, amount: formatCurrency(Number(paying.total) - Number(paying.paid ?? 0)) })}</h3>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 [&>*]:min-w-0">
                         <Field label={t('stock.common.amount')}><input type="number" className="input" value={pay.amount} onChange={(e) => setPay({ ...pay, amount: e.target.value })} /></Field>
                         <Field label={t('stock.inv.pay_from_account')}><select className="input" value={pay.account} onChange={(e) => setPay({ ...pay, account: e.target.value })}><option value="">{payAccounts.loading ? t('stock.common.loading') : t('stock.common.select')}</option>{(payAccounts.data ?? []).map((a) => <option key={a.id} value={a.code}>{a.code} — {a.name}</option>)}</select></Field>
                         <Field label={t('stock.common.reference')}><input className="input" value={pay.reference} onChange={(e) => setPay({ ...pay, reference: e.target.value })} /></Field>
@@ -778,9 +779,9 @@ export default function StockIndex() {
     return (
         <AppLayout title={t('stock.page.title')} subtitle={t('stock.page.subtitle')}>
             <Head title={t('stock.page.title')} />
-            <div className="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
+            <div className="tabs mb-4">
                 {TABS.map(([k, l]) => (
-                    <button key={k} onClick={() => { setTab(k); setMsg(null); }} className={cn('whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium', tab === k ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700')}>{t(l)}</button>
+                    <button key={k} onClick={() => { setTab(k); setMsg(null); }} className={cn('tab', tab === k && 'active')} aria-current={tab === k ? 'page' : undefined}>{t(l)}</button>
                 ))}
             </div>
             <Banner msg={msg} onClose={() => setMsg(null)} />

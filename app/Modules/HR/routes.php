@@ -59,3 +59,40 @@ Route::prefix('payroll')->group(function () {
     Route::get('rule-packs', [P::class, 'rulePacks']);
     Route::post('rule-packs/{pack}/certify', [P::class, 'certify']);
 });
+
+// Q2 employment lifecycle: e-contracts, raises & promotions, bonuses & allowances, transfers.
+Route::prefix('hr')->controller(\App\Modules\HR\Http\LifecycleController::class)->group(function () {
+    Route::get('contract-templates', 'templates');
+    Route::put('contract-templates', 'saveTemplate');
+    Route::get('econtracts', 'econtracts');
+    Route::post('employees/{employee}/econtracts', 'generate');
+    Route::get('econtracts/{econtract}', 'showEContract');
+    Route::patch('econtracts/{econtract}', 'updateEContract');
+    Route::post('econtracts/{econtract}/send', 'send');
+    Route::post('econtracts/{econtract}/countersign', 'countersign');
+    Route::post('econtracts/{econtract}/cancel', 'cancel');
+    Route::get('econtracts/{econtract}/pdf', 'pdf');
+    Route::get('compensation-changes', 'changes');
+    Route::post('employees/{employee}/compensation-changes', 'requestChange');
+    Route::post('compensation-changes/{change}/decide', 'decideChange');
+    Route::get('employees/{employee}/salary-history', 'salaryHistory');
+    Route::post('lifecycle/apply-due', 'applyDue');
+    Route::get('pay-elements', 'elements');
+    Route::post('employees/{employee}/pay-elements', 'addElement');
+    Route::post('pay-elements/{element}/cancel', 'cancelElement');
+    Route::get('service-charge-pools', 'pools');
+    Route::post('service-charge-pools', 'createPool');
+    Route::post('service-charge-pools/{pool}/distribute', 'distributePool');
+    Route::get('transfers', 'transfers');
+    Route::post('employees/{employee}/transfers', 'requestTransfer');
+    Route::post('transfers/{transfer}/decide', 'decideTransfer');
+});
+
+// H-A workforce: scheduling, rosters, swaps, leave policies, geofenced clocking, labour cost.
+require __DIR__.'/Workforce/routes.php';
+
+// H-B talent and compliance: recruitment, skills, training, planning, /me self-service, payroll checks, privacy.
+require __DIR__.'/Talent/routes.php';
+
+// H-C employee 360 profile: aggregator and per-section endpoints.
+require __DIR__.'/Profile/routes.php';

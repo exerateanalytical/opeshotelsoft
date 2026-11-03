@@ -11,3 +11,5 @@ Route::apiResource('room-types', RoomTypeController::class);
 Route::apiResource('rooms', RoomController::class);
 Route::apiResource('outlets', OutletController::class);
 Route::apiResource('assets', AssetController::class);
+
+require __DIR__.'/FastConfigure/routes.php';

@@ -31,7 +31,7 @@ class HandleInertiaRequests extends Middleware
     {
         app()->setLocale($this->locale($request));
 
-        $user = $request->user();
+        $user = $this->staffUser($request);
         if ($user && $this->mustEnrol($request, $user) && ! $request->routeIs(...self::MFA_ALLOWED)) {
             return redirect()->route('profile')->with('error', __('auth.2fa.required'));
         }
@@ -58,7 +58,7 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $user = $request->user();
+        $user = $this->staffUser($request);
 
         return [
             ...parent::share($request),
@@ -100,9 +100,15 @@ class HandleInertiaRequests extends Middleware
         return self::$translations[$locale];
     }
 
+    /** The signed-in staff user. The customer portal (/account) never sees one, even if the browser also holds a staff session. */
+    private function staffUser(Request $request)
+    {
+        return $request->is("account", "account/*") ? null : $request->user();
+    }
+
     private function locale(Request $request): string
     {
-        $wanted = $request->user()?->locale ?? ($request->hasSession() ? $request->session()->get('locale') : null);
+        $wanted = $this->staffUser($request)?->locale ?? ($request->hasSession() ? $request->session()->get('locale') : null);
 
         return in_array($wanted, LocaleController::SUPPORTED, true) ? $wanted : LocaleController::DEFAULT;
     }

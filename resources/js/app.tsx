@@ -6,13 +6,14 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { Toaster } from 'react-hot-toast';
 
 createInertiaApp({
-    title: (title) => title ? `${title} — OPes Hotel Soft` : 'OPes Hotel Soft',
+    title: (title) => title ? `${title} — OPES Hôtels Soft` : 'OPES Hôtels Soft',
     resolve: (name) =>
-        resolvePageComponent(
+        resolvePageComponent<any>(
             `./Pages/${name}.tsx`,
             import.meta.glob('./Pages/**/*.tsx'),
         ),
     setup({ el, App, props }) {
+        if (!el) return;
         const root = createRoot(el);
         root.render(
             <>

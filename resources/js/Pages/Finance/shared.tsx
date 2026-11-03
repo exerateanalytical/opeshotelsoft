@@ -30,7 +30,7 @@ export function Banner({ error, success }: { error?: string | null; success?: st
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
     return (
-        <label className="block text-xs font-medium text-slate-500">
+        <label className="block text-sm font-semibold text-slate-700">
             {label}
             <div className="mt-1">{children}</div>
         </label>
@@ -39,7 +39,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 
 export function Loading({ on }: { on: boolean }) {
     const t = useT();
-    return on ? <p className="py-6 text-center text-sm text-slate-400">{t('common.loading')}</p> : null;
+    return on ? <p className="py-6 text-center text-sm text-slate-500">{t('common.loading')}</p> : null;
 }
 
 export const STATUS_BADGE: Record<string, string> = {
@@ -51,5 +51,5 @@ export function Badge({ s }: { s: string }) {
     const t = useT();
     const key = `fin.status.${s}`;
     const label = t(key);
-    return <span className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[s] ?? 'bg-slate-100 text-slate-600'}`}>{label === key ? s.replace('_', ' ') : label}</span>;
+    return <span className={STATUS_BADGE[s] ?? 'badge-slate'}>{label === key ? s.replace('_', ' ') : label}</span>;
 }

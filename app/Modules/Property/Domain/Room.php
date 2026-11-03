@@ -15,7 +15,7 @@ class Room extends Model
 
     protected function casts(): array
     {
-        return ['occupied' => 'boolean', 'active' => 'boolean'];
+        return ['occupied' => 'boolean', 'active' => 'boolean', 'smoking' => 'boolean'];
     }
 
     public function roomType()

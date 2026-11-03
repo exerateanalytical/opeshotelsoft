@@ -1,0 +1,10 @@
+{
+    "brand.name": "OPES Hôtels Soft",
+    "brand.tagline": "Le système d'exploitation de l'hôtel",
+    "brand.powered_by": "Propulsé par OPES Hôtels Soft",
+    "brand.demo.select_label": "Choisir un compte de démonstration",
+    "brand.demo.select_placeholder": "Choisir un compte…",
+    "brand.demo.submit": "Se connecter avec ce compte",
+    "brand.demo.member_label": "Compte membre de démonstration",
+    "brand.demo.member_placeholder": "Choisir un membre…"
+}

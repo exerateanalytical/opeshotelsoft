@@ -2,16 +2,18 @@
 
 namespace App\Modules\Documents\Http;
 
+use App\Modules\Documents\Application\DocumentRenderer;
 use App\Modules\Documents\Application\InternalApi;
 use App\Modules\Documents\Application\NumberToWords;
+use App\Modules\Documents\Application\TemplateRenderer;
 use App\Modules\Guests\Domain\Guest;
 use App\Modules\HR\Application\Payroll\PayslipLabels;
 use App\Modules\HR\Domain\Payslip;
 use App\Modules\Tenancy\Domain\Hotel;
 use App\Platform\Tenancy\TenantContext;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * PDF documents. Each one first loads its resource through the existing API
@@ -20,18 +22,21 @@ use Illuminate\Support\Facades\DB;
  */
 class DocumentController
 {
-    public function __construct(private InternalApi $api, private TenantContext $ctx) {}
+    public function __construct(private InternalApi $api, private TenantContext $ctx, private DocumentRenderer $engine) {}
 
     public function invoice(Request $request, int $invoice)
     {
         $inv = $this->api->get("invoices/$invoice");
-        $lang = $this->lang($request, $inv['guest_id'] ?? null);
+        // The invoice is a legal document (OHADA / DGI): always issued in French.
+        $lang = 'fr';
 
         return $this->pdf('invoice', 'invoice-'.$inv['number'], $lang, [
             'invoice' => $inv,
             'words' => NumberToWords::convert((int) $inv['total'], $lang),
             'net' => (int) $inv['total'] - (int) $inv['tax_total'],
-        ]);
+            'templateNote' => TemplateRenderer::renderFor('invoice', 'fr', TemplateRenderer::values($this->hotel(), null, null, $inv))['html'],
+        ], ['number' => $inv['number'], 'source_id' => $invoice, 'amount' => (int) $inv['total'], 'currency' => $inv['currency'] ?? 'XAF',
+            'title' => (($inv['kind'] ?? 'invoice') === 'credit_note' ? 'Avoir' : 'Facture').' '.$inv['number']]);
     }
 
     public function folio(Request $request, int $folio)
@@ -39,7 +44,10 @@ class DocumentController
         $f = $this->api->get("folios/$folio");
         $lang = $this->lang($request, $f['guest_id'] ?? null);
 
-        return $this->pdf('folio', 'folio-'.($f['number'] ?? $folio), $lang, ['folio' => $f]);
+        return $this->pdf('folio', 'folio-'.($f['number'] ?? $folio), $lang, ['folio' => $f], [
+            'number' => (string) ($f['number'] ?? $folio), 'source_id' => $folio, 'amount' => (int) ($f['balance'] ?? 0), 'currency' => $f['currency'] ?? 'XAF',
+            'title' => $lang === 'en' ? 'Folio statement' : 'Relevé de folio',
+        ]);
     }
 
     public function registrationCard(Request $request, int $reservation)
@@ -48,7 +56,7 @@ class DocumentController
         $signature = null;
         if (! empty($card['has_signature'])) {
             $res = $this->api->raw("reservations/$reservation/registration-card/signature");
-            $bin = $res instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse
+            $bin = $res instanceof BinaryFileResponse
                 ? file_get_contents($res->getFile()->getPathname())
                 : (string) $res->getContent();
             if ($bin === '' && method_exists($res, 'sendContent')) {
@@ -60,7 +68,12 @@ class DocumentController
         }
         $lang = $this->lang($request, $card['guest_id'] ?? null);
 
-        return $this->pdf('registration-card', 'registration-card-'.$reservation, $lang, ['card' => $card, 'signature' => $signature]);
+        $note = TemplateRenderer::renderFor('registration_card', $lang, TemplateRenderer::values($this->hotel(), $card))['html'];
+
+        return $this->pdf('registration-card', 'registration-card-'.$reservation, $lang, ['card' => $card, 'signature' => $signature, 'templateNote' => $note], [
+            'number' => 'RC-'.($card['reservation_number'] ?? $card['number'] ?? $reservation), 'source_id' => $reservation,
+            'title' => $lang === 'en' ? 'Registration card' : 'Fiche d\'arrivée',
+        ]);
     }
 
     public function payslip(Request $request, int $payslip)
@@ -75,7 +88,7 @@ class DocumentController
         return $this->pdf('payslip', 'payslip-'.$payslip, $lang, [
             'slip' => $slip, 'run' => $run,
             'sections' => collect($slip['lines'])->groupBy('section')->map->values()->all(),
-        ]);
+        ], ['number' => 'PAY-'.$payslip, 'source_id' => $payslip, 'title' => $slip['labels']['title'] ?? '']);
     }
 
     public function purchaseOrder(Request $request, int $order)
@@ -83,7 +96,12 @@ class DocumentController
         $po = $this->api->get("purchasing/orders/$order");
         $items = DB::table('stock_items')->whereIn('id', collect($po['lines'] ?? [])->pluck('stock_item_id'))->get()->keyBy('id');
 
-        return $this->pdf('purchase-order', 'purchase-order-'.$po['number'], $this->lang($request), ['po' => $po, 'items' => $items]);
+        $lang = $this->lang($request);
+
+        return $this->pdf('purchase-order', 'purchase-order-'.$po['number'], $lang, ['po' => $po, 'items' => $items], [
+            'number' => $po['number'], 'source_id' => $order, 'amount' => (int) ($po['total'] ?? 0), 'currency' => $po['currency'] ?? 'XAF',
+            'title' => $lang === 'en' ? 'Purchase order' : 'Bon de commande',
+        ]);
     }
 
     private function lang(Request $request, ?int $guestId = null): string
@@ -105,16 +123,11 @@ class DocumentController
         return $this->ctx->hotelId() ? Hotel::find($this->ctx->hotelId()) : null;
     }
 
-    private function pdf(string $view, string $name, string $lang, array $data)
+    private function pdf(string $view, string $name, string $lang, array $data, array $meta = [])
     {
-        app()->setLocale($lang);
-        $pdf = Pdf::loadView("pdf.$view", $data + ['hotel' => $this->hotel(), 'lang' => $lang, 't' => fn (string $fr, string $en) => $lang === 'en' ? $en : $fr])
-            ->setPaper('a4');
+        $type = $meta['type'] ?? str_replace('-', '_', $view);
+        $doc = $this->engine->render($type, $data, $meta + ['view' => "pdf.$view", 'lang' => $lang, 'hotel' => $this->hotel(), 'source_type' => $type, 'filename' => $name]);
 
-        return response($pdf->output(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.preg_replace('/[^\w.-]/', '_', $name).'.pdf"',
-            'Cache-Control' => 'private, no-store',
-        ]);
+        return $this->engine->response($doc);
     }
 }

@@ -4,6 +4,7 @@ import { api, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Account, Banner, errMsg, Field, JournalEntry, Loading, Page, today } from './shared';
 import { useT } from '@/lib/i18n';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 
 interface Line { account: string; debit: string; credit: string; description: string; department: string }
 const emptyLine = (): Line => ({ account: '', debit: '', credit: '', description: '', department: '' });
@@ -33,7 +34,7 @@ export default function Journal() {
     return (
         <div>
             <Banner error={error ?? list.error?.message} success={ok} />
-            <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end">
+            <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:flex-wrap sm:items-end [&>*]:min-w-0">
                 <Field label={t('fin.col.journal')}><select className="input w-full sm:w-44" value={journal} onChange={(e) => { setJournal(e.target.value); setPage(1); }}>
                     <option value="">{t('fin.journal.all_journals')}</option>
                     {(journals.data ?? []).map((j) => <option key={j.code} value={j.code}>{j.code} · {j.name}</option>)}
@@ -41,7 +42,7 @@ export default function Journal() {
                 <Field label={t('fin.col.account')}><input className="input w-full sm:w-32" value={account} onChange={(e) => { setAccount(e.target.value); setPage(1); }} /></Field>
                 <Field label={t('fin.from')}><input type="date" className="input w-full" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} /></Field>
                 <Field label={t('fin.to')}><input type="date" className="input w-full" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} /></Field>
-                <button className="btn-primary col-span-2 sm:ml-auto" onClick={() => setCreating(true)}><Plus className="inline h-4 w-4" /> {t('fin.journal.manual_entry')}</button>
+                <button className="btn-primary sm:col-span-2 sm:ml-auto" onClick={() => setCreating(true)}><Plus className="inline h-4 w-4" /> {t('fin.journal.manual_entry')}</button>
             </div>
 
             {creating && (
@@ -68,7 +69,7 @@ export default function Journal() {
                                 <td className="p-2 text-xs">{e.reversed ? <span className="text-amber-700">{t('fin.journal.reversed')}</span> : e.reverses_entry_id ? t('fin.journal.reversal') : e.status}</td>
                             </tr>
                         ))}
-                        {list.data && list.data.data.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-slate-400">{t('fin.journal.empty')}</td></tr>}
+                        {list.data && list.data.data.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-slate-500">{t('fin.journal.empty')}</td></tr>}
                     </tbody>
                 </table>
             </div>
@@ -111,7 +112,7 @@ function EntryDetail({ id, onClose, onReversed }: { id: number; onClose: () => v
                     <h3 className="font-semibold">{e ? `${e.number} · ${e.journal_code}` : t('fin.journal.entry')}</h3>
                     {e && <p className="text-sm text-slate-500">{formatDate(e.date)} — {e.description} {e.source_type && `(${e.source_type})`}</p>}
                 </div>
-                <button onClick={onClose} className="text-slate-400"><X className="h-5 w-5" /></button>
+                <button onClick={onClose} className="text-slate-500"><X className="h-5 w-5" /></button>
             </div>
             <Banner error={error ?? entry.error?.message} />
             <Loading on={entry.loading} />
@@ -134,12 +135,13 @@ function EntryDetail({ id, onClose, onReversed }: { id: number; onClose: () => v
                             </tbody>
                         </table>
                     </div>
+                    <div className="mt-3"><PrintPdfButton path={`journal-voucher/${e.id}`} label={t('documents3.print_voucher')} /></div>
                     {e.reversed ? (
                         <p className="mt-3 text-sm text-amber-700">{t('fin.journal.has_been_reversed')}</p>
                     ) : !showReverse ? (
                         <button className="btn-secondary mt-3" onClick={() => setShowReverse(true)}>{t('fin.journal.reverse')}</button>
                     ) : (
-                        <form onSubmit={reverse} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+                        <form onSubmit={reverse} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-end [&>*]:min-w-0">
                             <Field label={t('fin.reason')}><input className="input w-full" required value={reason} onChange={(ev) => setReason(ev.target.value)} /></Field>
                             <Field label={t('fin.date_optional')}><input type="date" className="input w-full" value={date} onChange={(ev) => setDate(ev.target.value)} /></Field>
                             <div className="flex gap-2">
@@ -187,9 +189,9 @@ function EntryForm({ accounts, onClose, onDone }: { accounts: Account[]; onClose
 
     return (
         <form onSubmit={submit} className="card mb-4 p-4">
-            <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">{t('fin.journal.manual_title')}</h3><button type="button" onClick={onClose} className="text-slate-400"><X className="h-5 w-5" /></button></div>
+            <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">{t('fin.journal.manual_title')}</h3><button type="button" onClick={onClose} className="text-slate-500"><X className="h-5 w-5" /></button></div>
             <Banner error={error} />
-            <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-[8rem_10rem_1fr]">
+            <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-[8rem_10rem_1fr] [&>*]:min-w-0">
                 <Field label={t('fin.col.journal')}><input className="input w-full" required value={journal} onChange={(e) => setJournal(e.target.value)} /></Field>
                 <Field label={t('fin.col.date')}><input type="date" className="input w-full" required value={date} onChange={(e) => setDate(e.target.value)} /></Field>
                 <Field label={t('fin.col.description')}><input className="input w-full" required maxLength={250} value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
@@ -206,11 +208,11 @@ function EntryForm({ accounts, onClose, onDone }: { accounts: Account[]; onClose
                                 <td className="p-1"><input className="input w-24" value={l.department} onChange={(e) => set(i, { department: e.target.value })} /></td>
                                 <td className="p-1"><input type="number" min={0} className="input w-28 text-right" value={l.debit} onChange={(e) => set(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} /></td>
                                 <td className="p-1"><input type="number" min={0} className="input w-28 text-right" value={l.credit} onChange={(e) => set(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} /></td>
-                                <td className="p-1">{lines.length > 2 && <button type="button" onClick={() => setLines(lines.filter((_, j) => j !== i))} className="text-red-500"><Trash2 className="h-4 w-4" /></button>}</td>
+                                <td className="p-1">{lines.length > 2 && <button type="button" onClick={() => setLines(lines.filter((_, j) => j !== i))} className="btn-ghost btn-icon text-red-700" aria-label={t('common.delete')}><Trash2 className="h-4 w-4" /></button>}</td>
                             </tr>
                         ))}
                         <tr className="border-t border-slate-200 font-medium">
-                            <td className="p-1" colSpan={3}><button type="button" className="btn-secondary text-xs" onClick={() => setLines([...lines, emptyLine()])}>{t('fin.journal.add_line')}</button></td>
+                            <td className="p-1" colSpan={3}><button type="button" className="btn-secondary btn-sm" onClick={() => setLines([...lines, emptyLine()])}>{t('fin.journal.add_line')}</button></td>
                             <td className="p-1 text-right">{formatCurrency(debit)}</td>
                             <td className="p-1 text-right">{formatCurrency(credit)}</td>
                             <td />

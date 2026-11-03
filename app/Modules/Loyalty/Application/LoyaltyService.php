@@ -23,6 +23,8 @@ use Illuminate\Support\Str;
  */
 class LoyaltyService
 {
+    public const CARD_VALIDITY_YEARS = 3;
+
     public function __construct(private EventBus $bus, private TenantContext $ctx) {}
 
     public function program(): Program
@@ -69,6 +71,9 @@ class LoyaltyService
             if ($program->enrolment_bonus > 0) {
                 $this->credit($m, 'bonus', $program->enrolment_bonus, 0, 0, 0, 'Bonus de bienvenue', 'enrolment', $m->id);
             }
+            foreach (app(PromotionService::class)->enrolmentBonuses() as $promo) {
+                $this->credit($m, 'bonus', $promo->bonus_points, 0, 0, 0, "Bonus d'adhésion : {$promo->name}", 'promo_enrolment', $promo->id);
+            }
             $this->bus->record('loyalty.member_enrolled', ['membership_id' => $m->id, 'number' => $m->number, 'guest_id' => $guest->id], 'membership', $m->id);
 
             return $m->load('tier', 'cards');
@@ -77,24 +82,37 @@ class LoyaltyService
 
     public function issueCard(Membership $m, string $kind = 'digital'): Card
     {
-        $m->cards()->where('status', 'active')->where('kind', $kind)->update(['status' => 'replaced']);
-
-        return $m->cards()->create([
+        $new = $m->cards()->create([
             'card_number' => $this->cardNumber(), 'kind' => $kind,
-            'token' => Str::random(48), 'issued_at' => now(),
+            'token' => Str::random(48), 'issued_at' => now(), 'expires_on' => now()->addYears(self::CARD_VALIDITY_YEARS)->toDateString(),
         ]);
+        $m->cards()->where('status', 'active')->where('kind', $kind)->whereKeyNot($new->id)
+            ->update(['status' => 'replaced', 'replaced_by_card_id' => $new->id]);
+
+        return $new;
     }
 
     public function findByCard(string $numberOrToken): Membership
     {
-        $card = Card::where('status', 'active')->where(fn ($q) => $q->where('card_number', $numberOrToken)->orWhere('token', $numberOrToken))->first()
-            ?? throw new DomainException('Card not found or not active.', 'card-invalid', 404);
+        $card = Card::where(fn ($q) => $q->where('card_number', $numberOrToken)->orWhere('token', $numberOrToken))->first();
+        // Group scope: a card of another group resolves to no membership.
+        $m = $card ? Membership::with('guest', 'tier')->find($card->loyalty_membership_id) : null;
+        if (! $card || ! $m) {
+            throw new DomainException('Card not found or not active.', 'card-invalid', 404);
+        }
+        if (! $card->isUsable()) {
+            $state = $card->status === 'active' ? 'expired' : $card->status;
+            throw new DomainException("This card is $state.", 'card-'.$state, 422);
+        }
+        if ($m->status !== 'active') {
+            throw new DomainException('This membership is not active.', 'member-inactive', 422);
+        }
 
-        return Membership::with('guest', 'tier')->findOrFail($card->loyalty_membership_id);
+        return $m;
     }
 
     /** Earn from eligible spend; idempotent per source. */
-    public function earn(Membership $m, int $spend, int $nights, string $sourceType, string|int $sourceId, string $description): ?Transaction
+    public function earn(Membership $m, int $spend, int $nights, string $sourceType, string|int $sourceId, string $description, ?int $outletId = null): ?Transaction
     {
         if ($m->status !== 'active' || $spend <= 0) {
             return null;
@@ -104,7 +122,8 @@ class LoyaltyService
         }
         $program = $this->program();
         $base = intdiv($spend, max(1, $program->spend_per_point));
-        $points = (int) floor($base * $m->tier->earn_multiplier);
+        $promo = app(PromotionService::class)->multiplier(now()->toDateString(), $outletId);
+        $points = (int) floor($base * $m->tier->earn_multiplier * $promo);
         if ($points <= 0) {
             return null;
         }
@@ -205,11 +224,11 @@ class LoyaltyService
         return $m->fresh('tier');
     }
 
-    private function credit(Membership $m, string $kind, int $points, int $qualifying, int $nights, int $spend, string $description, string $sourceType, string|int $sourceId): Transaction
+    public function credit(Membership $m, string $kind, int $points, int $qualifying, int $nights, int $spend, string $description, string $sourceType, string|int $sourceId): Transaction
     {
         $program = $this->program();
         $tx = Transaction::create([
-            'loyalty_membership_id' => $m->id, 'hotel_id' => $this->ctx->hotelId(), 'kind' => $kind, 'points' => $points,
+            'loyalty_membership_id' => $m->id, 'hotel_id' => $this->ctx->hotelId() ?? $m->enrolled_hotel_id, 'kind' => $kind, 'points' => $points,
             'qualifying_points' => $qualifying, 'nights' => $nights, 'spend' => $spend, 'remaining' => $points,
             'expires_on' => now()->addMonths($program->expiry_months)->toDateString(), 'description' => $description,
             'source_type' => $sourceType, 'source_id' => (string) $sourceId, 'user_id' => $this->ctx->actor()?->id,
@@ -217,14 +236,14 @@ class LoyaltyService
         $m->increment('points_balance', $points);
         $m->increment('lifetime_points', $points);
         $this->bus->record('loyalty.points_earned', [
-            'membership_id' => $m->id, 'transaction_id' => $tx->id, 'points' => $points, 'hotel_id' => $this->ctx->hotelId(),
+            'membership_id' => $m->id, 'transaction_id' => $tx->id, 'points' => $points, 'hotel_id' => $tx->hotel_id,
             'liability_value' => $points * $program->point_value,
         ], 'membership', $m->id);
 
         return $tx;
     }
 
-    private function consumeFifo(Membership $m, int $points): void
+    public function consumeFifo(Membership $m, int $points): void
     {
         $left = $points;
         foreach (Transaction::where('loyalty_membership_id', $m->id)->where('remaining', '>', 0)->orderBy('expires_on')->orderBy('id')->lockForUpdate()->get() as $lot) {

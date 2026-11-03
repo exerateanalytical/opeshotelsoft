@@ -73,7 +73,7 @@ export default function GuestShow({ id }: { id: string }) {
             <Head title={g ? g.full_name : t('guests.col.guest')} />
             {msg && <div className={`mb-4 rounded-lg px-4 py-2 text-sm border ${msg.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{msg.text}</div>}
             {guest.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{guest.error.message}</div>}
-            {guest.loading && !g && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+            {guest.loading && !g && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             {g && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="space-y-4">
@@ -87,7 +87,7 @@ export default function GuestShow({ id }: { id: string }) {
                             <Row label={t('guests.field.address')} value={[g.address, g.city, g.country].filter(Boolean).join(', ')} />
                             <Row label={t('guests.field.profession')} value={g.profession} />
                             <Row label={t('guests.field.language')} value={g.language?.toUpperCase()} />
-                            <Row label={t('guests.company')} value={g.company ? <Link className="text-emerald-700 hover:underline" href={`/guests/companies/${g.company.id}`}>{g.company.name}</Link> : null} />
+                            <Row label={t('guests.company')} value={g.company ? <Link className="text-navy-600 underline-offset-2 hover:underline" href={`/guests/companies/${g.company.id}`}>{g.company.name}</Link> : null} />
                             <Row label={t('guests.field.marketing')} value={g.marketing_consent ? t('guests.yes') : t('guests.no')} />
                             {g.notes && <p className="text-sm text-slate-600 mt-2">{g.notes}</p>}
                         </div>
@@ -100,13 +100,13 @@ export default function GuestShow({ id }: { id: string }) {
                         </div>
                         <div className="card p-4">
                             <h3 className="font-semibold text-slate-800 mb-2">{t('guests.show.preferences')}</h3>
-                            {prefs.length === 0 && <p className="text-sm text-slate-400">{t('guests.show.no_prefs')}</p>}
+                            {prefs.length === 0 && <p className="text-sm text-slate-500">{t('guests.show.no_prefs')}</p>}
                             {prefs.map(([k, v]) => <Row key={k} label={k} value={String(v)} />)}
                         </div>
                         <div className="card p-4">
                             <h3 className="font-semibold text-slate-800 mb-2">{t('guests.show.loyalty')}</h3>
-                            {loyalty.loading && !loyalty.data && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
-                            {loyalty.data && !m && <p className="text-sm text-slate-400">{t('guests.show.not_member')}</p>}
+                            {loyalty.loading && !loyalty.data && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
+                            {loyalty.data && !m && <p className="text-sm text-slate-500">{t('guests.show.not_member')}</p>}
                             {m && (<>
                                 <Row label={t('guests.show.card')} value={m.number} />
                                 <Row label={t('guests.show.tier')} value={m.tier} />
@@ -122,20 +122,20 @@ export default function GuestShow({ id }: { id: string }) {
                             <h3 className="font-semibold text-slate-800 mb-2">{t('guests.show.stay_history')}</h3>
                             {stays.error && <p className="text-sm text-red-600">{stays.error.message}</p>}
                             <div className="overflow-x-auto">
-                                <table className="table-auto w-full text-sm">
+                                <table className="table-auto">
                                     <thead><tr className="text-left text-xs text-slate-500"><th className="py-1 pr-2">{t('guests.show.hotel')}</th><th className="pr-2">{t('guests.show.reservation')}</th><th className="pr-2">{t('guests.show.dates')}</th><th className="pr-2">{t('guests.show.room')}</th><th className="pr-2">{t('guests.status')}</th><th className="text-right">{t('guests.show.amount')}</th></tr></thead>
                                     <tbody>
                                         {stays.data?.map((s) => (
-                                            <tr key={s.id} className="border-t border-slate-100">
+                                            <tr key={s.id}>
                                                 <td className="py-1 pr-2">{s.hotel_name}</td>
-                                                <td className="pr-2"><Link className="text-emerald-700 hover:underline" href={`/reservations/${s.id}`}>{s.number}</Link></td>
+                                                <td className="pr-2"><Link className="text-navy-600 underline-offset-2 hover:underline" href={`/reservations/${s.id}`}>{s.number}</Link></td>
                                                 <td className="pr-2 whitespace-nowrap">{formatDate(s.arrival)} → {formatDate(s.departure)}</td>
                                                 <td className="pr-2">{s.room_number ?? s.room_type ?? '—'}</td>
                                                 <td className="pr-2"><span className="badge-slate">{s.status.replace('_', ' ')}</span></td>
                                                 <td className="text-right">{formatCurrency(s.total_amount)}</td>
                                             </tr>
                                         ))}
-                                        {stays.data?.length === 0 && <tr><td colSpan={6} className="py-3 text-slate-400">{t('guests.show.no_stays')}</td></tr>}
+                                        {stays.data?.length === 0 && <tr><td colSpan={6} className="py-3 text-slate-500">{t('guests.show.no_stays')}</td></tr>}
                                     </tbody>
                                 </table>
                             </div>
@@ -147,16 +147,16 @@ export default function GuestShow({ id }: { id: string }) {
                                 {folios.data && <span className="text-sm">{t('guests.show.open_balance')} <strong>{formatCurrency(folios.data.open_balance)}</strong></span>}
                             </div>
                             <div className="overflow-x-auto">
-                                <table className="table-auto w-full text-sm">
+                                <table className="table-auto">
                                     <tbody>
                                         {folios.data?.folios.map((f) => (
-                                            <tr key={f.id} className="border-t border-slate-100">
+                                            <tr key={f.id}>
                                                 <td className="py-1 pr-2">{f.number}</td><td className="pr-2">{f.hotel_name}</td><td className="pr-2">{f.kind}</td>
                                                 <td className="pr-2"><span className={f.status === 'open' ? 'badge-yellow' : 'badge-slate'}>{f.status}</span></td>
                                                 <td className="text-right">{formatCurrency(f.balance)}</td>
                                             </tr>
                                         ))}
-                                        {folios.data?.folios.length === 0 && <tr><td className="py-3 text-slate-400">{t('guests.show.no_folios')}</td></tr>}
+                                        {folios.data?.folios.length === 0 && <tr><td className="py-3 text-slate-500">{t('guests.show.no_folios')}</td></tr>}
                                     </tbody>
                                 </table>
                             </div>
@@ -164,7 +164,7 @@ export default function GuestShow({ id }: { id: string }) {
 
                         <div className="card p-4">
                             <h3 className="font-semibold text-slate-800 mb-2">{t('guests.show.possible_dups')}</h3>
-                            {dups.data?.length === 0 && <p className="text-sm text-slate-400">{t('guests.show.none_found')}</p>}
+                            {dups.data?.length === 0 && <p className="text-sm text-slate-500">{t('guests.show.none_found')}</p>}
                             {dups.data?.map((d) => (
                                 <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2 border-t border-slate-100 text-sm">
                                     <span>{d.first_name} {d.last_name} <span className="text-slate-500">{d.email ?? d.phone}</span></span>
@@ -189,11 +189,11 @@ export default function GuestShow({ id }: { id: string }) {
                             <p className="text-sm text-slate-500 mb-2">{t('guests.show.erasure_hint')}</p>
                             {privacyForm && (
                                 <form className="space-y-2 mb-3" onSubmit={(e) => { e.preventDefault(); post('priv', `guests/${id}/privacy-requests`, privacyForm, t('guests.show.request_sent')).then((ok) => ok && setPrivacyForm(null)); }}>
-                                    <select className="input w-full" value={privacyForm.kind} onChange={(e) => setPrivacyForm({ ...privacyForm, kind: e.target.value })}>
+                                    <select className="input w-full" value={privacyForm.kind} onChange={(e) => setPrivacyForm({ ...privacyForm, kind: e.target.value })} aria-label={t('guests.show.kind_anonymise')}>
                                         <option value="anonymise">{t('guests.show.kind_anonymise')}</option>
                                         <option value="delete">{t('guests.show.kind_delete')}</option>
                                     </select>
-                                    <textarea className="input w-full" rows={2} placeholder={t('guests.show.reason_ph')} required value={privacyForm.reason} onChange={(e) => setPrivacyForm({ ...privacyForm, reason: e.target.value })} />
+                                    <textarea className="input w-full" rows={2} aria-label={t('guests.show.reason_ph')} placeholder={t('guests.show.reason_ph')} required value={privacyForm.reason} onChange={(e) => setPrivacyForm({ ...privacyForm, reason: e.target.value })} />
                                     <div className="flex gap-2">
                                         <button className="btn-primary" disabled={busy === 'priv'}>{t('guests.show.submit_request')}</button>
                                         <button type="button" className="btn-secondary" onClick={() => setPrivacyForm(null)}>{t('common.cancel')}</button>
@@ -206,7 +206,7 @@ export default function GuestShow({ id }: { id: string }) {
                                     <span className={r.status === 'pending' ? 'badge-yellow' : r.status === 'approved' ? 'badge-green' : 'badge-slate'}>{r.status}</span>
                                 </div>
                             ))}
-                            <Link href="/guests/privacy-requests" className="text-sm text-emerald-700 hover:underline">{t('guests.show.all_requests')}</Link>
+                            <Link href="/guests/privacy-requests" className="text-sm text-navy-600 underline-offset-2 hover:underline">{t('guests.show.all_requests')}</Link>
                         </div>
                     </div>
                 </div>

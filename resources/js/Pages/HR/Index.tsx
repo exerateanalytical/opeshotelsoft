@@ -40,7 +40,7 @@ export default function HrIndex() {
             <div className="mb-5 flex gap-1 overflow-x-auto border-b">
                 {TABS.map(({ key, label, icon: Icon }) => (
                     <button key={key} onClick={() => select(key)}
-                        className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${tab === key ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+                        className={`flex items-center gap-2 whitespace-nowrap min-h-11 border-b-2 px-3 py-2 text-sm font-medium ${tab === key ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
                         <Icon className="h-4 w-4" /> {t(label)}
                     </button>
                 ))}

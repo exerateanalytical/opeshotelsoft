@@ -52,6 +52,29 @@ class CheckoutFees
         ];
     }
 
+    /**
+     * R-B: price an early check-in or late check-out the guest asks for in advance (manage-booking page).
+     * late_checkout: the latest 'late' rule with after_hour <= requested hour. early_checkin: the tightest
+     * 'early_checkin' rule with after_hour >= requested hour (rule hour = earliest arrival that rule still covers).
+     *
+     * @return array{rule_id:int, kind:string, charge_code:string, amount:int, label:string, hour:int}|null
+     */
+    public function requestQuote(Reservation $r, string $kind, int $hour): ?array
+    {
+        $rule = $kind === 'late_checkout'
+            ? CheckoutFeeRule::where('kind', 'late')->where('active', true)->where('after_hour', '<=', $hour)->orderByDesc('after_hour')->first()
+            : CheckoutFeeRule::where('kind', 'early_checkin')->where('active', true)->where('after_hour', '>=', $hour)->orderBy('after_hour')->first();
+        if (! $rule) {
+            return null;
+        }
+        $amount = $rule->fee_type === 'fixed' ? (int) $rule->value : (int) round($this->nightRate($r) * $rule->value / 100);
+
+        return $amount > 0 ? [
+            'rule_id' => $rule->id, 'kind' => $kind, 'charge_code' => $rule->charge_code, 'amount' => $amount, 'hour' => $hour,
+            'label' => $rule->label ?? ($kind === 'late_checkout' ? 'Late check-out' : 'Early check-in'),
+        ] : null;
+    }
+
     public function post(Reservation $r): FolioLine
     {
         $r->assertStatus('checked_in');

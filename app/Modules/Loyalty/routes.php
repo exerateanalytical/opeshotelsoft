@@ -20,3 +20,18 @@ Route::prefix('loyalty')->group(function () {
     Route::post('tiers', [L::class, 'storeTier']);
     Route::patch('tiers/{tier}', [L::class, 'updateTier']);
 });
+
+Route::prefix('loyalty')->controller(App\Modules\Loyalty\Http\LoyaltyCardController::class)->group(function () {
+    Route::get('cards/{card}', 'card')->whereNumber('card');
+    Route::get('cards/{card}/pdf', 'cardPdf')->whereNumber('card');
+    Route::post('cards/{card}/block', 'block')->whereNumber('card');
+    Route::post('cards/{card}/unblock', 'unblock')->whereNumber('card');
+    Route::post('cards/{card}/replace', 'replace')->whereNumber('card');
+    Route::get('promotions', 'promotions');
+    Route::post('promotions', 'storePromotion');
+    Route::patch('promotions/{promotion}', 'updatePromotion');
+    Route::get('members/{member}/statement', 'statement');
+    Route::get('members/{member}/statement/pdf', 'statementPdf');
+    Route::post('members/{member}/statement/email', 'emailStatement');
+    Route::post('pos/checks/{check}/member', 'attachToCheck');
+});

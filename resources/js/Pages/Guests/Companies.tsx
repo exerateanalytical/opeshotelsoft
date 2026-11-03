@@ -100,14 +100,14 @@ export default function CompaniesTab() {
 
             <div className="card p-4 flex flex-wrap gap-3 items-center">
                 <div className="relative flex-1 min-w-[200px]">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9 w-full" placeholder={t('guests.companies.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9 w-full" aria-label={t('guests.companies.search')} placeholder={t('guests.companies.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
                 </div>
-                <select className="input" value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }}>
+                <select className="input" value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }} aria-label={t('guests.companies.all_kinds')}>
                     <option value="">{t('guests.companies.all_kinds')}</option>
                     {KINDS.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
                 </select>
-                <label className="flex items-center gap-2 text-sm text-slate-600">
+                <label className="min-h-11 flex items-center gap-2 text-sm text-slate-600">
                     <input type="checkbox" checked={ledgerOnly} onChange={(e) => { setLedgerOnly(e.target.checked); setPage(1); }} /> {t('guests.companies.ledger_only')}
                 </label>
                 <button className="btn-primary flex items-center gap-1" onClick={() => open('new')}><Plus className="w-4 h-4" /> {t('guests.companies.new')}</button>
@@ -117,7 +117,7 @@ export default function CompaniesTab() {
                 <form onSubmit={save} className="card p-4 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('guests.companies.new') : t('guests.companies.edit_title', { name: editing.name })}</h3>
-                        <button type="button" onClick={() => setEditing(null)}><X className="w-4 h-4 text-slate-400" /></button>
+                        <button type="button" onClick={() => setEditing(null)}><X className="w-4 h-4 text-slate-500" /></button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <Field label={t('guests.companies.name_required')}><input className="input w-full" required value={form.name} onChange={(e) => set('name', e.target.value)} /></Field>
@@ -136,8 +136,8 @@ export default function CompaniesTab() {
                         <Field label={t('guests.companies.credit_limit_fcfa')}><input type="number" min={0} className="input w-full" value={form.credit_limit} onChange={(e) => set('credit_limit', e.target.value)} /></Field>
                         <Field label={t('guests.companies.terms_days')}><input type="number" min={0} max={180} className="input w-full" value={form.payment_terms_days} onChange={(e) => set('payment_terms_days', e.target.value)} /></Field>
                         <div className="flex flex-col gap-2 justify-end text-sm text-slate-700">
-                            <label className="flex items-center gap-2"><input type="checkbox" checked={form.city_ledger} onChange={(e) => set('city_ledger', e.target.checked)} /> {t('guests.companies.city_ledger_hint')}</label>
-                            <label className="flex items-center gap-2"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> {t('guests.status.active')}</label>
+                            <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={form.city_ledger} onChange={(e) => set('city_ledger', e.target.checked)} /> {t('guests.companies.city_ledger_hint')}</label>
+                            <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> {t('guests.status.active')}</label>
                         </div>
                     </div>
                     <div className="flex gap-2 justify-end">
@@ -149,23 +149,23 @@ export default function CompaniesTab() {
 
             <div className="card overflow-x-auto">
                 {list.error && <div className="bg-red-50 text-red-700 px-4 py-2 text-sm">{list.error.message}</div>}
-                <table className="table-auto w-full text-sm">
+                <table className="table-auto">
                     <thead>
-                        <tr className="text-left text-slate-500">
+                        <tr>
                             <th className="px-4 py-2">{t('guests.companies.name')}</th><th className="px-4 py-2">{t('guests.companies.kind')}</th><th className="px-4 py-2">{t('guests.companies.contact')}</th>
                             <th className="px-4 py-2">{t('guests.companies.city_ledger')}</th><th className="px-4 py-2 text-right">{t('guests.companies.credit_limit')}</th><th className="px-4 py-2">{t('guests.companies.terms')}</th>
                             <th className="px-4 py-2">{t('guests.status')}</th><th className="px-4 py-2"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {list.loading && !list.data && <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-400">{t('common.loading')}</td></tr>}
-                        {list.data?.data.length === 0 && <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-400">{t('guests.companies.empty')}</td></tr>}
+                        {list.loading && !list.data && <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-500">{t('common.loading')}</td></tr>}
+                        {list.data?.data.length === 0 && <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-500">{t('guests.companies.empty')}</td></tr>}
                         {list.data?.data.map((c) => (
-                            <tr key={c.id} className="border-t border-slate-100">
-                                <td className="px-4 py-2 font-medium text-slate-800"><Link href={`/guests/companies/${c.id}`} className="text-emerald-700 hover:underline">{c.name}</Link><div className="text-xs text-slate-400">{c.tax_id}</div></td>
+                            <tr key={c.id}>
+                                <td className="px-4 py-2 font-medium text-slate-800"><Link href={`/guests/companies/${c.id}`} className="text-navy-600 underline-offset-2 hover:underline">{c.name}</Link><div className="text-xs text-slate-500">{c.tax_id}</div></td>
                                 <td className="px-4 py-2">{(() => { const l = KINDS.find(([v]) => v === c.kind)?.[1]; return l ? t(l) : c.kind; })()}</td>
-                                <td className="px-4 py-2">{c.contact_name}<div className="text-xs text-slate-400">{c.email ?? c.phone}</div></td>
-                                <td className="px-4 py-2">{c.city_ledger ? <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs">{t('guests.yes')}</span> : <span className="text-slate-400">{t('guests.no')}</span>}</td>
+                                <td className="px-4 py-2">{c.contact_name}<div className="text-xs text-slate-500">{c.email ?? c.phone}</div></td>
+                                <td className="px-4 py-2">{c.city_ledger ? <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs">{t('guests.yes')}</span> : <span className="text-slate-500">{t('guests.no')}</span>}</td>
                                 <td className="px-4 py-2 text-right">{formatCurrency(c.credit_limit ?? 0)}</td>
                                 <td className="px-4 py-2">{t('guests.companies.days_short', { count: c.payment_terms_days ?? 0 })}</td>
                                 <td className="px-4 py-2">{c.active ? t('guests.status.active') : <span className="text-amber-700">{t('guests.status.inactive')}</span>}</td>
@@ -191,7 +191,7 @@ export default function CompaniesTab() {
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
-        <label className="block">
+        <label className="label">
             <span className="text-xs font-medium text-slate-500">{label}</span>
             <div className="mt-1">{children}</div>
         </label>

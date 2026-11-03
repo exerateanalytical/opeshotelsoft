@@ -1,6 +1,13 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Plus, Search, CalendarDays, Loader2 } from 'lucide-react';
+import { Plus, Search, CalendarDays, Loader2, Star } from 'lucide-react';
+import Button from '@/Components/ui/Button';
+import DataTable from '@/Components/ui/DataTable';
+import EmptyState from '@/Components/ui/EmptyState';
+import Field from '@/Components/ui/Field';
+import FilterBar from '@/Components/ui/FilterBar';
+import Modal from '@/Components/ui/Modal';
+import StatusBadge from './StatusBadge';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
@@ -11,10 +18,6 @@ const STATUSES: [string, string][] = [
     ['checked_out', 'res.status.checked_out'], ['cancelled', 'res.status.cancelled'], ['no_show', 'res.status.no_show'],
 ];
 
-const BADGE: Record<string, string> = {
-    tentative: 'bg-amber-50 text-amber-700', confirmed: 'bg-blue-50 text-blue-700', checked_in: 'bg-emerald-50 text-emerald-700',
-    checked_out: 'bg-slate-100 text-slate-600', cancelled: 'bg-red-50 text-red-700', no_show: 'bg-red-50 text-red-700',
-};
 
 interface Reservation {
     id: number;
@@ -74,95 +77,87 @@ export default function ReservationsIndex() {
         >
             <Head title={t('res.title')} />
 
-            <div className="flex items-center gap-3 mb-5 flex-wrap">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input className="input pl-9" placeholder={t('res.index.search')} value={q}
-                        onChange={(e) => (setQ(e.target.value), setPage(1))} />
-                </div>
-                <label className="text-sm text-slate-500">{t('res.index.arriving')}</label>
-                <input type="date" className="input w-40" value={from} onChange={(e) => (setFrom(e.target.value), setPage(1))} />
-            </div>
+            <FilterBar
+                activeCount={(status ? 1 : 0) + (from ? 1 : 0)}
+                onClear={() => (setStatus(''), setFrom(''), setPage(1))}
+                search={
+                    <div className="relative min-w-0 flex-1 sm:w-80 sm:flex-none">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                        <input type="search" className="input pl-9" placeholder={t('res.index.search')} aria-label={t('res.index.search')} value={q}
+                            onChange={(e) => (setQ(e.target.value), setPage(1))} />
+                    </div>
+                }
+            >
+                <Field label={t('res.index.arriving')}>
+                    <input type="date" className="input sm:w-44" value={from} onChange={(e) => (setFrom(e.target.value), setPage(1))} />
+                </Field>
+                <Field label={t('res.status')} className="sm:hidden">
+                    <select className="select" value={status} onChange={(e) => (setStatus(e.target.value), setPage(1))}>
+                        {STATUSES.map(([key, label]) => <option key={key} value={key}>{t(label)}</option>)}
+                    </select>
+                </Field>
+            </FilterBar>
 
-            <div className="flex gap-1 mb-5 overflow-x-auto pb-1">
+            <div role="group" aria-label={t('res.status')} className="mb-4 hidden gap-2 overflow-x-auto pb-1 sm:flex">
                 {STATUSES.map(([key, label]) => (
-                    <button key={key} onClick={() => (setStatus(key), setPage(1))}
-                        className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap',
-                            status === key ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300')}>
+                    <button key={key} type="button" aria-pressed={status === key} onClick={() => (setStatus(key), setPage(1))}
+                        className={cn('min-h-9 whitespace-nowrap rounded-lg border px-4 text-sm font-medium',
+                            status === key ? 'border-navy-800 bg-navy-800 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-navy-800')}>
                         {t(label)}
                     </button>
                 ))}
             </div>
 
             {(message || list.error) && (
-                <div className="mb-4 rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{message ?? list.error?.message}</div>
+                <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{message ?? list.error?.message}</div>
             )}
 
-            <div className="card overflow-x-auto">
-                <table className="table-auto w-full">
-                    <thead>
-                        <tr>
-                            <th>{t('res.confirmation')}</th><th>{t('res.guest')}</th><th>{t('res.room')}</th><th>{t('res.check_in')}</th><th>{t('res.check_out')}</th>
-                            <th>{t('res.nights')}</th><th>{t('res.amount')}</th><th>{t('res.status')}</th><th>{t('res.source')}</th><th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {list.loading && !list.data && (
-                            <tr><td colSpan={10} className="text-center py-12 text-slate-400"><Loader2 className="w-6 h-6 mx-auto animate-spin" /></td></tr>
-                        )}
-                        {list.data?.data.map((r) => (
-                            <tr key={r.id}>
-                                <td className="font-mono text-sm"><Link href={`/reservations/${r.id}`} className="text-emerald-700 hover:underline">{r.number}</Link></td>
-                                <td>{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '—'}{r.guest?.vip && <span className="ml-1 text-amber-500">★</span>}</td>
-                                <td>{r.room?.number ?? <span className="text-slate-400">{r.room_type?.code}</span>}</td>
-                                <td>{formatDate(r.arrival)}</td>
-                                <td>{formatDate(r.departure)}</td>
-                                <td>{nights(r.arrival, r.departure)}</td>
-                                <td>{formatCurrency(r.total_amount)}</td>
-                                <td><span className={cn('px-2 py-0.5 rounded text-xs font-medium', BADGE[r.status])}>{t(`res.status.${r.status}`)}</span></td>
-                                <td className="text-sm text-slate-500">{t(`res.channel.${r.channel}`) === `res.channel.${r.channel}` ? r.channel : t(`res.channel.${r.channel}`)}</td>
-                                <td className="whitespace-nowrap text-right">
-                                    {cancelling?.id === r.id ? (
-                                        <span className="inline-flex items-center gap-1">
-                                            <input className="input w-40" autoFocus placeholder={t('res.cancel_reason')} aria-label={t('res.cancel_reason')} value={cancelling.reason}
-                                                onChange={(e) => setCancelling({ id: r.id, reason: e.target.value })} />
-                                            <button className="btn-primary text-xs" disabled={!cancelling.reason.trim()} onClick={() => act(r, 'cancel', cancelling.reason.trim())}>{t('res.confirm')}</button>
-                                            <button className="btn-secondary text-xs" onClick={() => setCancelling(null)}>{t('res.keep')}</button>
-                                        </span>
-                                    ) : busy === r.id ? <Loader2 className="w-4 h-4 animate-spin inline" /> : (
-                                        <>
-                                            {['confirmed', 'tentative'].includes(r.status) && (
-                                                <>
-                                                    <button className="btn-secondary text-xs mr-1" onClick={() => act(r, 'check-in')}>{t('res.do_check_in')}</button>
-                                                    <button className="text-xs text-red-600 hover:underline" onClick={() => setCancelling({ id: r.id, reason: '' })}>{t('res.do_cancel')}</button>
-                                                </>
-                                            )}
-                                            {r.status === 'checked_in' && (
-                                                <button className="btn-secondary text-xs" onClick={() => act(r, 'check-out')}>{t('res.do_check_out')}</button>
-                                            )}
-                                        </>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                        {list.data && list.data.data.length === 0 && (
-                            <tr>
-                                <td colSpan={10} className="text-center py-16 text-slate-400">
-                                    <CalendarDays className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                                    <p className="font-medium">{t('res.index.empty')}</p>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            <DataTable
+                caption={t('res.title')}
+                loading={list.loading && !list.data}
+                rows={list.data?.data ?? []}
+                rowKey={(r) => r.id}
+                empty={<EmptyState icon={CalendarDays} title={t('res.index.empty')} />}
+                columns={[
+                    { key: 'number', header: t('res.confirmation'), cell: (r) => <Link href={`/reservations/${r.id}`} className="font-mono text-navy-600 underline underline-offset-2">{r.number}</Link> },
+                    { key: 'guest', header: t('res.guest'), cell: (r) => <>{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '-'}{r.guest?.vip && <Star className="ml-1 inline h-4 w-4 text-amber-600" aria-label="VIP" />}</> },
+                    { key: 'room', header: t('res.room'), cell: (r) => r.room?.number ?? <span className="text-slate-500">{r.room_type?.code}</span> },
+                    { key: 'in', header: t('res.check_in'), cell: (r) => formatDate(r.arrival) },
+                    { key: 'out', header: t('res.check_out'), cell: (r) => formatDate(r.departure) },
+                    { key: 'n', header: t('res.nights'), align: 'right', cell: (r) => nights(r.arrival, r.departure) },
+                    { key: 'amt', header: t('res.amount'), align: 'right', cell: (r) => <span className="tabular-nums">{formatCurrency(r.total_amount)}</span> },
+                    { key: 'status', header: t('res.status'), cell: (r) => <StatusBadge status={r.status} label={t(`res.status.${r.status}`)} /> },
+                    { key: 'src', header: t('res.source'), cell: (r) => <span className="text-slate-600">{t(`res.channel.${r.channel}`) === `res.channel.${r.channel}` ? r.channel : t(`res.channel.${r.channel}`)}</span> },
+                    { key: 'act', header: '', hideLabel: true, align: 'right', cell: (r) => busy === r.id ? <Loader2 className="inline h-4 w-4 animate-spin" aria-label="..." /> : (
+                        <span className="btn-row justify-end">
+                            {['confirmed', 'tentative'].includes(r.status) && (
+                                <>
+                                    <button type="button" className="btn-secondary btn-sm" onClick={() => act(r, 'check-in')}>{t('res.do_check_in')}</button>
+                                    <button type="button" className="btn-ghost btn-sm text-red-700" onClick={() => setCancelling({ id: r.id, reason: '' })}>{t('res.do_cancel')}</button>
+                                </>
+                            )}
+                            {r.status === 'checked_in' && <button type="button" className="btn-secondary btn-sm" onClick={() => act(r, 'check-out')}>{t('res.do_check_out')}</button>}
+                        </span>
+                    ) },
+                ]}
+            />
+
+            <Modal open={!!cancelling} onClose={() => setCancelling(null)} title={t('res.do_cancel')}
+                footer={<>
+                    <Button variant="secondary" onClick={() => setCancelling(null)}>{t('res.keep')}</Button>
+                    <Button variant="danger" disabled={!cancelling?.reason.trim()} onClick={() => { const r = list.data?.data.find((x) => x.id === cancelling?.id); if (r && cancelling) act(r, 'cancel', cancelling.reason.trim()); }}>{t('res.confirm')}</Button>
+                </>}>
+                <Field label={t('res.cancel_reason')} required>
+                    <input className="input" data-autofocus value={cancelling?.reason ?? ''} onChange={(e) => cancelling && setCancelling({ id: cancelling.id, reason: e.target.value })} />
+                </Field>
+            </Modal>
 
             {list.data && list.data.last_page > 1 && (
                 <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
                     <span>{t('res.index.count', { count: list.data.total })}</span>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                         <button className="btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t('common.previous')}</button>
-                        <span className="px-2 py-2">{page} / {list.data.last_page}</span>
+                        <span className="px-2">{page} / {list.data.last_page}</span>
                         <button className="btn-secondary" disabled={page >= list.data.last_page} onClick={() => setPage(page + 1)}>{t('common.next')}</button>
                     </div>
                 </div>

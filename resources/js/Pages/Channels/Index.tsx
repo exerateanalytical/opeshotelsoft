@@ -87,7 +87,7 @@ export default function ChannelsIndex() {
             <Head title={t('channels.short')} />
             <div className="space-y-6">
                 <Banner error={providers.error?.message ?? conns.error?.message ?? null} />
-                {(providers.loading || conns.loading) && <Loader2 className="h-5 w-5 animate-spin text-gray-400" />}
+                {(providers.loading || conns.loading) && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {(providers.data ?? []).map((p) => {
@@ -96,24 +96,24 @@ export default function ChannelsIndex() {
                             <button
                                 key={p.code}
                                 onClick={() => setSelected(p.code === selected ? null : p.code)}
-                                className={cn('card p-4 text-left transition', selected === p.code && 'ring-2 ring-blue-500')}
+                                className={cn('card p-4 text-left transition', selected === p.code && 'outline-2 outline-blue-700')}
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
                                         <div className="font-semibold">{p.name}</div>
-                                        <div className="text-xs text-gray-500">{lbl(t, `channels.kind.${p.kind}`, p.kind)} · {p.protocol}</div>
+                                        <div className="text-xs text-slate-500">{lbl(t, `channels.kind.${p.kind}`, p.kind)} · {p.protocol}</div>
                                     </div>
-                                    {c ? <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" /> : <Plug className="h-5 w-5 shrink-0 text-gray-400" />}
+                                    {c ? <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" /> : <Plug className="h-5 w-5 shrink-0 text-slate-500" />}
                                 </div>
                                 <div className="mt-3 flex flex-wrap gap-1 text-xs">
                                     {c ? (
                                         <>
-                                            <span className={cn('rounded-full px-2 py-0.5', c.status === 'active' ? 'bg-green-100 text-green-800' : c.status === 'suspended' ? 'bg-gray-200 text-gray-700' : 'bg-blue-100 text-blue-800')}>{lbl(t, `channels.status.${c.status}`, c.status)}</span>
-                                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">{lbl(t, `channels.env.${c.environment}`, c.environment)}</span>
+                                            <span className={cn('rounded-full px-2 py-0.5', c.status === 'active' ? 'bg-green-100 text-green-800' : c.status === 'suspended' ? 'bg-slate-200 text-slate-700' : 'bg-blue-100 text-blue-800')}>{lbl(t, `channels.status.${c.status}`, c.status)}</span>
+                                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">{lbl(t, `channels.env.${c.environment}`, c.environment)}</span>
                                             {c.dry_run && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">{t('channels.dry_run')}</span>}
                                         </>
                                     ) : (
-                                        <span className="text-gray-500">{t('channels.not_connected')}</span>
+                                        <span className="text-slate-500">{t('channels.not_connected')}</span>
                                     )}
                                 </div>
                             </button>
@@ -207,7 +207,7 @@ function ConnectionPanel({ provider, conn, onChanged, onClose }: { provider: Pro
                             {busy === 'sync' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {t('channels.push_now')}
                         </button>
                     </div>
-                    <div className="text-xs text-gray-500 break-all">{t('channels.inbound_url')} : <code>{conn.inbound_url}</code>{conn.last_push_at && <> · {t('channels.last_push', { date: formatDateTime(conn.last_push_at) })}</>}</div>
+                    <div className="text-xs text-slate-500 break-all">{t('channels.inbound_url')} : <code>{conn.inbound_url}</code>{conn.last_push_at && <> · {t('channels.last_push', { date: formatDateTime(conn.last_push_at) })}</>}</div>
                     <MappingEditor conn={conn} onSaved={() => { setNotice(t('channels.mappings_saved')); onChanged(); }} />
                     <Preview conn={conn} />
                     <SyncLogs conn={conn} />
@@ -252,19 +252,19 @@ function ConnectForm({ provider, conn, busy, run, onSaved }: {
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
             <h3 className="font-medium">{conn ? t('channels.settings') : t('channels.connect')}</h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <label className="text-sm">{t('channels.display_name')}<input className="input mt-1 w-full" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} /></label>
-                <label className="text-sm">{t('channels.property_code')}<input className="input mt-1 w-full" value={propertyCode} onChange={(e) => setPropertyCode(e.target.value)} maxLength={64} /></label>
-                <label className="text-sm">{t('channels.environment')}
-                    <select className="input mt-1 w-full" value={environment} onChange={(e) => setEnvironment(e.target.value as Connection['environment'])}>
+                <label className="label">{t('channels.display_name')}<input className="input mt-1 w-full" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} /></label>
+                <label className="label">{t('channels.property_code')}<input className="input mt-1 w-full" value={propertyCode} onChange={(e) => setPropertyCode(e.target.value)} maxLength={64} /></label>
+                <label className="label">{t('channels.environment')}
+                    <select className="input mt-1 w-full" value={environment} onChange={(e) => setEnvironment(e.target.value as Connection['environment'])} aria-label={t('channels.env.sandbox')}>
                         <option value="sandbox">{t('channels.env.sandbox')}</option><option value="production">{t('channels.env.production')}</option>
                     </select>
                 </label>
-                <label className="text-sm">{t('res.status')}
+                <label className="label">{t('res.status')}
                     <select className="input mt-1 w-full" value={status} onChange={(e) => setStatus(e.target.value as Connection['status'])}>
                         {['draft', 'testing', 'active', 'suspended'].map((s) => <option key={s} value={s}>{t(`channels.status.${s}`)}</option>)}
                     </select>
                 </label>
-                <label className="text-sm">{t('channels.sync_days')}<input type="number" min={30} max={730} className="input mt-1 w-full" value={syncDays} onChange={(e) => setSyncDays(Number(e.target.value))} /></label>
+                <label className="label">{t('channels.sync_days')}<input type="number" min={30} max={730} className="input mt-1 w-full" value={syncDays} onChange={(e) => setSyncDays(Number(e.target.value))} /></label>
             </div>
             <div className="flex flex-wrap gap-4 text-sm">
                 {(['push_rates', 'push_availability', 'receive_reservations'] as const).map((k) => (
@@ -286,7 +286,7 @@ function ConnectForm({ provider, conn, busy, run, onSaved }: {
                                 className="input mt-1 w-full"
                                 type={SECRET.test(f) ? 'password' : 'text'}
                                 autoComplete="new-password"
-                                placeholder={stored[f] ? t('channels.stored', { value: stored[f] }) : t('channels.not_set')}
+                                aria-label={stored[f] ? t('channels.stored', { value: stored[f] }) : t('channels.not_set')} placeholder={stored[f] ? t('channels.stored', { value: stored[f] }) : t('channels.not_set')}
                                 value={creds[f] ?? ''}
                                 onChange={(e) => setCreds({ ...creds, [f]: e.target.value })}
                                 maxLength={500}
@@ -294,7 +294,7 @@ function ConnectForm({ provider, conn, busy, run, onSaved }: {
                         </label>
                     ))}
                 </div>
-                <p className="mt-1 text-xs text-gray-500">{t('channels.secrets_hint')}</p>
+                <p className="mt-1 text-xs text-slate-500">{t('channels.secrets_hint')}</p>
             </div>
             <button type="submit" className="btn-primary" disabled={!!busy}>
                 {busy === 'save' ? <Loader2 className="h-4 w-4 animate-spin" /> : conn ? <Save className="h-4 w-4" /> : <Plug className="h-4 w-4" />} {conn ? t('channels.save_settings') : t('channels.connect')}
@@ -332,13 +332,13 @@ function MappingEditor({ conn, onSaved }: { conn: Connection; onSaved: () => voi
             <h3 className="font-medium">{t('channels.mappings')}</h3>
             <Banner error={error ?? roomTypes.error?.message ?? ratePlans.error?.message ?? null} />
             <div className="overflow-x-auto">
-                <table className="table-auto w-full text-sm">
-                    <thead><tr className="text-left text-gray-500"><th className="py-1 pr-2">{t('channels.our_room_type')}</th><th className="pr-2">{t('channels.channel_room')}</th><th className="pr-2">{t('channels.max_allotment')}</th><th /></tr></thead>
+                <table className="table-auto">
+                    <thead><tr><th className="py-1 pr-2">{t('channels.our_room_type')}</th><th className="pr-2">{t('channels.channel_room')}</th><th className="pr-2">{t('channels.max_allotment')}</th><th /></tr></thead>
                     <tbody>
                         {rooms.map((r, i) => (
                             <tr key={i}>
                                 <td className="py-1 pr-2">
-                                    <select className="input w-full min-w-[10rem]" value={r.room_type_id || ''} onChange={(e) => setRooms(rooms.map((x, j) => j === i ? { ...x, room_type_id: Number(e.target.value) } : x))}>
+                                    <select className="input w-full min-w-[10rem]" value={r.room_type_id || ''} onChange={(e) => setRooms(rooms.map((x, j) => j === i ? { ...x, room_type_id: Number(e.target.value) } : x))} aria-label={t('channels.choose')}>
                                         <option value="">{t('channels.choose')}</option>
                                         {types.map((rt) => <option key={rt.id} value={rt.id}>{rt.name} ({rt.code})</option>)}
                                     </select>
@@ -354,13 +354,13 @@ function MappingEditor({ conn, onSaved }: { conn: Connection; onSaved: () => voi
             <button className="btn-secondary" onClick={() => setRooms([...rooms, { room_type_id: 0, external_room_id: '', max_allotment: null }])}><Plus className="h-4 w-4" /> {t('channels.add_room_map')}</button>
 
             <div className="overflow-x-auto">
-                <table className="table-auto w-full text-sm">
-                    <thead><tr className="text-left text-gray-500"><th className="py-1 pr-2">{t('channels.our_rate_plan')}</th><th className="pr-2">{t('channels.channel_rate')}</th><th className="pr-2">{t('channels.markup')}</th><th /></tr></thead>
+                <table className="table-auto">
+                    <thead><tr><th className="py-1 pr-2">{t('channels.our_rate_plan')}</th><th className="pr-2">{t('channels.channel_rate')}</th><th className="pr-2">{t('channels.markup')}</th><th /></tr></thead>
                     <tbody>
                         {rates.map((r, i) => (
                             <tr key={i}>
                                 <td className="py-1 pr-2">
-                                    <select className="input w-full min-w-[10rem]" value={r.rate_plan_id || ''} onChange={(e) => setRates(rates.map((x, j) => j === i ? { ...x, rate_plan_id: Number(e.target.value) } : x))}>
+                                    <select className="input w-full min-w-[10rem]" value={r.rate_plan_id || ''} onChange={(e) => setRates(rates.map((x, j) => j === i ? { ...x, rate_plan_id: Number(e.target.value) } : x))} aria-label={t('channels.choose')}>
                                         <option value="">{t('channels.choose')}</option>
                                         {plans.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                                     </select>
@@ -407,13 +407,13 @@ function Preview({ conn }: { conn: Connection }) {
         <div className="space-y-3 border-t pt-4">
             <h3 className="font-medium">{t('channels.preview_title')}</h3>
             <div className="flex flex-wrap items-end gap-2">
-                <label className="text-sm">{t('res.seasons.from')}<input type="date" className="input mt-1 block" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-                <label className="text-sm">{t('res.agents.to')}<input type="date" className="input mt-1 block" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+                <label className="label">{t('res.seasons.from')}<input type="date" className="input mt-1 block" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+                <label className="label">{t('res.agents.to')}<input type="date" className="input mt-1 block" value={to} onChange={(e) => setTo(e.target.value)} /></label>
                 <button className="btn-secondary" onClick={load} disabled={loading}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />} {t('channels.preview')}</button>
                 {data !== null && <button className="btn-secondary" onClick={() => setData(null)}><X className="h-4 w-4" /> {t('channels.hide')}</button>}
             </div>
             <Banner error={error} />
-            {data !== null && <pre className="max-h-96 overflow-auto rounded-md bg-gray-900 p-3 text-xs text-gray-100">{JSON.stringify(data, null, 2)}</pre>}
+            {data !== null && <pre className="max-h-96 overflow-auto rounded-md bg-slate-900 p-3 text-xs text-slate-100">{JSON.stringify(data, null, 2)}</pre>}
         </div>
     );
 }
@@ -434,18 +434,18 @@ function SyncLogs({ conn }: { conn: Connection }) {
             </div>
             <Banner error={logs.error?.message ?? null} />
             <div className="overflow-x-auto">
-                <table className="table-auto w-full text-sm">
-                    <thead><tr className="text-left text-gray-500"><th className="py-1 pr-2" /><th className="pr-2">{t('channels.log.when')}</th><th className="pr-2">{t('channels.log.direction')}</th><th className="pr-2">{t('channels.log.kind')}</th><th className="pr-2">{t('res.status')}</th><th className="pr-2">HTTP</th><th>{t('channels.log.error')}</th></tr></thead>
+                <table className="table-auto">
+                    <thead><tr><th className="py-1 pr-2" /><th className="pr-2">{t('channels.log.when')}</th><th className="pr-2">{t('channels.log.direction')}</th><th className="pr-2">{t('channels.log.kind')}</th><th className="pr-2">{t('res.status')}</th><th className="pr-2">HTTP</th><th>{t('channels.log.error')}</th></tr></thead>
                     <tbody>
                         {(d?.data ?? []).map((l) => (
                             <Fragment key={l.id}>
-                                <tr className="cursor-pointer border-t hover:bg-gray-50" onClick={() => setOpen(open === l.id ? null : l.id)}>
+                                <tr className="cursor-pointer border-t hover:bg-slate-50" onClick={() => setOpen(open === l.id ? null : l.id)}>
                                     <td className="py-1 pr-2">{open === l.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</td>
                                     <td className="whitespace-nowrap pr-2">{formatDateTime(l.created_at)}</td>
                                     <td className="pr-2">{lbl(t, `channels.direction.${l.direction}`, l.direction)}</td>
                                     <td className="pr-2">{l.kind}</td>
                                     <td className="pr-2">
-                                        <span className={cn('rounded-full px-2 py-0.5 text-xs', ['sent', 'processed'].includes(l.status) ? 'bg-green-100 text-green-800' : ['failed', 'rejected'].includes(l.status) ? 'bg-red-100 text-red-800' : l.status === 'dry_run' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700')}>{lbl(t, `channels.log_status.${l.status}`, l.status)}</span>
+                                        <span className={cn('rounded-full px-2 py-0.5 text-xs', ['sent', 'processed'].includes(l.status) ? 'bg-green-100 text-green-800' : ['failed', 'rejected'].includes(l.status) ? 'bg-red-100 text-red-800' : l.status === 'dry_run' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700')}>{lbl(t, `channels.log_status.${l.status}`, l.status)}</span>
                                     </td>
                                     <td className="pr-2">{l.http_status ?? '—'}</td>
                                     <td className="max-w-[16rem] truncate text-red-700">{l.error}</td>
@@ -454,21 +454,21 @@ function SyncLogs({ conn }: { conn: Connection }) {
                                     <tr key={`${l.id}-x`}>
                                         <td colSpan={7} className="pb-3">
                                             <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-                                                <div><div className="mb-1 text-xs font-medium text-gray-500">{t('channels.log.request')}</div><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-md bg-gray-900 p-3 text-xs text-gray-100">{pretty(l.request) || '—'}</pre></div>
-                                                <div><div className="mb-1 text-xs font-medium text-gray-500">{t('channels.log.response')}</div><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-md bg-gray-900 p-3 text-xs text-gray-100">{pretty(l.response) || (l.status === 'dry_run' ? t('channels.log.not_sent') : '—')}</pre></div>
+                                                <div><div className="mb-1 text-xs font-medium text-slate-500">{t('channels.log.request')}</div><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-md bg-slate-900 p-3 text-xs text-slate-100">{pretty(l.request) || '—'}</pre></div>
+                                                <div><div className="mb-1 text-xs font-medium text-slate-500">{t('channels.log.response')}</div><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-md bg-slate-900 p-3 text-xs text-slate-100">{pretty(l.response) || (l.status === 'dry_run' ? t('channels.log.not_sent') : '—')}</pre></div>
                                             </div>
                                         </td>
                                     </tr>
                                 )}
                             </Fragment>
                         ))}
-                        {d && d.data.length === 0 && <tr><td colSpan={7} className="py-4 text-center text-gray-500">{t('channels.log.empty')}</td></tr>}
+                        {d && d.data.length === 0 && <tr><td colSpan={7} className="py-4 text-center text-slate-500">{t('channels.log.empty')}</td></tr>}
                     </tbody>
                 </table>
             </div>
             {d && d.last_page > 1 && (
                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">{t('channels.log.page', { page: d.current_page, last: d.last_page, total: d.total })}</span>
+                    <span className="text-slate-500">{t('channels.log.page', { page: d.current_page, last: d.last_page, total: d.total })}</span>
                     <div className="flex gap-2">
                         <button className="btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t('common.previous')}</button>
                         <button className="btn-secondary" disabled={page >= d.last_page} onClick={() => setPage(page + 1)}>{t('common.next')}</button>

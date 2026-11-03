@@ -11,6 +11,7 @@ use App\Modules\Reservations\Application\Pricing;
 use App\Modules\Reservations\Application\ReservationService;
 use App\Modules\Reservations\Domain\RatePlan;
 use App\Modules\Reservations\Domain\Reservation;
+use App\Modules\Reservations\Revenue\Application\BookingSiteRevenue;
 use App\Modules\Tenancy\Domain\Group;
 use App\Modules\Tenancy\Domain\Hotel;
 use App\Platform\Domain\DomainException;
@@ -49,6 +50,7 @@ class BookingEngineController
             'arrival' => ['required', 'date', 'after_or_equal:today'], 'departure' => ['required', 'date', 'after:arrival', 'before:'.now()->addYears(2)->toDateString()],
             'adults' => ['sometimes', 'integer', 'between:1,8'], 'children' => ['sometimes', 'integer', 'between:0,6'],
             'hotel_codes' => ['sometimes', 'array'], 'member_number' => ['nullable', 'string'], 'member_last_name' => ['nullable', 'string'],
+            'promo_code' => ['nullable', 'string', 'max:24'], 'corporate_code' => ['nullable', 'string', 'max:24'], // R-A
         ]);
         $member = $this->member($data['member_number'] ?? null, $data['member_last_name'] ?? null);
         $arrival = Carbon::parse($data['arrival']);
@@ -81,7 +83,8 @@ class BookingEngineController
                     }
                 }
 
-                return $offers;
+                // R-A: corporate rates, promo codes and best-available-rate flags.
+                return app(BookingSiteRevenue::class)->decorate($offers, $arrival, $departure, $data);
             });
             $out[] = ['hotel' => $hotel->only(['id', 'code', 'name', 'city']), 'offers' => $offers];
         }
@@ -100,13 +103,16 @@ class BookingEngineController
             'guest.email' => ['required', 'email'], 'guest.phone' => ['required', 'string', 'max:30'], 'guest.country' => ['nullable', 'string', 'size:2'],
             'special_requests' => ['nullable', 'string', 'max:1000'], 'member_number' => ['nullable', 'string'],
             'consent_marketing' => ['sometimes', 'boolean'], 'accept_terms' => ['accepted'],
+            'promo_code' => ['nullable', 'string', 'max:24'], 'corporate_code' => ['nullable', 'string', 'max:24'], // R-A
         ]);
         $hotel = Hotel::where('code', $data['hotel_code'])->where('status', 'active')->firstOrFail();
 
         $reservation = $this->asHotel($hotel, function () use ($data, $reservations) {
-            $plan = RatePlan::where('public', true)->findOrFail($data['rate_plan_id']);
+            $revenue = app(BookingSiteRevenue::class);
+            $prepared = $revenue->prepare($data); // R-A: public plan or corporate plan, promo discount
+            $plan = $prepared['plan'];
 
-            return DB::transaction(function () use ($data, $plan, $reservations) {
+            return DB::transaction(function () use ($data, $plan, $reservations, $revenue, $prepared) {
                 $member = ! empty($data['member_number']) ? Membership::where('number', $data['member_number'])->first() : null;
                 $guest = $member?->guest
                     ?? Guest::where('email', $data['guest']['email'])->first()
@@ -116,12 +122,15 @@ class BookingEngineController
                         'marketing_consent' => $data['consent_marketing'] ?? false, 'consent_at' => now(),
                     ]);
 
-                return $reservations->create([
+                $reservation = $reservations->create(array_merge([
                     'guest_id' => $guest->id, 'room_type_id' => $data['room_type_id'], 'rate_plan_id' => $plan->id,
                     'arrival' => $data['arrival'], 'departure' => $data['departure'], 'adults' => $data['adults'] ?? 1,
                     'children' => $data['children'] ?? 0, 'channel' => 'website', 'special_requests' => $data['special_requests'] ?? null,
                     'status' => $plan->deposit_required ? 'tentative' : 'confirmed', 'guarantee' => $plan->deposit_required ? 'deposit' : 'none',
-                ]);
+                ], $prepared['fields']));
+                $revenue->finish($reservation, $prepared);
+
+                return $reservation;
             });
         });
 
@@ -129,6 +138,7 @@ class BookingEngineController
             'confirmation' => $reservation->number, 'booking_ref' => $reservation->booking_ref, 'status' => $reservation->status,
             'total' => $reservation->total_amount, 'currency' => $reservation->currency, 'deposit_required' => $reservation->deposit_required,
             'manage_token' => $this->token($reservation),
+            'upsell_offers' => $reservation->getAttribute('upsell_offers') ?? [],
         ], 201);
     }
 

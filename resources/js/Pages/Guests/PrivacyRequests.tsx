@@ -45,14 +45,14 @@ export default function PrivacyRequests() {
                 ))}
             </div>
             {list.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{list.error.message}</div>}
-            {list.loading && !list.data && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+            {list.loading && !list.data && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             <div className="space-y-3">
-                {list.data?.data.length === 0 && <p className="text-sm text-slate-400">{t(`guests.privacy.empty.${status}`)}</p>}
+                {list.data?.data.length === 0 && <p className="text-sm text-slate-500">{t(`guests.privacy.empty.${status}`)}</p>}
                 {list.data?.data.map((r) => (
                     <div key={r.id} className="card p-4 text-sm">
                         <div className="flex flex-wrap justify-between gap-2">
                             <div>
-                                <Link href={`/guests/${r.guest_id}`} className="font-medium text-emerald-700 hover:underline">{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : t('guests.guest_no', { id: r.guest_id })}</Link>
+                                <Link href={`/guests/${r.guest_id}`} className="font-medium text-navy-600 underline-offset-2 hover:underline">{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : t('guests.guest_no', { id: r.guest_id })}</Link>
                                 <span className="badge-slate ml-2">{r.kind}</span>
                                 <p className="text-slate-600 mt-1">{r.reason}</p>
                                 <p className="text-xs text-slate-500">{t('guests.privacy.requested_by', { name: r.requester?.name ?? '—' })} · {formatDateTime(r.created_at)}{r.decider ? ` · ${t('guests.privacy.decided_by', { name: r.decider.name })}` : ''}</p>
@@ -68,7 +68,7 @@ export default function PrivacyRequests() {
                         {deciding?.id === r.id && (
                             <form className="mt-3 space-y-2" onSubmit={(e) => { e.preventDefault(); decide(); }}>
                                 {deciding.approve && <p className="text-red-700">{t('guests.privacy.warning')}</p>}
-                                <input className="input w-full" placeholder={deciding.approve ? t('guests.privacy.note_optional') : t('guests.privacy.reject_reason')} required={!deciding.approve} value={deciding.note} onChange={(e) => setDeciding({ ...deciding, note: e.target.value })} />
+                                <input className="input w-full" aria-label={deciding.approve ? t('guests.privacy.note_optional') : t('guests.privacy.reject_reason')} placeholder={deciding.approve ? t('guests.privacy.note_optional') : t('guests.privacy.reject_reason')} required={!deciding.approve} value={deciding.note} onChange={(e) => setDeciding({ ...deciding, note: e.target.value })} />
                                 <div className="flex gap-2">
                                     <button className="btn-primary" disabled={busy}>{deciding.approve ? t('guests.privacy.confirm_anon') : t('guests.privacy.confirm_reject')}</button>
                                     <button type="button" className="btn-secondary" onClick={() => setDeciding(null)}>{t('common.cancel')}</button>

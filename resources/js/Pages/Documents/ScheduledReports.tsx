@@ -114,7 +114,7 @@ export default function ScheduledReports() {
                         <h2 className="text-base font-semibold">{form.id ? t('docs.sched.edit') : t('docs.sched.new')}</h2>
                         <button className="btn-secondary" onClick={() => setForm(null)} aria-label={t('docs.close')}><X className="w-4 h-4" /></button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 [&>*]:min-w-0">
                         <div>
                             <label className="label">{t('docs.sched.name')}</label>
                             <input className="input w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -151,7 +151,7 @@ export default function ScheduledReports() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <input id="active" type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+                            <input id="active" type="checkbox" className="h-5 w-5 shrink-0" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
                             <label htmlFor="active" className="text-sm">{t('docs.sched.active')}</label>
                         </div>
                     </div>
@@ -198,12 +198,12 @@ export default function ScheduledReports() {
                                             </span>
                                         ) : (
                                             <span className="inline-flex gap-2">
-                                                <button className="btn-secondary" title={t('docs.sched.send_now')} disabled={busy} onClick={() => act(`scheduled-reports/${s.id}/run`, 'POST', t('docs.sched.sent'))}><Send className="w-4 h-4" /></button>
-                                                <button className="btn-secondary" title={t('common.edit')} onClick={() => setForm({
+                                                <button className="btn-secondary btn-icon" title={t('docs.sched.send_now')} disabled={busy} onClick={() => act(`scheduled-reports/${s.id}/run`, 'POST', t('docs.sched.sent'))} aria-label={t('docs.sched.send_now')}><Send className="w-4 h-4" /></button>
+                                                <button className="btn-secondary btn-icon" title={t('common.edit')} onClick={() => setForm({
                                                     id: s.id, name: s.name, report: s.report, params: new URLSearchParams(s.params ?? {}).toString(),
                                                     format: s.format, recipients: s.recipients.join(', '), frequency: s.frequency, active: s.active,
-                                                })}><Pencil className="w-4 h-4" /></button>
-                                                <button className="btn-secondary" title={t('common.delete')} onClick={() => setConfirmDelete(s.id)}><Trash2 className="w-4 h-4" /></button>
+                                                })} aria-label={t('common.edit')}><Pencil className="w-4 h-4" /></button>
+                                                <button className="btn-secondary btn-icon" title={t('common.delete')} onClick={() => setConfirmDelete(s.id)} aria-label={t('common.delete')}><Trash2 className="w-4 h-4" /></button>
                                             </span>
                                         )}
                                     </td>

@@ -1,0 +1,20 @@
+{
+    "nav.arrivals": "Arrivées du jour",
+    "nav.budgets": "Budgets et analytique",
+    "nav.channel_health": "Santé des canaux",
+    "nav.edge": "Serveur local (hors ligne)",
+    "nav.fastconfigure": "Configuration rapide",
+    "nav.group_booking": "Réservation multi-chambres",
+    "nav.letterhead": "En-tête et modèles",
+    "nav.messaging": "Messagerie clients",
+    "nav.my_space": "Mon espace",
+    "nav.onboarding": "Mise en service",
+    "nav.payables_workflow": "Fournisseurs et fiscalité",
+    "nav.people": "Performance et tâches",
+    "nav.rooming_import": "Import liste de rooming",
+    "nav.service_requests": "Demandes de service",
+    "nav.stock_control": "Contrôle des stocks",
+    "nav.stock_ops": "Opérations de stock",
+    "nav.talent": "Recrutement et formation",
+    "nav.workforce": "Planning du personnel"
+}

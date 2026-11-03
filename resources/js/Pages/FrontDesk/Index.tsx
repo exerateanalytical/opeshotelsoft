@@ -20,7 +20,7 @@ function RoomPicker({ reservation, onPicked }: { reservation: Reservation; onPic
     const t = useT();
     const rooms = useApi<{ data: Room[] }>(`rooms?filter[room_type_id]=${reservation.room_type_id}&filter[occupied]=0&filter[active]=1&per_page=200`);
     return (
-        <select className="input text-xs w-36" defaultValue="" onChange={(e) => e.target.value && onPicked(Number(e.target.value))}>
+        <select className="select w-44" aria-label={t('fo.desk.assign_room')} defaultValue="" onChange={(e) => e.target.value && onPicked(Number(e.target.value))}>
             <option value="" disabled>{rooms.loading ? t('common.loading') : t('fo.desk.assign_room')}</option>
             {rooms.data?.data.map((rm) => (
                 <option key={rm.id} value={rm.id}>{rm.number} · {hkLabel(t, rm.hk_status)}</option>
@@ -92,28 +92,28 @@ export default function FrontDesk() {
     const b = board.data;
     const list = (title: string, icon: React.ReactNode, rows: Reservation[], action: 'check-in' | 'check-out') => (
         <div className="card">
-            <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-200">
                 {icon}<h3 className="font-semibold text-slate-800">{title}</h3>
-                <span className="ml-auto text-sm text-slate-400">{rows.length}</span>
+                <span className="ml-auto text-sm text-slate-500">{rows.length}</span>
             </div>
-            {rows.length === 0 ? <p className="px-5 py-10 text-center text-sm text-slate-400">{t('fo.desk.none_today')}</p> : (
+            {rows.length === 0 ? <p className="px-5 py-10 text-center text-sm text-slate-500">{t('fo.desk.none_today')}</p> : (
                 <ul className="divide-y divide-slate-100">
                     {rows.map((r) => (
-                        <li key={r.id} className="flex items-center gap-3 px-5 py-3">
-                            <div className="min-w-0 flex-1">
-                                <p className="font-medium text-slate-800 truncate">
-                                    <Link href={`/reservations/${r.id}`} className="hover:underline">{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '—'}</Link>{r.guest?.vip && <span className="ml-1 text-amber-500">★</span>}
+                        <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+                            <div className="min-w-0 flex-1 basis-48">
+                                <p className="font-medium text-slate-900 truncate">
+                                    <Link href={`/reservations/${r.id}`} className="underline-offset-2 hover:underline">{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '—'}</Link>{r.guest?.vip && <span className="ml-1 text-amber-700" aria-label="VIP">★</span>}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-sm text-slate-600">
                                     {r.number} · {r.room ? t('fo.desk.room_n', { number: r.room.number }) : t('fo.desk.type_unassigned', { type: r.room_type?.code ?? '' })} · {t('fo.desk.until', { date: formatDate(r.departure) })}
                                 </p>
                             </div>
                             {action === 'check-in' && !r.room && (
                                 <RoomPicker reservation={r} onPicked={(roomId) => run(`check-in-${r.id}`, `reservations/${r.id}/check-in`, { room_id: roomId })} />
                             )}
-                            <button className="btn-secondary text-xs" disabled={busy === `${action}-${r.id}` || (action === 'check-in' && !r.room)}
+                            <button type="button" className="btn-primary min-w-28" disabled={busy === `${action}-${r.id}` || (action === 'check-in' && !r.room)}
                                 onClick={() => run(`${action}-${r.id}`, `reservations/${r.id}/${action}`)}>
-                                {busy === `${action}-${r.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : action === 'check-in' ? t('fo.desk.check_in') : t('fo.desk.check_out')}
+                                {busy === `${action}-${r.id}` ? <Loader2 className="w-4 h-4 animate-spin" aria-label="..." /> : action === 'check-in' ? t('fo.desk.check_in') : t('fo.desk.check_out')}
                             </button>
                         </li>
                     ))}
@@ -127,9 +127,9 @@ export default function FrontDesk() {
             title={t('fo.desk.title')}
             subtitle={b ? t('fo.desk.business_date', { date: formatDate(b.business_date) }) : t('fo.desk.subtitle')}
             actions={
-                <div className="flex gap-2">
+                <div className="btn-row">
                     <Link href="/front-desk/in-house" className="btn-secondary"><BedDouble className="w-4 h-4" /> {t('fo.desk.in_house')}</Link>
-                    <button className="btn-primary" onClick={nightAudit} disabled={busy === 'audit' || !b}>
+                    <button type="button" className="btn-primary" onClick={nightAudit} disabled={busy === 'audit' || !b}>
                         {busy === 'audit' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Moon className="w-4 h-4" />} {t('fo.desk.night_audit')}
                     </button>
                 </div>
@@ -139,12 +139,12 @@ export default function FrontDesk() {
             <CashierBar />
 
             {(message || board.error) && (
-                <div className={`mb-4 rounded-lg text-sm px-4 py-3 ${message?.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                <div role={message?.ok ? 'status' : 'alert'} className={`mb-4 rounded-lg text-sm px-4 py-3 ${message?.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
                     {message?.text ?? board.error?.message}
                 </div>
             )}
 
-            {!b ? <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-400" /> : (
+            {!b ? <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-500" aria-label="..." /> : (
                 <>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         {[
@@ -152,20 +152,20 @@ export default function FrontDesk() {
                             [t('fo.desk.occupied'), `${b.occupied} / ${b.total_rooms}`],
                         ].map(([label, value]) => (
                             <div key={label as string} className="card px-5 py-4">
-                                <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-                                <p className="text-2xl font-semibold text-slate-800 mt-1">{value}</p>
+                                <p className="text-sm font-medium text-slate-600">{label}</p>
+                                <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</p>
                             </div>
                         ))}
                     </div>
                     <div className="grid lg:grid-cols-2 gap-6 mb-6">
-                        {list(t('fo.desk.arrivals'), <DoorOpen className="w-4 h-4 text-emerald-600" />, b.arrivals, 'check-in')}
-                        {list(t('fo.desk.departures'), <DoorClosed className="w-4 h-4 text-amber-600" />, b.departures, 'check-out')}
+                        {list(t('fo.desk.arrivals'), <DoorOpen className="w-4 h-4 text-emerald-700" aria-hidden="true" />, b.arrivals, 'check-in')}
+                        {list(t('fo.desk.departures'), <DoorClosed className="w-4 h-4 text-amber-700" aria-hidden="true" />, b.departures, 'check-out')}
                     </div>
                     <div className="card px-5 py-4">
                         <div className="flex items-center gap-2 mb-3"><BedDouble className="w-4 h-4 text-slate-500" /><h3 className="font-semibold text-slate-800">{t('fo.desk.room_status')}</h3></div>
                         <div className="flex flex-wrap gap-3">
                             {Object.entries(b.rooms).map(([s, n]) => (
-                                <span key={s} className="px-3 py-1.5 rounded-lg bg-slate-50 text-sm text-slate-600"><b>{n}</b> {hkLabel(t, s)}</span>
+                                <span key={s} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700"><b>{n}</b> {hkLabel(t, s)}</span>
                             ))}
                         </div>
                     </div>

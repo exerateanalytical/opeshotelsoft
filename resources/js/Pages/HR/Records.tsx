@@ -1,3 +1,4 @@
+import Avatar from '@/Components/ui/Avatar';
 import { activeHotelId, api, ApiError, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { AlertTriangle, Check, Download, Upload } from 'lucide-react';
@@ -8,7 +9,7 @@ import { useT } from '@/lib/i18n';
 interface Doc { id: number; employee_id: number; type: string; title: string | null; original_name: string; size: number; expires_on: string | null; created_at: string; expired?: boolean; employee?: { id: number; number: string; first_name: string; last_name: string } }
 interface Task { id: number; title: string; owner_role: string | null; due_on: string | null; completed_at: string | null }
 interface Template { id: number; position_id: number; tasks: { title: string; owner_role: string | null; due_days?: number }[] }
-export interface OrgNode { id: number; number: string; name: string; position: string | null; reports: OrgNode[] }
+export interface OrgNode { id: number; number: string; name: string; photo_url?: string | null; position: string | null; reports: OrgNode[] }
 
 const DOC_TYPES = [['contract', 'hr.rec.doc.contract'], ['id', 'hr.rec.doc.id'], ['diploma', 'hr.rec.doc.diploma'], ['other', 'hr.rec.doc.other']] as const;
 
@@ -142,7 +143,7 @@ function EmployeeRecord({ id, employees }: { id: number; employees: Employee[] }
                     <ul className="divide-y text-sm">
                         {tasks.data?.map((tk) => (
                             <li key={tk.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                                <span className={tk.completed_at ? 'text-slate-400 line-through' : ''}>{tk.title}{tk.owner_role && <span className="ml-2 text-xs text-slate-500">{tk.owner_role}</span>}</span>
+                                <span className={tk.completed_at ? 'text-slate-500 line-through' : ''}>{tk.title}{tk.owner_role && <span className="ml-2 text-xs text-slate-500">{tk.owner_role}</span>}</span>
                                 {tk.completed_at ? <span className="badge badge-green text-xs">{t('hr.rec.done')}</span>
                                     : <button className="btn-secondary" onClick={() => complete(tk)}><Check className="h-4 w-4" /> {t('hr.rec.complete')}{tk.due_on && t('hr.rec.due', { date: formatDate(tk.due_on) })}</button>}
                             </li>
@@ -250,7 +251,7 @@ function Node({ n }: { n: OrgNode }) {
     return (
         <li>
             <div className="rounded border border-slate-200 px-3 py-2 text-sm">
-                <span className="font-medium">{n.name}</span>
+                <span className="flex items-center gap-2 font-medium"><Avatar src={n.photo_url} name={n.name} size={28} />{n.name}</span>
                 <span className="ml-2 text-xs text-slate-500">{n.position ?? n.number}</span>
             </div>
             {n.reports.length > 0 && <ul className="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-3">{n.reports.map((c) => <Node key={c.id} n={c} />)}</ul>}

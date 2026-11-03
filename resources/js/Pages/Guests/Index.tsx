@@ -87,7 +87,7 @@ export default function GuestsIndex() {
             actions={
                 <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
                     {([['guests', 'guests.tab.guests', Users], ['companies', 'guests.tab.companies', Building2]] as const).map(([k, l, Icon]) => (
-                        <button key={k} onClick={() => setTab(k)} className={cn('px-3 py-1 rounded-md flex items-center gap-1', tab === k ? 'bg-white shadow text-emerald-700' : 'text-slate-600')}>
+                        <button key={k} onClick={() => setTab(k)} className={cn('px-3 py-1 rounded-md flex items-center gap-1', tab === k ? 'bg-white border border-slate-300 text-emerald-700' : 'text-slate-600')}>
                             <Icon className="w-4 h-4" /> {t(l)}
                         </button>
                     ))}
@@ -203,10 +203,10 @@ function GuestsTab() {
 
             <div className="card p-4 flex flex-wrap gap-3 items-center">
                 <div className="relative flex-1 min-w-[200px]">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-9 w-full" placeholder={t('guests.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input className="input pl-9 w-full" aria-label={t('guests.search')} placeholder={t('guests.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
                 </div>
-                <select className="input" value={flag} onChange={(e) => { setFlag(e.target.value); setPage(1); }}>
+                <select className="input" value={flag} onChange={(e) => { setFlag(e.target.value); setPage(1); }} aria-label={t('guests.filter.all')}>
                     <option value="">{t('guests.filter.all')}</option>
                     <option value="vip">{t('guests.filter.vip')}</option>
                     <option value="blacklisted">{t('guests.filter.blacklisted')}</option>
@@ -218,10 +218,10 @@ function GuestsTab() {
                 <form onSubmit={save} className="card p-4 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('guests.new') : t('guests.companies.edit_title', { name: fullName(editing) })}</h3>
-                        <button type="button" onClick={() => setEditing(null)}><X className="w-4 h-4 text-slate-400" /></button>
+                        <button type="button" onClick={() => setEditing(null)}><X className="w-4 h-4 text-slate-500" /></button>
                     </div>
                     <Section title={t('guests.section.identity')}>
-                        <Field label={t('guests.field.title')}><input className="input w-full" placeholder={t('guests.field.title_ph')} value={form.title} onChange={(e) => set('title', e.target.value)} /></Field>
+                        <Field label={t('guests.field.title')}><input className="input w-full" aria-label={t('guests.field.title_ph')} placeholder={t('guests.field.title_ph')} value={form.title} onChange={(e) => set('title', e.target.value)} /></Field>
                         <Field label={t('guests.field.first_name_req')}><input className="input w-full" required value={form.first_name} onChange={(e) => set('first_name', e.target.value)} /></Field>
                         <Field label={t('guests.field.last_name_req')}><input className="input w-full" required value={form.last_name} onChange={(e) => set('last_name', e.target.value)} /></Field>
                         <Field label={t('guests.field.gender')}>
@@ -230,10 +230,10 @@ function GuestsTab() {
                             </select>
                         </Field>
                         <Field label={t('guests.field.dob')}><input type="date" className="input w-full" value={form.date_of_birth} onChange={(e) => set('date_of_birth', e.target.value)} /></Field>
-                        <Field label={t('guests.field.nationality_iso')}><input className="input w-full" maxLength={2} placeholder="CM" value={form.nationality} onChange={(e) => set('nationality', e.target.value)} /></Field>
+                        <Field label={t('guests.field.nationality_iso')}><input className="input w-full" maxLength={2} aria-label="CM" placeholder="CM" value={form.nationality} onChange={(e) => set('nationality', e.target.value)} /></Field>
                         <Field label={t('guests.field.profession')}><input className="input w-full" value={form.profession} onChange={(e) => set('profession', e.target.value)} /></Field>
                         <Field label={t('guests.field.language')}>
-                            <select className="input w-full" value={form.language} onChange={(e) => set('language', e.target.value)}>
+                            <select className="input w-full" value={form.language} onChange={(e) => set('language', e.target.value)} aria-label="Français">
                                 <option value="fr">Français</option><option value="en">English</option>
                             </select>
                         </Field>
@@ -267,9 +267,9 @@ function GuestsTab() {
                     </Section>
                     <Section title={t('guests.section.status')}>
                         <div className="flex flex-col gap-2 text-sm text-slate-700">
-                            <label className="flex items-center gap-2"><input type="checkbox" checked={form.vip} onChange={(e) => set('vip', e.target.checked)} /> VIP</label>
-                            <label className="flex items-center gap-2"><input type="checkbox" checked={form.blacklisted} onChange={(e) => set('blacklisted', e.target.checked)} /> {t('guests.blacklisted')}</label>
-                            <label className="flex items-center gap-2"><input type="checkbox" checked={form.marketing_consent} onChange={(e) => set('marketing_consent', e.target.checked)} /> {t('guests.field.marketing')}</label>
+                            <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={form.vip} onChange={(e) => set('vip', e.target.checked)} /> VIP</label>
+                            <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={form.blacklisted} onChange={(e) => set('blacklisted', e.target.checked)} /> {t('guests.blacklisted')}</label>
+                            <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={form.marketing_consent} onChange={(e) => set('marketing_consent', e.target.checked)} /> {t('guests.field.marketing')}</label>
                         </div>
                         {form.blacklisted && (
                             <Field label={t('guests.field.blacklist_reason')}><textarea className="input w-full" rows={2} value={form.blacklist_reason} onChange={(e) => set('blacklist_reason', e.target.value)} /></Field>
@@ -287,21 +287,21 @@ function GuestsTab() {
                 <div className="card p-4 space-y-3 border border-amber-200">
                     <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{t('guests.dup.title', { name: fullName(dupFor) })}</h3>
-                        <button onClick={() => setDupFor(null)}><X className="w-4 h-4 text-slate-400" /></button>
+                        <button onClick={() => setDupFor(null)}><X className="w-4 h-4 text-slate-500" /></button>
                     </div>
                     <p className="text-xs text-slate-500">{t('guests.dup.hint', { name: fullName(dupFor) })}</p>
-                    {dups.loading && <div className="text-sm text-slate-400">{t('guests.dup.searching')}</div>}
+                    {dups.loading && <div className="text-sm text-slate-500">{t('guests.dup.searching')}</div>}
                     {dups.error && <div className="bg-red-50 text-red-700 px-3 py-2 text-sm rounded">{dups.error.message}</div>}
                     {dups.data?.length === 0 && <div className="text-sm text-emerald-700">{t('guests.dup.none')}</div>}
                     {!!dups.data?.length && (
                         <div className="overflow-x-auto">
-                            <table className="table-auto w-full text-sm">
-                                <thead><tr className="text-left text-slate-500"><th className="px-3 py-1">{t('guests.companies.name')}</th><th className="px-3 py-1">{t('guests.dup.email_phone')}</th><th className="px-3 py-1">{t('guests.dup.id')}</th><th className="px-3 py-1"></th></tr></thead>
+                            <table className="table-auto">
+                                <thead><tr><th className="px-3 py-1">{t('guests.companies.name')}</th><th className="px-3 py-1">{t('guests.dup.email_phone')}</th><th className="px-3 py-1">{t('guests.dup.id')}</th><th className="px-3 py-1"></th></tr></thead>
                                 <tbody>
                                     {dups.data.map((g) => (
-                                        <tr key={g.id} className="border-t border-slate-100">
+                                        <tr key={g.id}>
                                             <td className="px-3 py-1">{fullName(g)}</td>
-                                            <td className="px-3 py-1">{g.email}<div className="text-xs text-slate-400">{g.phone}</div></td>
+                                            <td className="px-3 py-1">{g.email}<div className="text-xs text-slate-500">{g.phone}</div></td>
                                             <td className="px-3 py-1">{g.id_number}</td>
                                             <td className="px-3 py-1 text-right">
                                                 <button className="btn-secondary flex items-center gap-1" disabled={busy === g.id} onClick={() => merge(dupFor, g)}>
@@ -319,25 +319,25 @@ function GuestsTab() {
 
             <div className="card overflow-x-auto">
                 {list.error && <div className="bg-red-50 text-red-700 px-4 py-2 text-sm">{list.error.message}</div>}
-                <table className="table-auto w-full text-sm">
+                <table className="table-auto">
                     <thead>
-                        <tr className="text-left text-slate-500">
+                        <tr>
                             <th className="px-4 py-2">{t('guests.col.guest')}</th><th className="px-4 py-2">{t('guests.companies.contact')}</th><th className="px-4 py-2">{t('guests.col.id_doc')}</th>
                             <th className="px-4 py-2">{t('guests.col.nationality')}</th><th className="px-4 py-2">{t('guests.col.flags')}</th><th className="px-4 py-2"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {list.loading && !list.data && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">{t('common.loading')}</td></tr>}
-                        {list.data?.data.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">{t('guests.empty')}</td></tr>}
+                        {list.loading && !list.data && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">{t('common.loading')}</td></tr>}
+                        {list.data?.data.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">{t('guests.empty')}</td></tr>}
                         {list.data?.data.map((g) => (
                             <tr key={g.id} className={cn('border-t border-slate-100', g.blacklisted && 'bg-red-50/40')}>
-                                <td className="px-4 py-2 font-medium text-slate-800"><Link href={`/guests/${g.id}`} className="text-emerald-700 hover:underline">{fullName(g)}</Link>{g.company && <div className="text-xs font-normal text-slate-400">{g.company.name}</div>}</td>
-                                <td className="px-4 py-2">{g.email}<div className="text-xs text-slate-400">{g.phone}</div></td>
+                                <td className="px-4 py-2 font-medium text-slate-800"><Link href={`/guests/${g.id}`} className="text-navy-600 underline-offset-2 hover:underline">{fullName(g)}</Link>{g.company && <div className="text-xs font-normal text-slate-500">{g.company.name}</div>}</td>
+                                <td className="px-4 py-2">{g.email}<div className="text-xs text-slate-500">{g.phone}</div></td>
                                 <td className="px-4 py-2">
                                     {g.id_number ? (
                                         <>
                                             {(() => { const l = ID_TYPES.find(([v]) => v === g.id_type)?.[1]; return l ? t(l) : g.id_type; })()} {g.id_number}
-                                            {g.id_expiry && <div className={cn('text-xs', Date.parse(g.id_expiry) < Date.now() ? 'text-red-600' : 'text-slate-400')}>{t('guests.expires', { date: formatDate(g.id_expiry) })}</div>}
+                                            {g.id_expiry && <div className={cn('text-xs', Date.parse(g.id_expiry) < Date.now() ? 'text-red-600' : 'text-slate-500')}>{t('guests.expires', { date: formatDate(g.id_expiry) })}</div>}
                                         </>
                                     ) : <span className="text-amber-700 text-xs">{t('guests.missing')}</span>}
                                 </td>

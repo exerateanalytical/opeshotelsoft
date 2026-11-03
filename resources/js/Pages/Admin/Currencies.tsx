@@ -58,12 +58,12 @@ export default function Currencies() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {currencies.loading && !currencies.data && <tr><td colSpan={5}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-400" /></td></tr>}
+                                {currencies.loading && !currencies.data && <tr><td colSpan={5}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
                                 {(currencies.data ?? []).map((c) => (
                                     <tr key={c.code}>
                                         <td className="font-mono text-sm font-semibold">{c.code}</td>
                                         <td className="text-sm">
-                                            {c.name} {c.symbol && <span className="text-slate-400">({c.symbol})</span>}
+                                            {c.name} {c.symbol && <span className="text-slate-500">({c.symbol})</span>}
                                             <div className="flex gap-1 mt-1">
                                                 {c.is_functional && <span className="badge-blue">{t('admin.currency.functional')}</span>}
                                                 {canManage && !c.is_functional ? (
@@ -82,7 +82,7 @@ export default function Currencies() {
                                                     {t('admin.currency.confirm_delete', { code: c.code })}
                                                 </button>
                                             ) : (
-                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="text-slate-400 hover:text-red-600" onClick={() => setArmed(c.code)}>
+                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="text-slate-500 hover:text-red-600" onClick={() => setArmed(c.code)}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             ))}
@@ -138,7 +138,7 @@ export default function Currencies() {
                         <table className="table-auto w-full">
                             <thead><tr><th>{t('admin.currency.currency')}</th><th>{t('admin.currency.date')}</th><th>{t('admin.currency.latest_rate')}</th><th></th></tr></thead>
                             <tbody>
-                                {rates.data?.data.length === 0 && <tr><td colSpan={4} className="text-center py-8 text-slate-400 text-sm">{t('admin.currency.no_rates')}</td></tr>}
+                                {rates.data?.data.length === 0 && <tr><td colSpan={4} className="text-center py-8 text-slate-500 text-sm">{t('admin.currency.no_rates')}</td></tr>}
                                 {rates.data?.data.map((r) => (
                                     <tr key={r.id}>
                                         <td className="font-mono text-sm">{r.from}</td>
@@ -146,7 +146,7 @@ export default function Currencies() {
                                         <td className="font-mono text-sm">{r.rate}</td>
                                         <td className="text-right">
                                             {canManage && (
-                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="text-slate-400 hover:text-red-600" disabled={busy}
+                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="text-slate-500 hover:text-red-600" disabled={busy}
                                                     onClick={() => run(() => api(`admin/exchange-rates/${r.id}`, { method: 'DELETE' }))}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>

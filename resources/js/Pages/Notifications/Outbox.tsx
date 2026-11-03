@@ -95,7 +95,7 @@ export default function NotificationOutbox() {
 
             <div className="card overflow-x-auto">
                 {list.loading && !list.data ? (
-                    <div className="p-4"><Loader2 className="h-5 w-5 animate-spin text-slate-400" /></div>
+                    <div className="p-4"><Loader2 className="h-5 w-5 animate-spin text-slate-500" /></div>
                 ) : (
                     <table className="table-auto w-full text-sm">
                         <thead>

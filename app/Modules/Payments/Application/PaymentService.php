@@ -81,7 +81,8 @@ class PaymentService
         }
         $folio = ! empty($data['folio_id']) ? Folio::findOrFail($data['folio_id']) : null;
         $reservation = ! empty($data['reservation_id']) ? Reservation::findOrFail($data['reservation_id']) : null;
-        if (! $folio && ! $reservation) {
+        $linkId = $data['payment_link_id'] ?? null;
+        if (! $folio && ! $reservation && ! $linkId) {
             throw new DomainException('A payment needs a folio or a reservation.');
         }
         if ($folio && $folio->status !== 'open') {
@@ -102,8 +103,8 @@ class PaymentService
             'amount' => (int) $data['amount'], 'currency' => $hotel->currency ?? 'XAF',
             'folio_id' => $folio?->id, 'reservation_id' => $reservation?->id ?? $folio?->reservation_id,
             'payer_phone' => $data['payer_phone'] ?? null, 'payer_email' => $data['payer_email'] ?? null,
-            'channel' => $channel, 'created_by' => $actor?->id, 'expires_at' => now()->addMinutes(self::TTL_MINUTES),
-            'meta' => array_filter(['return_url' => $data['return_url'] ?? null]),
+            'payment_link_id' => $linkId, 'channel' => $channel, 'created_by' => $actor?->id, 'expires_at' => now()->addMinutes(self::TTL_MINUTES),
+            'meta' => array_filter(['return_url' => $data['return_url'] ?? null, 'method' => $data['method'] ?? null, 'inbound_id' => $data['inbound_id'] ?? null]),
         ]);
 
         try {
@@ -213,6 +214,13 @@ class PaymentService
                 return $intent;
             }
 
+            if ($intent->payment_link_id) {
+                [$folioId, $lineId] = app(PayLinkService::class)->apply($intent);
+                $intent->update(['status' => 'succeeded', 'folio_id' => $folioId ?? $intent->folio_id, 'folio_line_id' => $lineId, 'completed_at' => now()]);
+                $this->bus->record('payment.succeeded', $intent->only(['id', 'reference', 'provider', 'amount', 'folio_id', 'reservation_id', 'payment_link_id']), 'payment_intent', $intent->id);
+
+                return $intent;
+            }
             $folio = $intent->folio_id ? Folio::findOrFail($intent->folio_id) : $this->folios->guestFolioFor(Reservation::findOrFail($intent->reservation_id));
             $line = $this->folios->payment($folio, $intent->methodCode(), $intent->amount, $intent->provider_reference ?? $intent->reference, [
                 'description' => ($intent->reservation_id && ! $intent->folio_id ? 'Deposit - ' : 'Online payment - ').$intent->provider,

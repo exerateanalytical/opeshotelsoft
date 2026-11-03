@@ -12,6 +12,7 @@ class AccountingModule
 {
     public static function subscribe(EventBus $bus): void
     {
+        \Illuminate\Console\Application::starting(fn ($artisan) => $artisan->resolveCommands([\App\Modules\Accounting\Application\Core\RunScheduledCommand::class]));
         $rules = fn () => app(PostingRules::class);
 
         $bus->subscribe('tenancy.hotel.created', 'accounting.provision', fn (StoredEvent $e) => app(Provisioner::class)->provision(Hotel::findOrFail($e->aggregate_id)));

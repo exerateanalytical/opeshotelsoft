@@ -3,6 +3,7 @@ import { api, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Banner, errMsg, Field, Loading, monthStart, today } from './shared';
 import { useT } from '@/lib/i18n';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 
 interface Bank { id: number; name: string; kind: string; gl_account: string; currency: string; unmatched: number }
 interface StmtLine { id: number; date: string; description: string; reference: string | null; amount: number; balance: number | null; journal_line_id: number | null; match_kind: string | null }
@@ -54,6 +55,7 @@ export default function Reconciliation() {
     return (
         <div className="space-y-4">
             <Banner error={error ?? banks.error?.message} success={ok} />
+            {bank && <div><PrintPdfButton path={`bank-reconciliation/${bank.id}`} /></div>}
             <div className="card grid grid-cols-1 gap-2 p-4 sm:flex sm:items-end">
                 <Field label={t('fin.recon.treasury_account')}>
                     <select className="input w-full sm:w-64" value={bank?.id ?? ''} onChange={(e) => setBankId(Number(e.target.value))}>
@@ -65,7 +67,7 @@ export default function Reconciliation() {
                 {id && <button className="btn-primary" disabled={busy} onClick={() => act(`accounting/bank-accounts/${id}/auto-match`, {}, t('fin.recon.matched'))}>{t('fin.recon.auto_match')}</button>}
             </div>
 
-            <form className="card grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:items-end"
+            <form className="card grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:items-end [&>*]:min-w-0"
                 onSubmit={(e) => { e.preventDefault(); act('accounting/bank-accounts', newBank, t('fin.recon.account_added')); }}>
                 <Field label={t('fin.recon.new_account_name')}><input className="input w-full" required value={newBank.name} onChange={(e) => setNewBank({ ...newBank, name: e.target.value })} /></Field>
                 <Field label={t('fin.recon.kind')}>
@@ -87,7 +89,7 @@ export default function Reconciliation() {
                     <input type="file" accept=".csv,.txt" className="text-sm" onChange={(e) => loadFile(e.target.files?.[0])} />
                     <textarea className="input h-24 w-full font-mono text-sm" placeholder={t('fin.recon.paste_csv')} value={csv} onChange={(e) => setCsv(e.target.value)} />
                     <p className="text-xs text-slate-500">{t('fin.recon.mapping_hint')}</p>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-7">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-7 [&>*]:min-w-0">
                         {COLS.map((c) => (
                             <Field key={c} label={t(`fin.recon.col.${c}`)}><input className="input w-full" value={mapping[c]} onChange={(e) => setMapping({ ...mapping, [c]: e.target.value })} /></Field>
                         ))}
@@ -97,7 +99,7 @@ export default function Reconciliation() {
             )}
 
             {report.data && (
-                <div className="card grid grid-cols-2 gap-2 p-4 text-sm sm:grid-cols-4">
+                <div className="card grid grid-cols-2 gap-2 p-4 text-sm sm:grid-cols-4 [&>*]:min-w-0">
                     <div><p className="text-xs text-slate-500">{t('fin.recon.stmt_opening')}</p>{M(report.data.statement_opening_balance)}</div>
                     <div><p className="text-xs text-slate-500">{t('fin.recon.stmt_closing')}</p>{M(report.data.statement_closing_balance)}</div>
                     <div><p className="text-xs text-slate-500">{t('fin.recon.book_opening')}</p>{M(report.data.book_opening_balance)}</div>
@@ -105,7 +107,7 @@ export default function Reconciliation() {
                     <div><p className="text-xs text-slate-500">{t('fin.recon.in_stmt_not_books')}</p>{M(report.data.unmatched_statement_total)}</div>
                     <div><p className="text-xs text-slate-500">{t('fin.recon.in_books_not_stmt')}</p>{M(report.data.unmatched_ledger_total)}</div>
                     <div><p className="text-xs text-slate-500">{t('fin.closing.difference')}</p>{M(report.data.difference)}</div>
-                    <div><span className={`badge-${report.data.reconciled ? 'success' : 'warning'} rounded px-2 py-0.5 text-xs`}>{report.data.reconciled ? t('fin.recon.reconciled') : t('fin.recon.not_reconciled')}</span></div>
+                    <div><span className={`badge-${report.data.reconciled ? 'green' : 'yellow'}`}>{report.data.reconciled ? t('fin.recon.reconciled') : t('fin.recon.not_reconciled')}</span></div>
                 </div>
             )}
 
@@ -121,7 +123,7 @@ export default function Reconciliation() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 [&>*]:min-w-0">
                 <div className="card overflow-x-auto p-2">
                     <h4 className="p-2 font-semibold">{t('fin.recon.stmt_lines')}</h4>
                     <Loading on={stmt.loading} />
@@ -134,12 +136,12 @@ export default function Reconciliation() {
                                     <td className="p-2 text-right whitespace-nowrap">{M(l.amount)}</td>
                                     <td className="p-2 text-right">
                                         {l.journal_line_id
-                                            ? <button className="btn-secondary text-xs" disabled={busy} onClick={() => act(`accounting/statement-lines/${l.id}/unmatch`, {}, t('fin.recon.unmatched'))}>{t('fin.recon.unmatch')}</button>
-                                            : <button className="btn-secondary text-xs" onClick={() => setSelected(l)}>{t('fin.recon.select')}</button>}
+                                            ? <button className="btn-secondary btn-sm" disabled={busy} onClick={() => act(`accounting/statement-lines/${l.id}/unmatch`, {}, t('fin.recon.unmatched'))}>{t('fin.recon.unmatch')}</button>
+                                            : <button className="btn-secondary btn-sm" onClick={() => setSelected(l)}>{t('fin.recon.select')}</button>}
                                     </td>
                                 </tr>
                             ))}
-                            {stmt.data?.length === 0 && <tr><td className="p-6 text-center text-slate-400">{t('fin.recon.no_stmt_lines')}</td></tr>}
+                            {stmt.data?.length === 0 && <tr><td className="p-6 text-center text-slate-500">{t('fin.recon.no_stmt_lines')}</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -154,11 +156,11 @@ export default function Reconciliation() {
                                     <td className="p-2">{l.description}<span className="block text-xs text-slate-500">{l.number}</span></td>
                                     <td className="p-2 text-right whitespace-nowrap">{M(l.amount)}</td>
                                     <td className="p-2 text-right">
-                                        {selected && <button className="btn-primary text-xs" disabled={busy} onClick={() => act(`accounting/statement-lines/${selected.id}/match`, { journal_line_id: l.id }, t('fin.recon.matched'))}>{t('fin.recon.match')}</button>}
+                                        {selected && <button className="btn-primary btn-sm" disabled={busy} onClick={() => act(`accounting/statement-lines/${selected.id}/match`, { journal_line_id: l.id }, t('fin.recon.matched'))}>{t('fin.recon.match')}</button>}
                                     </td>
                                 </tr>
                             ))}
-                            {ledger.data?.length === 0 && <tr><td className="p-6 text-center text-slate-400">{t('fin.recon.all_reconciled')}</td></tr>}
+                            {ledger.data?.length === 0 && <tr><td className="p-6 text-center text-slate-500">{t('fin.recon.all_reconciled')}</td></tr>}
                         </tbody>
                     </table>
                 </div>

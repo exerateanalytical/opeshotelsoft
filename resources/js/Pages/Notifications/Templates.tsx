@@ -89,7 +89,7 @@ export default function NotificationTemplates() {
             actions={<Link href="/notifications/outbox" className="btn-secondary">{t('notif.outbox')}</Link>}
         >
             <Head title={t('notif.templates_title')} />
-            {data.loading && !data.data && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
+            {data.loading && !data.data && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
             {data.error && <p className="text-sm text-red-700">{data.error.message}</p>}
 
             {data.data && (

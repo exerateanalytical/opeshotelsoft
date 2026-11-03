@@ -69,6 +69,8 @@ export default function LoyaltyMembers() {
             actions={
                 <div className="flex gap-2">
                     <Link href="/loyalty" className="btn-secondary inline-flex items-center gap-2"><Settings className="w-4 h-4" /> {t('loyalty.members.programme')}</Link>
+                    <Link href="/loyalty/promotions" className="btn-secondary">{t('loyalty.promo.title')}</Link>
+                    <Link href="/loyalty/counter" className="btn-secondary inline-flex items-center gap-2"><ScanLine className="w-4 h-4" /> {t('loyalty.counter.title')}</Link>
                     <button className="btn-primary inline-flex items-center gap-2" onClick={() => setEnrolOpen(true)}><Plus className="w-4 h-4" /> {t('loyalty.members.enrol_guest')}</button>
                 </div>
             }
@@ -80,7 +82,7 @@ export default function LoyaltyMembers() {
             {enrolOpen && <EnrolPanel onClose={() => setEnrolOpen(false)} onDone={(m) => { setEnrolOpen(false); notify(t('loyalty.members.enrolled', { number: m.number })); setSelected(m.id); }} onError={setError} />}
 
             <form onSubmit={lookup} className="card p-4 mb-4 flex flex-col sm:flex-row gap-2 sm:items-center">
-                <ScanLine className="w-5 h-5 text-slate-400 hidden sm:block" />
+                <ScanLine className="w-5 h-5 text-slate-500 hidden sm:block" />
                 <input className="input flex-1" placeholder={t('loyalty.members.scan_ph')} value={card} onChange={(e) => setCard(e.target.value)} maxLength={64} />
                 <button className="btn-secondary inline-flex items-center gap-2" disabled={looking}>{looking && <Loader2 className="w-4 h-4 animate-spin" />} {t('loyalty.members.lookup')}</button>
             </form>
@@ -102,7 +104,7 @@ export default function LoyaltyMembers() {
                 <div className="card p-4 xl:col-span-3">
                     <form className="flex flex-col sm:flex-row gap-2 mb-3" onSubmit={(e) => { e.preventDefault(); setPage(1); setSearch(q); }}>
                         <div className="relative flex-1">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                             <input className="input w-full pl-9" placeholder={t('loyalty.members.search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
                         </div>
                         <select className="input" value={tier} onChange={(e) => { setTier(e.target.value); setPage(1); }}>
@@ -123,8 +125,8 @@ export default function LoyaltyMembers() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {list.loading && !list.data && <tr><td colSpan={6} className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-slate-400" /></td></tr>}
-                                {list.data?.data.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('loyalty.members.empty')}</td></tr>}
+                                {list.loading && !list.data && <tr><td colSpan={6} className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-slate-500" /></td></tr>}
+                                {list.data?.data.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-slate-500">{t('loyalty.members.empty')}</td></tr>}
                                 {list.data?.data.map((m) => (
                                     <tr key={m.id} onClick={() => setSelected(m.id)} className={`border-t cursor-pointer hover:bg-slate-50 ${selected === m.id ? 'bg-emerald-50' : ''}`}>
                                         <td className="py-2 pr-3 font-mono">{m.number}</td>
@@ -151,7 +153,7 @@ export default function LoyaltyMembers() {
                 </div>
                 <div className="xl:col-span-2">
                     {selected ? <MemberPanel id={selected} onClose={() => setSelected(null)} onDone={notify} onError={(e) => { setError(e); setSuccess(null); }} />
-                        : <div className="card p-6 text-center text-sm text-slate-400">{t('loyalty.members.select_hint')}</div>}
+                        : <div className="card p-6 text-center text-sm text-slate-500">{t('loyalty.members.select_hint')}</div>}
                 </div>
             </div>
         </AppLayout>
@@ -180,21 +182,21 @@ function EnrolPanel({ onClose, onDone, onError }: { onClose: () => void; onDone:
         <div className="card p-4 mb-4">
             <div className="flex justify-between items-center mb-3">
                 <h2 className="font-semibold">{t('loyalty.members.enrol_title')}</h2>
-                <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
+                <button onClick={onClose} className="text-slate-500 hover:text-slate-600"><X className="w-4 h-4" /></button>
             </div>
             <form className="flex gap-2 mb-2" onSubmit={(e) => { e.preventDefault(); setTerm(q); }}>
                 <input className="input flex-1" placeholder={t('loyalty.members.guest_search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
                 <button className="btn-secondary">{t('loyalty.members.search')}</button>
             </form>
-            {guests.loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+            {guests.loading && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
             {guests.error && <p className="text-sm text-red-600">{guests.error.message}</p>}
             <div className="max-h-56 overflow-y-auto divide-y">
                 {guests.data?.data.map((g) => (
                     <button key={g.id} type="button" onClick={() => setGuest(g)} className={`w-full text-left px-2 py-2 text-sm hover:bg-slate-50 ${guest?.id === g.id ? 'bg-emerald-50' : ''}`}>
-                        <span className="font-medium">{g.first_name} {g.last_name}</span> <span className="text-slate-400">{g.email ?? g.phone ?? ''}</span>
+                        <span className="font-medium">{g.first_name} {g.last_name}</span> <span className="text-slate-500">{g.email ?? g.phone ?? ''}</span>
                     </button>
                 ))}
-                {guests.data?.data.length === 0 && <p className="text-sm text-slate-400 py-2">{t('loyalty.members.no_guests')}</p>}
+                {guests.data?.data.length === 0 && <p className="text-sm text-slate-500 py-2">{t('loyalty.members.no_guests')}</p>}
             </div>
             {guest && (
                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center mt-3">
@@ -231,7 +233,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
         } catch (e) { onError(msg(e)); return false; } finally { setBusy(null); }
     }
 
-    if (m.loading && !m.data) return <div className="card p-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-400" /></div>;
+    if (m.loading && !m.data) return <div className="card p-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-500" /></div>;
     if (m.error) return <div className="card p-4 text-sm text-red-600">{m.error.message}</div>;
     const d = m.data;
     if (!d) return null;
@@ -242,8 +244,9 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
                 <div>
                     <div className="font-semibold text-slate-800">{d.guest ? `${d.guest.first_name} ${d.guest.last_name}` : t('loyalty.members.member')}</div>
                     <div className="text-xs text-slate-500 font-mono">{d.number}</div>
+                    <Link href={`/loyalty/members/${d.id}/statement`} className="text-xs text-blue-700 hover:underline">{t('loyalty.stmt.open')}</Link>
                 </div>
-                <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
+                <button onClick={onClose} className="text-slate-500 hover:text-slate-600"><X className="w-4 h-4" /></button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                 <Stat label={t('loyalty.members.balance')} value={d.points_balance.toLocaleString()} />
@@ -257,11 +260,11 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
                 <ul className="text-sm divide-y mb-2">
                     {d.cards.map((c) => (
                         <li key={c.id} className="py-1 flex justify-between gap-2">
-                            <span className="font-mono">{c.card_number}</span>
+                            <Link href={`/loyalty/cards/${c.id}`} className="font-mono text-blue-700 hover:underline">{c.card_number}</Link>
                             <span className="text-slate-500">{c.kind} · {c.status} · {formatDate(c.issued_at)}</span>
                         </li>
                     ))}
-                    {d.cards.length === 0 && <li className="py-1 text-slate-400">{t('loyalty.members.no_cards')}</li>}
+                    {d.cards.length === 0 && <li className="py-1 text-slate-500">{t('loyalty.members.no_cards')}</li>}
                 </ul>
                 <div className="flex gap-2">
                     <select className="input flex-1" value={cardKind} onChange={(e) => setCardKind(e.target.value as 'digital' | 'physical')}>
@@ -313,7 +316,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
                                     <td className={`py-1 text-right ${x.points < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{x.points > 0 ? '+' : ''}{x.points.toLocaleString()}</td>
                                 </tr>
                             ))}
-                            {d.transactions.length === 0 && <tr><td colSpan={4} className="py-2 text-slate-400">{t('loyalty.members.no_txn')}</td></tr>}
+                            {d.transactions.length === 0 && <tr><td colSpan={4} className="py-2 text-slate-500">{t('loyalty.members.no_txn')}</td></tr>}
                         </tbody>
                     </table>
                 </div>

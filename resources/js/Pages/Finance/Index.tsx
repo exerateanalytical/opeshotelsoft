@@ -31,10 +31,10 @@ export default function FinanceIndex() {
     return (
         <AppLayout title={t('fin.title')} subtitle={t('fin.subtitle')}>
             <Head title={t('fin.title')} />
-            <div className="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
+            <div className="tabs mb-4">
                 {TABS.map((tb) => (
                     <button key={tb.key} onClick={() => setTab(tb.key)}
-                        className={cn('flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium', tab === tb.key ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700')}>
+                        className={cn('tab', tab === tb.key && 'active')} aria-current={tab === tb.key ? 'page' : undefined}>
                         <tb.icon className="h-4 w-4" /> {t(tb.label)}
                     </button>
                 ))}

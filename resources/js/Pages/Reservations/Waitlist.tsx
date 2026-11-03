@@ -80,11 +80,10 @@ export default function Waitlist() {
     const [convertPlan, setConvertPlan] = useState<Record<number, string>>({});
 
     return (
-        <AppLayout>
+        <AppLayout title={t('res.waitlist.title')}>
             <Head title={t('res.waitlist.title')} />
-            <div className="mx-auto max-w-5xl space-y-4 p-4">
+            <div className="mx-auto max-w-5xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h1 className="text-xl font-semibold">{t('res.waitlist.title')}</h1>
                     <Link href="/reservations" className="btn-secondary">{t('res.title')}</Link>
                 </div>
 
@@ -98,25 +97,25 @@ export default function Waitlist() {
                     ) : (
                         <div>
                             <div className="relative">
-                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                                <input className="input w-full pl-8" placeholder={t('res.waitlist.search_guest')} value={guestQ} onChange={(e) => setGuestQ(e.target.value)} />
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
+                                <input className="input w-full pl-8" aria-label={t('res.waitlist.search_guest')} placeholder={t('res.waitlist.search_guest')} value={guestQ} onChange={(e) => setGuestQ(e.target.value)} />
                             </div>
                             {hits.map((g) => (
-                                <button key={g.id} type="button" className="block w-full px-2 py-1 text-left text-sm hover:bg-gray-50" onClick={() => (setForm({ ...form, guest: g }), setGuestQ(''))}>
-                                    {g.first_name} {g.last_name} <span className="text-gray-500">{g.email ?? ''}</span>
+                                <button key={g.id} type="button" className="block w-full px-2 py-1 text-left text-sm hover:bg-slate-50" onClick={() => (setForm({ ...form, guest: g }), setGuestQ(''))}>
+                                    {g.first_name} {g.last_name} <span className="text-slate-500">{g.email ?? ''}</span>
                                 </button>
                             ))}
                         </div>
                     )}
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         <label className="label">{t('res.room_type')}
-                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
+                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })} aria-label={t('res.choose')}>
                                 <option value="">{t('res.choose')}</option>
                                 {types.data?.data.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                             </select>
                         </label>
                         <label className="label">{t('res.rate_plan')}
-                            <select className="input w-full" value={form.rate_plan_id} onChange={(e) => setForm({ ...form, rate_plan_id: e.target.value })}>
+                            <select className="input w-full" value={form.rate_plan_id} onChange={(e) => setForm({ ...form, rate_plan_id: e.target.value })} aria-label={t('res.waitlist.decide_later')}>
                                 <option value="">{t('res.waitlist.decide_later')}</option>
                                 {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
@@ -134,24 +133,24 @@ export default function Waitlist() {
                 <section className="card p-4">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <h2 className="font-medium">{t('res.waitlist.entries')}</h2>
-                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('res.waitlist.open')}>
                             <option value="">{t('res.waitlist.open')}</option>
                             {['waiting', 'offered', 'converted', 'cancelled'].map((s) => <option key={s} value={s}>{t(`res.waitlist.status.${s}`)}</option>)}
                         </select>
                     </div>
                     {list.loading && !list.data ? <Loader2 className="h-5 w-5 animate-spin" /> : list.data?.data.length === 0 ? (
-                        <p className="text-sm text-gray-500">{t('res.waitlist.empty')}</p>
+                        <p className="text-sm text-slate-500">{t('res.waitlist.empty')}</p>
                     ) : (
                         <div className="space-y-2">
                             {list.data?.data.map((e) => (
-                                <div key={e.id} className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                <div key={e.id} className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <div className="font-medium">{e.guest?.first_name} {e.guest?.last_name} <span className={BADGE[e.status] ?? 'badge-slate'}>{t(`res.waitlist.status.${e.status}`)}</span></div>
-                                        <div className="text-gray-600">{e.room_type?.name} · {formatDate(e.arrival)} → {formatDate(e.departure)} · {t('res.waitlist.adults_short', { count: e.adults })}{e.rate_plan ? ` · ${e.rate_plan.code}` : ''}</div>
-                                        {e.guest?.phone && <div className="text-gray-500">{e.guest.phone}</div>}
-                                        {e.notes && <div className="text-gray-500">{e.notes}</div>}
+                                        <div className="text-slate-600">{e.room_type?.name} · {formatDate(e.arrival)} → {formatDate(e.departure)} · {t('res.waitlist.adults_short', { count: e.adults })}{e.rate_plan ? ` · ${e.rate_plan.code}` : ''}</div>
+                                        {e.guest?.phone && <div className="text-slate-500">{e.guest.phone}</div>}
+                                        {e.notes && <div className="text-slate-500">{e.notes}</div>}
                                         {['waiting', 'offered'].includes(e.status) && (
-                                            <div className={cn('text-xs', e.available ? 'text-emerald-700' : 'text-gray-500')}>{e.available ? t('res.waitlist.available') : t('res.waitlist.still_sold_out')}</div>
+                                            <div className={cn('text-xs', e.available ? 'text-emerald-700' : 'text-slate-500')}>{e.available ? t('res.waitlist.available') : t('res.waitlist.still_sold_out')}</div>
                                         )}
                                         {e.reservation_id && <Link className="text-blue-700 underline" href={`/reservations/${e.reservation_id}`}>{t('res.waitlist.open_booking')}</Link>}
                                     </div>
@@ -159,7 +158,7 @@ export default function Waitlist() {
                                         <div className="flex flex-wrap items-center gap-2">
                                             {e.status === 'waiting' && <button type="button" className="btn-secondary" disabled={busy === e.id || !e.available} onClick={() => act(e, 'offer')}>{t('res.waitlist.offer')}</button>}
                                             {!e.rate_plan && (
-                                                <select className="input" value={convertPlan[e.id] ?? ''} onChange={(ev) => setConvertPlan({ ...convertPlan, [e.id]: ev.target.value })}>
+                                                <select className="input" value={convertPlan[e.id] ?? ''} onChange={(ev) => setConvertPlan({ ...convertPlan, [e.id]: ev.target.value })} aria-label={t('res.rate_plan')}>
                                                     <option value="">{t('res.rate_plan')}</option>
                                                     {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}
                                                 </select>

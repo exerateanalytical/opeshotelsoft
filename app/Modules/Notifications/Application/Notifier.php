@@ -58,6 +58,9 @@ class Notifier
 
         $templates = [];
         foreach (DefaultTemplates::CHANNELS as $channel) {
+            if ($channel === 'whatsapp' && in_array($event, ['reservation.created', 'reservation.pre_arrival'], true) && WhatsApp\GuestJourney::enabled()) {
+                continue; // the WhatsApp journey sends these as Meta templates
+            }
             if ($address[$channel] && ($t = $this->template($hotel, $event, $channel, $locale))) {
                 $templates[$channel] = $t;
             }
