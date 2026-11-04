@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import { useCan } from '@/lib/useCan';
 import { Banner, errMsg, Field, FinEmptyState, Loading, today } from './shared';
 import { CoreNav, M, Table, Td, Th } from './coreShared';
 
@@ -16,6 +17,7 @@ interface Audit { id: number; action: string; subject_type: string; subject_id: 
 
 export default function Accruals() {
     const t = useT();
+    const can = useCan();
     const schedules = useApi<Schedule[]>('accounting/core/schedules');
     const recurring = useApi<Recurring[]>('accounting/core/recurring');
     const locks = useApi<Lock[]>('accounting/core/period-locks');
@@ -124,8 +126,8 @@ export default function Accruals() {
                             <Td>{x.month}/{x.year}</Td><Td>{t(`acc2.lock.${x.action}`)}</Td><Td>{t(`acc2.status.${x.status}`)}</Td><Td>{x.requester}{x.decider ? ` / ${x.decider}` : ''}</Td><Td>{x.reason}</Td>
                             <Td r>{x.status === 'pending' && (
                                 <>
-                                    <button className="btn-primary mr-2" onClick={() => call(`accounting/core/period-locks/${x.id}/decide`, { approve: true }, t('acc2.lock.approved'), [locks.reload])}>{t('acc2.lock.approve')}</button>
-                                    <button className="btn-secondary" onClick={() => call(`accounting/core/period-locks/${x.id}/decide`, { approve: false }, t('acc2.lock.rejected'), [locks.reload])}>{t('acc2.lock.reject')}</button>
+                                    {can('accounting.period_approve') && <button className="btn-primary mr-2" onClick={() => call(`accounting/core/period-locks/${x.id}/decide`, { approve: true }, t('acc2.lock.approved'), [locks.reload])}>{t('acc2.lock.approve')}</button>}
+                                    {can('accounting.period_approve') && <button className="btn-secondary" onClick={() => call(`accounting/core/period-locks/${x.id}/decide`, { approve: false }, t('acc2.lock.rejected'), [locks.reload])}>{t('acc2.lock.reject')}</button>}
                                 </>
                             )}</Td>
                         </tr>

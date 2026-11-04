@@ -4,6 +4,7 @@ import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Banner, Field, Loading, monthStart, today } from './shared';
 import { useT } from '@/lib/i18n';
 import PrintPdfButton from '@/Components/PrintPdfButton';
+import ExportButtons from '@/Components/ExportButtons';
 
 type Kind = 'trial' | 'gl' | 'income' | 'balance' | 'vat' | 'dept' | 'ageing' | 'consolidated';
 const KINDS: [Kind, string][] = [
@@ -64,13 +65,15 @@ export default function Reports() {
     const printMap: Partial<Record<Kind, string>> = { trial: 'trial-balance', gl: 'general-ledger', income: 'income-statement', balance: 'balance-sheet', vat: 'vat-return', ageing: 'ageing' };
     const printPath = printMap[kind] && (kind !== 'gl' || account) ? `${printMap[kind]}?from=${from}&to=${to}${kind === 'gl' ? `&account=${encodeURIComponent(account)}` : ''}` : null;
     const res = useApi<unknown>(p ? `accounting/${p}` : null);
+    const exportMap: Partial<Record<Kind, string>> = { trial: 'trial-balance', gl: 'general-ledger', income: 'income-statement', balance: 'balance-sheet', vat: 'vat', ageing: 'ageing' };
+    const exportKey = exportMap[kind];
     const d = res.data as never;
 
     return (
         <div>
             <div className="mb-4 flex flex-wrap gap-1">
                 {KINDS.map(([k, l]) => (
-                    <button key={k} onClick={() => setKind(k)} className={cn('btn-sm', k === kind ? 'btn-primary' : 'btn-secondary')}>{t(l)}</button>
+                    <button key={k} type="button" aria-pressed={k === kind} onClick={() => setKind(k)} className={cn('btn-sm', k === kind ? 'btn-primary' : 'btn-secondary')}>{t(l)}</button>
                 ))}
             </div>
             <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:items-end [&>*]:min-w-0">
@@ -80,6 +83,10 @@ export default function Reports() {
                 <button className="btn-secondary" onClick={res.reload}>{t('fin.refresh')}</button>
                 {printPath && <PrintPdfButton path={printPath} className="btn-secondary inline-flex items-center gap-1" />}
             </div>
+            {exportKey && (kind !== 'gl' || account) && (
+                <ExportButtons className="mb-4" report={exportKey} params={kind === 'balance' ? { date: to } : kind === 'ageing' ? {} : { from, to, account: kind === 'gl' ? account : null }} />
+            )}
+            {(kind === 'dept' || kind === 'consolidated') && <ExportButtons className="mb-4" report={kind === 'dept' ? 'departmental' : 'consolidated'} params={{ from, to }} />}
             <Banner error={res.error?.message} />
             <Loading on={res.loading} />
             {kind === 'gl' && !account && <p className="text-sm text-slate-500">{t('fin.rep.enter_account')}</p>}

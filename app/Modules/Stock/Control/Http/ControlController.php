@@ -20,6 +20,7 @@ use App\Modules\Tenancy\Domain\Hotel;
 use App\Platform\Domain\DomainException;
 use App\Platform\Tenancy\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /** Inventory control API (I-A). Mounted under /api/v1/stock-control. */
 class ControlController

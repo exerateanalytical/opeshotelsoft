@@ -10,6 +10,7 @@ import OpsPrintButton from '@/Components/OpsPrintButton';
 import { PeopleTabs } from './Index';
 import { Employee, EmployeeRef, errorText, listOf, money, openFile, post } from './lib';
 import Alert from '@/Components/ui/Alert';
+import { ExitDetailModal } from './PeopleGapd';
 
 interface Settlement { requires_review: boolean; seniority_years: number; notice_months: number; leave_days: number; lines: { code: string; amount: number; basis: string }[]; total: number }
 interface Exit { id: number; kind: string; status: string; notice_date: string; last_day: string; settlement: Settlement | null; certificate_number: string | null; employee: EmployeeRef | null }
@@ -22,6 +23,7 @@ export default function PeopleExits() {
     const employees = useApi<Employee[] | { data: Employee[] }>('hr/employees?per_page=200');
     const [form, setForm] = useState(EMPTY);
     const [error, setError] = useState<string | null>(null);
+    const [detail, setDetail] = useState<number | null>(null);
     const run = async (fn: () => Promise<unknown>) => { setError(null); try { await fn(); list.reload(); } catch (e) { setError(errorText(e)); } };
 
     return (
@@ -73,6 +75,7 @@ export default function PeopleExits() {
                             </table></div>
                         </>)}
                         <div className="mt-3 space-x-2">
+                            <button type="button" className="btn-secondary" onClick={() => setDetail(x.id)}>{x.status === 'draft' ? t('gapd.exit.edit') : t('gapd.exit.view')}</button>
                             <OpsPrintButton path={`termination-letter/${x.id}`} label={t('documents4.termination')} />
                             {x.settlement && <OpsPrintButton path={`final-settlement/${x.id}`} label={t('documents4.settlement')} />}
                             {x.status === 'draft' && <button className="btn-primary" onClick={() => { if (window.confirm(t('people.exits.approve_confirm'))) run(() => post(`people/exits/${x.id}/approve`)); }}>{t('people.exits.approve')}</button>}
@@ -81,6 +84,7 @@ export default function PeopleExits() {
                     </div>
                 ))}
             </div>
+            <ExitDetailModal id={detail} onClose={() => setDetail(null)} onSaved={() => list.reload()} />
         </AppLayout>
     );
 }

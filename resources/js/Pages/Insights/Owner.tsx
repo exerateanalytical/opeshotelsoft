@@ -4,7 +4,12 @@ import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { fcfa, Kpis, severityClass } from './shared';
+import Modal from '@/Components/ui/Modal';
+import Tabs from '@/Components/ui/Tabs';
+import EmptyState from '@/Components/ui/EmptyState';
+import { fcfa, Kpis, severityClass, type AlertRow } from './shared';
+
+interface DigestRow { id: number; date: string; messages: number | null; sent_at: string | null }
 
 /** Mobile-first owner page: one API call, four tiles, takings, top alerts. */
 export default function Owner() {
@@ -12,6 +17,10 @@ export default function Owner() {
     const perms = (usePage().props as { auth?: { user?: { permissions?: string[] } | null } }).auth?.user?.permissions ?? [];
     const [date, setDate] = useState('');
     const q = useApi<{ today: Kpis; yesterday: Kpis }>(`insights/owner${date ? `?date=${date}` : ''}`, [date]);
+    const [tab, setTab] = useState('today');
+    const [alertId, setAlertId] = useState<number | null>(null);
+    const digests = useApi<DigestRow[]>(tab === 'digests' ? 'insights/digests' : null, [tab]);
+    const alertQ = useApi<AlertRow & { hotel?: { name: string } }>(alertId ? `insights/alerts/${alertId}` : null, [alertId]);
     const k = q.data?.today;
     const y = q.data?.yesterday;
 
@@ -35,9 +44,33 @@ export default function Owner() {
                     </label>
                     {perms.includes('insights.group') && <Link href="/owner/group" className="btn-secondary">{t('insights.owner.group')}</Link>}
                 </div>
-                {q.error && <p className="text-sm text-red-700">{q.error.message}</p>}
-                {q.loading && !k && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
-                {k && (
+                <Tabs label={t('gapf.owner.tabs')} value={tab} onChange={setTab} tabs={[{ key: 'today', label: t('gapf.owner.tab_today') }, { key: 'digests', label: t('gapf.owner.tab_digests') }]} />
+                {tab === 'digests' && (
+                    <div role="tabpanel" id="panel-digests" className="card p-3">
+                        {digests.error && <p className="text-sm text-red-700">{digests.error.message}</p>}
+                        {digests.data && digests.data.length === 0 && <EmptyState title={t('gapf.owner.no_digests')} />}
+                        {digests.data && digests.data.length > 0 && (
+                            <div className="table-wrap">
+                                <table className="table-std table-cards">
+                                    <caption className="sr-only">{t('gapf.owner.tab_digests')}</caption>
+                                    <thead><tr><th>{t('gapf.owner.digest_date')}</th><th className="num">{t('gapf.owner.digest_messages')}</th><th>{t('gapf.owner.digest_sent')}</th></tr></thead>
+                                    <tbody>
+                                        {digests.data.map((d) => (
+                                            <tr key={d.id}>
+                                                <td data-label={t('gapf.owner.digest_date')}>{d.date?.slice(0, 10)}</td>
+                                                <td data-label={t('gapf.owner.digest_messages')} className="num">{d.messages ?? 0}</td>
+                                                <td data-label={t('gapf.owner.digest_sent')}>{d.sent_at ? new Date(d.sent_at).toLocaleString() : t('gapf.owner.not_sent')}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+                {tab === 'today' && q.error && <p className="text-sm text-red-700">{q.error.message}</p>}
+                {tab === 'today' && q.loading && !k && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
+                {tab === 'today' && k && (
                     <>
                         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
                             {tile(t('insights.owner.revenue'), fcfa(k.revenue), y && fcfa(y.revenue))}
@@ -65,9 +98,11 @@ export default function Owner() {
                             {k.top_alerts.length === 0 && <p className="text-sm text-slate-500">{t('insights.owner.no_alerts')}</p>}
                             <ul className="space-y-2">
                                 {k.top_alerts.map((a) => (
-                                    <li key={a.id} className={`rounded border p-2 text-sm ${severityClass[a.severity]}`}>
-                                        <div className="font-medium">{a.title}</div>
-                                        <div className="text-xs">{t(`insights.rule.${a.rule}`)}{a.amount ? ` · ${fcfa(a.amount)}` : ''}</div>
+                                    <li key={a.id}>
+                                        <button type="button" onClick={() => setAlertId(a.id)} className={`w-full rounded border p-2 text-left text-sm ${severityClass[a.severity]}`}>
+                                            <div className="font-medium">{a.title}</div>
+                                            <div className="text-xs">{t(`insights.rule.${a.rule}`)}{a.amount ? ` · ${fcfa(a.amount)}` : ''}</div>
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
@@ -76,6 +111,19 @@ export default function Owner() {
                     </>
                 )}
             </div>
+            <Modal open={alertId !== null} onClose={() => setAlertId(null)} title={alertQ.data?.title ?? t('gapf.owner.alert_detail')}>
+                {alertQ.error && <p className="text-sm text-red-700">{alertQ.error.message}</p>}
+                {alertQ.data && (
+                    <dl className="space-y-2 text-sm">
+                        <div><dt className="text-slate-500">{t('gapf.owner.alert_rule')}</dt><dd>{t(`insights.rule.${alertQ.data.rule}`)}</dd></div>
+                        <div><dt className="text-slate-500">{t('gapf.owner.alert_severity')}</dt><dd>{alertQ.data.severity}{alertQ.data.status ? ` · ${alertQ.data.status}` : ''}</dd></div>
+                        {alertQ.data.amount ? <div><dt className="text-slate-500">{t('gapf.owner.alert_amount')}</dt><dd>{fcfa(alertQ.data.amount)}</dd></div> : null}
+                        <div><dt className="text-slate-500">{t('gapf.owner.alert_when')}</dt><dd>{alertQ.data.occurred_at ? new Date(alertQ.data.occurred_at).toLocaleString() : ''}</dd></div>
+                        {alertQ.data.detail && <div><dt className="text-slate-500">{t('gapf.owner.alert_detail')}</dt><dd className="whitespace-pre-wrap">{alertQ.data.detail}</dd></div>}
+                        {alertQ.data.evidence?.map((e, i) => <div key={i}><dt className="text-slate-500">{e.label}</dt><dd>{e.url ? <a className="text-blue-700 underline" href={e.url}>{e.type} #{e.id}</a> : `${e.type} #${e.id}`}</dd></div>)}
+                    </dl>
+                )}
+            </Modal>
         </AppLayout>
     );
 }

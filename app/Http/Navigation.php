@@ -125,6 +125,8 @@ class Navigation
 
         ['label' => 'nav.properties', 'path' => '/properties', 'icon' => 'Building2', 'section' => 'nav.section.settings', 'permission' => ['property.view']],
         ['label' => 'nav.users', 'path' => '/settings/users', 'icon' => 'ShieldCheck', 'section' => 'nav.section.settings', 'permission' => ['users.view']],
+        ['label' => 'nav.clock_kiosk', 'path' => '/clock/kiosk', 'icon' => 'Tablet', 'section' => 'nav.section.settings', 'permission' => ['workforce.kiosk']],
+        ['label' => 'nav.checkout_fees', 'path' => '/front-desk/checkout-fee-rules', 'icon' => 'Clock', 'section' => 'nav.section.settings', 'permission' => ['frontdesk.configure']],
         ['label' => 'nav.hotels', 'path' => '/settings/hotels', 'icon' => 'Hotel', 'section' => 'nav.section.settings', 'permission' => ['hotels.view']],
         ['label' => 'nav.message_templates', 'path' => '/notifications/templates', 'icon' => 'Mail', 'section' => 'nav.section.settings', 'permission' => ['notifications.view']],
         ['label' => 'nav.message_outbox', 'path' => '/notifications/outbox', 'icon' => 'Inbox', 'section' => 'nav.section.settings', 'permission' => ['notifications.view']],

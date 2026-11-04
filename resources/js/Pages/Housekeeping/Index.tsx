@@ -10,6 +10,8 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatDate, formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import ExportButtons from '@/Components/ExportButtons';
+import EmptyState from '@/Components/ui/EmptyState';
 
 const STATUSES = ['vacant_clean', 'vacant_dirty', 'occupied_clean', 'occupied_dirty', 'inspected', 'out_of_order', 'out_of_service'] as const;
 const STATUS_STYLE: Record<string, string> = {
@@ -170,15 +172,19 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
 
     const rows = (tasks.data ?? []).filter((x) => (!statusFilter || x.status === statusFilter) && (!q || x.room?.number.toLowerCase().includes(q.toLowerCase())));
     const reload = () => tasks.reload();
+    const generate = () => api<{ created: number }>('housekeeping/tasks/generate', { method: 'POST', body: JSON.stringify(date ? { date } : {}) })
+        .then((r) => { setMsg({ ok: true, text: t('hk.tasks_created', { count: r.created }) }); reload(); })
+        .catch((e) => setMsg({ ok: false, text: e instanceof ApiError ? e.message : String(e) }));
 
     return (
         <div className="space-y-4">
-            <button type="button" data-primary-action className="btn-primary btn-lg w-full sm:w-auto" disabled={busy !== null}
-                onClick={() => api<{ created: number }>('housekeeping/tasks/generate', { method: 'POST', body: JSON.stringify(date ? { date } : {}) })
-                    .then((r) => { setMsg({ ok: true, text: t('hk.tasks_created', { count: r.created }) }); reload(); })
-                    .catch((e) => setMsg({ ok: false, text: e instanceof ApiError ? e.message : String(e) }))}>
-                <Sparkles className="w-4 h-4" aria-hidden="true" /> {t('hk.generate')}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+                <button type="button" data-primary-action className="btn-primary btn-lg w-full sm:w-auto" disabled={busy !== null} onClick={generate}>
+                    <Sparkles className="w-4 h-4" aria-hidden="true" /> {t('hk.generate')}
+                </button>
+                <span className="text-sm text-slate-500">{t('gapf.hk.assignment_sheet')}</span>
+                <ExportButtons report="housekeeping-assignments" params={{ date, mine: mine ? 1 : '' }} />
+            </div>
             <FilterBar
                 activeCount={[date, q, statusFilter].filter(Boolean).length + (mine ? 1 : 0) + (allStaff ? 1 : 0)}
                 onClear={() => { setDate(''); setQ(''); setStatusFilter(''); setMine(false); setAllStaff(false); }}
@@ -254,7 +260,7 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
                     { key: 'finish', label: t('hk.finish'), hidden: x.status !== 'in_progress', onSelect: (r) => { setFinishing(r); setChecklist(r.checklist ?? []); setNotes(r.notes ?? ''); } },
                     { key: 'inspect', label: t('hk.inspect'), hidden: x.status !== 'done', onSelect: (r) => { setInspecting(r); setInspNotes(''); } },
                 ]}
-                empty={<p className="text-slate-500 py-4 text-center">{t('hk.no_tasks')}</p>}
+                empty={<EmptyState title={t('hk.no_tasks')} action={<button type="button" className="btn-primary" disabled={busy !== null} onClick={generate}><Sparkles className="w-4 h-4" aria-hidden="true" /> {t('hk.generate')}</button>} />}
                 columns={[
                     { key: 'room', header: t('guests.show.room'), sortValue: (x) => x.room?.number ?? '', className: 'font-semibold', cell: (x) => <>{x.room?.number} <span className="text-xs font-normal text-slate-500">{x.room?.floor != null && t('hk.floor_short', { floor: x.room.floor })}</span></> },
                     { key: 'kind', header: t('guests.companies.kind'), sortValue: (x) => x.kind, className: 'capitalize', cell: (x) => tl(x.kind) },

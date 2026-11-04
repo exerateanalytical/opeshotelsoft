@@ -1,5 +1,6 @@
 import Tabs from '@/Components/ui/Tabs';
-import { EmptyFor } from '@/Components/ui/EmptyStates';
+import { EmptyFor, EmptyAction } from '@/Components/ui/EmptyStates';
+import ExportButtons from '@/Components/ExportButtons';
 import Field from '@/Components/ui/Field';
 import FilterBar from '@/Components/ui/FilterBar';
 import Modal from '@/Components/ui/Modal';
@@ -57,6 +58,8 @@ export default function MaintenanceIndex() {
     const [selected, setSelected] = useState<number | null>(null);
     const [showCreate, setShowCreate] = useState(false);
     const [showSchedule, setShowSchedule] = useState(false);
+    const [assetId, setAssetId] = useState<number | null>(null);
+    const assetDetail = useApi<Asset & { status?: string; category?: string; location?: string | null; purchased_on?: string | null }>(assetId ? `assets/${assetId}` : null, [assetId]);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [editing, setEditing] = useState<number | null>(null);
@@ -152,12 +155,13 @@ export default function MaintenanceIndex() {
                             </select>
                         </Field>
                     </FilterBar>
+                    <ExportButtons report="work-orders" params={{ status, priority, q, per_page: 200 }} className="mb-3" />
                     <div className="grid gap-4 lg:grid-cols-3">
                         <div className={cn('card overflow-hidden', selected && wide ? 'lg:col-span-2' : 'lg:col-span-3')}>
                             {orders.loading ? <Loader2 className="w-5 h-5 animate-spin m-6 text-slate-500" /> : orders.error ? (
                                 <p className="p-4 text-sm text-red-700">{orders.error.message}</p>
                             ) : list.length === 0 ? (
-                                <EmptyFor kind="maintenance" />
+                                <EmptyFor kind="maintenance" action={<EmptyAction kind="maintenance" onClick={() => setShowCreate(true)} />} />
                             ) : (
                                 <div className="table-wrap"><table className="table-auto">
                                     <thead><tr>
@@ -170,7 +174,7 @@ export default function MaintenanceIndex() {
                                                 className={cn('cursor-pointer hover:bg-slate-50', selected === w.id && 'bg-navy-50')}>
                                                 <td className="font-mono text-sm"><button type="button" className="min-h-9 text-navy-600 underline underline-offset-2" onClick={() => setSelected(w.id)}>{w.number}</button></td>
                                                 <td>{w.title}{w.room_out_of_order && <span className="ml-1 text-xs font-medium text-red-700">{t('maint.ooo')}</span>}</td>
-                                                <td>{w.room ? t('hk.room_no', { number: w.room.number }) : assetName(w.asset_id) || '—'}</td>
+                                                <td>{w.room ? t('hk.room_no', { number: w.room.number }) : w.asset_id ? <button type="button" className="hit-44 text-navy-600 underline underline-offset-2" onClick={(e) => { e.stopPropagation(); setAssetId(w.asset_id); }}>{assetName(w.asset_id) || '—'}</button> : '—'}</td>
                                                 <td><Badge cls={PRIO_BADGE[w.priority]} text={w.priority} /></td>
                                                 <td><Badge cls={STATUS_BADGE[w.status]} text={w.status} /></td>
                                                 <td>{w.assignee?.name ?? userName(w.assigned_to)}</td>
@@ -255,6 +259,17 @@ export default function MaintenanceIndex() {
                     </div>
                 </>
             )}
+            <Modal open={assetId !== null} onClose={() => setAssetId(null)} title={assetDetail.data?.name ?? t('maint.asset')}>
+                {assetDetail.error && <p className="text-sm text-red-700">{assetDetail.error.message}</p>}
+                {assetDetail.data && (
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                        <div><dt className="text-slate-500">{t('gapf.maint.asset_tag')}</dt><dd>{assetDetail.data.tag ?? '—'}</dd></div>
+                        <div><dt className="text-slate-500">{t('guests.status')}</dt><dd>{assetDetail.data.status ?? '—'}</dd></div>
+                        <div><dt className="text-slate-500">{t('maint.category')}</dt><dd>{assetDetail.data.category ?? '—'}</dd></div>
+                        <div><dt className="text-slate-500">{t('hk.lf.location')}</dt><dd>{assetDetail.data.location ?? '—'}</dd></div>
+                    </dl>
+                )}
+            </Modal>
         </AppLayout>
     );
 }

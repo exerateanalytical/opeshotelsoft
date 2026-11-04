@@ -57,6 +57,7 @@ Route::prefix('accounting3')->group(function () {
     Route::get('tax/vat-returns/{id}/export', [T::class, 'vatExport'])->whereNumber('id');
     Route::get('tax/withholding-rates', [T::class, 'whtRates']);
     Route::post('tax/withholding-rates', [T::class, 'saveWhtRate']);
+    Route::get('tax/suppliers/{supplier}/profile', [T::class, 'showSupplierProfile'])->whereNumber('supplier');
     Route::put('tax/suppliers/{supplier}/profile', [T::class, 'supplierProfile'])->whereNumber('supplier');
     Route::get('tax/withholding-certificates', [T::class, 'certificates']);
     Route::post('tax/withholding-certificates/remit', [T::class, 'remit']);

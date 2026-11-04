@@ -6,6 +6,7 @@ import { Account, Banner, errMsg, Field, JournalEntry, Loading, Page, today } fr
 import { useT } from '@/lib/i18n';
 import { uploadFile } from './ab3Shared';
 import PrintPdfButton from '@/Components/PrintPdfButton';
+import { GapaEntryPanel } from './gapaParts';
 
 interface Line { account: string; debit: string; credit: string; description: string; department: string }
 const emptyLine = (): Line => ({ account: '', debit: '', credit: '', description: '', department: '' });
@@ -137,6 +138,7 @@ function EntryDetail({ id, onClose, onReversed }: { id: number; onClose: () => v
                         </table>
                     </div>
                     <div className="mt-3"><PrintPdfButton path={`journal-voucher/${e.id}`} label={t('documents3.print_voucher')} /></div>
+                    <GapaEntryPanel entryId={e.id} number={e.number} />
                     {e.reversed ? (
                         <p className="mt-3 text-sm text-amber-700">{t('fin.journal.has_been_reversed')}</p>
                     ) : !showReverse ? (

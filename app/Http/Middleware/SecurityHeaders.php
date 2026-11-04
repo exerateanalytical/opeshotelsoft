@@ -56,6 +56,7 @@ class SecurityHeaders
             'font-src '.$d(["'self'", 'data:', 'https://fonts.gstatic.com']),
             'img-src '.$d(["'self'", 'data:', 'blob:']),
             'connect-src '.$d(["'self'"]),
+            "frame-src 'self' blob:",
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",

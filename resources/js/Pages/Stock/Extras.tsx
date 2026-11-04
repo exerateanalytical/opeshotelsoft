@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import ExportButtons from '@/Components/ExportButtons';
 import OpsPrintButton from '@/Components/OpsPrintButton';
 import { EmptyFor } from '@/Components/ui/EmptyStates';
 import QueryStatus from '@/Components/ui/QueryStatus';
@@ -299,6 +300,7 @@ export function Wastage() {
             <div className="flex flex-wrap gap-3">
                 <Field label={t('stock.common.from')}><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
                 <Field label={t('stock.common.to')}><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
+                <ExportButtons className="self-end" report="wastage" params={{ from, to }} />
             </div>
             {r.error && <p className="text-sm text-red-700">{r.error.message}</p>}
             {r.data && (

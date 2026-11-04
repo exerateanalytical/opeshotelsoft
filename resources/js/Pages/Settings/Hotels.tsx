@@ -1,11 +1,12 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Loader2, Pencil, Plus, Star, X } from 'lucide-react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { Banner, errorText, Field, Forbidden, Paginated } from './shared';
+import ReasonConfirmModal from '@/Components/gaph/ReasonConfirmModal';
 
 interface Hotel {
     id: number;
@@ -26,6 +27,7 @@ interface Hotel {
     check_in_time: string | null;
     check_out_time: string | null;
     business_date: string | null;
+    status?: string;
 }
 
 const COUNTRIES: Record<string, string> = { CM: 'Cameroon', GA: 'Gabon', CG: 'Congo', TD: 'Chad', CF: 'Central African Rep.', GQ: 'Equatorial Guinea' };
@@ -45,6 +47,31 @@ export default function SettingsHotels() {
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
     const forbidden = hotels.error?.problem.status === 403;
+    const page = usePage().props as { auth?: { user?: { permissions?: string[] } | null }; property?: { id: number } | null };
+    const canManage = (page.auth?.user?.permissions ?? []).includes('hotels.manage');
+    const currentHotelId = page.property?.id;
+    const [statusFor, setStatusFor] = useState<Hotel | null>(null);
+    const [statusError, setStatusError] = useState<string | null>(null);
+    const activeCount = (hotels.data?.data ?? []).filter((h) => (h.status ?? 'active') === 'active').length;
+
+    async function changeStatus(reason: string) {
+        if (!statusFor) return;
+        const next = (statusFor.status ?? 'active') === 'active' ? 'inactive' : 'active';
+        setBusy(true);
+        setStatusError(null);
+        setMessage(null);
+        try {
+            await api(`hotels/${statusFor.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: next, reason }) });
+            setMessage({ ok: true, text: t(next === 'active' ? 'gaph.hotel.activated' : 'gaph.hotel.deactivated', { name: statusFor.name }) });
+            setStatusFor(null);
+            hotels.reload();
+        } catch (err) {
+            const status = (err as { problem?: { status?: number } }).problem?.status;
+            setStatusError(status === 429 ? t('gaph.rate_limited') : errorText(err));
+        } finally {
+            setBusy(false);
+        }
+    }
 
     function open(h: Hotel | 'new') {
         setMessage(null);
@@ -145,10 +172,10 @@ export default function SettingsHotels() {
 
                     <div className="card overflow-x-auto">
                         <table className="table-auto w-full">
-                            <thead><tr><th>{t('settings.hotels.hotel')}</th><th>{t('settings.hotels.location')}</th><th>{t('settings.hotels.stars')}</th><th>{t('settings.hotels.currency')}</th><th>{t('settings.hotels.check_in_out')}</th><th>{t('settings.hotels.business_date')}</th><th></th></tr></thead>
+                            <thead><tr><th>{t('settings.hotels.hotel')}</th><th>{t('settings.hotels.location')}</th><th>{t('settings.hotels.stars')}</th><th>{t('settings.hotels.currency')}</th><th>{t('settings.hotels.check_in_out')}</th><th>{t('settings.hotels.business_date')}</th><th>{t('gaph.hotel.status')}</th><th></th></tr></thead>
                             <tbody>
-                                {hotels.loading && !hotels.data && <tr><td colSpan={7}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
-                                {hotels.data?.data.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-slate-500 text-sm">{t('settings.hotels.empty')}</td></tr>}
+                                {hotels.loading && !hotels.data && <tr><td colSpan={8}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
+                                {hotels.data?.data.length === 0 && <tr><td colSpan={8} className="text-center py-10 text-slate-500 text-sm">{t('settings.hotels.empty')}</td></tr>}
                                 {hotels.data?.data.map((h) => (
                                     <tr key={h.id}>
                                         <td><div className="text-sm font-medium text-slate-800">{h.name}</div><div className="text-xs font-mono text-slate-500">{h.code}{h.legal_name ? ` · ${h.legal_name}` : ''}</div></td>
@@ -157,12 +184,21 @@ export default function SettingsHotels() {
                                         <td className="text-sm">{h.currency}</td>
                                         <td className="text-sm">{hm(h.check_in_time) || '—'} / {hm(h.check_out_time) || '—'}</td>
                                         <td className="text-sm font-medium">{h.business_date ? formatDate(h.business_date) : '—'}</td>
-                                        <td className="text-right"><button title={t('common.edit')} className="btn-ghost btn-icon btn-sm" onClick={() => open(h)} aria-label={t('common.edit')}><Pencil className="w-4 h-4" /></button></td>
+                                        <td><span className={(h.status ?? 'active') === 'active' ? 'text-xs px-2 py-0.5 rounded bg-emerald-50 text-emerald-700' : 'text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700'}>{t((h.status ?? 'active') === 'active' ? 'gaph.hotel.active' : 'gaph.hotel.inactive')}</span></td>
+                                        <td className="text-right whitespace-nowrap"><button title={t('common.edit')} className="btn-ghost btn-icon btn-sm" onClick={() => open(h)} aria-label={t('common.edit')}><Pencil className="w-4 h-4" /></button>
+                                            {canManage && ((h.status ?? 'active') !== 'active' || (h.id !== currentHotelId && activeCount > 1)) && (
+                                                <button type="button" className="btn-ghost btn-sm" onClick={() => { setStatusError(null); setStatusFor(h); }}>{t((h.status ?? 'active') === 'active' ? 'gaph.hotel.deactivate' : 'gaph.hotel.activate')}</button>
+                                            )}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
+                    <ReasonConfirmModal open={statusFor !== null} danger={(statusFor?.status ?? 'active') === 'active'} busy={busy} error={statusError}
+                        title={t((statusFor?.status ?? 'active') === 'active' ? 'gaph.hotel.deactivate_title' : 'gaph.hotel.activate_title', { name: statusFor?.name ?? '' })}
+                        message={t((statusFor?.status ?? 'active') === 'active' ? 'gaph.hotel.deactivate_confirm' : 'gaph.hotel.activate_confirm', { name: statusFor?.name ?? '' })}
+                        confirmLabel={t((statusFor?.status ?? 'active') === 'active' ? 'gaph.hotel.deactivate' : 'gaph.hotel.activate')}
+                        onClose={() => setStatusFor(null)} onConfirm={changeStatus} />
                 </>
             )}
         </AppLayout>

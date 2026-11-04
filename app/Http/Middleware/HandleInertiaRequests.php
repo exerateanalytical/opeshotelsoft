@@ -44,6 +44,10 @@ class HandleInertiaRequests extends Middleware
         if ($user && $this->mustEnrol($request, $user) && ! $request->routeIs(...self::MFA_ALLOWED)) {
             return redirect()->route('profile')->with('error', __('auth.2fa.required'));
         }
+        // A temporary password set by an administrator must be replaced before anything else (GAPH).
+        if ($user && $user->must_change_password && ! $request->routeIs(...self::MFA_ALLOWED)) {
+            return redirect()->route('profile')->with('error', __('Your password was reset by an administrator. Choose a new password before continuing.'));
+        }
 
         return parent::handle($request, $next);
     }
@@ -129,6 +133,9 @@ class HandleInertiaRequests extends Middleware
     /** Required role, not enrolled, and not a demo session while DEMO_LOGINS is on. */
     private function mustEnrol(Request $request, $user): bool
     {
+        if ($user->must_enrol_mfa && ! app(TwoFactor::class)->enabled($user)) {
+            return true; // reset by an administrator (GAPH)
+        }
         if (app()->runningUnitTests() && ! TwoFactor::$enforceInTests) {
             return false;
         }

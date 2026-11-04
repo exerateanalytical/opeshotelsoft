@@ -9,6 +9,7 @@ import { CheckOutPanel, RegistrationCardPanel, RoomMovePanel, RoutingPanel } fro
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import { BookingGroup, PreferencesPanel, RegistrationLinks, UpsellPanel } from '@/Components/gape/ReservationExtras';
 
 interface Reservation {
     id: number;
@@ -20,6 +21,8 @@ interface Reservation {
     adults: number;
     total_amount: number;
     company_id: number | null;
+    booking_ref?: string | null;
+    room_prefs?: { floor?: string; view?: string; quiet?: boolean; together?: string } | null;
     guest: { first_name: string; last_name: string; vip: boolean; phone: string | null; email: string | null };
     room: { number: string } | null;
     room_type: { name: string };
@@ -194,6 +197,10 @@ export default function ReservationShow({ id }: { id: string }) {
                     {inHouse && <RoomMovePanel id={id} notify={notify} onDone={refreshAll} />}
                     {inHouse && <RoutingPanel id={id} companyId={r.company_id} chargeCodes={chargeCodes.data ?? []} notify={notify} />}
                     {['checked_in', 'checked_out'].includes(r.status) && <RegistrationCardPanel id={id} editable={inHouse} notify={notify} />}
+                    {['checked_in', 'checked_out'].includes(r.status) && <RegistrationLinks id={id} notify={notify} />}
+                    <UpsellPanel id={id} status={r.status} notify={notify} onDone={refreshAll} />
+                    <PreferencesPanel id={id} prefs={r.room_prefs ?? null} editable={['tentative', 'confirmed', 'checked_in'].includes(r.status)} notify={notify} onDone={res.reload} />
+                    {r.booking_ref && <BookingGroup bookingRef={r.booking_ref} currentId={r.id} />}
                     </div>
                 </div>
             )}

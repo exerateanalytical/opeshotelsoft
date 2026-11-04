@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import ExportButtons from '@/Components/ExportButtons';
+import EmptyState from '@/Components/ui/EmptyState';
 
 interface Entry {
     id: number;
@@ -83,6 +85,8 @@ export default function AuditIndex() {
                 <button type="button" className="btn-secondary" onClick={() => { setPage(1); setF({ user_id: '', subject_type: '', event: '', from: '', to: '' }); }}>{t('common.reset')}</button>
             </div>
 
+            <ExportButtons report="audit-log" params={{ ...f, per_page: 200 }} className="mb-3" />
+
             {log.error && <div className="card p-4 mb-4 text-sm text-red-700 bg-red-50">{log.error.message}</div>}
 
             <div className="card overflow-x-auto">
@@ -95,13 +99,13 @@ export default function AuditIndex() {
                     </thead>
                     <tbody>
                         {log.loading && !log.data && <tr><td colSpan={6}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
-                        {log.data?.data.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-slate-500 text-sm">{t('admin.audit.empty')}</td></tr>}
+                        {log.data?.data.length === 0 && <tr><td colSpan={6}><EmptyState title={t('admin.audit.empty')} /></td></tr>}
                         {log.data?.data.map((e) => (
                             <tr key={e.id}>
                                 <td className="text-sm whitespace-nowrap">{formatDateTime(e.created_at)}</td>
                                 <td className="text-sm">{e.causer?.name ?? t('admin.audit.system')}</td>
                                 <td>{e.event ? <span className="badge-slate">{e.event}</span> : '—'}</td>
-                                <td className="text-sm whitespace-nowrap">{short(e.subject_type)}{e.subject_id ? ` #${e.subject_id}` : ''}</td>
+                                <td className="text-sm whitespace-nowrap">{e.subject_type ? <button type="button" className="hit-44 text-blue-700 underline underline-offset-2" title={t('gapf.audit.filter_entity')} onClick={() => { setPage(1); setF({ ...f, subject_type: e.subject_type! }); }}>{short(e.subject_type)}</button> : short(e.subject_type)}{e.subject_id ? ` #${e.subject_id}` : ''}</td>
                                 <td className="text-sm">{e.description}</td>
                                 <td className="min-w-[12rem]"><Changes p={e.properties} /></td>
                             </tr>

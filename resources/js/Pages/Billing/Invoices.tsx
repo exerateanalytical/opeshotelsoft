@@ -10,6 +10,7 @@ import { useMemo, useState } from 'react';
 import { useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import ExportButtons from '@/Components/ExportButtons';
 
 interface Invoice {
     id: number;
@@ -92,6 +93,7 @@ export default function Invoices() {
             </FilterBar>
 
             {invoices.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{invoices.error.message}</div>}
+            <ExportButtons report="invoices" params={{ status, company_id: company, q: q.trim(), from, to }} className="mb-3" />
 
             <DataTable
                 caption={t('billing.invoices.title')}

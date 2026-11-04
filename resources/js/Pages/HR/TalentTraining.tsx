@@ -71,6 +71,7 @@ export default function TalentTraining() {
                                 <select className="select" aria-label={t('ui2.hr.employee')} value={enroll[s.id] ?? ''} onChange={(e) => setEnroll({ ...enroll, [s.id]: e.target.value })}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}</select>
                                 <button className="btn-secondary" disabled={!enroll[s.id]} onClick={() => run(() => tsend(`sessions/${s.id}/enroll`, { employee_ids: [Number(enroll[s.id])] }))}>{t('talent.enroll')}</button>
                                 <button className="btn-primary" onClick={() => run(() => tsend(`sessions/${s.id}/complete`))}>{t('talent.complete')}</button>
+                                <button className="btn-secondary" onClick={() => { if (window.confirm(t('gapd.session.cancel_confirm'))) run(() => tsend(`sessions/${s.id}/cancel`)); }}>{t('gapd.session.cancel')}</button>
                             </div>)}
                     </div>))}
             </Section>

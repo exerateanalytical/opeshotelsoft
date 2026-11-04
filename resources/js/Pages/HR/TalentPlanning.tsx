@@ -9,7 +9,7 @@ import { Banner, Pill, Section, TalentTabs, msg, tget, tsend, unwrap } from './T
 
 interface Cell { budgeted: number | null; actual: number; variance: number | null; vacancies: number }
 interface HC { months: string[]; rows: { department_id: number; department: string; open_posts: number; months: Record<string, Cell> }[] }
-interface Pos { position_id: number; position: string; risk: string; incumbents: string[]; successors: { employee_id: number; name: string; readiness: string }[]; covered: boolean; at_risk: boolean }
+interface Pos { position_id: number; position: string; risk: string; incumbents: string[]; successors: { id?: number; employee_id: number; name: string; readiness: string }[]; covered: boolean; at_risk: boolean }
 interface Emp { id: number; first_name: string; last_name: string }
 interface Position { id: number; title: string }
 
@@ -62,7 +62,8 @@ export default function TalentPlanning() {
                     <div key={p.position_id} className="mb-3 text-sm">
                         <p className="font-semibold">{p.position} <Pill tone={p.at_risk ? 'bad' : p.covered ? 'ok' : 'warn'}>{p.at_risk ? t('talent.at_risk') : p.covered ? t('talent.covered') : t('talent.not_ready')}</Pill> <Pill tone="muted">{t(`talent.risk.${p.risk}`)}</Pill></p>
                         <p className="text-slate-600">{t('talent.incumbents')}: {p.incumbents.join(', ') || '-'}</p>
-                        <ul className="ml-4 list-disc">{p.successors.map((x) => <li key={x.employee_id}>{x.name} - {t(`talent.readiness.${x.readiness}`)}</li>)}</ul>
+                        <ul className="ml-4 list-disc">{p.successors.map((x) => <li key={x.employee_id}>{x.name} - {t(`talent.readiness.${x.readiness}`)}
+                            {x.id && <button type="button" className="btn-ghost btn-sm ml-2" onClick={() => { if (window.confirm(t('gapd.succ.remove_confirm'))) run(() => api(`hr/talent/successors/${x.id}`, { method: 'DELETE' })); }}>{t('gapd.remove')}</button>}</li>)}</ul>
                     </div>))}
                 <div className="flex flex-wrap gap-2 text-sm">
                     <select className="select" aria-label={t('ui2.hr.position')} value={k.position_id} onChange={(e) => setK({ ...k, position_id: e.target.value })}><option value="" />{positions.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select>

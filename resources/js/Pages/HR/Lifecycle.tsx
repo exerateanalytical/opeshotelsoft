@@ -10,6 +10,7 @@ import { Badge, Banner, Department, Employee, errMsg, Field, Paged, Position } f
 import OpsPrintButton from '@/Components/OpsPrintButton';
 import { EmptyFor } from '@/Components/ui/EmptyStates';
 import QueryStatus from '@/Components/ui/QueryStatus';
+import { ApplyDueButton, EContractModal, TemplatesTab } from './LifecycleGapd';
 
 type Emp = Pick<Employee, 'id' | 'number' | 'first_name' | 'last_name'>;
 interface EDoc { id: number; number: string; kind: string; title: string; status: string; created_at: string; employee?: Emp; employee_signed_at: string | null; pdf_sha256: string | null }
@@ -54,6 +55,7 @@ function ContractsTab() {
     const [link, setLink] = useState<string | null>(null);
     const [signing, setSigning] = useState<EDoc | null>(null);
     const [sig, setSig] = useState<string | null>(null);
+    const [detail, setDetail] = useState<number | null>(null);
 
     async function generate(e: React.FormEvent) {
         e.preventDefault();
@@ -99,6 +101,7 @@ function ContractsTab() {
                                 <tr key={d.id} className="border-t">
                                     <td className="py-2">{d.number}</td><td>{name(d.employee)}</td><td>{t(`hr2.kind.${d.kind}`)}</td><td><Badge s={d.status} /></td>
                                     <td className="space-x-2 whitespace-nowrap text-right">
+                                        <button type="button" className="btn-ghost btn-sm" onClick={() => setDetail(d.id)}>{d.status === 'draft' ? t('gapd.ec.edit') : t('gapd.ec.view')}</button>
                                         <a className="text-emerald-700 underline" href={`/api/v1/hr/econtracts/${d.id}/pdf`} target="_blank" rel="noreferrer">PDF</a>
                                         {['draft', 'sent'].includes(d.status) && <button className="btn-secondary" onClick={() => send(d)}><Send className="h-3 w-3" /> {d.status === 'sent' ? t('hr2.contracts.resend') : t('hr2.contracts.send')}</button>}
                                         {d.status === 'employee_signed' && <button className="btn-primary" onClick={() => setSigning(d)}>{t('hr2.contracts.countersign')}</button>}
@@ -120,6 +123,7 @@ function ContractsTab() {
                     </div>
                 </div>
             )}
+            <EContractModal id={detail} onClose={() => setDetail(null)} onSaved={() => { m.good(t('gapd.saved')); docs.reload(); }} />
         </div>
     );
 }
@@ -147,6 +151,7 @@ function ChangesTab() {
     return (
         <div>
             <Banner ok={m.ok} err={m.err} />
+            <ApplyDueButton onDone={list.reload} />
             <QueryStatus query={list} variant="table" rows={3} />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <form onSubmit={submit} className="card space-y-2">
@@ -371,7 +376,8 @@ function TransfersTab() {
     );
 }
 
-const TABS = ['contracts', 'changes', 'pay', 'transfers'] as const;
+const TABS = ['contracts', 'templates', 'changes', 'pay', 'transfers'] as const;
+const TAB_KEY = (k: string) => (k === 'templates' ? 'gapd.tabs.templates' : `hr2.tabs.${k}`);
 
 export default function Lifecycle() {
     const t = useT();
@@ -382,10 +388,11 @@ export default function Lifecycle() {
             <div className="mb-5 flex gap-1 overflow-x-auto border-b">
                 {TABS.map((k) => (
                     <button key={k} onClick={() => setTab(k)}
-                        className={`min-h-11 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${tab === k ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>{t(`hr2.tabs.${k}`)}</button>
+                        className={`min-h-11 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${tab === k ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>{t(TAB_KEY(k))}</button>
                 ))}
             </div>
             {tab === 'contracts' && <ContractsTab />}
+            {tab === 'templates' && <TemplatesTab />}
             {tab === 'changes' && <ChangesTab />}
             {tab === 'pay' && <PayTab />}
             {tab === 'transfers' && <TransfersTab />}

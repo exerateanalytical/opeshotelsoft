@@ -27,6 +27,10 @@ class RequireMfaEnrolment
         if ($user && ! in_array($request->path(), self::ALLOWED, true) && $this->twoFactor->mustEnrol($user)) {
             abort(403, 'Two-factor authentication must be set up for this account before using the API.');
         }
+        // Temporary password from an administrator reset (GAPH): replace it in the web profile first.
+        if ($user && $user->must_change_password && ! in_array($request->path(), self::ALLOWED, true)) {
+            abort(403, 'This account has a temporary password. Choose a new password in your web profile before using the API.');
+        }
 
         return $next($request);
     }

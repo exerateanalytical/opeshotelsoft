@@ -6,6 +6,7 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import Alert from '@/Components/ui/Alert';
+import ContactPreferencesCard from '@/Components/gape/ContactPreferencesCard';
 
 interface Guest {
     id: number; title: string | null; first_name: string; last_name: string; full_name: string; email: string | null; phone: string | null;
@@ -104,6 +105,7 @@ export default function GuestShow({ id }: { id: string }) {
                             {prefs.length === 0 && <p className="text-sm text-slate-500">{t('guests.show.no_prefs')}</p>}
                             {prefs.map(([k, v]) => <Row key={k} label={k} value={String(v)} />)}
                         </div>
+                        <ContactPreferencesCard guestId={id} />
                         <div className="card p-4">
                             <h3 className="font-semibold text-slate-800 mb-2">{t('guests.show.loyalty')}</h3>
                             {loyalty.loading && !loyalty.data && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}

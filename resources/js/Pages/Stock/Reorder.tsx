@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { errMsg, fcfa, num, usePerms } from './ControlShared';
+import ReorderTools from './ReorderTools';
 
 interface Line { stock_item_id: number; store_id: number; code: string; name: string; purchase_unit: string; on_hand: number; on_order: number; par_level: number; reorder_point: number; suggested_quantity: number; unit_price: number }
 interface Group { supplier_id: number | null; supplier: string | null; lead_time_days: number; expected_date: string; estimated_total: number; lines: Line[] }
@@ -57,6 +58,7 @@ export default function Reorder() {
                     </table>
                 </div>
             ))}
+            <ReorderTools canManage={perms.includes('stockcontrol.manage')} />
         </AppLayout>
     );
 }

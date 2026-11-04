@@ -3,6 +3,9 @@ import QueryStatus from '@/Components/ui/QueryStatus';
 import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useState, type FormEvent } from 'react';
+import Modal from '@/Components/ui/Modal';
+import { toast } from '@/Components/ui/Toast';
+import { useCan } from '@/lib/useCan';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useMt } from './strings';
 
@@ -14,11 +17,17 @@ interface Conv {
 interface Msg { id: number; direction: 'in' | 'out'; type: string; body: string | null; template_name: string | null; journey: string | null; status: string; error: string | null; dry_run: boolean; created_at: string }
 interface Detail extends Conv { messages: Msg[]; reservation: { number: string; status: string; arrival: string; departure: string; room: string | null } | null }
 interface QuickReply { id: number; title: string; body: string; locale: string }
+interface Account { id: number; phone_number_id: string; display_phone: string | null }
 
 const JOURNEYS = ['booking_confirmation', 'pre_arrival', 'welcome', 'bill', 'review'];
 
 export default function MessagingInbox() {
     const t = useMt();
+    const can = useCan();
+    const [editQr, setEditQr] = useState<QuickReply | null>(null);
+    const [delQr, setDelQr] = useState<QuickReply | null>(null);
+    const [acct, setAcct] = useState({ phone_number_id: '', display_phone: '' });
+    const accounts = useApi<Account[]>(can('messaging.manage') ? 'messaging/accounts' : null);
     const [filter, setFilter] = useState('open');
     const [q, setQ] = useState('');
     const [sel, setSel] = useState<number | null>(null);
@@ -147,7 +156,48 @@ export default function MessagingInbox() {
                     <input className="input" aria-label={t('messaging.body')} placeholder={t('messaging.body')} value={qr.body} onChange={(e) => setQr({ ...qr, body: e.target.value })} />
                     <button className="btn-secondary" disabled={!qr.title || !qr.body}>{t('messaging.quick_reply_new')}</button>
                 </form>
+                <ul className="mt-3 max-w-3xl divide-y divide-slate-200">
+                    {quick.data?.map((r) => (
+                        <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                            <span className="min-w-0 flex-1"><span className="font-medium">{r.title}</span> <span className="text-slate-500">{r.body}</span></span>
+                            <span className="btn-row">
+                                <button type="button" className="btn-secondary btn-sm" onClick={() => setEditQr(r)}>{t('gapf.edit')}</button>
+                                <button type="button" className="btn-danger btn-sm" onClick={() => setDelQr(r)}>{t('gapf.delete')}</button>
+                            </span>
+                        </li>
+                    ))}
+                </ul>
             </div>
+
+            {can('messaging.manage') && (
+                <div className="card p-4 mt-4">
+                    <h2 className="font-medium mb-2">{t('gapf.msg.accounts')}</h2>
+                    <p className="mb-2 text-sm text-slate-500">{t('gapf.msg.accounts_hint')}</p>
+                    {accounts.data?.length === 0 && <p className="mb-2 text-sm text-slate-500">{t('gapf.msg.no_accounts')}</p>}
+                    <ul className="mb-3 divide-y divide-slate-200 text-sm">
+                        {accounts.data?.map((a) => <li key={a.id} className="py-2">{a.display_phone ?? '—'} <span className="text-slate-500">({a.phone_number_id})</span></li>)}
+                    </ul>
+                    <form className="grid max-w-3xl gap-2 sm:grid-cols-[1fr_1fr_auto]" onSubmit={(e) => { e.preventDefault(); run(async () => { await api('messaging/accounts', { method: 'POST', body: JSON.stringify({ phone_number_id: acct.phone_number_id, display_phone: acct.display_phone || null }) }); setAcct({ phone_number_id: '', display_phone: '' }); accounts.reload(); toast.success(t('gapf.msg.account_added')); }); }}>
+                        <input className="input" aria-label={t('gapf.msg.phone_number_id')} placeholder={t('gapf.msg.phone_number_id')} value={acct.phone_number_id} onChange={(e) => setAcct({ ...acct, phone_number_id: e.target.value })} />
+                        <input className="input" aria-label={t('gapf.msg.display_phone')} placeholder={t('gapf.msg.display_phone')} value={acct.display_phone} onChange={(e) => setAcct({ ...acct, display_phone: e.target.value })} />
+                        <button className="btn-secondary" disabled={!acct.phone_number_id}>{t('gapf.msg.add_account')}</button>
+                    </form>
+                </div>
+            )}
+
+            <Modal open={editQr !== null} onClose={() => setEditQr(null)} title={t('gapf.msg.edit_reply')} formId="qr-edit"
+                footer={<button type="submit" form="qr-edit" className="btn-primary" disabled={busy}>{t('gapf.save')}</button>}>
+                {editQr && (
+                    <form id="qr-edit" className="space-y-3" onSubmit={(e) => { e.preventDefault(); run(async () => { await api(`messaging/quick-replies/${editQr.id}`, { method: 'PUT', body: JSON.stringify({ title: editQr.title, body: editQr.body, locale: editQr.locale }) }); setEditQr(null); quick.reload(); }); }}>
+                        <label className="block"><span className="label">{t('messaging.title')}</span><input className="input w-full" value={editQr.title} onChange={(e) => setEditQr({ ...editQr, title: e.target.value })} /></label>
+                        <label className="block"><span className="label">{t('messaging.body')}</span><textarea className="textarea w-full" rows={4} value={editQr.body} onChange={(e) => setEditQr({ ...editQr, body: e.target.value })} /></label>
+                    </form>
+                )}
+            </Modal>
+            <Modal open={delQr !== null} onClose={() => setDelQr(null)} title={t('gapf.msg.delete_reply')}
+                footer={<button type="button" className="btn-danger" disabled={busy} onClick={() => run(async () => { await api(`messaging/quick-replies/${delQr!.id}`, { method: 'DELETE' }); setDelQr(null); quick.reload(); })}>{t('gapf.delete')}</button>}>
+                <p className="text-sm">{t('gapf.msg.delete_reply_confirm', { title: delQr?.title ?? '' })}</p>
+            </Modal>
         </AppLayout>
     );
 }

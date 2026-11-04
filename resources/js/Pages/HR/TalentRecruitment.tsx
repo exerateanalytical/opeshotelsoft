@@ -80,6 +80,7 @@ export default function TalentRecruitment() {
                             {sel.applicant.cv_name && <a className="underline" href={`/api/v1/hr/talent/applicants/${sel.applicant.id}/cv`}>{t('talent.download_cv')}</a>}
                             <div className="flex flex-wrap gap-2">
                                 {STAGES.filter((s) => s !== sel.applicant.stage).map((s) => <button key={s} className="btn-secondary" onClick={() => run(() => tsend(`applicants/${sel.applicant.id}/stage`, { stage: s }))}>{t(`talent.stage.${s}`)}</button>)}
+                                <button className="btn-danger" onClick={() => { if (window.confirm(t('gapd.applicant.anonymise_confirm'))) run(() => tsend(`applicants/${sel.applicant.id}/anonymise`), t('gapd.applicant.anonymised')); }}>{t('gapd.applicant.anonymise')}</button>
                                 <button className="btn-secondary" onClick={() => run(() => tsend(`applicants/${sel.applicant.id}/pool`, { in: !sel.applicant.talent_pool }))}>{sel.applicant.talent_pool ? t('talent.pool_remove') : t('talent.pool_add')}</button>
                             </div>
                             <div className="flex gap-2"><input className="input flex-1" placeholder={t('talent.note')} aria-label={t('talent.note')} value={note} onChange={(e) => setNote(e.target.value)} />
@@ -105,7 +106,9 @@ export default function TalentRecruitment() {
                                 <h4 className="mb-2 font-semibold">{t('talent.offers')}</h4>
                                 {sel.offers.map((o) => (
                                     <p key={o.id} className="mb-1">{money(o.base_salary)} XAF <Pill tone={o.status === 'accepted' ? 'ok' : 'muted'}>{t(`talent.offer_status.${o.status}`)}</Pill>
-                                        {o.status === 'draft' || o.status === 'sent' ? <button className="btn-secondary ml-2" onClick={() => run(() => tsend(`offers/${o.id}/send`), t('talent.offer_sent'))}>{t('talent.send_offer')}</button> : null}</p>))}
+                                        {o.status === 'draft' || o.status === 'sent' ? <button className="btn-secondary ml-2" onClick={() => run(() => tsend(`offers/${o.id}/send`), t('talent.offer_sent'))}>{t('talent.send_offer')}</button> : null}
+                                        {o.status === 'sent' && <button className="btn-secondary ml-2" onClick={() => run(() => tsend(`offers/${o.id}/accept`), t('gapd.offer.accepted'))}>{t('gapd.offer.accept')}</button>}
+                                        {(o.status === 'draft' || o.status === 'sent') && <button className="btn-ghost btn-sm ml-2" onClick={() => { if (window.confirm(t('gapd.offer.withdraw_confirm'))) run(() => tsend(`offers/${o.id}/withdraw`)); }}>{t('gapd.offer.withdraw')}</button>}</p>))}
                                 <div className="flex flex-wrap gap-2"><input className="input" type="number" placeholder={t('talent.salary')} aria-label={t('talent.salary')} value={salary} onChange={(e) => setSalary(e.target.value)} />
                                     <input className="input" type="date" aria-label={t('ui2.hr.start_date')} value={start} onChange={(e) => setStart(e.target.value)} />
                                     <button className="btn-primary" disabled={!salary || !start} onClick={() => run(() => tsend(`applicants/${sel.applicant.id}/offers`, { base_salary: Number(salary), start_date: start }))}>{t('talent.make_offer')}</button></div>

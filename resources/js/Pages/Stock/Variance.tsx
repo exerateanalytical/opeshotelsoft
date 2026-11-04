@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { errMsg, fcfa, num, Paged, Ref, today, usePerms } from './ControlShared';
+import VarianceReviews from './VarianceReviews';
 
 interface Row { stock_item_id: number; code: string; name: string; unit: string; theoretical: number; actual: number; variance_qty: number; wastage: number; unexplained_qty: number; variance_pct: number | null; variance_value: number; unexplained_value: number; reasons: { reason: string; quantity: number }[] }
 interface Report { store: string; rows: Row[]; totals: { theoretical_value: number; actual_value: number; variance_value: number; unexplained_value: number; variance_pct: number | null } }
@@ -20,12 +21,13 @@ export default function Variance() {
     const [from, setFrom] = useState(today().slice(0, 8) + '01');
     const [to, setTo] = useState(today());
     const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+    const [reviewTick, setReviewTick] = useState(0);
     const report = useApi<Report>(outlet ? `stock-control/variance?outlet_id=${outlet}&from=${from}&to=${to}` : null, [outlet, from, to]);
     const outlets = useApi<Paged<Ref> | Ref[]>('outlets?per_page=100');
     const outletList = Array.isArray(outlets.data) ? outlets.data : outlets.data?.data ?? [];
 
     async function freeze() {
-        try { await api('stock-control/variance/reviews', { method: 'POST', body: JSON.stringify({ outlet_id: Number(outlet), from, to }) }); setMsg({ ok: true, text: t('stock2.variance.frozen') }); } catch (e) { setMsg({ ok: false, text: errMsg(e) }); }
+        try { await api('stock-control/variance/reviews', { method: 'POST', body: JSON.stringify({ outlet_id: Number(outlet), from, to }) }); setMsg({ ok: true, text: t('stock2.variance.frozen') }); setReviewTick((n) => n + 1); } catch (e) { setMsg({ ok: false, text: errMsg(e) }); }
     }
 
     return (
@@ -70,6 +72,7 @@ export default function Variance() {
                     </div>
                 </>
             )}
+            <VarianceReviews outletId={outlet} canManage={canManage} refreshKey={reviewTick} />
             {!outlet && <div className="card"><EmptyState title={t('states3.empty.variance_pick.title')} description={t('states3.empty.variance_pick.text')} /></div>}
         </AppLayout>
     );

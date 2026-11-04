@@ -10,6 +10,7 @@ import OpsPrintButton from '@/Components/OpsPrintButton';
 import { PeopleTabs } from './Index';
 import { Employee, EmployeeRef, errorText, listOf, openFile, post, upload } from './lib';
 import Alert from '@/Components/ui/Alert';
+import { useCan } from '@/lib/useCan';
 
 interface Sanction { id: number; kind: string; incident_date: string; reason: string; status: string; suspension_start: string | null; suspension_end: string | null; documents_count: number; employee: EmployeeRef | null }
 
@@ -21,6 +22,7 @@ export default function PeopleDiscipline() {
     const employees = useApi<Employee[] | { data: Employee[] }>('hr/employees?per_page=200');
     const [form, setForm] = useState(EMPTY);
     const [error, setError] = useState<string | null>(null);
+    const can = useCan();
     const run = async (fn: () => Promise<unknown>) => { setError(null); try { await fn(); list.reload(); } catch (e) { setError(errorText(e)); } };
 
     const save = (e: React.FormEvent) => {
@@ -79,6 +81,7 @@ export default function PeopleDiscipline() {
                                     {s.documents_count > 0 && <button className="btn-secondary" onClick={() => openDoc(s)}>{t('people.discipline.document')} ({s.documents_count})</button>}
                                     {s.status === 'issued' && <button className="btn-secondary" onClick={() => run(() => post(`people/sanctions/${s.id}/acknowledge`))}>{t('people.discipline.acknowledged')}</button>}
                                     {s.status === 'issued' && <button className="btn-secondary" onClick={() => run(() => post(`people/sanctions/${s.id}/acknowledge`, { refused: true }))}>{t('people.discipline.refused')}</button>}
+                                    {s.status !== 'withdrawn' && can('people.discipline') && <button className="btn-danger" onClick={() => { if (window.confirm(t('gapd.sanction.withdraw_confirm'))) run(() => post(`people/sanctions/${s.id}/withdraw`)); }}>{t('gapd.sanction.withdraw')}</button>}
                                 </td>
                             </tr>
                         ))}

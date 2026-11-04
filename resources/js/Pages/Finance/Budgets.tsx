@@ -1,5 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
+import { useCan } from '@/lib/useCan';
+import { GapaBudgetDetail, GapaBudgetGroup } from './gapaParts';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,8 @@ export default function Budgets() {
     const list = useApi<Budget[]>('accounting/core/budgets');
     const accounts = useApi<Account[]>('accounting/accounts');
     const [sel, setSel] = useState<number | null>(null);
+    const [detail, setDetail] = useState<number | null>(null);
+    const can = useCan();
     const [by, setBy] = useState('account');
     const [through, setThrough] = useState(new Date().getMonth() + 1);
     const [method, setMethod] = useState('budget');
@@ -75,6 +79,7 @@ export default function Budgets() {
                         <tr key={b.id} className={cn(sel === b.id && 'bg-slate-50')}>
                             <Td b>{b.name}</Td><Td>{b.year}</Td><Td><Badge s={b.status === 'approved' ? 'open' : 'issued'} /> <span className="text-xs text-slate-500">{t(`acc2.status.${b.status}`)}</span></Td><Td r>{M(b.total)}</Td>
                             <Td r>
+                                <button className="btn-secondary mr-2" onClick={() => setDetail(b.id)} aria-label={t('gapa.budget.open_detail', { name: b.name })}>{t('gapa.budget.detail')}</button>
                                 <button className="btn-secondary mr-2" onClick={() => setSel(b.id)}>{t('acc2.budgets.variance')}</button>
                                 <PrintPdfButton path={`budget-variance/${b.id}?by=${by}`} className="btn-secondary mr-2 inline-flex items-center gap-1" />
                                 {b.status === 'draft' && <button className="btn-primary" onClick={() => approve(b.id)}>{t('acc2.budgets.approve')}</button>}
@@ -84,6 +89,9 @@ export default function Budgets() {
                 </Table>
                 {list.data?.length === 0 && <p className="py-4 text-center text-sm text-slate-500">{t('acc2.budgets.empty')}</p>}
             </div>
+
+            {detail && <GapaBudgetDetail id={detail} onClose={() => setDetail(null)} />}
+            {can('accounting.consolidate') && <GapaBudgetGroup />}
 
             {sel && (
                 <div className="card mb-4 p-4">

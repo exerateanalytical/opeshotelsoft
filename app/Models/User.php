@@ -35,6 +35,8 @@ class User extends Authenticatable implements OAuthenticatable
             'mfa_secret' => 'encrypted',
             'all_hotels' => 'boolean',
             'is_platform_admin' => 'boolean',
+            'must_change_password' => 'boolean',
+            'must_enrol_mfa' => 'boolean',
         ];
     }
 

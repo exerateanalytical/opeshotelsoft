@@ -47,6 +47,7 @@ Route::post('reservations/{reservation}/cancel', [ReservationController::class, 
 Route::get('reservations/{reservation}/cancellation-quote', [ReservationController::class, 'cancellationQuote']);
 Route::post('reservations/{reservation}/no-show', [ReservationController::class, 'noShow']);
 Route::post('reservations/{reservation}/assign-room', [ReservationController::class, 'assignRoom']);
+Route::get('reservations/{reservation}/available-rooms', [ReservationController::class, 'availableRooms']);
 
 Route::get('blocks', [BlockController::class, 'index']);
 Route::post('blocks', [BlockController::class, 'store']);

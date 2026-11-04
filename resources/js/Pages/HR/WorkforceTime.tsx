@@ -6,8 +6,9 @@ import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, msg } from './WorkforceTabs';
 import Alert from '@/Components/ui/Alert';
+import { AnomalyPhotoButton } from './WorkforceGapd';
 
-interface Anomaly { id: number; employee: string | null; date: string; kind: string; severity: string; detail: Record<string, unknown>; status: string }
+interface Anomaly { id: number; employee: string | null; date: string; kind: string; severity: string; detail: Record<string, unknown>; status: string; has_photo?: boolean }
 interface Settings { geo_lat: number | null; geo_lng: number | null; geo_radius_m: number; geo_required: boolean; photo_required: boolean; late_tolerance_min: number; rest_hours_min: number; max_weekly_hours: number }
 
 export default function WorkforceTime() {
@@ -30,7 +31,7 @@ export default function WorkforceTime() {
                 {list.data?.length === 0 && <p className="text-slate-500">{t('workforce.none')}</p>}
                 <ul className="divide-y divide-slate-100">{list.data?.map((a) => (
                     <li key={a.id} className="flex items-center justify-between py-2"><span>{a.date.slice(0, 10)} - {a.employee} - {t(`workforce.anomaly.${a.kind}`)} ({a.severity}) <span className="text-slate-500">{JSON.stringify(a.detail)}</span></span>
-                        <span className="flex gap-2"><button className="btn-secondary" onClick={() => act(() => wpost(`workforce/anomalies/${a.id}/review`, { status: 'reviewed' }))}>{t('workforce.time.reviewed')}</button>
+                        <span className="flex gap-2">{a.has_photo && <AnomalyPhotoButton anomalyId={a.id} />}<button className="btn-secondary" onClick={() => act(() => wpost(`workforce/anomalies/${a.id}/review`, { status: 'reviewed' }))}>{t('workforce.time.reviewed')}</button>
                             <button className="btn-secondary" onClick={() => act(() => wpost(`workforce/anomalies/${a.id}/review`, { status: 'dismissed' }))}>{t('workforce.time.dismiss')}</button></span></li>))}</ul></div>
             <form className="card grid gap-3 p-4 text-sm sm:grid-cols-3" onSubmit={(e) => { e.preventDefault(); act(() => wpost('workforce/settings', form, 'PUT')); }}>
                 <h2 className="font-semibold sm:col-span-3">{t('workforce.time.settings')}</h2>

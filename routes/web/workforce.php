@@ -12,3 +12,6 @@ Route::middleware(['auth'])->prefix('hr/workforce')->group(function () {
     Route::get('/cost', fn () => Inertia::render('HR/WorkforceCost'))->middleware('can:workforce.view')->name('workforce.cost');
     Route::get('/clock', fn () => Inertia::render('HR/WorkforceClock'))->name('workforce.clock');
 });
+
+// GAPI: full-screen PIN clock-in for the hotel's shared tablet (kiosk account).
+Route::middleware(['auth', 'can:workforce.kiosk'])->get('/clock/kiosk', fn () => Inertia::render('HR/WorkforceKiosk'))->name('workforce.kiosk');

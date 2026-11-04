@@ -6,6 +6,7 @@ import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import { useCan } from '@/lib/useCan';
 import Alert from '@/Components/ui/Alert';
 
 interface Reason { factor: string; pct: number; detail: string }
@@ -18,6 +19,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export default function RevenueSuggestions() {
     const t = useT();
+    const can = useCan();
     const types = useApi<{ data: { id: number; name: string }[] }>('room-types?per_page=100');
     const sugs = useApi<{ data: Suggestion[] }>('revenue/suggestions?status=pending');
     const settings = useApi<Settings>('revenue/settings');
@@ -70,8 +72,8 @@ export default function RevenueSuggestions() {
                                         <div className="text-slate-600">{t('revenue.sug.why')}: {g.reasons.map((r) => `${r.factor} ${r.pct > 0 ? '+' : ''}${r.pct}% (${r.detail})`).join(' · ')}</div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button type="button" className="btn-primary" onClick={() => run(() => api(`revenue/suggestions/${g.id}/accept`, { method: 'POST', body: '{}' }), sugs.reload)}>{t('revenue.common.accept')}</button>
-                                        <button type="button" className="btn-secondary" onClick={() => run(() => api(`revenue/suggestions/${g.id}/reject`, { method: 'POST', body: '{}' }), sugs.reload)}>{t('revenue.common.reject')}</button>
+                                        {can('revenue.approve') && <button type="button" className="btn-primary" onClick={() => run(() => api(`revenue/suggestions/${g.id}/accept`, { method: 'POST', body: '{}' }), sugs.reload)}>{t('revenue.common.accept')}</button>}
+                                        {can('revenue.approve') && <button type="button" className="btn-secondary" onClick={() => run(() => api(`revenue/suggestions/${g.id}/reject`, { method: 'POST', body: '{}' }), sugs.reload)}>{t('revenue.common.reject')}</button>}
                                     </div>
                                 </div>
                             ))}

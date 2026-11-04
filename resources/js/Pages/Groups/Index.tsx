@@ -8,6 +8,8 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import ExportButtons from '@/Components/ExportButtons';
+import EmptyState from '@/Components/ui/EmptyState';
 
 interface Allocation { room_type_id: number; date: string; rooms: number; picked_up: number }
 interface Block {
@@ -46,6 +48,11 @@ export default function GroupsIndex() {
                 </select>
             </div>
 
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-slate-500">{t('gapf.groups.export_blocks')}</span>
+                <ExportButtons report="room-blocks" params={{ status }} />
+            </div>
+
             {blocks.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{blocks.error.message}</div>}
 
             <div className="card overflow-x-auto">
@@ -53,7 +60,7 @@ export default function GroupsIndex() {
                     <thead><tr><th>{t('groups.code')}</th><th>{t('groups.name')}</th><th>{t('res.company')}</th><th>{t('groups.dates')}</th><th>{t('groups.cutoff')}</th><th className="text-right">{t('groups.pickup')}</th><th>{t('res.status')}</th></tr></thead>
                     <tbody>
                         {blocks.loading && !blocks.data && <tr><td colSpan={7} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
-                        {blocks.data && rows.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-slate-500 text-sm">{t('groups.empty')}</td></tr>}
+                        {blocks.data && rows.length === 0 && <tr><td colSpan={7}><EmptyState title={t('groups.empty')} action={<button type="button" className="btn-primary" onClick={() => setCreating(true)}><Plus className="w-4 h-4" /> {t('groups.new_block')}</button>} /></td></tr>}
                         {rows.map((b) => {
                             const rooms = b.allocations.reduce((a, x) => a + x.rooms, 0);
                             const picked = b.allocations.reduce((a, x) => a + (x.picked_up ?? 0), 0);
@@ -65,7 +72,7 @@ export default function GroupsIndex() {
                                     <td className="text-sm whitespace-nowrap">{formatDate(b.arrival)} → {formatDate(b.departure)}</td>
                                     <td className="text-sm">{b.cutoff_date ? formatDate(b.cutoff_date) : '—'}</td>
                                     <td className="text-right text-sm">{picked} / {rooms} <span className="text-xs text-slate-500">{t('groups.room_nights')}</span></td>
-                                    <td><span className={cn('text-xs px-2 py-0.5 rounded', blockStatusClass(b.status))}>{t(`groups.status.${b.status}`)}</span><span className="ml-2 inline-flex gap-1 align-middle"><OpsPrintButton path={`group-contract/${b.id}`} label={t('documents4.group_contract')} /><OpsPrintButton path={`rooming-list/${b.id}`} label={t('documents4.rooming_list')} /></span></td>
+                                    <td><span className={cn('text-xs px-2 py-0.5 rounded', blockStatusClass(b.status))}>{t(`groups.status.${b.status}`)}</span><span className="ml-2 inline-flex gap-1 align-middle"><OpsPrintButton path={`group-contract/${b.id}`} label={t('documents4.group_contract')} /><OpsPrintButton path={`rooming-list/${b.id}`} label={t('documents4.rooming_list')} /><ExportButtons report="rooming-list" params={{ room_block_id: b.id, per_page: 200 }} /></span></td>
                                 </tr>
                             );
                         })}

@@ -5,6 +5,7 @@ import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { Account, Banner, errMsg, Field } from './shared';
+import ExportButtons from '@/Components/ExportButtons';
 
 const TYPES = ['asset', 'liability', 'equity', 'income', 'expense', 'off_balance'];
 const blank = { code: '', name: '', type: 'expense', postable: true, reconcilable: false, active: true };
@@ -43,7 +44,10 @@ export default function Accounts() {
                     <option value="">{t('fin.accounts.all_classes')}</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((c) => <option key={c} value={c}>{t('fin.accounts.class_n', { n: c })}</option>)}
                 </select>
-                <button className="btn-primary sm:ml-auto" onClick={() => setForm({ ...blank })}>{t('fin.accounts.new')}</button>
+                <div className="sm:ml-auto flex flex-wrap gap-2">
+                    <ExportButtons report="chart-of-accounts" params={{ q, class: cls }} />
+                    <button className="btn-primary" onClick={() => setForm({ ...blank })}>{t('fin.accounts.new')}</button>
+                </div>
             </div>
             {form && (
                 <form onSubmit={save} className="card mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 [&>*]:min-w-0">

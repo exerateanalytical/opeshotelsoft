@@ -1,5 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import QueryStatus from '@/Components/ui/QueryStatus';
+import Modal from '@/Components/ui/Modal';
 import { Head } from '@inertiajs/react';
 import { Copy, Plus, X } from 'lucide-react';
 import { useState } from 'react';
@@ -23,6 +24,8 @@ export default function PaymentLinks() {
     const [form, setForm] = useState({ target_type: params.get('target_type') ?? 'folio', target_id: params.get('target_id') ?? '', amount: '', payer_phone: '', allow_partial: true });
     const [created, setCreated] = useState<PayLink | null>(null);
     const [error, setError] = useState('');
+    const [viewId, setViewId] = useState<number | null>(null);
+    const detail = useApi<PayLink & { intents: { id: number; reference: string; provider: string; amount: number; status: string; payer_phone: string | null; created_at: string; completed_at: string | null }[] }>(viewId ? `payments/links/${viewId}` : null, [viewId]);
 
     const create = async () => {
         setError('');
@@ -84,7 +87,7 @@ export default function PaymentLinks() {
                         {list.data?.data.length === 0 && <tr><td colSpan={8} className="text-center text-slate-500 py-6">{t('payments2.links.empty')}</td></tr>}
                         {list.data?.data.map((l) => (
                             <tr key={l.id}>
-                                <td className="font-mono">{l.code}</td>
+                                <td className="font-mono"><button type="button" className="hit-44 text-blue-700 underline" onClick={() => setViewId(l.id)}>{l.code}</button></td>
                                 <td>{t(`payments2.target.${l.target_type}`)} · {l.label}</td>
                                 <td className="text-right">{formatCurrency(l.amount)}</td>
                                 <td className="text-right">{formatCurrency(l.amount_paid)}</td>
@@ -100,6 +103,30 @@ export default function PaymentLinks() {
                     </tbody>
                 </table>
             </div>
+            <Modal open={viewId !== null} onClose={() => setViewId(null)} title={t('gapf.link.detail', { code: detail.data?.code ?? '' })}>
+                {detail.error && <p className="text-sm text-red-700">{detail.error.message}</p>}
+                {detail.data && (
+                    <div className="space-y-3 text-sm">
+                        <dl className="grid grid-cols-2 gap-2">
+                            <div><dt className="text-slate-500">{t('payments2.links.target')}</dt><dd>{t(`payments2.target.${detail.data.target_type}`)} · {detail.data.label}</dd></div>
+                            <div><dt className="text-slate-500">{t('payments2.inbound.amount')}</dt><dd>{formatCurrency(detail.data.amount)}</dd></div>
+                            <div><dt className="text-slate-500">{t('payments2.links.paid')}</dt><dd>{formatCurrency(detail.data.amount_paid)}</dd></div>
+                            <div><dt className="text-slate-500">{t('payments2.links.balance')}</dt><dd>{formatCurrency(detail.data.balance)}</dd></div>
+                            <div><dt className="text-slate-500">{t('payments2.links.expires')}</dt><dd>{detail.data.expires_at ? formatDateTime(detail.data.expires_at) : '-'}</dd></div>
+                            <div><dt className="text-slate-500">{t('gapf.link.status')}</dt><dd>{t(`payments2.status.${detail.data.status}`)}</dd></div>
+                        </dl>
+                        <h3 className="font-semibold">{t('gapf.link.attempts')}</h3>
+                        {detail.data.intents.length === 0 && <p className="text-slate-500">{t('gapf.link.no_attempts')}</p>}
+                        <ul className="divide-y divide-slate-200">
+                            {detail.data.intents.map((i) => (
+                                <li key={i.id} className="flex flex-wrap justify-between gap-2 py-2">
+                                    <span className="font-mono">{i.reference}</span><span>{formatCurrency(i.amount)}</span><span>{i.provider}</span><span>{i.status}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </Modal>
         </AppLayout>
     );
 }

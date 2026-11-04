@@ -1,11 +1,16 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Loader2, Pencil, Plus, Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Modal from '@/Components/ui/Modal';
+import EmptyState from '@/Components/ui/EmptyState';
+import ExportButtons from '@/Components/ExportButtons';
 import { Banner, errorText, Field, Forbidden, Paginated } from './shared';
+import ReasonConfirmModal from '@/Components/gaph/ReasonConfirmModal';
+import TemporaryPasswordModal from '@/Components/gaph/TemporaryPasswordModal';
 
 interface HotelRef { id: number; code: string; name: string }
 interface User {
@@ -17,6 +22,7 @@ interface User {
     all_hotels: boolean;
     roles: { id: number; name: string }[];
     hotels: HotelRef[];
+    mfa_confirmed_at?: string | null;
 }
 interface Role { id: number; name: string; permissions: { id: number; name: string }[] }
 
@@ -35,6 +41,48 @@ export default function SettingsUsers() {
     const [draft, setDraft] = useState<Draft>(empty);
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+    const [toggling, setToggling] = useState<User | null>(null);
+    const me = (usePage().props as { auth?: { user?: { id: number } | null } }).auth?.user?.id;
+    const [resetting, setResetting] = useState<{ user: User; kind: 'password' | 'two-factor' } | null>(null);
+    const [resetError, setResetError] = useState<string | null>(null);
+    const [temp, setTemp] = useState<{ name: string; password: string } | null>(null);
+
+    async function runReset(reason: string) {
+        if (!resetting) return;
+        const { user: u, kind } = resetting;
+        setBusy(true);
+        setResetError(null);
+        setMessage(null);
+        try {
+            const res = await api<{ temporary_password?: string }>(`users/${u.id}/${kind}-reset`, { method: 'POST', body: JSON.stringify({ reason }) });
+            setResetting(null);
+            if (kind === 'password' && res?.temporary_password) setTemp({ name: u.name, password: res.temporary_password });
+            setMessage({ ok: true, text: t(kind === 'password' ? 'gaph.password.done_banner' : 'gaph.mfa.done_banner', { name: u.name }) });
+            users.reload();
+        } catch (err) {
+            const status = (err as { problem?: { status?: number } }).problem?.status;
+            setResetError(status === 429 ? t('gaph.rate_limited') : errorText(err));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function toggleStatus(u: User) {
+        const next = u.status === 'active' ? 'suspended' : 'active';
+        setBusy(true);
+        setMessage(null);
+        try {
+            await api(`users/${u.id}`, { method: 'PATCH', body: JSON.stringify({ status: next }) });
+            setMessage({ ok: true, text: t(next === 'suspended' ? 'gapf.users.deactivated' : 'gapf.users.reactivated', { name: u.name }) });
+            setToggling(null);
+            users.reload();
+        } catch (err) {
+            setMessage({ ok: false, text: errorText(err) });
+            setToggling(null);
+        } finally {
+            setBusy(false);
+        }
+    }
 
     const forbidden = users.error?.problem.status === 403;
     const hotelList = hotels.data?.data ?? [];
@@ -173,18 +221,26 @@ export default function SettingsUsers() {
                                     {hotelList.map((h) => <option key={h.id} value={h.id}>{h.code}</option>)}
                                 </select>
                             </div>
+                            <div className="px-5 py-3 border-b border-slate-100"><ExportButtons report="staff-users" /></div>
                             <table className="table-auto w-full">
                                 <thead><tr><th>{t('settings.users.user')}</th><th>{t('settings.users.role')}</th><th>{t('settings.users.hotels')}</th><th>{t('settings.users.status')}</th><th></th></tr></thead>
                                 <tbody>
                                     {users.loading && !users.data && <tr><td colSpan={5}><Loader2 className="w-5 h-5 mx-auto my-8 animate-spin text-slate-500" /></td></tr>}
-                                    {users.data && filtered.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-slate-500 text-sm">{t('settings.users.no_match')}</td></tr>}
+                                    {users.data && filtered.length === 0 && <tr><td colSpan={5}><EmptyState title={t('settings.users.no_match')} action={(users.data?.data ?? []).length === 0 ? <button type="button" className="btn-primary" onClick={() => open('new')}><Plus className="w-4 h-4" /> {t('settings.users.new')}</button> : undefined} /></td></tr>}
                                     {filtered.map((u) => (
                                         <tr key={u.id}>
                                             <td><div className="text-sm font-medium text-slate-800">{u.name}</div><div className="text-xs text-slate-500">{u.email}</div></td>
                                             <td className="text-sm">{u.roles.map((r) => r.name).join(', ') || '—'}</td>
                                             <td className="text-xs">{u.all_hotels ? t('settings.users.all_hotels') : u.hotels.map((h) => h.code).join(', ') || '—'}</td>
                                             <td><span className={cn('text-xs px-2 py-0.5 rounded', u.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>{u.status}</span></td>
-                                            <td className="text-right"><button title={t('common.edit')} aria-label={t('common.edit')} className="hit-44 text-slate-500 hover:text-indigo-600" onClick={() => open(u)}><Pencil className="w-4 h-4" /></button></td>
+                                            <td className="text-right"><button title={t('common.edit')} aria-label={t('common.edit')} className="hit-44 text-slate-500 hover:text-indigo-600" onClick={() => open(u)}><Pencil className="w-4 h-4" /></button>
+                                                <button type="button" className="btn-ghost btn-sm" onClick={() => setToggling(u)}>{t(u.status === 'active' ? 'gapf.users.deactivate' : 'gapf.users.reactivate')}</button>
+                                                {u.id !== me && (
+                                                    <>
+                                                        <button type="button" className="btn-ghost btn-sm" onClick={() => { setResetError(null); setResetting({ user: u, kind: 'password' }); }}>{t('gaph.password.action')}</button>
+                                                        {u.mfa_confirmed_at && <button type="button" className="btn-ghost btn-sm" onClick={() => { setResetError(null); setResetting({ user: u, kind: 'two-factor' }); }}>{t('gaph.mfa.action')}</button>}
+                                                    </>
+                                                )}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -209,6 +265,16 @@ export default function SettingsUsers() {
                             </div>
                         </div>
                     </div>
+                    <Modal open={toggling !== null} onClose={() => setToggling(null)} title={toggling?.status === 'active' ? t('gapf.users.deactivate_title') : t('gapf.users.reactivate_title')}
+                        footer={<button type="button" className={toggling?.status === 'active' ? 'btn-danger' : 'btn-primary'} disabled={busy} onClick={() => toggling && toggleStatus(toggling)}>{t(toggling?.status === 'active' ? 'gapf.users.deactivate' : 'gapf.users.reactivate')}</button>}>
+                        <p className="text-sm">{t(toggling?.status === 'active' ? 'gapf.users.deactivate_confirm' : 'gapf.users.reactivate_confirm', { name: toggling?.name ?? '' })}</p>
+                    </Modal>
+                    <ReasonConfirmModal open={resetting !== null} danger busy={busy} error={resetError}
+                        title={t(resetting?.kind === 'two-factor' ? 'gaph.mfa.title' : 'gaph.password.title', { name: resetting?.user.name ?? '' })}
+                        message={t(resetting?.kind === 'two-factor' ? 'gaph.mfa.confirm' : 'gaph.password.confirm', { name: resetting?.user.name ?? '' })}
+                        confirmLabel={t(resetting?.kind === 'two-factor' ? 'gaph.mfa.action' : 'gaph.password.action')}
+                        onClose={() => setResetting(null)} onConfirm={runReset} />
+                    <TemporaryPasswordModal name={temp?.name ?? ''} password={temp?.password ?? null} onClose={() => setTemp(null)} />
                 </>
             )}
         </AppLayout>

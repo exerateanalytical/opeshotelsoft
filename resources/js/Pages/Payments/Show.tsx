@@ -6,10 +6,12 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { Intent, PROVIDERS, STATUS_BADGE } from './shared';
 import { useT } from '@/lib/i18n';
+import { useCan } from '@/lib/useCan';
 
 
 export default function PaymentShow({ id }: { id: string }) {
     const t = useT();
+    const can = useCan();
     const intent = useApi<Intent>(`payments/intents/${id}`);
     const i = intent.data;
 
@@ -66,7 +68,7 @@ export default function PaymentShow({ id }: { id: string }) {
                         )}
                     </div>
                     <div className="space-y-6">
-                        {i.status === 'succeeded' && (i.refundable ?? 0) > 0 && <RefundForm intent={i} onDone={() => intent.reload()} />}
+                        {i.status === 'succeeded' && (i.refundable ?? 0) > 0 && can('payments.refund') && <RefundForm intent={i} onDone={() => intent.reload()} />}
                         <div className="card overflow-x-auto">
                             <table className="table-auto">
                                 <thead><tr><th>{t('payments.show.refund')}</th><th>{t('payments.reason')}</th><th className="text-right">{t('payments.amount')}</th></tr></thead>

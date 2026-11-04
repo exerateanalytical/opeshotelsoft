@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { Badge, Banner, errMsg, Field, Invoice, Loading, Page } from './shared';
 import { useT } from '@/lib/i18n';
 import PrintPdfButton from '@/Components/PrintPdfButton';
+import ExportButtons from '@/Components/ExportButtons';
 
 interface Statement {
     company: { id: number; name: string; tax_id: string | null; credit_limit: number | null; payment_terms_days: number | null };
@@ -41,6 +42,10 @@ export default function Receivables() {
                     {['issued', 'partially_paid', 'paid', 'cancelled'].map((s) => <option key={s} value={s}>{t(`fin.status.${s}`)}</option>)}
                 </select>
                 <CompanyPicker value={company} onChange={(c) => { setCompany(c); setPage(1); }} />
+            </div>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                <span className="text-sm font-semibold text-slate-700">{t('gapa.recv.export_ageing')}</span>
+                <ExportButtons report="ageing" />
             </div>
             {statementFor && <StatementPanel id={statementFor} onClose={() => setStatementFor(null)} />}
             {paying && (

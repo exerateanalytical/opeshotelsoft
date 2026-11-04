@@ -109,7 +109,7 @@ class PlanningService
             return [
                 'position_id' => $k->position_id, 'position' => $positions[$k->position_id]->title ?? '#'.$k->position_id, 'risk' => $k->risk, 'notes' => $k->notes,
                 'incumbents' => $emps->where('position_id', $k->position_id)->where('status', '!=', 'terminated')->map->full_name->values()->all(),
-                'successors' => $list->map(fn ($s) => ['employee_id' => $s->employee_id, 'name' => $emps[$s->employee_id]->full_name, 'readiness' => $s->readiness, 'notes' => $s->notes])->values()->all(),
+                'successors' => $list->map(fn ($s) => ['id' => $s->id, 'employee_id' => $s->employee_id, 'name' => $emps[$s->employee_id]->full_name, 'readiness' => $s->readiness, 'notes' => $s->notes])->values()->all(),
                 'ready_now' => $ready, 'covered' => $ready > 0, 'at_risk' => $ready === 0 && $k->risk === 'high',
             ];
         })->values()->all();

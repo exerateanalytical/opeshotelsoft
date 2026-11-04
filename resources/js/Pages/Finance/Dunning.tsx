@@ -6,6 +6,7 @@ import { useT } from '@/lib/i18n';
 import { Banner, errMsg, Field, Loading } from './shared';
 import { M, Table, Td, Th } from './coreShared';
 import { AbNav } from './ab3Shared';
+import DunningHoldsPanel from './DunningHoldsPanel';
 
 interface Cand { invoice_id: number; number: string; company_id: number | null; bill_to: string; days_overdue: number; balance: number; fee: number; interest: number; last_level_sent: number; next_level: number | null; held: boolean; eligible: boolean }
 interface Level { level: number; days_overdue: number; fee: number; active: boolean }
@@ -24,8 +25,9 @@ export default function Dunning() {
 
     const run = async (fn: () => Promise<unknown>, msg = t('acc3.saved')) => {
         setError(null); setOk(null);
-        try { await fn(); setOk(msg); cands.reload(); cfg.reload(); notices.reload(); setSel([]); } catch (e) { setError(errMsg(e)); }
+        try { await fn(); setOk(msg); cands.reload(); cfg.reload(); notices.reload(); setSel([]); setHv((v) => v + 1); } catch (e) { setError(errMsg(e)); }
     };
+    const [hv, setHv] = useState(0);
 
     return (
         <AppLayout title={t('acc3.dun.title')} subtitle={t('acc3.dun.subtitle')}>
@@ -56,6 +58,7 @@ export default function Dunning() {
                 </Table>
                 {cands.data?.length === 0 && <p className="py-3 text-sm text-slate-500">{t('acc3.dun.none')}</p>}
             </div>
+            <div className="mb-4"><DunningHoldsPanel version={hv} onChange={() => cands.reload()} /></div>
 
             <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
                 <div className="card p-4">

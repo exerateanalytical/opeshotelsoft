@@ -268,6 +268,21 @@ class RosterService
         return $req;
     }
 
+    /** GAPI: a manager (workforce.manage) withdraws an open request on the requester's behalf; the reason is kept in the event log. */
+    public function managerCancel(ShiftRequest $req, string $reason): ShiftRequest
+    {
+        if (! in_array($req->status, ['pending', 'accepted'], true)) {
+            throw new DomainException('This request is already closed.', 'invalid-state');
+        }
+        return DB::transaction(function () use ($req, $reason) {
+            $prev = $req->status;
+            $req->update(['status' => 'cancelled', 'decided_by' => $this->ctx->actor()?->id, 'decided_at' => now()]);
+            $this->bus->record('hr.shift_request_cancelled', ['id' => $req->id, 'kind' => $req->kind, 'by' => 'manager', 'previous_status' => $prev, 'reason' => $reason], 'shift_request', $req->id);
+
+            return $req;
+        });
+    }
+
     /** Manager decision. Claims need no colleague step; swaps need the colleague to have accepted. */
     public function decide(ShiftRequest $req, bool $approve, bool $acknowledge = false): ShiftRequest
     {

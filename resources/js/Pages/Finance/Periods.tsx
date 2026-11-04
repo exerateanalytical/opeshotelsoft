@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import { useCan } from '@/lib/useCan';
 import { Badge, Banner, errMsg, Field, Loading } from './shared';
 
 interface Period { id: number; year: number; month: number; status: string; closed_at: string | null; closed_by: number | null }
@@ -9,6 +10,7 @@ const MONTH_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep
 
 export default function Periods() {
     const t = useT();
+    const can = useCan();
     const MONTHS = MONTH_KEYS.map((m) => t(`fin.month.${m}`));
     const list = useApi<Period[]>('accounting/periods');
     const now = new Date();
@@ -62,7 +64,7 @@ export default function Periods() {
                                 <td className="p-2"><Badge s={p.status} /></td>
                                 <td className="p-2">{p.closed_at ? formatDateTime(p.closed_at) : '—'}</td>
                                 <td className="p-2 text-right">
-                                    {p.status === 'closed' && <button className="btn-secondary btn-sm" onClick={() => setReopen(p)}>{t('fin.periods.reopen')}</button>}
+                                    {p.status === 'closed' && can('accounting.period_approve') && <button className="btn-secondary btn-sm" onClick={() => setReopen(p)}>{t('fin.periods.reopen')}</button>}
                                 </td>
                             </tr>
                         ))}

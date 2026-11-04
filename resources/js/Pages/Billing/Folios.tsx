@@ -17,6 +17,7 @@ import Tabs from '@/Components/ui/Tabs';
 import { useSplitView } from '@/Components/ui/MasterDetail';
 import Alert from '@/Components/ui/Alert';
 import { useCan } from '@/lib/useCan';
+import ExportButtons from '@/Components/ExportButtons';
 
 interface Line {
     id: number;
@@ -121,6 +122,7 @@ export default function Folios() {
 
             {list.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{list.error.message}</div>}
 
+            <ExportButtons report="folios" params={{ status, kind, company_id: company, q: q.trim() }} className="mb-3" />
             <div className={cn('grid gap-6', selected && wide && 'xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]')}>
                 <DataTable
                     className="self-start"
@@ -141,7 +143,7 @@ export default function Folios() {
                         }}>{t('desktop.copy.numbers')}</button>
                     )}
                     rowActions={() => [{ key: 'open', label: t('desktop.view.detail'), onSelect: (f) => setSelected(f.id) }]}
-                    empty={<EmptyState title={t('billing.folios.no_match')} />}
+                    empty={<EmptyState title={t('billing.folios.no_match')} action={<button type="button" className="btn-primary" onClick={() => setOpening(true)}><Plus className="w-4 h-4" /> {t('billing.folios.open_folio')}</button>} />}
                     columns={[
                         { key: 'number', header: t('billing.folios.number'), sortValue: (f) => f.number, cell: (f) => <button type="button" className="min-h-11 md:min-h-9 font-mono text-sm underline underline-offset-2 text-navy-600" aria-label={`${t('billing.folios.folio')} ${f.number}`} onClick={() => setSelected(f.id)}>{f.number}</button> },
                         { key: 'kind', header: t('billing.folios.kind'), sortValue: (f) => f.kind, cell: (f) => lbl('billing.kind', f.kind) },

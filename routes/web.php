@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     // Front Desk
     Route::prefix('front-desk')->name('front-desk.')->group(function () {
         Route::get('/', fn () => Inertia::render('FrontDesk/Index'))->middleware('can:frontdesk.view')->name('index');
+        Route::get('/checkout-fee-rules', fn () => Inertia::render('FrontDesk/CheckoutFeeRules'))->middleware('can:frontdesk.configure')->name('checkout-fee-rules');
     });
 
     // Housekeeping

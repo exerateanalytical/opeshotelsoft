@@ -115,6 +115,13 @@ class TaxController
         return $w->saveRate($d);
     }
 
+    public function showSupplierProfile(Request $r, Withholding $w, int $supplier)
+    {
+        $this->can($r, 'accounting.tax', 'accounting.tax_file', 'payables.manage');
+
+        return $w->supplierProfileOf($supplier);
+    }
+
     public function supplierProfile(Request $r, Withholding $w, int $supplier)
     {
         $this->can($r, 'accounting.tax_file', 'payables.manage');

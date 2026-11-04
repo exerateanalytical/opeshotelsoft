@@ -6,6 +6,7 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import Alert from '@/Components/ui/Alert';
+import { useCan } from '@/lib/useCan';
 
 interface Req {
     id: number; guest_id: number; kind: string; status: string; reason: string; decision_note: string | null; created_at: string;
@@ -14,6 +15,7 @@ interface Req {
 
 export default function PrivacyRequests() {
     const t = useT();
+    const can = useCan();
     const [status, setStatus] = useState('pending');
     const list = useApi<{ data: Req[] }>(`guests/privacy-requests?status=${status}`);
     const [deciding, setDeciding] = useState<{ id: number; approve: boolean; note: string } | null>(null);
@@ -59,7 +61,7 @@ export default function PrivacyRequests() {
                                 <p className="text-xs text-slate-500">{t('guests.privacy.requested_by', { name: r.requester?.name ?? '—' })} · {formatDateTime(r.created_at)}{r.decider ? ` · ${t('guests.privacy.decided_by', { name: r.decider.name })}` : ''}</p>
                                 {r.decision_note && <p className="text-slate-600">{t('guests.privacy.note', { note: r.decision_note })}</p>}
                             </div>
-                            {r.status === 'pending' && deciding?.id !== r.id && (
+                            {r.status === 'pending' && deciding?.id !== r.id && can('guests.privacy_approve') && (
                                 <div className="flex gap-2 items-start">
                                     <button className="btn-primary" onClick={() => setDeciding({ id: r.id, approve: true, note: '' })}>{t('guests.privacy.approve')}</button>
                                     <button className="btn-secondary" onClick={() => setDeciding({ id: r.id, approve: false, note: '' })}>{t('guests.privacy.reject')}</button>

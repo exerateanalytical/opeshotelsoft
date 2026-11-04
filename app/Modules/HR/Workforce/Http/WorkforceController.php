@@ -237,6 +237,15 @@ class WorkforceController
         return $this->rosters->cancel($this->me($r), $req);
     }
 
+    /** GAPI: manager cancel of any open request (requester-only cancel stays on cancelRequest). */
+    public function managerCancelRequest(Request $r, ShiftRequest $req)
+    {
+        $this->need($r, 'workforce.manage');
+        $d = $r->validate(['reason' => ['required', 'string', 'min:3', 'max:200']]);
+
+        return $this->rosters->managerCancel($req, $d['reason']);
+    }
+
     public function decideRequest(Request $r, ShiftRequest $req)
     {
         $this->need($r, 'workforce.publish');
@@ -344,6 +353,21 @@ class WorkforceController
         $this->clock->verifyPin($emp, $d['pin']);
 
         return $this->clockResult($this->clock->clock($emp, $direction, 'pin', $this->clockInput($r))) + ['employee' => $emp->full_name];
+    }
+
+    /** GAPI: what the shared kiosk tablet needs: who can punch by PIN (name and number only), today's last punches, photo rule. */
+    public function kioskBoard(Request $r)
+    {
+        $this->need($r, 'workforce.kiosk');
+        $s = $this->rosters->settings();
+        $ids = \App\Modules\HR\Workforce\Domain\Pin::pluck('employee_id');
+        $staff = Employee::whereIn('id', $ids)->where('status', 'active')->orderBy('first_name')->orderBy('last_name')->get(['id', 'number', 'first_name', 'last_name'])
+            ->map(fn ($e) => ['number' => $e->number, 'name' => trim($e->first_name.' '.mb_substr((string) $e->last_name, 0, 1).'.')])->values();
+        $events = \App\Modules\HR\Workforce\Domain\ClockEvent::where('method', 'pin')->where('occurred_at', '>=', now()->startOfDay())->orderByDesc('id')->limit(8)->get(['employee_id', 'direction', 'occurred_at']);
+        $names = Employee::whereIn('id', $events->pluck('employee_id'))->get(['id', 'first_name', 'last_name'])->keyBy('id');
+        $recent = $events->map(fn ($e) => ['name' => isset($names[$e->employee_id]) ? trim($names[$e->employee_id]->first_name.' '.mb_substr((string) $names[$e->employee_id]->last_name, 0, 1).'.') : '-', 'direction' => $e->direction, 'at' => $e->occurred_at->toIso8601String()])->values();
+
+        return ['pin_enabled' => (bool) $s->pin_enabled, 'photo_required' => (bool) $s->photo_required, 'staff' => $staff, 'recent' => $recent];
     }
 
     public function setPin(Request $r, Employee $employee)

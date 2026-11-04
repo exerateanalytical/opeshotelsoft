@@ -241,6 +241,8 @@
     "nav.travel_agents": "Travel agents",
     "nav.seasons": "Rate seasons",
     "nav.in_house": "In house",
+    "nav.checkout_fees": "Late checkout fees",
+    "nav.clock_kiosk": "Clock-in kiosk",
     "nav.payments": "Online payments",
     "nav.payment_gateways": "Payment gateways",
     "nav.org_chart": "Org chart",

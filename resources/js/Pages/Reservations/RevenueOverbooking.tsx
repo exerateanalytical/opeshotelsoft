@@ -7,6 +7,7 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import Alert from '@/Components/ui/Alert';
+import { UpsellOffersSection, WalksSection } from '@/Components/gape/WalksAndUpsells';
 
 interface Policy { room_type_id: number; room_type: string; max_rooms: number; max_percent: number; cap: number }
 interface Exposure { room_type: string; date: string; rooms: number; booked: number; over: number }
@@ -86,6 +87,9 @@ export default function RevenueOverbooking() {
                         <div key={i} className="text-sm">{formatDate(x.date)} · {x.room_type} · {x.booked}/{x.rooms} · {t('revenue.ob.over')} {x.over}</div>
                     ))}
                 </section>
+
+                <WalksSection notify={(ok, text) => setMsg({ ok, text })} defaults={{ partner: walk.walk_partner_hotel, compensation: walk.walk_compensation }} />
+                <UpsellOffersSection notify={(ok, text) => setMsg({ ok, text })} />
 
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{t('revenue.ob.walk_policy')}</h2>

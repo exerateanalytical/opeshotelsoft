@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { errMsg, fcfa, num, usePerms } from './ControlShared';
+import FefoPanel from './FefoPanel';
 
 interface Lot { id: number; item: string; unit: string; lot_number: string; store_id: number; expiry_date: string | null; quantity_remaining: number; days_left?: number; value?: number }
 interface Expiry { expired: Lot[]; expiring: Lot[] }
@@ -62,6 +63,7 @@ export default function Batches() {
             <QueryStatus query={lots} variant="table" />
             <StockTabs current="batches" />
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
+            <FefoPanel />
             {table(expiry.data?.expired ?? [], t('stock2.batches.expired'), 'text-red-700')}
             {table(expiry.data?.expiring ?? [], t('stock2.batches.expiring'), 'text-amber-700')}
             {lots.data?.length === 0 ? <div className="card"><EmptyFor kind="stock" action={<EmptyAction kind="stock" href="/stock" />} /></div> : table(lots.data ?? [], t('stock2.batches.all'), '')}

@@ -7,6 +7,7 @@ import { useT } from '@/lib/i18n';
 import { Banner, errMsg, Field, FinEmptyState, today } from './shared';
 import { M, Table, Td, Th } from './coreShared';
 import { AbNav, Gate, downloadFile } from './ab3Shared';
+import { StampRulesPanel, SupplierTaxPanel, VatPreviewButton, VatReturnDrawer, WhtRatesPanel } from './TaxVatExtras';
 
 interface Profile { profile: { country: string; name: string; vat_rate: number; vat_form: string; filing_day: number; gate: string }; countries: { code: string; name: string; vat_rate: number }[] }
 interface VatReturn { id: number; period_from: string; period_to: string; version: number; status: string; filing_reference: string | null; figures: Record<string, number>; locked: boolean }
@@ -28,6 +29,7 @@ export default function TaxVat() {
     const [ok, setOk] = useState<string | null>(null);
     const [ref, setRef] = useState<Record<number, string>>({});
     const [remit, setRemit] = useState({ account: '521100', reference: '' });
+    const [detail, setDetail] = useState<number | null>(null);
 
     const run = async (fn: () => Promise<unknown>, msg = t('acc3.saved')) => {
         setError(null); setOk(null);
@@ -60,6 +62,7 @@ export default function TaxVat() {
                     <Field label={t('acc3.from')}><input type="date" className="input" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} /></Field>
                     <Field label={t('acc3.to')}><input type="date" className="input" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} /></Field>
                     <button className="btn-primary" onClick={() => run(() => api('accounting3/tax/vat-returns', { method: 'POST', body: JSON.stringify(range) }), t('acc3.tax.prepared'))}>{t('acc3.tax.prepare')}</button>
+                    <VatPreviewButton from={range.from} to={range.to} />
                 </div>
                 <QueryStatus query={returns} variant="table" />
                 <Table head={<><Th>{t('acc3.pay.period')}</Th><Th>v</Th><Th>{t('acc3.status')}</Th><Th r>{t('acc3.tax.collected')}</Th><Th r>{t('acc3.tax.deductible')}</Th><Th r>{t('acc3.tax.due')}</Th><Th r>{t('acc3.tax.credit')}</Th><Th /></>}>
@@ -75,6 +78,7 @@ export default function TaxVat() {
                                     </span>
                                 )}
                                 {r.status === 'filed' && <button className="btn-secondary mr-1" onClick={() => run(() => api(`accounting3/tax/vat-returns/${r.id}/amend`, { method: 'POST' }))}>{t('acc3.tax.amend')}</button>}
+                                <button type="button" className="btn-secondary mr-1" onClick={() => setDetail(r.id)}>{t('gapb.vat.detail')}</button>
                                 <button className="btn-secondary" onClick={() => downloadFile(`accounting3/tax/vat-returns/${r.id}/export?format=xlsx`, `vat-${r.period_to}.xlsx`).catch((e) => setError(errMsg(e)))}>Excel</button>
                             </Td>
                         </tr>
@@ -106,6 +110,14 @@ export default function TaxVat() {
                     <p className="mt-2 text-xs text-slate-500">{t('acc3.tax.stamp_note', { rules: stamp.data?.rules.length ?? 0 })}</p>
                 </div>
             </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+                <WhtRatesPanel />
+                <SupplierTaxPanel />
+            </div>
+            <div className="mt-4">
+                <StampRulesPanel rules={stamp.data?.rules as never} onSaved={() => stamp.reload()} />
+            </div>
+            <VatReturnDrawer id={detail} onClose={() => setDetail(null)} />
         </AppLayout>
     );
 }

@@ -13,6 +13,7 @@ import OpsPrintButton from '@/Components/OpsPrintButton';
 import { errMsg, fcfa, num, Ref, usePerms } from './ControlShared';
 import { useFormErrors, useList } from './StockForms';
 import StockTabs from './StockTabs';
+import RfqDetail from './RfqDetail';
 
 interface Rfq { id: number; number: string; title: string; status: string; due_date: string | null }
 interface Cell { supplier_id: number; unit_price: number | null; line_total: number | null; lead_time_days: number | null; lowest: boolean; awarded: boolean }
@@ -104,6 +105,7 @@ export default function RfqPage() {
     const grid = useApi<Grid>(sel ? `stock-ops/rfqs/${sel}/grid` : null);
     const [msg, setMsg] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
+    const [detailId, setDetailId] = useState<number | null>(null);
     const [quote, setQuote] = useState<{ supplier: number; prices: Record<number, string>; lead: Record<number, string> } | null>(null);
     const [quoteBusy, setQuoteBusy] = useState(false);
     const qf = useFormErrors();
@@ -151,6 +153,7 @@ export default function RfqPage() {
                 <div className="card overflow-x-auto p-3 text-sm">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                         <h2 className="font-medium">{g.rfq.number} · {g.rfq.title}</h2>
+                        <Button size="sm" variant="secondary" onClick={() => setDetailId(g.rfq.id)}>{t('gapc.rfq.detail')}</Button>
                         {canEdit && status === 'draft' && <Button size="sm" onClick={() => act('send', {}, t('stock4.rfq.sent'))}>{t('stock3.rfq.send')}</Button>}
                         {canEdit && status === 'awarded' && <Button size="sm" variant="accent" onClick={() => act('convert')}>{t('stock3.rfq.convert')}</Button>}
                         {canEdit && ['draft', 'sent', 'awarded'].includes(status ?? '') && <Button size="sm" variant="secondary" onClick={() => act('cancel', {}, t('stock4.rfq.cancelled'))}>{t('stock3.rfq.cancel')}</Button>}
@@ -190,6 +193,7 @@ export default function RfqPage() {
                     </table>
                 </div>
             )}
+            <RfqDetail rfqId={detailId} onClose={() => setDetailId(null)} grid={g ?? null} />
             <NewRfq open={creating} onClose={() => setCreating(false)} onCreated={(id) => { list.reload(); setSel(id); }} />
             <Modal open={!!(g && quote)} onClose={() => setQuote(null)} title={t('stock3.rfq.quote_for', { name: supplierName })}
                 footer={<><Button variant="secondary" onClick={() => setQuote(null)}>{t('stock4.common.cancel')}</Button><Button loading={quoteBusy} onClick={saveQuote}>{t('stock3.rfq.save_quote')}</Button></>}>

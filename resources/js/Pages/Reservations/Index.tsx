@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search, CalendarDays, Loader2, Star, ExternalLink, LogIn, LogOut, XCircle, Copy } from 'lucide-react';
+import { Plus, Search, CalendarDays, Loader2, Star, ExternalLink, LogIn, LogOut, XCircle, Copy, BedDouble, MessageSquare } from 'lucide-react';
 import Button from '@/Components/ui/Button';
 import DataTable, { type RowAction } from '@/Components/ui/DataTable';
 import MasterDetail, { useSplitView } from '@/Components/ui/MasterDetail';
@@ -15,6 +15,10 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import { useCan } from '@/lib/useCan';
+import ExportButtons from '@/Components/ExportButtons';
+import BulkAssignRoomModal, { type AssignRow } from '@/Components/gapg/BulkAssignRoomModal';
+import BulkMessageModal, { type MessageRow } from '@/Components/gapg/BulkMessageModal';
 
 const STATUSES: [string, string][] = [
     ['', 'common.all'], ['tentative', 'res.status.tentative'], ['confirmed', 'res.status.confirmed'], ['checked_in', 'res.status.checked_in'],
@@ -71,6 +75,32 @@ export default function ReservationsIndex() {
             .then(() => toast.success(t('desktop.copy.done', { count: rs.length })))
             .catch(() => toast.error(t('desktop.copy.failed')));
     };
+
+    const can = useCan();
+    const [bulkBusy, setBulkBusy] = useState(false);
+    const [assignRows, setAssignRows] = useState<AssignRow[] | null>(null);
+    const [messageRows, setMessageRows] = useState<MessageRow[] | null>(null);
+    const [bulkCancel, setBulkCancel] = useState<{ rows: Reservation[]; reason: string; clear: () => void } | null>(null);
+    async function bulk(rows: Reservation[], action: 'check-in' | 'cancel', reason?: string, clear?: () => void) {
+        setBulkBusy(true);
+        setMessage(null);
+        let ok = 0;
+        const failed: string[] = [];
+        for (const r of rows) {
+            try {
+                await api(`reservations/${r.id}/${action}`, { method: 'POST', body: JSON.stringify(action === 'cancel' ? { reason } : {}) });
+                ok++;
+            } catch (e) {
+                failed.push(`${r.number}: ${e instanceof ApiError ? e.message : String(e)}`);
+            }
+        }
+        setBulkBusy(false);
+        setBulkCancel(null);
+        clear?.();
+        list.reload();
+        if (ok) toast.success(t('gape.bulk.done', { count: ok }));
+        if (failed.length) setMessage(t('gape.bulk.failed', { count: failed.length }) + ' ' + failed.join('; '));
+    }
 
     async function act(r: Reservation, action: 'check-in' | 'check-out' | 'cancel', reason?: string) {
         const body = action === 'cancel' ? { reason } : {};
@@ -172,7 +202,17 @@ export default function ReservationsIndex() {
                 activeKey={current?.id ?? null}
                 onRowClick={open}
                 selectable
-                bulkActions={({ rows, clear }) => <Button size="sm" variant="secondary" icon={Copy} onClick={() => { copyNumbers(rows); clear(); }}>{t('desktop.copy.numbers')}</Button>}
+                bulkActions={({ rows, clear }) => {
+                    const arriving = rows.filter((r) => ['confirmed', 'tentative'].includes(r.status));
+                    const assignable = arriving; // in-house guests change rooms via move-room, not assign
+                    return (<>
+                        <Button size="sm" variant="secondary" icon={Copy} onClick={() => { copyNumbers(rows); clear(); }}>{t('desktop.copy.numbers')}</Button>
+                        {can('frontdesk.manage', 'reservations.manage') && arriving.length > 0 && <Button size="sm" variant="secondary" icon={LogIn} loading={bulkBusy} onClick={() => bulk(arriving, 'check-in', undefined, clear)}>{t('gape.bulk.check_in', { count: arriving.length })}</Button>}
+                        {can('reservations.manage') && assignable.length > 0 && <Button size="sm" variant="secondary" icon={BedDouble} onClick={() => { setAssignRows(assignable.map((r) => ({ id: r.id, number: r.number, guest: guestName(r), roomType: r.room_type?.code ?? '', arrival: r.arrival, departure: r.departure, currentRoom: r.room?.number ?? null }))); clear(); }}>{t('gapg.assign.button', { count: assignable.length })}</Button>}
+                        {can('messaging.reply', 'messaging.manage') && <Button size="sm" variant="secondary" icon={MessageSquare} onClick={() => { setMessageRows(rows.slice(0, 100).map((r) => ({ id: r.id, number: r.number, guest: guestName(r) }))); clear(); }}>{t('gapg.msg.button', { count: Math.min(rows.length, 100) })}</Button>}
+                        {can('reservations.manage') && arriving.length > 0 && <Button size="sm" variant="danger" icon={XCircle} disabled={bulkBusy} onClick={() => setBulkCancel({ rows: arriving, reason: '', clear })}>{t('gape.bulk.cancel', { count: arriving.length })}</Button>}
+                    </>);
+                }}
                 rowActions={rowActions}
                 empty={(status || q.trim() || from)
                     ? <NoResults onReset={() => { setStatus(''); setQ(''); setFrom(''); setPage(1); }} />
@@ -211,6 +251,25 @@ export default function ReservationsIndex() {
                     <input className="input" data-autofocus value={cancelling?.reason ?? ''} onChange={(e) => cancelling && setCancelling({ id: cancelling.id, reason: e.target.value })} />
                 </Field>
             </Modal>
+
+            <Modal open={!!bulkCancel} onClose={() => setBulkCancel(null)} title={t('gape.bulk.cancel', { count: bulkCancel?.rows.length ?? 0 })}
+                footer={<>
+                    <Button variant="secondary" onClick={() => setBulkCancel(null)}>{t('res.keep')}</Button>
+                    <Button variant="danger" loading={bulkBusy} disabled={!bulkCancel?.reason.trim()} onClick={() => bulkCancel && bulk(bulkCancel.rows, 'cancel', bulkCancel.reason.trim(), bulkCancel.clear)}>{t('res.confirm')}</Button>
+                </>}>
+                <p className="mb-3 text-sm text-slate-600">{bulkCancel?.rows.map((r) => r.number).join(', ')}</p>
+                <Field label={t('res.cancel_reason')} required>
+                    <input className="input" data-autofocus value={bulkCancel?.reason ?? ''} onChange={(e) => bulkCancel && setBulkCancel({ ...bulkCancel, reason: e.target.value })} />
+                </Field>
+            </Modal>
+
+            <BulkAssignRoomModal rows={assignRows} onClose={() => setAssignRows(null)} onDone={() => list.reload()} />
+            <BulkMessageModal rows={messageRows} onClose={() => setMessageRows(null)} />
+
+            <section className="mt-4 flex flex-wrap items-center gap-2" aria-label={t('gape.export.label')}>
+                <span className="text-sm text-slate-600">{t('gape.export.label')}</span>
+                <ExportButtons report="reservations" params={{ status, q, arriving: from, per_page: 200 }} />
+            </section>
 
             {list.data && list.data.last_page > 1 && (
                 <div className="flex items-center justify-between mt-4 text-sm text-slate-500">

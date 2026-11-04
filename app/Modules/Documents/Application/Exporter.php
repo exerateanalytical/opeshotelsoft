@@ -17,6 +17,9 @@ final class Exporter
         'pdf' => 'application/pdf',
     ];
 
+    /** Hard cap on exported rows from a paginated source. */
+    public const MAX_ROWS = 5000;
+
     public function __construct(private InternalApi $api, private TenantContext $ctx) {}
 
     /** @return array{content: string, mime: string, filename: string} */
@@ -27,10 +30,16 @@ final class Exporter
         }
         [$def, $path, $query] = ReportRegistry::resolve($report, $params);
         unset($query['format'], $query['lang']);
-        $data = $this->api->get($path, $query) ?? [];
-        $rows = array_map(fn ($r) => (array) $r, array_values(($def['rows'])($data)));
+        unset($query['page']);
+        [$data, $truncated] = $this->fetchAll($path, $query);
+        $rows = array_map(fn ($r) => (array) $r, array_values(($def['rows'])($data, $query)));
         $columns = $def['columns'] ?? array_keys($rows[0] ?? []);
         $matrix = array_map(fn ($r) => array_map(fn ($c) => self::cell($r[$c] ?? null), $columns), $rows);
+        if ($truncated && $columns) {
+            $note = array_fill(0, count($columns), null);
+            $note[0] = sprintf('TRUNCATED: export limited to the first %d rows; narrow the filters to export the rest.', self::MAX_ROWS);
+            $matrix[] = $note;
+        }
         // Human-facing formats get translated headers; CSV keeps the column codes for re-import.
         $headers = array_map(fn ($c) => self::header((string) $c), $columns);
 
@@ -41,6 +50,31 @@ final class Exporter
         };
 
         return ['content' => $content, 'mime' => self::MIME[$format], 'filename' => $report.'-'.now()->format('Ymd-His').'.'.$format];
+    }
+
+    /**
+     * Fetches the whole filtered set: paginated list answers ({data, last_page}) are followed page by page
+     * up to MAX_ROWS. The list endpoints' own page size is untouched.
+     *
+     * @return array{0: mixed, 1: bool} [data, truncated]
+     */
+    private function fetchAll(string $path, array $query): array
+    {
+        $data = $this->api->get($path, $query) ?? [];
+        if (! is_array($data) || ! isset($data['data'], $data['last_page']) || ! is_array($data['data'])) {
+            return [$data, false];
+        }
+        $last = (int) $data['last_page'];
+        for ($page = 2; $page <= $last && count($data['data']) < self::MAX_ROWS; $page++) {
+            $next = $this->api->get($path, $query + ['page' => $page]);
+            $data['data'] = array_merge($data['data'], $next['data'] ?? []);
+        }
+        $truncated = count($data['data']) > self::MAX_ROWS || ($page <= $last);
+        if (count($data['data']) > self::MAX_ROWS) {
+            $data['data'] = array_slice($data['data'], 0, self::MAX_ROWS);
+        }
+
+        return [$data, $truncated];
     }
 
     /** Reports go through the engine: every export is a new issued document (number = report + timestamp). */

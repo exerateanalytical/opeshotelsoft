@@ -7,6 +7,9 @@ import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, msg } from './WorkforceTabs';
 import Alert from '@/Components/ui/Alert';
+import { MyShiftsPanel } from '@/Pages/Me/MyShiftsPanel';
+import ManagerCancelButton from '@/Components/gapi/ManagerCancelButton';
+import { useCan } from '@/lib/useCan';
 
 interface Shift { id: number; date: string; starts_at: string; ends_at: string; role: string | null }
 interface Req { id: number; kind: string; status: string; requester: string | null; counterpart: string | null; shift: Shift | null }
@@ -16,6 +19,8 @@ export default function WorkforceRequests() {
     const open = useApi<Shift[]>('workforce/open-shifts');
     const reqs = useApi<Req[]>('workforce/requests');
     const [error, setError] = useState<string | null>(null);
+    const [mine, setMine] = useState(false);
+    const canManage = useCan()('workforce.manage');
     const act = async (fn: () => Promise<unknown>) => { setError(null); try { await fn(); open.reload(); reqs.reload(); } catch (e) { setError(msg(e)); } };
     return (
         <AppLayout title={t('workforce.requests.title')} subtitle={t('workforce.requests.subtitle')}>
@@ -24,6 +29,11 @@ export default function WorkforceRequests() {
             <QueryStatus query={reqs} variant="list" />
             <WorkforceTabs active="/hr/workforce/requests" />
             {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+            {/* GAPD: own shifts, swap request (POST workforce/swaps) and cancel own request (POST requests/{id}/cancel). */}
+            <div className="mb-4">
+                <button type="button" className="btn-secondary" aria-expanded={mine} onClick={() => setMine(!mine)}>{mine ? t('gapd.req.hide_mine') : t('gapd.req.show_mine')}</button>
+                {mine && <div className="mt-3"><MyShiftsPanel /></div>}
+            </div>
             <div className="card mb-4 p-4 text-sm"><h2 className="mb-2 font-semibold">{t('workforce.requests.open_shifts')}</h2>
                 {open.data?.length === 0 && <p className="text-slate-500">{t('workforce.none')}</p>}
                 <ul className="divide-y divide-slate-100">{open.data?.map((s) => (
@@ -38,6 +48,7 @@ export default function WorkforceRequests() {
                             {r.kind === 'swap' && r.status === 'pending' && <button className="btn-secondary" onClick={() => act(() => wpost(`workforce/requests/${r.id}/respond`, { accept: true }))}>{t('workforce.requests.accept')}</button>}
                             {['pending', 'accepted'].includes(r.status) && <button className="btn-primary" onClick={() => act(() => wpost(`workforce/requests/${r.id}/decide`, { approve: true }))}>{t('workforce.requests.approve')}</button>}
                             {['pending', 'accepted'].includes(r.status) && <button className="btn-secondary" onClick={() => act(() => wpost(`workforce/requests/${r.id}/decide`, { approve: false }))}>{t('workforce.requests.reject')}</button>}
+                            {canManage && ['pending', 'accepted'].includes(r.status) && <ManagerCancelButton requestId={r.id} summary={`${t(`workforce.kind.${r.kind}`)} - ${r.requester ?? ''} - ${r.shift?.date.slice(0, 10) ?? ''}`} onDone={() => { open.reload(); reqs.reload(); }} />}
                         </span></li>))}</ul></div>
         </AppLayout>
     );

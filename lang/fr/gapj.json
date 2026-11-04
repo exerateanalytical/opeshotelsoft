@@ -1,0 +1,6 @@
+{
+  "gapj.scan.camera": "Scanner avec la caméra",
+  "gapj.scan.close": "Fermer la caméra",
+  "gapj.scan.denied": "Caméra indisponible ou autorisation refusée. Saisissez le code ou utilisez un lecteur.",
+  "gapj.scan.unsupported": "Le scan par caméra n'est pas pris en charge par ce navigateur. Saisissez le code ou utilisez un lecteur."
+}

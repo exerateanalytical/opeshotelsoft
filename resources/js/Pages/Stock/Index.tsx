@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import StockTabs from './StockTabs';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { AlertTriangle, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { Fragment, useState, type ReactNode } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
@@ -9,6 +9,9 @@ import { Ageing, PaymentRun, PriceLists, Requisitions, Returns, Wastage } from '
 import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
 import Alert from '@/Components/ui/Alert';
+import ExportButtons from '@/Components/ExportButtons';
+
+const EXPORT_KEYS: Record<string, string> = { 'stock/items': 'stock-items', 'stock/stores': 'stock-stores', suppliers: 'stock-suppliers' };
 
 interface Page<T> { data: T[]; total: number; current_page: number; last_page: number }
 interface Balance { store_id: number; store: string; stock_item_id: number; code: string; name: string; unit: string; quantity: number; avg_cost: number; value: number; reorder_level: number }
@@ -153,6 +156,7 @@ function Balances({ stores, items }: Refs) {
                         <option value="">{t('stock.common.all_categories')}</option>{CATEGORIES.map((c) => <option key={c} value={c}>{t(`stock.cat.${c}`)}</option>)}
                     </select>
                     <Loading on={bal.loading} />
+                    <ExportButtons report="stock-balances" params={{ store_id: storeId, category }} />
                     <span className="ml-auto text-sm text-slate-600">{t('stock.bal.total_value')} <b>{formatCurrency(total)}</b></span>
                 </div>
                 {bal.error && <p className="text-sm text-red-700">{bal.error.message}</p>}
@@ -209,7 +213,8 @@ function Crud<T extends { id: number; active?: boolean }>({ title, plural, path,
                 <h3 className="font-semibold">{plural}</h3>
                 <input className="input w-full sm:w-48" placeholder={t('stock.common.search')} aria-label={t('stock.common.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
                 <Loading on={list.loading} />
-                <button className="btn-primary ml-auto" onClick={() => open()}><Plus className="mr-1 inline h-4 w-4" />{t('stock.crud.new', { name: title.toLowerCase() })}</button>
+                <span className="ml-auto"><ExportButtons report={EXPORT_KEYS[path]} params={{ q, per_page: 200 }} /></span>
+                <button className="btn-primary" onClick={() => open()}><Plus className="mr-1 inline h-4 w-4" />{t('stock.crud.new', { name: title.toLowerCase() })}</button>
             </div>
             {editing && (
                 <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -339,6 +344,8 @@ function TransferIssue({ items, stores, notify }: Refs) {
     const [tLines, setTLines] = useState<Line[]>([{ stock_item_id: '', quantity: '' }]);
     const [iss, setIss] = useState({ kind: 'issue', store: '', reference: '', reason: '' });
     const [iLines, setILines] = useState<Line[]>([{ stock_item_id: '', quantity: '' }]);
+    const reasonsApi = useApi<string[]>('stock/wastage-reasons');
+    const wastageReasons = reasonsApi.data?.length ? reasonsApi.data : WASTAGE_REASONS;
     const storeSel = (v: string, on: (v: string) => void) => (
         <select className="select" value={v} onChange={(e) => on(e.target.value)} aria-label={tr('stock.common.select')}><option value="">{tr('stock.common.select')}</option>{stores.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}</select>
     );
@@ -361,7 +368,7 @@ function TransferIssue({ items, stores, notify }: Refs) {
                     <Field label={tr('stock.common.store')}>{storeSel(iss.store, (v) => setIss({ ...iss, store: v }))}</Field>
                     <Field label={tr('stock.common.reference')}><input className="input" value={iss.reference} onChange={(e) => setIss({ ...iss, reference: e.target.value })} /></Field>
                     <Field label={tr('stock.common.reason')}>{iss.kind === 'wastage'
-                        ? <select className="select" value={iss.reason} onChange={(e) => setIss({ ...iss, reason: e.target.value })} aria-label={tr('stock.iss.select_reason')}><option value="">{tr('stock.iss.select_reason')}</option>{WASTAGE_REASONS.map((w) => <option key={w} value={w}>{tr(`stock.waste.${w}`)}</option>)}</select>
+                        ? <select className="select" value={iss.reason} onChange={(e) => setIss({ ...iss, reason: e.target.value })} aria-label={tr('stock.iss.select_reason')}><option value="">{tr('stock.iss.select_reason')}</option>{wastageReasons.map((w) => <option key={w} value={w}>{tr(`stock.waste.${w}`)}</option>)}</select>
                         : <input className="input" value={iss.reason} onChange={(e) => setIss({ ...iss, reason: e.target.value })} />}</Field>
                 </div>
                 <LinesEditor lines={iLines} setLines={setILines} items={items} />
@@ -552,12 +559,13 @@ function Orders({ items, stores, suppliers, notify }: Refs) {
                     {(list.data?.data ?? []).map((po) => (
                         <Fragment key={po.id}>
                             <tr>
-                                <td className="px-2 py-1 font-medium">{po.number}</td><td className="px-2 py-1">{po.supplier?.name ?? `#${po.supplier_id}`}</td>
+                                <td className="px-2 py-1 font-medium"><Link href={`/purchasing/orders/${po.id}`} className="text-brand-800 underline">{po.number}</Link></td><td className="px-2 py-1">{po.supplier?.name ?? `#${po.supplier_id}`}</td>
                                 <td className="px-2 py-1">{formatDate(po.order_date)}</td>
                                 <td className="px-2 py-1 text-xs">{po.lines.map((l) => `${iName(l.stock_item_id)} ${Number(l.received_quantity)}/${Number(l.quantity)}`).join(', ')}</td>
                                 <td className="px-2 py-1">{formatCurrency(Number(po.total))}</td><td className="px-2 py-1"><Badge s={po.status} /></td>
                                 <td className="whitespace-nowrap px-2 py-1 text-right">
                                     {busy === po.id && <Loader2 className="mr-1 inline h-4 w-4 animate-spin" />}
+                                    <Link href={`/purchasing/orders/${po.id}`} className="btn-secondary btn-sm">{t('gapc.po.open')}</Link>{' '}
                                     {po.status === 'draft' && <button className="btn-secondary btn-sm" onClick={() => act(po, 'submit')}>{t('stock.common.submit')}</button>}{' '}
                                     {po.status === 'submitted' && <button className="btn-primary btn-sm" onClick={() => act(po, 'approve')}>{t('stock.common.approve')}</button>}{' '}
                                     {['approved', 'partially_received'].includes(po.status) && <button className="btn-primary btn-sm" onClick={() => openReceive(po)}>{t('stock.po.receive')}</button>}{' '}

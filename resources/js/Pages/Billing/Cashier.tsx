@@ -9,6 +9,8 @@ import { useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import PrintPdfButton from '@/Components/PrintPdfButton';
+import ExportButtons from '@/Components/ExportButtons';
+import EmptyState from '@/Components/ui/EmptyState';
 
 interface Shift {
     id: number;
@@ -77,13 +79,14 @@ export default function Cashier() {
             </FilterBar>
 
             {shifts.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{shifts.error.message}</div>}
+            <ExportButtons report="cashier-shifts" params={{ status, user_id: userId, from, to, per_page: 200 }} className="mb-3" />
 
             <div className="card overflow-x-auto">
                 <table className="table-auto">
                     <thead><tr><th></th><th>{t('billing.cashier.shift')}</th><th>{t('billing.cashier.cashier')}</th><th>{t('billing.cashier.station')}</th><th>{t('billing.cashier.business_date')}</th><th>{t('billing.cashier.opened')}</th><th>{t('billing.cashier.closed')}</th><th className="text-right">{t('billing.cashier.float')}</th><th className="text-right">{t('billing.cashier.variance')}</th></tr></thead>
                     <tbody>
                         {shifts.loading && !shifts.data && <tr><td colSpan={9} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
-                        {shifts.data && rows.length === 0 && <tr><td colSpan={9} className="text-center py-10 text-slate-500 text-sm">{t('billing.cashier.no_shifts')}</td></tr>}
+                        {shifts.data && rows.length === 0 && <tr><td colSpan={9}><EmptyState title={t('billing.cashier.no_shifts')} description={t('gapf.cashier.empty_hint')} /></td></tr>}
                         {rows.map((s) => {
                             const v = s.variance ?? 0;
                             const methods = Array.from(new Set([...Object.keys(s.expected ?? {}), ...Object.keys(s.counted ?? {})]));

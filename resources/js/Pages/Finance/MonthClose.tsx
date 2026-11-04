@@ -7,6 +7,8 @@ import { useT } from '@/lib/i18n';
 import { Banner, errMsg, Field, FinEmptyState, Loading } from './shared';
 import { Table, Td, Th } from './coreShared';
 import { AbNav } from './ab3Shared';
+import { useCan } from '@/lib/useCan';
+import CloseTemplatesPanel, { AssignTaskModal } from './CloseTemplatesPanel';
 
 interface Task { id: number; title: string; owner_name: string | null; owner_role: string | null; due_date: string; required: boolean; auto_check: string | null; check_result: { ok: boolean; detail: string } | null; status: string; signer_name: string | null; signed_at: string | null; overdue: boolean }
 interface Run { id: number; year: number; month: number; status: string; progress: { total: number; done: number; open_required: number }; tasks: Task[] }
@@ -22,6 +24,8 @@ export default function MonthClose() {
     const [error, setError] = useState<string | null>(null);
     const [ok, setOk] = useState<string | null>(null);
     const [override, setOverride] = useState<Record<number, string>>({});
+    const can = useCan();
+    const [assign, setAssign] = useState<{ id: number; title: string } | null>(null);
     const exists = runs.data?.some((r) => r.year === year && r.month === month);
 
     const act = async (fn: () => Promise<unknown>, msg = t('acc3.saved')) => {
@@ -52,7 +56,12 @@ export default function MonthClose() {
                         {r.tasks.map((k) => (
                             <tr key={k.id}>
                                 <Td>{k.title}{!k.required && <span className="ml-1 text-xs text-slate-500">({t('acc3.cl.optional')})</span>}</Td>
-                                <Td>{k.owner_name ?? t(`acc3.cl.role.${k.owner_role}`) }</Td>
+                                <Td>
+                                    <span className="flex flex-wrap items-center gap-2">
+                                        {k.owner_name ?? t(`acc3.cl.role.${k.owner_role}`)}
+                                        {k.status === 'pending' && r.status !== 'complete' && can('accounting.close_manage') && <button type="button" className="btn-ghost btn-sm" aria-label={`${t('gapb.assign.action')}: ${k.title}`} onClick={() => setAssign({ id: k.id, title: k.title })}>{t('gapb.assign.action')}</button>}
+                                    </span>
+                                </Td>
                                 <td className={`p-2 ${k.overdue ? 'font-semibold text-red-700' : ''}`}>{k.due_date}</td>
                                 <Td>
                                     {k.auto_check ? (
@@ -76,6 +85,8 @@ export default function MonthClose() {
                     </Table>
                 </div>
             )}
+            <CloseTemplatesPanel />
+            <AssignTaskModal task={assign} onClose={() => setAssign(null)} onDone={() => { setAssign(null); run.reload(); }} />
         </AppLayout>
     );
 }

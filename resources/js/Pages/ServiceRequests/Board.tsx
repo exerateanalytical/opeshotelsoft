@@ -62,6 +62,18 @@ export default function Board() {
         }
     }
 
+    const [escalating, setEscalating] = useState(false);
+    async function escalate() {
+        setEscalating(true);
+        try {
+            const r = await api<{ late: number; overdue: number }>('service-requests/escalate', { method: 'POST', body: '{}' });
+            setMsg({ ok: true, text: t('gape.sr.escalated', { late: r.late, overdue: r.overdue }) });
+            active.reload();
+        } catch (e) {
+            setMsg({ ok: false, text: e instanceof ApiError ? e.message : t('servicerequests.error.generic') });
+        } finally { setEscalating(false); }
+    }
+
     function sla(r: Req) {
         const mins = Math.round((new Date(r.due_at).getTime() - now) / 60000);
         return mins >= 0
@@ -80,6 +92,7 @@ export default function Board() {
         <AppLayout title={t('servicerequests.title')} subtitle={t('servicerequests.subtitle')}
             actions={<>
                 <Link href="/service-requests/settings" className="btn-secondary">{t('servicerequests.settings')}</Link>
+                {canManage && <button type="button" className="btn-secondary" disabled={escalating} onClick={escalate}>{t('gape.sr.escalate')}</button>}
                 {canManage && <button type="button" className="btn-primary" onClick={() => setOpen(!open)}>{t('servicerequests.new')}</button>}
             </>}>
             <Head title={t('servicerequests.title')} />

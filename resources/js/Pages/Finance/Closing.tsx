@@ -3,6 +3,7 @@ import { api, useApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { Banner, errMsg, Field, Loading, monthStart, today } from './shared';
 import { useT } from '@/lib/i18n';
+import { GapaFxExposure } from './gapaParts';
 
 interface CashFlow {
     sections: { key: string; label: string; total: number; lines: { label: string; amount: number; subtotal?: boolean }[] }[];
@@ -142,6 +143,8 @@ export default function Closing() {
                     </div>
                 )}
             </section>
+
+            <GapaFxExposure />
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { EmptyFor } from '@/Components/ui/EmptyStates';
+import { EmptyFor, EmptyAction } from '@/Components/ui/EmptyStates';
+import ExportButtons from '@/Components/ExportButtons';
 import { Head, Link } from '@inertiajs/react';
 import { CreditCard, Loader2, Plus, ScanLine, Search, Settings, X } from 'lucide-react';
 import { useState } from 'react';
@@ -119,6 +120,7 @@ export default function LoyaltyMembers() {
                         <button className="btn-secondary">{t('loyalty.members.search')}</button>
                     </form>
                     {list.error && <Banner kind="error" text={list.error.message} />}
+                    <ExportButtons report="loyalty-members" params={{ q: search, tier }} className="mb-3" />
                     <div className="overflow-x-auto">
                         <table className="table-auto w-full text-sm">
                             <thead>
@@ -129,7 +131,7 @@ export default function LoyaltyMembers() {
                             </thead>
                             <tbody>
                                 {list.loading && !list.data && <tr><td colSpan={6} className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-slate-500" /></td></tr>}
-                                {list.data?.data.length === 0 && <tr><td colSpan={6}><EmptyFor kind="loyalty" /></td></tr>}
+                                {list.data?.data.length === 0 && <tr><td colSpan={6}><EmptyFor kind="loyalty" action={<EmptyAction kind="loyalty" onClick={() => setEnrolOpen(true)} />} /></td></tr>}
                                 {list.data?.data.map((m) => (
                                     <tr key={m.id} onClick={() => setSelected(m.id)} className={`border-t cursor-pointer hover:bg-slate-50 ${selected === m.id ? 'bg-emerald-50' : ''}`}>
                                         <td className="py-2 pr-3 font-mono">{m.number}</td>

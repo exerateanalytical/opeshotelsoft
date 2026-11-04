@@ -1,9 +1,11 @@
-import { Loader2, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { Eye, Loader2, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import Alert from '@/Components/ui/Alert';
+import Modal from '@/Components/ui/Modal';
+import EmptyState from '@/Components/ui/EmptyState';
 
 export type FieldType = 'text' | 'number' | 'money' | 'bool' | 'select' | 'date' | 'textarea' | 'list';
 export interface Field {
@@ -146,6 +148,9 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [viewId, setViewId] = useState<number | null>(null);
+    const [delRow, setDelRow] = useState<Row | null>(null);
+    const detail = useApi<Row>(viewId ? `${path}/${viewId}` : null, [viewId]);
 
     const params = new URLSearchParams({ page: String(page), per_page: '25' });
     if (q) params.set('q', q);
@@ -178,10 +183,10 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
     }
 
     async function remove(row: Row) {
-        if (!confirm(t('prop.crud.confirm_remove', { action: deleteLabel, noun: noun.toLowerCase() }))) return;
         setError(null);
         try {
             await api(`${path}/${row.id}`, { method: 'DELETE' });
+            setDelRow(null);
             setSuccess(t('prop.crud.removed', { noun, action: deleteLabel.toLowerCase() }));
             list.reload();
         } catch (err) {
@@ -238,20 +243,43 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
                             <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500"><Loader2 className="inline h-4 w-4 animate-spin" /> {t('common.loading')}</td></tr>
                         )}
                         {!list.loading && !rows.length && (
-                            <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500">{t('prop.crud.none', { noun: noun.toLowerCase() })}</td></tr>
+                            <tr><td colSpan={columns.length + 1}>
+                                <EmptyState title={t('prop.crud.none', { noun: noun.toLowerCase() })}
+                                    action={<button type="button" className="btn-primary" onClick={() => open(null)}><Plus className="h-4 w-4" /> {t('prop.crud.new', { noun: noun.toLowerCase() })}</button>} />
+                            </td></tr>
                         )}
                         {rows.map((r) => (
                             <tr key={r.id} className="border-t border-slate-100">
                                 {columns.map((c) => <td key={c.key} className="whitespace-nowrap px-3 py-2">{cell(r, c)}</td>)}
                                 <td className="whitespace-nowrap px-3 py-2 text-right">
+                                    {r.id && <button className="btn-ghost btn-icon" title={t('gapf.crud.detail')} onClick={() => setViewId(r.id!)} aria-label={t('gapf.crud.detail')}><Eye className="h-4 w-4" /></button>}
                                     <button className="btn-ghost btn-icon" title={t('common.edit')} onClick={() => open(r)} aria-label={t('common.edit')}><Pencil className="h-4 w-4" /></button>
-                                    <button className="btn-ghost btn-icon text-red-700" title={deleteLabel} onClick={() => remove(r)} aria-label={deleteLabel}><Trash2 className="h-4 w-4" /></button>
+                                    <button className="btn-ghost btn-icon text-red-700" title={deleteLabel} onClick={() => setDelRow(r)} aria-label={deleteLabel}><Trash2 className="h-4 w-4" /></button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            <Modal open={viewId !== null} onClose={() => setViewId(null)} title={t('gapf.crud.detail_title', { noun })}
+                footer={detail.data && <button type="button" className="btn-secondary" onClick={() => { const r = detail.data!; setViewId(null); open(r); }}>{t('common.edit')}</button>}>
+                {detail.error && <p className="text-sm text-red-700">{detail.error.message}</p>}
+                {detail.loading && !detail.data && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
+                {detail.data && (
+                    <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                        {fields.map((f) => (
+                            <div key={f.name}>
+                                <dt className="text-slate-500">{f.label}</dt>
+                                <dd>{cell(detail.data!, { key: f.name, label: f.label, type: f.type })}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                )}
+            </Modal>
+            <Modal open={delRow !== null} onClose={() => setDelRow(null)} title={deleteLabel}
+                footer={<button type="button" className="btn-danger" onClick={() => delRow && remove(delRow)}>{deleteLabel}</button>}>
+                <p className="text-sm">{t('prop.crud.confirm_remove', { action: deleteLabel, noun: noun.toLowerCase() })}</p>
+            </Modal>
             {list.data && list.data.last_page > 1 && (
                 <div className="mt-3 flex items-center justify-between text-sm text-slate-500">
                     <span>{t('prop.crud.total', { count: list.data.total })}</span>

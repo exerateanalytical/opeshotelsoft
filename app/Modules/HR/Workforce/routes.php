@@ -27,6 +27,7 @@ Route::prefix('workforce')->controller(W::class)->group(function () {
     Route::post('requests/{req}/respond', 'respondSwap');
     Route::post('requests/{req}/cancel', 'cancelRequest');
     Route::post('requests/{req}/decide', 'decideRequest');
+    Route::post('requests/{req}/manager-cancel', 'managerCancelRequest');
 
     Route::get('leave/policies', 'leavePolicies');
     Route::put('leave/policies', 'saveLeavePolicy');
@@ -37,7 +38,8 @@ Route::prefix('workforce')->controller(W::class)->group(function () {
     Route::get('leave/balances', 'leaveBalances');
 
     Route::post('clock/{direction}', 'clockSelf')->whereIn('direction', ['in', 'out']);
-    Route::post('kiosk/{direction}', 'kioskClock')->whereIn('direction', ['in', 'out']);
+    Route::get('kiosk/board', 'kioskBoard');
+    Route::post('kiosk/{direction}','kioskClock')->whereIn('direction', ['in', 'out']);
     Route::put('employees/{employee}/pin', 'setPin');
     Route::get('anomalies', 'anomalies');
     Route::post('anomalies/{anomaly}/review', 'reviewAnomaly');

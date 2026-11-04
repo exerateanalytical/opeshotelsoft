@@ -17,6 +17,8 @@ Route::prefix('notifications')->group(function () {
 use App\Modules\Notifications\Http\MessagingController as M;
 
 Route::prefix('messaging')->group(function () {
+    // GAP-G bulk send from the reservations list (messaging.reply or messaging.manage, checked in the controller).
+    Route::post('bulk', [\App\Modules\Notifications\Http\BulkMessageController::class, 'send']);
     Route::middleware('can:messaging.view')->group(function () {
         Route::get('conversations', [M::class, 'conversations']);
         Route::get('conversations/{id}', [M::class, 'show'])->whereNumber('id');

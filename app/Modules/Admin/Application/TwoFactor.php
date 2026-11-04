@@ -33,6 +33,10 @@ class TwoFactor
      */
     public function mustEnrol(User $user): bool
     {
+        // An administrator reset this user's two-factor (GAPH): re-enrolment is due whatever the role or environment.
+        if ($user->must_enrol_mfa && ! $this->enabled($user)) {
+            return true;
+        }
         if (app()->runningUnitTests() && ! self::$enforceInTests) {
             return false;
         }
@@ -58,7 +62,7 @@ class TwoFactor
         if (! $user->mfa_secret || ! Totp::verify($user->mfa_secret, $code)) {
             throw new DomainException(__('auth.2fa.invalid_code'), 'invalid-code');
         }
-        $user->forceFill(['mfa_confirmed_at' => now()])->save();
+        $user->forceFill(['mfa_confirmed_at' => now(), 'must_enrol_mfa' => false])->save();
 
         return $this->regenerateCodes($user);
     }

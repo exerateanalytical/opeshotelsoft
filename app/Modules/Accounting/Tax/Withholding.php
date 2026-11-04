@@ -50,6 +50,14 @@ class Withholding
         return (array) $this->table('withholding_rates')->where('code', $d['code'])->first();
     }
 
+    /** Current tax profile of a supplier in this hotel (defaults when none saved yet). */
+    public function supplierProfileOf(int $supplierId): array
+    {
+        $p = $this->table('supplier_tax_profiles')->where('supplier_id', $supplierId)->first();
+
+        return $p ? (array) $p : ['supplier_id' => $supplierId, 'withholding_code' => null, 'exempt' => false, 'niu' => null];
+    }
+
     public function saveSupplierProfile(int $supplierId, array $d): array
     {
         $this->rates(); // seeds the country defaults on first use

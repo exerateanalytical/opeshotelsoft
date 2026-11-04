@@ -6,13 +6,16 @@ import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import { useCan } from '@/lib/useCan';
 import Alert from '@/Components/ui/Alert';
+import { ContractActions, QuoteTool } from '@/Components/gape/RevenueTools';
 
 interface Promo { id: number; code: string; name: string; type: 'percent' | 'amount'; value: number; uses: number; max_uses: number | null; active: boolean }
-interface Contract { id: number; code: string; name: string; valid_from: string; valid_to: string; last_room_availability: boolean; active: boolean; company?: { name: string }; rate_plan?: { code: string; derived_adjust_percent: number }; allotments: { id: number; rooms: number; start_date: string; end_date: string; room_type_id: number }[] }
+interface Contract { id: number; code: string; name: string; valid_from: string; valid_to: string; last_room_availability: boolean; active: boolean; notes?: string | null; company?: { name: string }; rate_plan?: { code: string; derived_adjust_percent: number }; allotments: { id: number; rooms: number; start_date: string; end_date: string; room_type_id: number }[] }
 
 export default function RevenueOffers() {
     const t = useT();
+    const can = useCan();
     const promos = useApi<{ data: Promo[] }>('revenue/promo-codes');
     const contracts = useApi<{ data: Contract[] }>('revenue/contracts');
     const companies = useApi<{ data: { id: number; name: string }[] }>('companies?per_page=200');
@@ -34,6 +37,8 @@ export default function RevenueOffers() {
             <div className="mx-auto max-w-5xl space-y-4">
                 {msg && <Alert variant="danger">{msg}</Alert>}
 
+                <QuoteTool types={types.data?.data ?? []} plans={(plans.data?.data ?? []).map((x) => ({ id: x.id, name: x.name, code: x.code }))} />
+
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{t('revenue.offers.promos')}</h2>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -52,7 +57,7 @@ export default function RevenueOffers() {
                     {promos.data?.data.map((x) => (
                         <div key={x.id} className="flex items-center justify-between rounded-md border border-slate-200 p-2 text-sm">
                             <span><strong>{x.code}</strong> · {x.name} · {x.type === 'percent' ? `${x.value}%` : formatCurrency(x.value)} · {t('revenue.offers.uses')} {x.uses}{x.max_uses ? `/${x.max_uses}` : ''}</span>
-                            <button type="button" className="btn-secondary" onClick={() => run(() => api(`revenue/promo-codes/${x.id}`, { method: 'PATCH', body: JSON.stringify({ name: x.name, type: x.type, value: x.value, active: !x.active }) }), promos.reload)}>{x.active ? t('revenue.common.reject') : t('revenue.common.accept')}</button>
+                            {can('revenue.manage') && <button type="button" className="btn-secondary" onClick={() => run(() => api(`revenue/promo-codes/${x.id}`, { method: 'PATCH', body: JSON.stringify({ name: x.name, type: x.type, value: x.value, active: !x.active }) }), promos.reload)}>{x.active ? t('revenue.common.reject') : t('revenue.common.accept')}</button>}
                         </div>
                     ))}
                 </section>
@@ -84,6 +89,7 @@ export default function RevenueOffers() {
                         <div key={x.id} className="space-y-2 rounded-md border border-slate-200 p-3 text-sm">
                             <div className="font-medium">{x.code} · {x.name} · {x.company?.name} · {x.rate_plan?.code} ({x.rate_plan?.derived_adjust_percent}%)</div>
                             <div className="text-slate-600">{formatDate(x.valid_from)} → {formatDate(x.valid_to)}{x.last_room_availability ? ` · ${t('revenue.offers.lra')}` : ''}</div>
+                            <ContractActions c={x} types={types.data?.data ?? []} onSaved={contracts.reload} />
                             {x.allotments.map((a) => <div key={a.id}>{a.rooms} × {types.data?.data.find((y) => y.id === a.room_type_id)?.name} · {formatDate(a.start_date)} → {formatDate(a.end_date)}</div>)}
                             {al.contract === x.id ? (
                                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

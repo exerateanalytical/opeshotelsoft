@@ -7,6 +7,8 @@ import { useT } from '@/lib/i18n';
 import { Banner, errMsg, Field, Loading, today } from './shared';
 import { M, Table, Td, Th } from './coreShared';
 import { AbNav, uploadFile } from './ab3Shared';
+import { useCan } from '@/lib/useCan';
+import { CapturePreview, ChainEditModal, InvoiceApprovalsPanel } from './PayablesExtras';
 
 interface Chain { id: number; name: string; min_amount: number; max_amount: number | null; steps_list: { role: string; label: string | null }[]; active: boolean }
 interface Inbox { id: number; supplier_invoice_id: number; reference: string; supplier: string; total: number; role: string; label: string | null; step_no: number }
@@ -27,10 +29,14 @@ export default function PayablesWorkflow() {
     const [dg, setDg] = useState({ to_user_id: '', starts_on: today(), ends_on: today(), reason: '' });
     const [conv, setConv] = useState<{ id: number; supplier_id: string; reference: string; date: string; net_total: string; tax_total: string; account: string } | null>(null);
     const [note, setNote] = useState('');
+    const can = useCan();
+    const [editChain, setEditChain] = useState<Chain | null>(null);
+    const [preview, setPreview] = useState<number | null>(null);
+    const [ver, setVer] = useState(0);
 
     const run = async (fn: () => Promise<unknown>, after?: () => void) => {
         setError(null); setOk(null);
-        try { await fn(); setOk(t('acc3.saved')); after?.(); chains.reload(); inbox.reload(); deleg.reload(); caps.reload(); } catch (e) { setError(errMsg(e)); }
+        try { await fn(); setOk(t('acc3.saved')); after?.(); chains.reload(); inbox.reload(); deleg.reload(); caps.reload(); setVer((v) => v + 1); } catch (e) { setError(errMsg(e)); }
     };
 
     return (
@@ -39,6 +45,8 @@ export default function PayablesWorkflow() {
             <QueryStatus query={chains} variant="table" />
             <AbNav active="/finance/payables-workflow" />
             <Banner error={error} success={ok} />
+
+            {can('payables.manage', 'payables.approve') && <InvoiceApprovalsPanel suppliers={suppliers.data?.data ?? []} version={ver} onChange={() => { inbox.reload(); }} />}
 
             <div className="card mb-4 p-4">
                 <h3 className="mb-3 font-semibold">{t('acc3.pay.inbox')}</h3>
@@ -68,8 +76,8 @@ export default function PayablesWorkflow() {
                         <div className="sm:col-span-2"><Field label={t('acc3.pay.roles')}><input className="input w-full" value={chain.roles} onChange={(e) => setChain({ ...chain, roles: e.target.value })} /></Field></div>
                         <button className="btn-primary sm:col-span-2">{t('common.save')}</button>
                     </form>
-                    <Table head={<><Th>{t('acc3.name')}</Th><Th r>{t('acc3.pay.min_amount')}</Th><Th>{t('acc3.pay.steps')}</Th></>}>
-                        {chains.data?.map((c) => <tr key={c.id}><Td b>{c.name}</Td><Td r>{M(c.min_amount)}</Td><Td>{c.steps_list.map((s) => s.role).join(' > ')}</Td></tr>)}
+                    <Table head={<><Th>{t('acc3.name')}</Th><Th r>{t('acc3.pay.min_amount')}</Th><Th>{t('acc3.pay.steps')}</Th><Th /></>}>
+                        {chains.data?.map((c) => <tr key={c.id}><Td b>{c.name}</Td><Td r>{M(c.min_amount)}</Td><Td>{c.steps_list.map((s) => s.role).join(' > ')}</Td><Td r>{can('payables.approval_config') && <button type="button" className="btn-secondary btn-sm" aria-label={`${t('gapb.edit')} ${c.name}`} onClick={() => setEditChain(c)}>{t('gapb.edit')}</button>}</Td></tr>)}
                     </Table>
                 </div>
                 <div className="card p-4">
@@ -102,7 +110,7 @@ export default function PayablesWorkflow() {
                 <Table head={<><Th>{t('acc3.pay.file')}</Th><Th>{t('acc3.status')}</Th><Th /></>}>
                     {caps.data?.captures.map((c) => (
                         <tr key={c.id}><Td>{c.filename}</Td><Td>{t(`acc3.pay.cap.${c.status}`)}</Td>
-                            <Td r>{c.status !== 'converted' && <button className="btn-secondary" onClick={() => setConv({ id: c.id, supplier_id: String(c.extracted.supplier_id ?? ''), reference: String(c.extracted.reference ?? ''), date: String(c.extracted.date ?? today()), net_total: String(c.extracted.net_total ?? ''), tax_total: String(c.extracted.tax_total ?? '0'), account: '632000' })}>{t('acc3.pay.confirm')}</button>}</Td></tr>
+                            <Td r><button type="button" className="btn-ghost btn-sm mr-1" aria-label={`${t('gapb.cap.preview')} ${c.filename}`} onClick={() => setPreview(c.id)}>{t('gapb.cap.preview')}</button>{c.status !== 'converted' && <button className="btn-secondary" onClick={() => setConv({ id: c.id, supplier_id: String(c.extracted.supplier_id ?? ''), reference: String(c.extracted.reference ?? ''), date: String(c.extracted.date ?? today()), net_total: String(c.extracted.net_total ?? ''), tax_total: String(c.extracted.tax_total ?? '0'), account: '632000' })}>{t('acc3.pay.confirm')}</button>}</Td></tr>
                     ))}
                 </Table>
                 {conv && (
@@ -120,6 +128,8 @@ export default function PayablesWorkflow() {
                     </form>
                 )}
             </div>
+            <ChainEditModal chain={editChain} onClose={() => setEditChain(null)} onSaved={() => { setEditChain(null); chains.reload(); }} />
+            <CapturePreview id={preview} onClose={() => setPreview(null)} />
         </AppLayout>
     );
 }

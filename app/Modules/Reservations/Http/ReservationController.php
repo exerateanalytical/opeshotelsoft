@@ -141,6 +141,20 @@ class ReservationController
         return $this->service->assignRoom($reservation, $data['room_id'])->load('room');
     }
 
+    /** Rooms of the booked type that are sellable and free for the reservation's dates (bulk assign picker). */
+    public function availableRooms(Request $request, Reservation $reservation)
+    {
+        $this->can($request, 'view');
+        $busy = Reservation::whereNotNull('room_id')->where('id', '!=', $reservation->id)
+            ->whereIn('status', Reservation::ACTIVE)
+            ->where('arrival', '<', $reservation->departure)->where('departure', '>', $reservation->arrival)
+            ->select('room_id');
+
+        return \App\Modules\Property\Domain\Room::where('room_type_id', $reservation->room_type_id)
+            ->where('active', true)->whereNotIn('hk_status', ['out_of_order', 'out_of_service'])
+            ->whereNotIn('id', $busy)->orderBy('number')->get(['id', 'number', 'hk_status']);
+    }
+
     private function can(Request $request, string $ability): void
     {
         $u = $request->user();

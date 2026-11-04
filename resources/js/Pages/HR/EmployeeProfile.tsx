@@ -11,6 +11,10 @@ import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Assets, Conduct, Data, Documents, Employment, Growth, Overview, Pay, Time, Timeline } from './EmployeeProfileSections';
 import { Badge } from './shared';
+import { KioskPinField } from './WorkforceGapd';
+import { FeedbackSummaryCard } from '@/Pages/People/PeopleGapd';
+import EmployeeTrainingPanel from '@/Components/gapi/EmployeeTrainingPanel';
+import { useCan } from '@/lib/useCan';
 
 interface Action { key: string; href?: string; print?: string; api?: string }
 interface Header {
@@ -49,6 +53,8 @@ export default function EmployeeProfile({ employeeId }: { employeeId: number }) 
     const [visited, setVisited] = useState<string[]>(['overview']);
     const h = head.data;
     const e = h?.employee;
+    const can = useCan();
+    const showTraining = can('talent.view');
     const sections = h?.sections ?? [];
     const canPay = sections.includes('pay');
     const pick = (k: string) => (setTab(k), setVisited((v) => (v.includes(k) ? v : [...v, k])));
@@ -85,8 +91,21 @@ export default function EmployeeProfile({ employeeId }: { employeeId: number }) 
                         )}
                     </div>
 
-                    {sections.length === 0 && <div className="card mt-4"><EmptyFor kind="staff" /></div>}
-                    <Tabs className="mt-4" label={t('profile.sections')} value={tab} onChange={pick} tabs={sections.map((k) => ({ key: k, label: t(`profile.tab.${k}`) }))} />
+                    {tab === 'overview' && (
+                        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                            <FeedbackSummaryCard employeeId={employeeId} />
+                            <KioskPinField employeeId={employeeId} />
+                        </div>
+                    )}
+                    {sections.length === 0 &&<div className="card mt-4"><EmptyFor kind="staff" /></div>}
+                    <Tabs className="mt-4" label={t('profile.sections')} value={tab} onChange={pick} tabs={[...sections.map((k) => ({ key: k, label: t(`profile.tab.${k}`) })), ...(showTraining ? [{ key: 'gapi-training', label: t('gapi.training.tab') }] : [])]} />
+
+                    {/* GAPI: training records tab (talent API), mounted once visited. */}
+                    {showTraining && visited.includes('gapi-training') && (
+                        <div role="tabpanel" id="panel-gapi-training" aria-labelledby="tab-gapi-training" hidden={tab !== 'gapi-training'} className="mt-4">
+                            <EmployeeTrainingPanel employeeId={employeeId} employeeName={e.full_name} />
+                        </div>
+                    )}
 
                     {sections.map((k) => visited.includes(k) && (
                         <Section key={k} id={employeeId} name={k} active={tab === k}>

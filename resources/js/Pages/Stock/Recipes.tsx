@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import QueryStatus from '@/Components/ui/QueryStatus';
 import StockTabs from './StockTabs';
+import RecipeHistory from './RecipeHistory';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -85,6 +86,7 @@ export default function Recipes() {
                     </table>
                     <p className="mt-2">{t('stock2.recipes.plate_cost')}: <b>{fcfa(detail.data.analysis.plate_cost)}</b>
                         {detail.data.analysis.margin_pct !== null && <> - {t('stock2.recipes.col.margin')}: <b className={detail.data.analysis.below_target ? 'text-red-700' : ''}>{detail.data.analysis.margin_pct} %</b> ({t('stock2.recipes.net_price')} {fcfa(detail.data.analysis.net_price)})</>}</p>
+                    <RecipeHistory recipeId={openId} reloadKey={detail.data.analysis.plate_cost} />
                 </div>
             )}
 

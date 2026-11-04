@@ -4,6 +4,7 @@ namespace App\Modules\Tenancy\Http;
 
 use App\Modules\Tenancy\Domain\Hotel;
 use App\Platform\Events\EventBus;
+use App\Platform\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -61,6 +62,40 @@ class HotelController
         return DB::transaction(function () use ($hotel, $data, $bus) {
             $hotel->update($data);
             $bus->record('tenancy.hotel.updated', ['id' => $hotel->id, 'changes' => array_keys($hotel->getChanges())], 'hotel', $hotel->id);
+
+            return $hotel;
+        });
+    }
+
+    /**
+     * Activate or deactivate a hotel (GAPH). Refuses to deactivate the hotel the caller is working in
+     * or the last active hotel of the group. Audit-logged with the reason.
+     */
+    public function status(Request $request, Hotel $hotel, EventBus $bus, TenantContext $ctx)
+    {
+        $actor = $request->user();
+        abort_unless($actor->can('hotels.manage'), 403);
+        $data = $request->validate([
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+        if ($data['status'] === 'inactive') {
+            abort_if((int) $ctx->hotelId() === (int) $hotel->id, 422, 'You cannot deactivate the hotel you are currently working in.');
+        }
+
+        return DB::transaction(function () use ($hotel, $data, $actor, $bus) {
+            if ($data['status'] === 'inactive' && $hotel->status === 'active') {
+                // Lock the group's active hotels so two concurrent requests cannot both pass the last-hotel guard.
+                $active = Hotel::withoutGlobalScopes()->where('group_id', $hotel->group_id)->where('status', 'active')
+                    ->lockForUpdate()->pluck('id');
+                abort_if($active->count() <= 1, 422, 'The last active hotel of the group cannot be deactivated.');
+            }
+            $from = $hotel->status;
+            $hotel->update(['status' => $data['status']]);
+            activity('security')->causedBy($actor)->performedOn($hotel)->event('hotel_status_changed')
+                ->withProperties(['from' => $from, 'to' => $data['status'], 'reason' => $data['reason'], 'ip' => request()->ip()])
+                ->log('hotel_status_changed');
+            $bus->record('tenancy.hotel.status_changed', ['id' => $hotel->id, 'from' => $from, 'to' => $data['status']], 'hotel', $hotel->id);
 
             return $hotel;
         });
