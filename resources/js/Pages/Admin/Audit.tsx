@@ -53,21 +53,21 @@ export default function AuditIndex() {
             <div className="card p-4 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
                 <div>
                     <label className="label" htmlFor="f-user">{t('admin.audit.user')}</label>
-                    <select id="f-user" className="input w-full" value={f.user_id} onChange={set('user_id')}>
+                    <select id="f-user" className="select w-full" value={f.user_id} onChange={set('user_id')}>
                         <option value="">{t('common.all')}</option>
                         {(filters.data?.users ?? []).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="label" htmlFor="f-model">{t('admin.audit.model')}</label>
-                    <select id="f-model" className="input w-full" value={f.subject_type} onChange={set('subject_type')}>
+                    <select id="f-model" className="select w-full" value={f.subject_type} onChange={set('subject_type')}>
                         <option value="">{t('common.all')}</option>
                         {(filters.data?.subject_types ?? []).map((s) => <option key={s} value={s}>{short(s)}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="label" htmlFor="f-event">{t('admin.audit.event')}</label>
-                    <select id="f-event" className="input w-full" value={f.event} onChange={set('event')}>
+                    <select id="f-event" className="select w-full" value={f.event} onChange={set('event')}>
                         <option value="">{t('common.all')}</option>
                         {(filters.data?.events ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>

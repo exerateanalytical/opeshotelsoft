@@ -1,3 +1,5 @@
+import { formatCurrency } from '@/lib/utils';
+
 /** Fetch helper for the member portal (session cookie + XSRF, JSON in and out). */
 export class MemberApiError extends Error {
     status: number;
@@ -31,6 +33,7 @@ export async function mapi<T = Record<string, unknown>>(method: 'GET' | 'POST', 
     return json as T;
 }
 
-export const money = (n: number, currency = 'XAF') => `${Math.round(n).toLocaleString('fr-FR')} ${currency}`;
+/** Money in the current language (shared formatter: narrow no-break space groups, comma or point decimals). */
+export const money = (n: number, currency = 'XAF') => formatCurrency(Math.round(n), currency);
 
 export const fmtDate = (d: string, locale: string) => new Date(d + (d.length === 10 ? 'T00:00:00' : '')).toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });

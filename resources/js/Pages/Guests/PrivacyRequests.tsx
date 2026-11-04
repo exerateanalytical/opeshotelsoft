@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Req {
     id: number; guest_id: number; kind: string; status: string; reason: string; decision_note: string | null; created_at: string;
@@ -38,13 +39,13 @@ export default function PrivacyRequests() {
     return (
         <AppLayout title={t('guests.privacy.title')} subtitle={t('guests.privacy.subtitle')}>
             <Head title={t('guests.privacy.title')} />
-            {msg && <div className={`mb-4 rounded-lg px-4 py-2 text-sm border ${msg.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{msg.text}</div>}
+            {msg && <Alert variant={msg.ok ? 'success' : 'danger'} className="mb-4">{msg.text}</Alert>}
             <div className="flex gap-2 mb-4 overflow-x-auto">
                 {['pending', 'approved', 'rejected'].map((s) => (
                     <button key={s} onClick={() => setStatus(s)} className={status === s ? 'btn-primary' : 'btn-secondary'}>{t(`guests.privacy.tab.${s}`)}</button>
                 ))}
             </div>
-            {list.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{list.error.message}</div>}
+            {list.error && <Alert variant="danger" className="mb-4">{list.error.message}</Alert>}
             {list.loading && !list.data && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             <div className="space-y-3">
                 {list.data?.data.length === 0 && <p className="text-sm text-slate-500">{t(`guests.privacy.empty.${status}`)}</p>}

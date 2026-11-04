@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, msg } from './WorkforceTabs';
+import Alert from '@/Components/ui/Alert';
 
 interface Shift { id: number; date: string; starts_at: string; ends_at: string; role: string | null }
 interface Req { id: number; kind: string; status: string; requester: string | null; counterpart: string | null; shift: Shift | null }
@@ -22,7 +23,7 @@ export default function WorkforceRequests() {
             <QueryStatus query={open} variant="list" rows={3} />
             <QueryStatus query={reqs} variant="list" />
             <WorkforceTabs active="/hr/workforce/requests" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
             <div className="card mb-4 p-4 text-sm"><h2 className="mb-2 font-semibold">{t('workforce.requests.open_shifts')}</h2>
                 {open.data?.length === 0 && <p className="text-slate-500">{t('workforce.none')}</p>}
                 <ul className="divide-y divide-slate-100">{open.data?.map((s) => (

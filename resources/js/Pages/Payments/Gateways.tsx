@@ -69,7 +69,7 @@ function GatewayCard({ gateway, onSaved }: { gateway: Gateway; onSaved: () => vo
                 <label className="min-h-11 label flex items-center gap-2">
                     <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} /> {t('payments.gateways.enabled')}
                 </label>
-                <select className="input" value={mode} onChange={(e) => setMode(e.target.value as Gateway['mode'])} aria-label={t('payments.gateways.sandbox')}>
+                <select className="select" value={mode} onChange={(e) => setMode(e.target.value as Gateway['mode'])} aria-label={t('payments.gateways.sandbox')}>
                     <option value="sandbox">{t('payments.gateways.sandbox')}</option>
                     <option value="live">{t('payments.gateways.live')}</option>
                 </select>

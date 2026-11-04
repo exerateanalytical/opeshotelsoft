@@ -45,7 +45,7 @@ export default function Import() {
                 <div className="grid gap-3 sm:grid-cols-3 items-end">
                     <label className="block">
                         <span className="label">{t('onboarding.import.kind')}</span>
-                        <select className="input" value={kind} onChange={(e) => { setKind(e.target.value as typeof kind); setResult(null); }}>
+                        <select className="select" value={kind} onChange={(e) => { setKind(e.target.value as typeof kind); setResult(null); }}>
                             {KINDS.map((k) => <option key={k} value={k}>{t(`onboarding.import.kind.${k}`)}</option>)}
                         </select>
                     </label>
@@ -72,7 +72,7 @@ export default function Import() {
                             {t(`onboarding.import.status.${result.status}`)} — {t('onboarding.import.summary', { ok: result.rows_ok, failed: result.rows_failed, total: result.rows_total })}
                         </p>
                         {result.report.some((r) => !r.ok) && (
-                            <div className="overflow-x-auto"><table className="mt-2 w-full">
+                            <div className="table-wrap"><table className="table-auto w-full mt-2">
                                 <thead><tr className="text-left text-slate-500"><th className="w-20 py-1">{t('onboarding.import.row')}</th><th>{t('onboarding.import.errors')}</th></tr></thead>
                                 <tbody>
                                     {result.report.filter((r) => !r.ok).map((r, i) => (
@@ -91,7 +91,7 @@ export default function Import() {
                 <h2 className="mb-2 font-semibold text-slate-900">{t('onboarding.import.history')}</h2>
                 <QueryStatus query={history} variant="table" rows={3} />
                 {history.data && history.data.length === 0 && <EmptyFor kind="generic" />}
-                <div className="overflow-x-auto"><table className="w-full text-sm">
+                <div className="table-wrap"><table className="table-auto w-full text-sm">
                     <tbody>
                         {(history.data ?? []).map((b) => (
                             <tr key={b.id} className="border-t border-slate-100">
@@ -135,7 +135,7 @@ function CopySetup() {
         <div className="card p-4 mb-4 space-y-3">
             <h2 className="font-semibold text-slate-900">{t('onboarding.copy.title')}</h2>
             <p className="text-sm text-slate-500">{t('onboarding.copy.help')}</p>
-            <select className="input max-w-sm" aria-label={t('onboarding.copy.source')} value={source} onChange={(e) => setSource(e.target.value)}>
+            <select className="select max-w-sm" aria-label={t('onboarding.copy.source')} value={source} onChange={(e) => setSource(e.target.value)}>
                 <option value="">{t('onboarding.copy.source')}</option>
                 {(hotels.data?.data ?? []).filter((h) => h.id !== current).map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
             </select>

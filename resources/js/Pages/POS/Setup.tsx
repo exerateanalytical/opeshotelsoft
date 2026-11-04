@@ -83,7 +83,7 @@ export default function Setup({ outlets, outletId }: { outlets: Outlet[]; outlet
                             }, tr('pos.setup.level_saved'), () => setPl(null));
                         }}>
                             <input className="input w-full" placeholder={tr('pos.setup.level_name_ph')} aria-label={tr('pos.setup.level_name_ph')} required value={pl.name} onChange={(e) => setPl({ ...pl, name: e.target.value })} />
-                            <select className="input w-full" value={pl.outlet_id} onChange={(e) => setPl({ ...pl, outlet_id: e.target.value })} aria-label={tr('pos.common.all_outlets')}>
+                            <select className="select w-full" value={pl.outlet_id} onChange={(e) => setPl({ ...pl, outlet_id: e.target.value })} aria-label={tr('pos.common.all_outlets')}>
                                 <option value="">{tr('pos.common.all_outlets')}</option>
                                 {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                             </select>
@@ -102,12 +102,12 @@ export default function Setup({ outlets, outletId }: { outlets: Outlet[]; outlet
                             <p className="text-xs text-slate-500">{tr('pos.setup.fixed_hint')}</p>
                             {pl.items.map((it, i) => (
                                 <div key={i} className="flex gap-2">
-                                    <select className="input w-full" value={it.pos_menu_item_id} onChange={(e) => setPl({ ...pl, items: pl.items.map((x, j) => (j === i ? { ...x, pos_menu_item_id: e.target.value } : x)) })} aria-label={tr('pos.setup.item_ph')}>
+                                    <select className="select w-full" value={it.pos_menu_item_id} onChange={(e) => setPl({ ...pl, items: pl.items.map((x, j) => (j === i ? { ...x, pos_menu_item_id: e.target.value } : x)) })} aria-label={tr('pos.setup.item_ph')}>
                                         <option value="">{tr('pos.setup.item_ph')}</option>
                                         {menu.data?.data.map((m) => <option key={m.id} value={m.id}>{m.name} ({formatCurrency(m.price)})</option>)}
                                     </select>
                                     <input className="input w-28" type="number" min={0} placeholder={tr('pos.menu.price')} aria-label={tr('pos.menu.price')} required value={it.price} onChange={(e) => setPl({ ...pl, items: pl.items.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)) })} />
-                                    <button type="button" title={tr('pos.common.remove')} className="text-slate-500" onClick={() => setPl({ ...pl, items: pl.items.filter((_, j) => j !== i) })}><X className="w-4 h-4" /></button>
+                                    <button type="button" title={tr('pos.common.remove')} className="btn-ghost btn-icon btn-sm" onClick={() => setPl({ ...pl, items: pl.items.filter((_, j) => j !== i) })} aria-label={tr('pos.common.remove')}><X className="w-4 h-4" /></button>
                                 </div>
                             ))}
                             <button type="button" className="btn-secondary" onClick={() => setPl({ ...pl, items: [...pl.items, { pos_menu_item_id: '', price: '' }] })}><Plus className="w-4 h-4" /> {tr('pos.setup.fixed_price')}</button>

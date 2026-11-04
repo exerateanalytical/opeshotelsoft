@@ -25,7 +25,7 @@ export default function Page() {
     }, [outlets.data]);
 
     const actions = (
-        <select className="input w-full sm:w-48" aria-label={t('pos.menu.outlet')} value={outletId ?? ''} onChange={(e) => setOutletId(Number(e.target.value))}>
+        <select className="select w-full sm:w-48" aria-label={t('pos.menu.outlet')} value={outletId ?? ''} onChange={(e) => setOutletId(Number(e.target.value))}>
             {posOutlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
         </select>
     );

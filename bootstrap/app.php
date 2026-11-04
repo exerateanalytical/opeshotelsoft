@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => \App\Platform\Tenancy\ResolveTenant::class,
             'idempotent' => \App\Platform\Http\Idempotency::class,
         ]);
-        $middleware->trustProxies(at: '*');
+        // Trusted proxies come from config/trustedproxy.php (env TRUSTED_PROXIES, default none): SEC2.
         $middleware->prepend(\App\Http\Middleware\PerfDebug::class);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         // Tenant context must exist before route-model binding applies tenant scopes.

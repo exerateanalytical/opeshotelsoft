@@ -50,12 +50,18 @@ abstract class BaseDriver implements ChannelDriver
         return $out;
     }
 
-    /** Verify `X-Signature: sha256=<hmac(body)>` using credentials.webhook_secret. */
+    /**
+     * Verify `X-Signature: sha256=<hmac(body)>` using credentials.webhook_secret, else the connection's generated
+     * inbound secret. Unsigned traffic is refused in every environment, sandbox included.
+     */
     public function verify(Request $request, Connection $c): bool
     {
         $secret = $this->cred($c, 'webhook_secret');
         if ($secret === '') {
-            return $c->environment === 'sandbox'; // sandbox connections may receive unsigned test traffic
+            $secret = (string) ($c->inbound_secret ?? '');
+        }
+        if ($secret === '') {
+            return false;
         }
         $sig = (string) ($request->header('X-Signature') ?? $request->header('X-Hub-Signature-256') ?? '');
         $expected = 'sha256='.hash_hmac('sha256', $request->getContent(), $secret);

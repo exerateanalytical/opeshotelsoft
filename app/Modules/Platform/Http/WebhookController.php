@@ -25,8 +25,15 @@ class WebhookController
             'url' => ['required', 'url:https,http'],
             'event_types' => ['required', 'array', 'min:1'],
             'event_types.*' => ['string', 'max:100'],
-            'hotel_id' => ['nullable', 'integer'],
+            'hotel_id' => ['nullable', 'integer',
+                \Illuminate\Validation\Rule::exists('hotels', 'id')->where('group_id', $request->user()->group_id)],
         ]);
+        // A hotel-scoped user may only subscribe to events of a hotel they are allowed in, never to the whole group.
+        $allowed = $request->user()->allowedHotelIds();
+        if ($allowed !== null) {
+            abort_if(empty($data['hotel_id']) || ! in_array((int) $data['hotel_id'], array_map('intval', $allowed), true), 403,
+                'You can only subscribe to events of a hotel you are allowed in.');
+        }
         $secret = 'whsec_'.Str::random(40);
         $sub = WebhookSubscription::create($data + ['secret' => $secret]);
 

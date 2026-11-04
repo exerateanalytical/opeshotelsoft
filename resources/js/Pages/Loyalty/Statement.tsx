@@ -6,6 +6,7 @@ import { api, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { errorText, openPdf } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 interface Statement {
     member: { id: number; number: string; name: string; tier: string | null; email: string | null };
@@ -50,7 +51,7 @@ export default function LoyaltyStatement({ memberId }: { memberId: number }) {
                 </div>
             }>
             <Head title={t('loyalty.stmt.title')} />
-            {msg && <div className={`mb-4 rounded-lg border px-4 py-2 text-sm ${msg.kind === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>{msg.text}</div>}
+            {msg && <Alert variant={msg.kind === 'error' ? 'danger' : 'success'} className="mb-4">{msg.text}</Alert>}
             <div className="flex flex-wrap gap-3 mb-4 items-end text-sm">
                 <label>{t('loyalty.stmt.from')}<input type="date" className="input block" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
                 <label>{t('loyalty.stmt.to')}<input type="date" className="input block" value={to} onChange={(e) => setTo(e.target.value)} /></label>
@@ -64,8 +65,8 @@ export default function LoyaltyStatement({ memberId }: { memberId: number }) {
                             <div key={k} className="card p-3"><div className="text-xs text-slate-500">{t(`loyalty.stmt.${k}`)}</div><div className="font-semibold">{n(v)}</div></div>
                         ))}
                     </div>
-                    <div className="card overflow-x-auto">
-                        <table className="w-full text-sm">
+                    <div className="card table-wrap">
+                        <table className="table-auto w-full text-sm">
                             <thead><tr className="text-left text-xs text-slate-500 border-b"><th className="p-2">{t('loyalty.stmt.date')}</th><th className="p-2">{t('loyalty.stmt.activity')}</th><th className="p-2 text-right">{t('loyalty.stmt.points')}</th><th className="p-2 text-right">{t('loyalty.stmt.balance')}</th></tr></thead>
                             <tbody>
                                 {d.lines.map((l) => (

@@ -181,7 +181,11 @@ class CloudSync
             if (! array_key_exists('hotel_id', $row) && ! array_key_exists('group_id', $row)) {
                 [$parent, $fk] = TablePolicy::PARENTS[$table] ?? [null, null];
                 $p = $parent && isset($row[$fk]) ? $this->rows->read($parent, (int) $row[$fk]) : null;
-                if (! $p || (int) ($p['hotel_id'] ?? 0) !== $node->hotel_id && (int) ($p['group_id'] ?? 0) !== $node->group_id) {
+                // A parent that carries a hotel_id must be this node's hotel; group-level parents must be this group (SEC1 audit).
+                $owned = $p && (array_key_exists('hotel_id', $p) && $p['hotel_id'] !== null
+                    ? (int) $p['hotel_id'] === $node->hotel_id
+                    : (int) ($p['group_id'] ?? 0) === $node->group_id);
+                if (! $owned) {
                     return 'Parent row is not owned by this hotel.';
                 }
             }

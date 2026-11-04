@@ -18,6 +18,19 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'resources/js'),
         },
     },
+    build: {
+        rollupOptions: {
+            output: {
+                // React + Inertia change only on dependency upgrades: their own chunk stays cached
+                // in browsers across app releases (docs/PERFORMANCE.md).
+                manualChunks(id) {
+                    if (/node_modules[\\/](react|react-dom|scheduler|@inertiajs)[\\/]/.test(id)) {
+                        return 'vendor-react';
+                    }
+                },
+            },
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

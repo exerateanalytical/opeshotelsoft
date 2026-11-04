@@ -36,18 +36,24 @@ final class Totp
     /** Accepts the current step and one step either side (clock drift). */
     public static function verify(string $secret, string $code, ?int $timestamp = null, int $window = 1): bool
     {
+        return self::matchStep($secret, $code, $timestamp, $window) !== null;
+    }
+
+    /** The time step the code belongs to (current step and one either side), or null. Used for replay protection. */
+    public static function matchStep(string $secret, string $code, ?int $timestamp = null, int $window = 1): ?int
+    {
         $code = preg_replace('/\s+/', '', $code);
         if (! preg_match('/^\d{6}$/', $code)) {
-            return false;
+            return null;
         }
         $step = intdiv($timestamp ?? time(), self::PERIOD);
         for ($i = -$window; $i <= $window; $i++) {
             if (hash_equals(self::hotp($secret, $step + $i), $code)) {
-                return true;
+                return $step + $i;
             }
         }
 
-        return false;
+        return null;
     }
 
     public static function uri(string $secret, string $account, string $issuer = 'OpesHotelSoft'): string

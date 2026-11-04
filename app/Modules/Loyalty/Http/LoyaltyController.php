@@ -31,6 +31,7 @@ class LoyaltyController
             'name' => ['sometimes', 'string', 'max:100'], 'spend_per_point' => ['sometimes', 'integer', 'min:1'],
             'point_value' => ['sometimes', 'integer', 'min:1'], 'expiry_months' => ['sometimes', 'integer', 'between:1,120'],
             'enrolment_bonus' => ['sometimes', 'integer', 'min:0'], 'eligible_departments' => ['sometimes', 'array'],
+            'max_manual_adjustment' => ['sometimes', 'integer', 'min:1', 'max:10000000'],
         ]);
         $program = $this->loyalty->setupDefault($data['name'] ?? 'Membership Rewards');
         $program->update(collect($data)->except('name')->all());
@@ -97,6 +98,10 @@ class LoyaltyController
     {
         abort_unless($request->user()->can('loyalty.adjust_points'), 403);
         $data = $request->validate(['points' => ['required', 'integer', 'not_in:0'], 'reason' => ['required', 'string', 'max:255']]);
+        // SEC2: one adjustment above the programme cap (default 5,000 points) needs loyalty.adjust_large.
+        $cap = (int) (Program::first()?->max_manual_adjustment ?? 5000);
+        abort_if(abs($data['points']) > $cap && ! $request->user()->can('loyalty.adjust_large'), 403,
+            "Adjustments above $cap points need the loyalty.adjust_large permission.");
 
         return response()->json($this->loyalty->adjust($member, $data['points'], $data['reason']), 201);
     }

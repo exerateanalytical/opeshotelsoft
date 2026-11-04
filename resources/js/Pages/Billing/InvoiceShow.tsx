@@ -233,7 +233,7 @@ export default function InvoiceShow({ id }: { id: string }) {
                             <p className="text-xs text-slate-500">{t('billing.invoice.settlement', { amount: formatCurrency(due) })}</p>
                             {due <= 0 ? <p className="text-sm text-emerald-700">{t('billing.invoice.fully_paid')}</p> : (
                                 <form className="space-y-3" onSubmit={recordPayment}>
-                                    <select className="input" required value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })} aria-label={t('billing.invoice.method')}>
+                                    <select className="select" required value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })} aria-label={t('billing.invoice.method')}>
                                         <option value="" disabled>{t('billing.invoice.method')}</option>
                                         {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                                     </select>

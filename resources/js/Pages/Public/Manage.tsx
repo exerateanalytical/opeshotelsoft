@@ -113,7 +113,7 @@ export default function Manage(p: PublicProps) {
                                 <form onSubmit={deposit} className="space-y-3">
                                     <div>
                                         <label className="label" htmlFor="method">{d.method}</label>
-                                        <select id="method" className="input" value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })}>
+                                        <select id="method" className="select" value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })}>
                                             <option value="mtn_momo">{d.mtn}</option><option value="orange_money">{d.orange}</option><option value="card">{d.card}</option>
                                         </select>
                                     </div>

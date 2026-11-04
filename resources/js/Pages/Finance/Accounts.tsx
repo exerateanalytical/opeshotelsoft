@@ -39,7 +39,7 @@ export default function Accounts() {
             <Banner error={error ?? list.error?.message} success={ok} />
             <div className="mb-4 flex flex-wrap items-end gap-2">
                 <input className="input w-full sm:w-64" placeholder={t('fin.accounts.search')} aria-label={t('fin.accounts.search')} value={q} onChange={(e) => setQ(e.target.value)} />
-                <select className="input w-full sm:w-40" value={cls} onChange={(e) => setCls(e.target.value)} aria-label={t('fin.accounts.all_classes')}>
+                <select className="select w-full sm:w-40" value={cls} onChange={(e) => setCls(e.target.value)} aria-label={t('fin.accounts.all_classes')}>
                     <option value="">{t('fin.accounts.all_classes')}</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((c) => <option key={c} value={c}>{t('fin.accounts.class_n', { n: c })}</option>)}
                 </select>
@@ -50,7 +50,7 @@ export default function Accounts() {
                     <Field label={t('fin.col.code')}><input className="input w-full" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required pattern="[1-9][0-9]{1,19}" /></Field>
                     <Field label={t('fin.col.name')}><input className="input w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></Field>
                     <Field label={t('fin.col.type')}>
-                        <select className="input w-full" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                        <select className="select w-full" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
                             {TYPES.map((ty) => <option key={ty} value={ty}>{t(`fin.account_type.${ty}`)}</option>)}
                         </select>
                     </Field>

@@ -170,6 +170,6 @@ class MobileMoneyController
         $this->can($request, 'payments.payouts');
         $d = $request->validate(['destination' => ['required', 'string', 'max:60']]);
 
-        return $this->payouts->updateDestination(PayoutRun::findOrFail($payout), $item, $d['destination']);
+        return $this->payouts->updateDestination(PayoutRun::findOrFail($payout), $item, $d['destination'], $request->user());
     }
 }

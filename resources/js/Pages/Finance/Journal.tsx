@@ -4,6 +4,7 @@ import { api, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Account, Banner, errMsg, Field, JournalEntry, Loading, Page, today } from './shared';
 import { useT } from '@/lib/i18n';
+import { uploadFile } from './ab3Shared';
 import PrintPdfButton from '@/Components/PrintPdfButton';
 
 interface Line { account: string; debit: string; credit: string; description: string; department: string }
@@ -35,7 +36,7 @@ export default function Journal() {
         <div>
             <Banner error={error ?? list.error?.message} success={ok} />
             <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:flex-wrap sm:items-end [&>*]:min-w-0">
-                <Field label={t('fin.col.journal')}><select className="input w-full sm:w-44" value={journal} onChange={(e) => { setJournal(e.target.value); setPage(1); }}>
+                <Field label={t('fin.col.journal')}><select className="select w-full sm:w-44" value={journal} onChange={(e) => { setJournal(e.target.value); setPage(1); }}>
                     <option value="">{t('fin.journal.all_journals')}</option>
                     {(journals.data ?? []).map((j) => <option key={j.code} value={j.code}>{j.code} · {j.name}</option>)}
                 </select></Field>
@@ -112,7 +113,7 @@ function EntryDetail({ id, onClose, onReversed }: { id: number; onClose: () => v
                     <h3 className="font-semibold">{e ? `${e.number} · ${e.journal_code}` : t('fin.journal.entry')}</h3>
                     {e && <p className="text-sm text-slate-500">{formatDate(e.date)} — {e.description} {e.source_type && `(${e.source_type})`}</p>}
                 </div>
-                <button onClick={onClose} className="text-slate-500"><X className="h-5 w-5" /></button>
+                <button onClick={onClose} className="btn-ghost btn-icon btn-sm" aria-label={t('ui.nav.close')}><X className="h-5 w-5" /></button>
             </div>
             <Banner error={error ?? entry.error?.message} />
             <Loading on={entry.loading} />
@@ -164,6 +165,7 @@ function EntryForm({ accounts, onClose, onDone }: { accounts: Account[]; onClose
     const [lines, setLines] = useState<Line[]>([emptyLine(), emptyLine()]);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const [files, setFiles] = useState<File[]>([]);
 
     const debit = lines.reduce((s, l) => s + num(l.debit), 0);
     const credit = lines.reduce((s, l) => s + num(l.credit), 0);
@@ -182,14 +184,24 @@ function EntryForm({ accounts, onClose, onDone }: { accounts: Account[]; onClose
                 journal, date, description,
                 lines: lines.map((l) => ({ account: l.account, debit: num(l.debit), credit: num(l.credit), description: l.description || null, department: l.department || null })),
             };
-            const r = await api<JournalEntry>('accounting/entries', { method: 'POST', body: JSON.stringify(body) });
+            let r: JournalEntry;
+            if (files.length) {
+                // Supporting documents go as multipart; the server reads `lines` as a JSON string.
+                const fd = new FormData();
+                fd.append('journal', journal); fd.append('date', date); fd.append('description', description);
+                fd.append('lines', JSON.stringify(body.lines));
+                files.forEach((f) => fd.append('attachments[]', f));
+                r = await uploadFile<JournalEntry>('accounting/entries', fd);
+            } else {
+                r = await api<JournalEntry>('accounting/entries', { method: 'POST', body: JSON.stringify(body) });
+            }
             onDone(r.number);
         } catch (err) { setError(errMsg(err)); } finally { setBusy(false); }
     }
 
     return (
         <form onSubmit={submit} className="card mb-4 p-4">
-            <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">{t('fin.journal.manual_title')}</h3><button type="button" onClick={onClose} className="text-slate-500"><X className="h-5 w-5" /></button></div>
+            <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">{t('fin.journal.manual_title')}</h3><button type="button" onClick={onClose} className="btn-ghost btn-icon btn-sm" aria-label={t('ui.nav.close')}><X className="h-5 w-5" /></button></div>
             <Banner error={error} />
             <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-[8rem_10rem_1fr] [&>*]:min-w-0">
                 <Field label={t('fin.col.journal')}><input className="input w-full" required value={journal} onChange={(e) => setJournal(e.target.value)} /></Field>
@@ -219,6 +231,12 @@ function EntryForm({ accounts, onClose, onDone }: { accounts: Account[]; onClose
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div className="mt-3">
+                <Field label={t('acc4.entry.attachments')}>
+                    <input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.xlsx,.csv,.docx,.txt" className="input w-full" onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 10))} />
+                </Field>
+                <p className="mt-1 text-sm text-slate-600">{t('acc4.entry.attachments_hint')}</p>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3">
                 <button className="btn-primary" disabled={!valid || busy}>{t('fin.journal.post_entry')}</button>

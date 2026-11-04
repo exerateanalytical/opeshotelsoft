@@ -41,7 +41,7 @@ export default function Stocktake() {
             <StockTabs current="stocktake" />
             {msg && <p className="mb-3 text-sm text-red-700">{msg}</p>}
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-                <select className="input w-full sm:w-48" value={store} onChange={(e) => setStore(e.target.value)} aria-label={t('stock3.take.store')}>
+                <select className="select w-full sm:w-48" value={store} onChange={(e) => setStore(e.target.value)} aria-label={t('stock3.take.store')}>
                     <option value="">{t('stock3.take.store')}</option>
                     {(Array.isArray(stores.data) ? stores.data : stores.data?.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>

@@ -32,8 +32,9 @@ class ManageService
         private DigitalCheckin $checkin, private EventBus $bus,
     ) {}
 
-    public function options(Reservation $r): array
+    public function options(Reservation $r, ?string $lang = null): array
     {
+        $lang = in_array($lang, ['fr', 'en'], true) ? $lang : ($r->loadMissing('guest')->guest?->language === 'en' ? 'en' : 'fr');
         $hotel = Hotel::findOrFail($r->hotel_id);
         $upcoming = in_array($r->status, ['tentative', 'confirmed'], true);
         $balance = $this->balance($r);
@@ -42,7 +43,7 @@ class ManageService
         return [
             'modify' => $this->modifyRule($r),
             'cancel' => $upcoming ? ['allowed' => true, 'fee' => $this->reservations->cancellationFee($r), 'currency' => $r->currency] : ['allowed' => false, 'fee' => 0, 'currency' => $r->currency],
-            'services' => $r->status === 'cancelled' || in_array($r->status, ['checked_out', 'no_show'], true) ? [] : $this->purchases->services(),
+            'services' => $r->status === 'cancelled' || in_array($r->status, ['checked_out', 'no_show'], true) ? [] : $this->purchases->services($lang),
             'early_checkin' => $upcoming && ExperienceSetting::forCurrentHotel()->early_checkin_enabled ? collect(CheckoutFeeRule::where('kind', 'early_checkin')->where('active', true)->orderBy('after_hour')->pluck('after_hour'))
                 ->map(fn ($h) => ['hour' => (int) $h, 'fee' => $quoteFee('early_checkin', (int) $h)])->filter(fn ($o) => $o['fee'])->values()->all() : [],
             'late_checkout' => ExperienceSetting::forCurrentHotel()->late_checkout_enabled && in_array($r->status, ['tentative', 'confirmed', 'checked_in'], true) ? collect(CheckoutFeeRule::where('kind', 'late')->where('active', true)->orderBy('after_hour')->pluck('after_hour'))

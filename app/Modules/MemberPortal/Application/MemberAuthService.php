@@ -30,6 +30,9 @@ class MemberAuthService
 
     public const OTP_RESEND_SECONDS = 60;
 
+    /** One-time codes sent to one contact per day, all purposes together (SEC2). */
+    public const OTP_DAILY_CAP = 10;
+
     public const THROTTLE_ATTEMPTS = 5;
 
     public const THROTTLE_DECAY = 300;
@@ -85,11 +88,15 @@ class MemberAuthService
         $account = $existing ?? new MemberAccount([$col => $contact['value']]);
         $account->group_id = $group->id;
         // Names, language and consent are only a request: they are applied to the profile after the code is proven.
-        $account->fill([
-            'first_name' => $d['first_name'], 'last_name' => $d['last_name'], 'locale' => ($d['locale'] ?? null) === 'en' ? 'en' : 'fr',
-            'marketing_consent' => (bool) ($d['marketing_consent'] ?? false),
-        ]);
-        $account->save();
+        // SEC2: a repeated sign-up only re-sends the code; it never replaces the names of a pending account
+        // (someone else could otherwise rename the profile the real owner is about to verify).
+        if (! $existing) {
+            $account->fill([
+                'first_name' => $d['first_name'], 'last_name' => $d['last_name'], 'locale' => ($d['locale'] ?? null) === 'en' ? 'en' : 'fr',
+                'marketing_consent' => (bool) ($d['marketing_consent'] ?? false),
+            ]);
+            $account->save();
+        }
         $this->issueOtp($account, 'signup', $contact);
     }
 
@@ -229,6 +236,12 @@ class MemberAuthService
         if ($a->otp_sent_at && $a->otp_sent_at->gt(now()->subSeconds(self::OTP_RESEND_SECONDS)) && $a->otp_purpose === $purpose) {
             return; // resend cool-down: the previous code is still valid
         }
+        // Daily cap per contact (SMS and e-mail cost, flooding): silent beyond it, like every other refusal here.
+        $daily = 'member-otp-day:'.sha1($contact['type'].'|'.$contact['value']);
+        if (RateLimiter::tooManyAttempts($daily, self::OTP_DAILY_CAP)) {
+            return;
+        }
+        RateLimiter::hit($daily, 86400);
         $code = (string) random_int(100000, 999999);
         $a->forceFill(['otp_hash' => $this->hash($a, $purpose, $code), 'otp_purpose' => $purpose, 'otp_expires_at' => now()->addMinutes(self::OTP_MINUTES),
             'otp_attempts' => 0, 'otp_sent_at' => now()])->save();
@@ -270,12 +283,41 @@ class MemberAuthService
         if ($contact['type'] === 'email') {
             $q->whereRaw('lower(email) = ?', [$contact['value']]);
         } else {
-            $d = $contact['value'];
+            // Full E.164 comparison (SEC2): a profile is linked only when its whole normalised number equals the proven
+            // one, and never when several profiles carry that number (staff merge them first).
+            $cc = $this->callingCode();
+            $want = self::e164($contact['value'], $cc);
             $digits = "regexp_replace(coalesce(phone, ''), '\\D', '', 'g')";
-            strlen($d) >= 9 ? $q->whereRaw("length($digits) >= 9 and right($digits, 9) = ?", [substr($d, -9)]) : $q->whereRaw("$digits = ?", [$d]);
+            $matches = $q->whereRaw("right($digits, 8) = ?", [substr($want, -8)])->get()
+                ->filter(fn (Guest $g) => self::e164((string) $g->phone, $cc) === $want);
+
+            return $matches->count() === 1 ? $matches->first() : null;
         }
 
         return $q->orderByRaw('exists (select 1 from loyalty_memberships m where m.guest_id = guests.id) desc')->orderBy('id')->first();
+    }
+
+    /** Digits of an E.164 number: international prefix 00 dropped, local numbers get the calling code (trunk 0 dropped). */
+    public static function e164(string $raw, string $callingCode): string
+    {
+        $d = preg_replace('/\D+/', '', $raw);
+        if (str_starts_with($d, '00')) {
+            return substr($d, 2);
+        }
+        if (strlen($d) <= 9) {
+            return $callingCode.ltrim($d, '0');
+        }
+
+        return $d;
+    }
+
+    /** Calling code of the group's country (CEMAC), Cameroon by default. */
+    private function callingCode(): string
+    {
+        $codes = ['CM' => '237', 'GA' => '241', 'CG' => '242', 'CF' => '236', 'TD' => '235', 'GQ' => '240'];
+        $country = $this->ctx->withoutScope(fn () => \App\Modules\Tenancy\Domain\Hotel::where('group_id', $this->ctx->groupId())->orderBy('id')->value('country'));
+
+        return $codes[strtoupper((string) $country)] ?? '237';
     }
 
     private function limiterKey(string $identifier, ?string $ip): string

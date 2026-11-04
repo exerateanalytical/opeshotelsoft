@@ -20,8 +20,11 @@ class StaffController
             $q->where('name', 'ilike', '%'.$term.'%');
         }
 
+        // Roles are only listed to users who may view user accounts; everyone else gets id and name (assignment pickers).
+        $withRoles = $request->user()->can('users.view') || $request->user()->can('users.manage');
+
         return $q->orderBy('name')->limit(500)->get(['id', 'name'])
-            ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'roles' => $u->roles->pluck('name')->values()]);
+            ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name] + ($withRoles ? ['roles' => $u->roles->pluck('name')->values()] : []));
     }
 
     /** Users of the group who can work in the given hotel. */

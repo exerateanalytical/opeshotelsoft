@@ -59,7 +59,7 @@ export default function WatermarkForm({ onSaved, nextLabel, onNext }: { onSaved?
             <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
                     <span className="label">{t('documents2.wm.mode')}</span>
-                    <select className="input" value={f.mode} onChange={(e) => set('mode', e.target.value as WM['mode'])}>
+                    <select className="select" value={f.mode} onChange={(e) => set('mode', e.target.value as WM['mode'])}>
                         <option value="none">{t('documents2.wm.none')}</option>
                         <option value="text">{t('documents2.wm.text')}</option>
                         <option value="image">{t('documents2.wm.image')}</option>
@@ -71,7 +71,7 @@ export default function WatermarkForm({ onSaved, nextLabel, onNext }: { onSaved?
                 </label>
                 <label className="block">
                     <span className="label">{t('documents2.wm.position')}</span>
-                    <select className="input" value={f.position} onChange={(e) => set('position', e.target.value as WM['position'])}>
+                    <select className="select" value={f.position} onChange={(e) => set('position', e.target.value as WM['position'])}>
                         <option value="center">{t('documents2.wm.center')}</option>
                         <option value="diagonal">{t('documents2.wm.diagonal')}</option>
                         <option value="tile">{t('documents2.wm.tile')}</option>
@@ -79,7 +79,7 @@ export default function WatermarkForm({ onSaved, nextLabel, onNext }: { onSaved?
                 </label>
                 <label className="block">
                     <span className="label">{t('documents2.wm.apply')}</span>
-                    <select className="input" value={f.apply} onChange={(e) => set('apply', e.target.value as WM['apply'])}>
+                    <select className="select" value={f.apply} onChange={(e) => set('apply', e.target.value as WM['apply'])}>
                         <option value="all">{t('documents2.wm.apply_all')}</option>
                         <option value="drafts">{t('documents2.wm.apply_drafts')}</option>
                     </select>

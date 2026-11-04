@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface GuestLite { id: number; first_name: string; last_name: string; email?: string | null; phone?: string | null }
 interface Member {
@@ -28,7 +29,7 @@ interface Page<T> { data: T[]; total: number; current_page: number; last_page: n
 
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : String(e));
 const Banner = ({ kind, text }: { kind: 'error' | 'ok'; text: string }) => (
-    <div className={`mb-4 rounded-lg border px-4 py-2 text-sm ${kind === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>{text}</div>
+    <Alert variant={kind === 'error' ? 'danger' : 'success'} className="mb-4">{text}</Alert>
 );
 
 export default function LoyaltyMembers() {
@@ -108,7 +109,7 @@ export default function LoyaltyMembers() {
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                             <input className="input w-full pl-9" placeholder={t('loyalty.members.search_ph')} aria-label={t('loyalty.members.search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
                         </div>
-                        <select className="input" aria-label={t('ui2.loyalty.filter_tier')} value={tier} onChange={(e) => { setTier(e.target.value); setPage(1); }}>
+                        <select className="select" aria-label={t('ui2.loyalty.filter_tier')} value={tier} onChange={(e) => { setTier(e.target.value); setPage(1); }}>
                             <option value="">{t('loyalty.members.all_tiers')}</option>
                             <option value="SILVER">Silver</option>
                             <option value="GOLD">Gold</option>
@@ -183,7 +184,7 @@ function EnrolPanel({ onClose, onDone, onError }: { onClose: () => void; onDone:
         <div className="card p-4 mb-4">
             <div className="flex justify-between items-center mb-3">
                 <h2 className="font-semibold">{t('loyalty.members.enrol_title')}</h2>
-                <button onClick={onClose} className="text-slate-500 hover:text-slate-600"><X className="w-4 h-4" /></button>
+                <button onClick={onClose} className="btn-ghost btn-icon btn-sm" aria-label={t('ui.nav.close')}><X className="w-4 h-4" /></button>
             </div>
             <form className="flex gap-2 mb-2" onSubmit={(e) => { e.preventDefault(); setTerm(q); }}>
                 <input className="input flex-1" placeholder={t('loyalty.members.guest_search_ph')} aria-label={t('loyalty.members.guest_search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
@@ -202,7 +203,7 @@ function EnrolPanel({ onClose, onDone, onError }: { onClose: () => void; onDone:
             {guest && (
                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center mt-3">
                     <span className="text-sm flex-1">{t('loyalty.members.selected')} <b>{guest.first_name} {guest.last_name}</b></span>
-                    <select className="input" aria-label={t('ui2.loyalty.card_kind')} value={kind} onChange={(e) => setKind(e.target.value as 'digital' | 'physical')}>
+                    <select className="select" aria-label={t('ui2.loyalty.card_kind')} value={kind} onChange={(e) => setKind(e.target.value as 'digital' | 'physical')}>
                         <option value="digital">{t('loyalty.members.card_digital')}</option><option value="physical">{t('loyalty.members.card_physical')}</option>
                     </select>
                     <button className="btn-primary inline-flex items-center gap-2" disabled={busy} onClick={enrol}>{busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('loyalty.members.enrol')}</button>
@@ -247,7 +248,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
                     <div className="text-xs text-slate-500 font-mono">{d.number}</div>
                     <Link href={`/loyalty/members/${d.id}/statement`} className="text-xs text-blue-700 hover:underline">{t('loyalty.stmt.open')}</Link>
                 </div>
-                <button onClick={onClose} className="text-slate-500 hover:text-slate-600"><X className="w-4 h-4" /></button>
+                <button onClick={onClose} className="btn-ghost btn-icon btn-sm" aria-label={t('ui.nav.close')}><X className="w-4 h-4" /></button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                 <Stat label={t('loyalty.members.balance')} value={d.points_balance.toLocaleString()} />
@@ -268,7 +269,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
                     {d.cards.length === 0 && <li className="py-1 text-slate-500">{t('loyalty.members.no_cards')}</li>}
                 </ul>
                 <div className="flex gap-2">
-                    <select className="input flex-1" aria-label={t('ui2.loyalty.card_kind')} value={cardKind} onChange={(e) => setCardKind(e.target.value as 'digital' | 'physical')}>
+                    <select className="select flex-1" aria-label={t('ui2.loyalty.card_kind')} value={cardKind} onChange={(e) => setCardKind(e.target.value as 'digital' | 'physical')}>
                         <option value="physical">{t('loyalty.members.physical')}</option><option value="digital">{t('loyalty.members.digital')}</option>
                     </select>
                     <button className="btn-secondary" disabled={busy === 'card'} onClick={() => run('card', 'cards', { kind: cardKind }, t('loyalty.members.card_issued'))}>{t('loyalty.members.issue_card')}</button>
@@ -281,7 +282,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
             }}>
                 <h3 className="text-sm font-semibold">{t('loyalty.members.redeem_title')}</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <select className="input flex-1" required aria-label={t('loyalty.members.open_folio')} value={redeem.folio_id} onChange={(e) => setRedeem({ ...redeem, folio_id: e.target.value })}>
+                    <select className="select flex-1" required aria-label={t('loyalty.members.open_folio')} value={redeem.folio_id} onChange={(e) => setRedeem({ ...redeem, folio_id: e.target.value })}>
                         <option value="">{t('loyalty.members.open_folio')}</option>
                         {guestFolios.map((f) => <option key={f.id} value={f.id}>{f.number} · {f.name} · {formatCurrency(f.balance)}</option>)}
                     </select>

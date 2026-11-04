@@ -40,7 +40,7 @@ export default function GroupsIndex() {
             {creating && <CreateBlock companies={rowsOf(companies.data)} onDone={() => { setCreating(false); blocks.reload(); }} />}
 
             <div className="flex gap-3 mb-4">
-                <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('groups.all_statuses')}>
+                <select className="select w-auto" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('groups.all_statuses')}>
                     <option value="">{t('groups.all_statuses')}</option>
                     {STATUSES.map((s) => <option key={s} value={s}>{t(`groups.status.${s}`)}</option>)}
                 </select>
@@ -114,16 +114,16 @@ function CreateBlock({ companies, onDone }: { companies: Named[]; onDone: () => 
                 <label className="label">{t('res.departure')}<input className="input mt-1" type="date" required min={form.arrival || undefined} value={form.departure} onChange={set('departure')} /></label>
                 <label className="label">{t('groups.cutoff_date')}<input className="input mt-1" type="date" max={form.arrival || undefined} value={form.cutoff_date} onChange={set('cutoff_date')} /></label>
                 <label className="label">{t('res.status')}
-                    <select className="input mt-1" value={form.status} onChange={set('status')}><option value="tentative">{t('groups.status.tentative')}</option><option value="definite">{t('groups.status.definite')}</option></select>
+                    <select className="select mt-1" value={form.status} onChange={set('status')}><option value="tentative">{t('groups.status.tentative')}</option><option value="definite">{t('groups.status.definite')}</option></select>
                 </label>
                 <label className="label lg:col-span-2">{t('res.rate_plan')}
-                    <select className="input mt-1" value={form.rate_plan_id} onChange={set('rate_plan_id')}>
+                    <select className="select mt-1" value={form.rate_plan_id} onChange={set('rate_plan_id')}>
                         <option value="">{t('groups.create.rate_later')}</option>
                         {rowsOf(ratePlans.data).map((r) => <option key={r.id} value={r.id}>{r.code ? `${r.code} · ` : ''}{r.name}</option>)}
                     </select>
                 </label>
                 <label className="label lg:col-span-2">{t('res.company')}
-                    <select className="input mt-1" value={form.company_id} onChange={set('company_id')}>
+                    <select className="select mt-1" value={form.company_id} onChange={set('company_id')}>
                         <option value="">—</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
@@ -135,14 +135,14 @@ function CreateBlock({ companies, onDone }: { companies: Named[]; onDone: () => 
                 <div className="space-y-2">
                     {allocs.map((a, i) => (
                         <div key={i} className="grid grid-cols-[1fr_5rem_7rem_auto] gap-2">
-                            <select className="input" required value={a.room_type_id} onChange={(e) => setAllocs(allocs.map((x, j) => j === i ? { ...x, room_type_id: e.target.value } : x))} aria-label={t('groups.room_type_ph')}>
+                            <select className="select" required value={a.room_type_id} onChange={(e) => setAllocs(allocs.map((x, j) => j === i ? { ...x, room_type_id: e.target.value } : x))} aria-label={t('groups.room_type_ph')}>
                                 <option value="" disabled>{t('groups.room_type_ph')}</option>
                                 {rowsOf(roomTypes.data).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                             </select>
                             <input className="input" type="number" min={1} max={500} required aria-label={t('res.rooms')} placeholder={t('res.rooms')} value={a.rooms} onChange={(e) => setAllocs(allocs.map((x, j) => j === i ? { ...x, rooms: e.target.value } : x))} />
                             <input className="input" type="number" min={0} aria-label={t('groups.create.rate_opt')} placeholder={t('groups.create.rate_opt')} value={a.rate} onChange={(e) => setAllocs(allocs.map((x, j) => j === i ? { ...x, rate: e.target.value } : x))} />
-                            <button type="button" className="text-slate-500 hover:text-red-600 disabled:opacity-30" disabled={allocs.length === 1} title={t('groups.remove')}
-                                onClick={() => setAllocs(allocs.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4" /></button>
+                            <button type="button" className="btn-ghost btn-icon btn-sm disabled:opacity-30" disabled={allocs.length === 1} title={t('groups.remove')}
+                                onClick={() => setAllocs(allocs.filter((_, j) => j !== i))} aria-label={t('groups.remove')}><Trash2 className="w-4 h-4" /></button>
                         </div>
                     ))}
                 </div>

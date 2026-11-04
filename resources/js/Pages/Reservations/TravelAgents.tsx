@@ -6,6 +6,7 @@ import { Fragment, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Agent { id: number; name: string; iata_number: string | null; commission_percent: string | number; email: string | null; phone: string | null; active: boolean }
 interface Line { reservation_id: number; number: string; guest: string; arrival: string; departure: string; status: string; revenue: number; commission: number }
@@ -64,7 +65,7 @@ export default function TravelAgents() {
                     </div>
                 </section>
 
-                {message && <div className={cn('rounded-md border p-3 text-sm', message.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-red-300 bg-red-50 text-red-800')}>{message.text}</div>}
+                {message && <Alert variant={message.ok ? 'success' : 'danger'}>{message.text}</Alert>}
 
                 <section className="card overflow-x-auto p-4">
                     <h2 className="mb-2 font-medium">{t('res.agents.list')}</h2>

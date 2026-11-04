@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Page<T> { data: T[]; total: number; current_page: number; last_page: number; per_page?: number }
 interface Room { id: number; number: string }
@@ -116,8 +117,8 @@ export default function MaintenanceIndex() {
             }
         >
             <Head title={t('maint.title')} />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-            {success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{success}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+            {success && <Alert variant="success" className="mb-4">{success}</Alert>}
 
             <Tabs label={t('maint.title')} className="mb-4" value={tab} onChange={(k) => setTab(k as typeof tab)}
                 tabs={[{ key: 'orders', label: t('maint.tab.orders') }, { key: 'schedules', label: t('maint.tab.schedules') }]} />
@@ -183,7 +184,7 @@ export default function MaintenanceIndex() {
                                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 p-2 text-xs text-slate-500">
                                     <span>{t('maint.pager', { page: orders.data.current_page, last: orders.data.last_page, count: orders.data.total })}</span>
                                     <div className="flex items-center gap-2">
-                                        <select className="input w-auto" value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>
+                                        <select className="select w-auto" value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>
                                             {[25, 50, 100, 200].map((n) => <option key={n} value={n}>{t('maint.per_page', { count: n })}</option>)}
                                         </select>
                                         <button className="btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t('common.previous')}</button>
@@ -262,7 +263,7 @@ function TechPicker({ techs, value, onChange, className, placeholder }: { techs:
     const t = useT();
     if (!techs) return <input className={className} type="number" aria-label={t('maint.user_id_ph', { label: placeholder })} placeholder={t('maint.user_id_ph', { label: placeholder })} value={value} onChange={(e) => onChange(e.target.value)} />;
     return (
-        <select className={className} value={value} onChange={(e) => onChange(e.target.value)}>
+        <select className={className.replace(/\binput\b/, 'select')} value={value} onChange={(e) => onChange(e.target.value)}>
             <option value="">{placeholder}</option>
             {techs.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
@@ -302,31 +303,31 @@ function CreateOrder({ rooms, assets, techs, onClose, onSubmit }: {
                     <label className="flex min-h-11 items-center gap-2"><input type="radio" checked={f.target === 'asset'} onChange={() => set('target', 'asset')} /> {t('maint.asset')}</label>
                 </div>
                 {f.target === 'room' ? (
-                    <select className="input" value={f.room_id} onChange={(e) => set('room_id', e.target.value)} aria-label={t('maint.no_room')}>
+                    <select className="select" value={f.room_id} onChange={(e) => set('room_id', e.target.value)} aria-label={t('maint.no_room')}>
                         <option value="">{t('maint.no_room')}</option>
                         {rooms.map((r) => <option key={r.id} value={r.id}>{t('hk.room_no', { number: r.number })}</option>)}
                     </select>
                 ) : (
-                    <select className="input" value={f.asset_id} required onChange={(e) => set('asset_id', e.target.value)} aria-label={t('maint.select_asset')}>
+                    <select className="select" value={f.asset_id} required onChange={(e) => set('asset_id', e.target.value)} aria-label={t('maint.select_asset')}>
                         <option value="">{t('maint.select_asset')}</option>
                         {assets.map((a) => <option key={a.id} value={a.id}>{a.name}{a.tag ? ` (${a.tag})` : ''}</option>)}
                     </select>
                 )}
-                <select className="input" value={f.category} onChange={(e) => set('category', e.target.value)}>
+                <select className="select" value={f.category} onChange={(e) => set('category', e.target.value)}>
                     {CATEGORIES.map((c) => <option key={c} value={c}>{tl(c)}</option>)}
                 </select>
-                <select className="input" value={f.priority} onChange={(e) => set('priority', e.target.value)}>
+                <select className="select" value={f.priority} onChange={(e) => set('priority', e.target.value)}>
                     {PRIORITIES.map((c) => <option key={c} value={c}>{tl(c)}</option>)}
                 </select>
                 <TechPicker techs={techs} className="input" placeholder={t('hk.unassigned')} value={f.assigned_to} onChange={(v) => set('assigned_to', v)} />
                 <label className="label">{t('maint.due')}<input className="input" type="datetime-local" value={f.due_at} onChange={(e) => set('due_at', e.target.value)} /></label>
                 {f.target === 'room' && f.room_id && (
-                    <div className="sm:col-span-2 rounded border border-amber-200 bg-amber-50 p-2 text-sm space-y-2">
+                    <Alert variant="warning" className="sm:col-span-2"><div className="space-y-2">
                         <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={f.room_out_of_order} onChange={(e) => set('room_out_of_order', e.target.checked)} />{t('maint.take_ooo')}</label>
                         {f.room_out_of_order && (
                             <label className="label">{t('maint.ooo_until')}<input className="input" type="date" min={new Date().toISOString().slice(0, 10)} value={f.out_of_order_until} onChange={(e) => set('out_of_order_until', e.target.value)} /></label>
                         )}
-                    </div>
+                    </div></Alert>
                 )}
             </div>
             <div className="flex justify-end gap-2">
@@ -430,15 +431,15 @@ function Detail({ id, techs, assetName, userName, onClose, run, embedded }: {
                                     <p className="text-xs text-slate-500">{t('maint.parts_hint')}</p>
                                     {parts.map((p, i) => (
                                         <div key={i} className="flex gap-1">
-                                            <select className="input flex-1" value={p.stock_item_id} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, stock_item_id: e.target.value } : x)))} aria-label={t('maint.item_ph')}>
+                                            <select className="select flex-1" value={p.stock_item_id} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, stock_item_id: e.target.value } : x)))} aria-label={t('maint.item_ph')}>
                                                 <option value="">{t('maint.item_ph')}</option>
                                                 {(items.data?.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.unit ? ` (${s.unit})` : ''}</option>)}
                                             </select>
                                             <input className="input w-20" type="number" step="0.001" min="0.001" required value={p.quantity} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, quantity: e.target.value } : x)))} />
-                                            <button type="button" onClick={() => setParts(parts.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4 text-red-500" /></button>
+                                            <button className="btn-ghost btn-icon btn-sm" type="button" onClick={() => setParts(parts.filter((_, j) => j !== i))} aria-label={t('ui.remove')}><Trash2 className="w-4 h-4 text-red-500" /></button>
                                         </div>
                                     ))}
-                                    <button type="button" className="text-xs text-emerald-700" onClick={() => setParts([...parts, { stock_item_id: '', quantity: '1' }])}>{t('maint.add_part')}</button>
+                                    <button type="button" className="btn-ghost btn-sm" onClick={() => setParts([...parts, { stock_item_id: '', quantity: '1' }])}>{t('maint.add_part')}</button>
                                     <div className="flex justify-end"><button className="btn-primary">{t('maint.confirm_complete')}</button></div>
                                 </form>
                             )}
@@ -465,11 +466,11 @@ function CreateSchedule({ assets, initial, onClose, onSubmit }: { assets: Asset[
         }}>
             <div className="grid gap-3 sm:grid-cols-2">
                 <input className="input sm:col-span-2" required aria-label={t('maint.pm_title_ph')} placeholder={t('maint.pm_title_ph')} value={f.title} onChange={(e) => set('title', e.target.value)} />
-                <select className="input" value={f.asset_id} onChange={(e) => set('asset_id', e.target.value)} aria-label={t('maint.no_asset')}>
+                <select className="select" value={f.asset_id} onChange={(e) => set('asset_id', e.target.value)} aria-label={t('maint.no_asset')}>
                     <option value="">{t('maint.no_asset')}</option>
                     {assets.map((a) => <option key={a.id} value={a.id}>{a.name}{a.tag ? ` (${a.tag})` : ''}</option>)}
                 </select>
-                <select className="input" value={f.category} onChange={(e) => set('category', e.target.value)}>
+                <select className="select" value={f.category} onChange={(e) => set('category', e.target.value)}>
                     {CATEGORIES.map((c) => <option key={c} value={c}>{tl(c)}</option>)}
                 </select>
                 <label className="label">{t('maint.every_days')}<input className="input" type="number" min={1} max={730} required value={f.every_days} onChange={(e) => set('every_days', e.target.value)} /></label>

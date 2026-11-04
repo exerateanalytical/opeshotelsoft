@@ -38,6 +38,8 @@ final class Sheets
     {
         $out = fopen('php://temp', 'r+');
         foreach ($rows as $r) {
+            // Spreadsheet formula injection: text cells starting with = + - @ or a tab/CR are neutralised (SEC1 audit).
+            $r = array_map(fn ($v) => is_string($v) && $v !== '' && ! is_numeric($v) && strpbrk($v[0], "=+-@\t\r") !== false ? "'".$v : $v, $r);
             fputcsv($out, $r, ';', '"', '');
         }
         rewind($out);

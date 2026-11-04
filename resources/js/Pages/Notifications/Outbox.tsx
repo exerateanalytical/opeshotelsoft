@@ -70,14 +70,14 @@ export default function NotificationOutbox() {
             <div className="card p-4 mb-4 grid gap-3 sm:grid-cols-3">
                 <div>
                     <label className="label" htmlFor="status">{t('notif.status')}</label>
-                    <select id="status" className="input" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+                    <select id="status" className="select" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
                         <option value="">{t('common.all')}</option>
                         {Object.keys(BADGE).map((s) => <option key={s} value={s}>{t(`notif.status.${s}`)}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="label" htmlFor="channel">{t('notif.channel')}</label>
-                    <select id="channel" className="input" value={channel} onChange={(e) => { setChannel(e.target.value); setPage(1); }}>
+                    <select id="channel" className="select" value={channel} onChange={(e) => { setChannel(e.target.value); setPage(1); }}>
                         <option value="">{t('common.all')}</option>
                         <option value="email">{t('notif.email')}</option>
                         <option value="sms">SMS</option>

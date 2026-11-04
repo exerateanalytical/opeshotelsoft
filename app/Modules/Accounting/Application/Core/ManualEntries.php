@@ -4,6 +4,7 @@ namespace App\Modules\Accounting\Application\Core;
 
 use App\Modules\Accounting\Application\Ledger;
 use App\Modules\Accounting\Domain\JournalEntry;
+use App\Modules\Tenancy\Domain\Hotel;
 use App\Platform\Domain\DomainException;
 use App\Platform\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
@@ -18,9 +19,9 @@ class ManualEntries
     public function __construct(private Ledger $ledger, private TenantContext $ctx, private AuditTrail $audit) {}
 
     /** @param UploadedFile[] $files */
-    public function post(string $journal, string $date, string $description, array $lines, array $files): JournalEntry
+    public function post(string $journal, string $date, string $description, array $lines, array $files, bool $allowNoAttachment = false): JournalEntry
     {
-        if (! $files) {
+        if (! $files && ! ($allowNoAttachment && $this->attachmentsOptional())) {
             throw new DomainException('A manual entry needs at least one supporting document.', 'attachment-required');
         }
 
@@ -33,6 +34,14 @@ class ManualEntries
 
             return $entry->load('lines');
         });
+    }
+
+    /** Hotel setting `accounting.attachments_optional`: absent (new hotels) means strict; existing hotels were migrated to true. */
+    public function attachmentsOptional(): bool
+    {
+        $settings = Hotel::find($this->ctx->requireHotelId())?->settings ?? [];
+
+        return (bool) ($settings['accounting.attachments_optional'] ?? false);
     }
 
     public function attach(JournalEntry $entry, UploadedFile $file): array

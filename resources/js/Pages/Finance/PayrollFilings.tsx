@@ -34,7 +34,7 @@ export default function PayrollFilings() {
 
             <div className="card mb-4 p-4">
                 <div className="mb-3 flex flex-wrap items-end gap-2">
-                    <Field label={t('acc3.pf.kind')}><select className="input" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc3.pf.kind.${k}`)}</option>)}</select></Field>
+                    <Field label={t('acc3.pf.kind')}><select className="select" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc3.pf.kind.${k}`)}</option>)}</select></Field>
                     <Field label={t('acc3.pf.period')}><input type="month" className="input" value={period} onChange={(e) => setPeriod(e.target.value)} /></Field>
                     <button className="btn-primary" disabled={!build.data} onClick={() => dl('xlsx')}>Excel</button>
                     <button className="btn-secondary" disabled={!build.data} onClick={() => dl('csv')}>CSV</button>

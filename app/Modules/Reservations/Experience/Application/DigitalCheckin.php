@@ -119,7 +119,14 @@ class DigitalCheckin
         if ($bytes === false) {
             throw new DomainException('The ID photo could not be read.', 'bad-photo');
         }
-        $path = "checkins/{$r->hotel_id}/{$r->id}-id.".($m[1] === 'jpeg' ? 'jpg' : $m[1]);
+        // Content check, as in FrontDeskExtrasController::store(): the declared data-URL type is not trusted; the bytes
+        // must really be a JPEG, PNG or WebP image, and the stored extension follows the detected type.
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
+        $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'][$mime] ?? null;
+        if ($ext === null) {
+            throw new DomainException('The ID photo must be a JPEG, PNG or WebP image under 2 MB.', 'bad-photo');
+        }
+        $path = "checkins/{$r->hotel_id}/{$r->id}-id.".$ext;
         Storage::disk('local')->put($path, $bytes);
 
         return $path;

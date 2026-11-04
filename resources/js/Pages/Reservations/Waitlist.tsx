@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Entry {
     id: number; status: string; arrival: string; departure: string; adults: number; children: number; notes: string | null;
@@ -111,13 +112,13 @@ export default function Waitlist() {
                     )}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         <label className="label">{t('res.room_type')}
-                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
+                            <select className="select w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
                                 <option value="">{t('res.choose')}</option>
                                 {types.data?.data.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                             </select>
                         </label>
                         <label className="label">{t('res.rate_plan')}
-                            <select className="input w-full" value={form.rate_plan_id} onChange={(e) => setForm({ ...form, rate_plan_id: e.target.value })}>
+                            <select className="select w-full" value={form.rate_plan_id} onChange={(e) => setForm({ ...form, rate_plan_id: e.target.value })}>
                                 <option value="">{t('res.waitlist.decide_later')}</option>
                                 {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
@@ -130,12 +131,12 @@ export default function Waitlist() {
                     <button type="button" className="btn-primary" disabled={!form.guest || !form.room_type_id} onClick={add}>{t('res.waitlist.add')}</button>
                 </section>
 
-                {message && <div className={cn('rounded-md border p-3 text-sm', message.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-red-300 bg-red-50 text-red-800')}>{message.text}</div>}
+                {message && <Alert variant={message.ok ? 'success' : 'danger'}>{message.text}</Alert>}
 
                 <section className="card p-4">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <h2 className="font-medium">{t('res.waitlist.entries')}</h2>
-                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('res.waitlist.open')}>
+                        <select className="select" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('res.waitlist.open')}>
                             <option value="">{t('res.waitlist.open')}</option>
                             {['waiting', 'offered', 'converted', 'cancelled'].map((s) => <option key={s} value={s}>{t(`res.waitlist.status.${s}`)}</option>)}
                         </select>
@@ -160,7 +161,7 @@ export default function Waitlist() {
                                         <div className="flex flex-wrap items-center gap-2">
                                             {e.status === 'waiting' && <button type="button" className="btn-secondary" disabled={busy === e.id || !e.available} onClick={() => act(e, 'offer')}>{t('res.waitlist.offer')}</button>}
                                             {!e.rate_plan && (
-                                                <select className="input" value={convertPlan[e.id] ?? ''} onChange={(ev) => setConvertPlan({ ...convertPlan, [e.id]: ev.target.value })} aria-label={t('res.rate_plan')}>
+                                                <select className="select" value={convertPlan[e.id] ?? ''} onChange={(ev) => setConvertPlan({ ...convertPlan, [e.id]: ev.target.value })} aria-label={t('res.rate_plan')}>
                                                     <option value="">{t('res.rate_plan')}</option>
                                                     {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}
                                                 </select>

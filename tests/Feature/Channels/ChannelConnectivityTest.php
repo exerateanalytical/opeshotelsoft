@@ -25,6 +25,16 @@ class ChannelConnectivityTest extends TestCase
         return [$c, $type, $plan];
     }
 
+    private function signed(array $c, array $payload)
+    {
+        $body = json_encode($payload);
+
+        return $this->call('POST', "/api/v1/channels/inbound/{$c['uuid']}", [], [], [], [
+            'CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json',
+            'HTTP_X_SIGNATURE' => 'sha256='.hash_hmac('sha256', $body, $c['inbound_secret']),
+        ], $body);
+    }
+
     public function test_rate_change_pushes_ari_to_live_channels(): void
     {
         [$c, $type, $plan] = $this->connect('channex');
@@ -62,8 +72,9 @@ class ChannelConnectivityTest extends TestCase
             'rooms' => [['room_type_id' => 'DLX-EXT', 'rate_plan_id' => 'BAR-EXT', 'occupancy' => ['adults' => 2]]],
         ]];
 
-        $this->postJson("/api/v1/channels/inbound/{$c['uuid']}", $payload)->assertOk()->assertJsonPath('results.0.result', 'created');
-        $this->postJson("/api/v1/channels/inbound/{$c['uuid']}", $payload)->assertOk()->assertJsonPath('results.0.result', 'duplicate');
+        // SEC2: inbound bookings are signed with the secret returned once at creation, sandbox included.
+        $this->signed($c, $payload)->assertOk()->assertJsonPath('results.0.result', 'created');
+        $this->signed($c, $payload)->assertOk()->assertJsonPath('results.0.result', 'duplicate');
 
         $r = Reservation::where('external_ref', 'BDC-998877')->firstOrFail();
         $this->assertSame(115_000, $r->total_amount);
@@ -71,7 +82,7 @@ class ChannelConnectivityTest extends TestCase
 
         $payload['payload']['status'] = 'cancelled';
         $payload['payload']['revision_id'] = 'rev-2';
-        $this->postJson("/api/v1/channels/inbound/{$c['uuid']}", $payload)->assertOk()->assertJsonPath('results.0.result', 'cancelled');
+        $this->signed($c, $payload)->assertOk()->assertJsonPath('results.0.result', 'cancelled');
         $this->assertSame('cancelled', $r->fresh()->status);
     }
 
@@ -102,7 +113,7 @@ class ChannelConnectivityTest extends TestCase
 </OTA_HotelResNotifRQ>
 XML;
 
-        $res = $this->call('POST', "/api/v1/channels/inbound/{$c['uuid']}", [], [], [], ['CONTENT_TYPE' => 'application/xml'], $xml);
+        $res = $this->call('POST', "/api/v1/channels/inbound/{$c['uuid']}", [], [], [], ['CONTENT_TYPE' => 'application/xml', 'HTTP_X_SIGNATURE' => 'sha256='.hash_hmac('sha256', $xml, $c['inbound_secret'])], $xml);
         $res->assertOk();
         $this->assertStringContainsString('<Success/>', $res->getContent());
         $this->assertStringContainsString('4455667788', $res->getContent());

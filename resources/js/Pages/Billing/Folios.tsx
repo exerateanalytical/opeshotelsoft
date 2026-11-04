@@ -189,7 +189,7 @@ function OpenFolioForm({ companies, onDone }: { companies: Company[]; onDone: (i
             }
         }}>
             <label className="label">{t('billing.folios.kind')}
-                <select className="input mt-1" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+                <select className="select mt-1" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                     <option value="house">{lbl('billing.kind', 'house')}</option>
                     <option value="master">{lbl('billing.kind', 'master')}</option>
                     <option value="company">{lbl('billing.kind', 'company')}</option>
@@ -201,7 +201,7 @@ function OpenFolioForm({ companies, onDone }: { companies: Company[]; onDone: (i
                     onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </label>
             <label className="label">{t('billing.folios.company_optional')}
-                <select className="input mt-1" value={form.company_id} onChange={(e) => setForm({ ...form, company_id: e.target.value })}>
+                <select className="select mt-1" value={form.company_id} onChange={(e) => setForm({ ...form, company_id: e.target.value })}>
                     <option value="">—</option>
                     {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -325,7 +325,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, emb
                                         if (await run('charge', `folios/${f.id}/charges`, { ...charge, amount: Number(charge.amount) }, t('billing.folios.charge_posted')))
                                             setCharge({ charge_code: '', amount: '', description: '' });
                                     }}>
-                                        <select className="input" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })} aria-label={t('billing.folios.charge_code')}>
+                                        <select className="select" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })} aria-label={t('billing.folios.charge_code')}>
                                             <option value="" disabled>{t('billing.folios.charge_code')}</option>
                                             {chargeCodes.data?.filter((c) => c.code !== 'ROOM').map((c) => <option key={c.code} value={c.code}>{c.code} · {c.name}</option>)}
                                         </select>
@@ -341,7 +341,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, emb
                                         if (await run('pay', `folios/${f.id}/payments`, { ...payment, amount: Number(payment.amount), reference: payment.reference || null }, t('billing.folios.payment_recorded')))
                                             setPayment({ method: 'CASH', amount: '', reference: '' });
                                     }}>
-                                        <select className="input" value={payment.method} onChange={(e) => setPayment({ ...payment, method: e.target.value })}>
+                                        <select className="select" value={payment.method} onChange={(e) => setPayment({ ...payment, method: e.target.value })}>
                                             {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                                         </select>
                                         <div className="flex flex-wrap gap-2">
@@ -359,7 +359,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, emb
                                         if (await run('xfer', `folios/${f.id}/transfer`, { to_folio_id: Number(transfer.to_folio_id), amount: Number(transfer.amount), description: transfer.description || null }, t('billing.folios.transferred')))
                                             setTransfer({ to_folio_id: '', amount: '', description: '' });
                                     }}>
-                                        <select className="input" required value={transfer.to_folio_id} onChange={(e) => setTransfer({ ...transfer, to_folio_id: e.target.value })} aria-label={t('billing.folios.destination')}>
+                                        <select className="select" required value={transfer.to_folio_id} onChange={(e) => setTransfer({ ...transfer, to_folio_id: e.target.value })} aria-label={t('billing.folios.destination')}>
                                             <option value="" disabled>{t('billing.folios.destination')}</option>
                                             {openFolios.map((o) => <option key={o.id} value={o.id}>{o.number} · {o.name} ({lbl('billing.kind', o.kind)})</option>)}
                                         </select>
@@ -376,7 +376,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, emb
                                         if (confirm(t('billing.folios.ledger_confirm')))
                                             await run('cl', `folios/${f.id}/city-ledger`, { company_id: Number(ledgerCompany || f.company_id) }, t('billing.folios.moved_ledger'));
                                     }}>
-                                        <select className="input" required value={ledgerCompany || (f.company_id ? String(f.company_id) : '')} onChange={(e) => setLedgerCompany(e.target.value)} aria-label={t('billing.folios.company')}>
+                                        <select className="select" required value={ledgerCompany || (f.company_id ? String(f.company_id) : '')} onChange={(e) => setLedgerCompany(e.target.value)} aria-label={t('billing.folios.company')}>
                                             <option value="" disabled>{t('billing.folios.company')}</option>
                                             {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>

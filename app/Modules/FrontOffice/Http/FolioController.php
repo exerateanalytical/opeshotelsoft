@@ -111,9 +111,12 @@ class FolioController
     public function transfer(Request $request, Folio $folio)
     {
         $this->can($request, 'manage');
-        $data = $request->validate(['to_folio_id' => ['required', 'integer'], 'amount' => ['required', 'integer'], 'description' => ['nullable', 'string']]);
+        $data = $request->validate(['to_folio_id' => ['required', 'integer'], 'amount' => ['required', 'integer', 'min:1'], 'description' => ['nullable', 'string']]);
+        $to = Folio::findOrFail($data['to_folio_id']);
+        // Credit billing goes through the city-ledger route (company approval and credit limit), never a plain transfer (SEC1 audit).
+        abort_if($to->kind === 'city_ledger', 422, 'Use the city-ledger transfer for company billing.');
 
-        return $this->folios->transfer($folio, Folio::findOrFail($data['to_folio_id']), $data['amount'], $data['description'] ?? 'Transfer');
+        return $this->folios->transfer($folio, $to, $data['amount'], $data['description'] ?? 'Transfer');
     }
 
     public function cityLedger(Request $request, Folio $folio)

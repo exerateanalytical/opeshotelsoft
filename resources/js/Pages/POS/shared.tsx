@@ -1,3 +1,4 @@
+import Alert from '@/Components/ui/Alert';
 export interface Outlet { id: number; code: string; name: string; kind: string; active: boolean }
 export interface MenuItem {
     id: number; code: string; name: string; name_en: string | null; outlet_id: number | null; category: string | null;
@@ -30,8 +31,8 @@ export type Msg = { ok: boolean; text: string } | null;
 export function Banner({ msg }: { msg: Msg }) {
     if (!msg) return null;
     return (
-        <div className={`mb-4 rounded-lg px-4 py-2 text-sm ${msg.ok ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+        <Alert variant={msg.ok ? 'success' : 'danger'} className="mb-4">
             {msg.text}
-        </div>
+        </Alert>
     );
 }

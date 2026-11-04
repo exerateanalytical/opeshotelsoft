@@ -123,7 +123,7 @@ export default function ScheduledReports() {
                         </div>
                         <div>
                             <label className="label">{t('docs.sched.report')}</label>
-                            <select className="input w-full" value={form.report} onChange={(e) => setForm({ ...form, report: e.target.value })}>
+                            <select className="select w-full" value={form.report} onChange={(e) => setForm({ ...form, report: e.target.value })}>
                                 {(reports.data ?? []).map((r) => <option key={r.key} value={r.key}>{r.title}</option>)}
                             </select>
                         </div>
@@ -133,7 +133,7 @@ export default function ScheduledReports() {
                         </div>
                         <div>
                             <label className="label">{t('docs.sched.format')}</label>
-                            <select className="input w-full" value={form.format} onChange={(e) => setForm({ ...form, format: e.target.value as Form['format'] })}>
+                            <select className="select w-full" value={form.format} onChange={(e) => setForm({ ...form, format: e.target.value as Form['format'] })}>
                                 <option value="pdf">PDF</option>
                                 <option value="xlsx">{t('docs.sched.excel')}</option>
                                 <option value="csv">CSV</option>

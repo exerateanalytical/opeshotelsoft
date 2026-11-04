@@ -1,0 +1,188 @@
+[
+  {
+    "fingerprint": "tenancy:users:hotel-scoped-admin-grants-all-hotels",
+    "title": "A hotel-scoped users.manage holder can grant all_hotels=true (to anyone, including themself) and so escape their own hotel allow-list",
+    "attack_class": "authz",
+    "lower_trust_principal": "Staff user with users.manage whose all_hotels=false (allowed to hotel A only)",
+    "boundary_crossed": "Hotel boundary inside a group (allowedHotelIds), and role boundary (any role incl. group-owner assignable)",
+    "entrypoint": {"file": "app/Modules/Tenancy/Http/UserController.php", "line": 135, "description": "PATCH /api/v1/users/{user} (update) and POST /api/v1/users (store, line 100); only checks users.manage and same group_id"},
+    "sink": {"file": "app/Modules/Tenancy/Http/UserController.php", "line": 148, "description": "$user->update(collect($data)->only(['name','status','all_hotels'])) and syncRoles($data['roles']) with no check that the actor themself has all_hotels or holds the role being granted"},
+    "propagation": [
+      {"file": "app/Modules/Tenancy/Http/UserController.php", "line": 110, "description": "store(): 'all_hotels' => ['boolean'] accepted from body"},
+      {"file": "app/Modules/Tenancy/Http/UserController.php", "line": 124, "description": "store(): User::create([... 'all_hotels' => $data['all_hotels'] ?? false])"},
+      {"file": "app/Modules/Tenancy/Http/UserController.php", "line": 141, "description": "update(): 'roles' => any role name that exists for guard api (e.g. group-owner, finance-director)"},
+      {"file": "app/Platform/Tenancy/ResolveTenant.php", "line": 101, "description": "allowedHotelIds() is recomputed from DB on every request, so the escalation is effective immediately"},
+      {"file": "app/Modules/Tenancy/Http/HotelController.php", "line": 15, "description": "Hotel index/global scope then returns every hotel of the group"}
+    ],
+    "intended_control": "Per-user hotel allow-list (users.hotels pivot / all_hotels) is the second tenancy dimension; a hotel manager should not be able to widen it beyond their own scope nor hand out higher roles",
+    "observed_or_expected_result": "Hotel-A manager PATCHes their own user (or a colleague) with {\"all_hotels\": true, \"roles\": [\"group-owner\"]} -> next request they read/write every hotel of the group (reservations, folios, payroll, accounting) and hold group-owner permissions",
+    "conditions": ["actor has users.manage (hotel manager role likely has it)", "actor is not all_hotels (otherwise nothing to gain except role escalation)", "update() does not exclude the actor's own user id"],
+    "confidence": "high",
+    "proposed_severity": "high",
+    "smallest_fix": "In store()/update(): abort_unless($request->user()->all_hotels, 403) when all_hotels is requested true; restrict hotel_ids to the actor's allowedHotelIds(); forbid assigning roles the actor does not hold (or require a group-level permission such as users.manage_group); forbid editing own account's scope/roles",
+    "regression_test_idea": "Feature test: user A (all_hotels=false, hotels=[A], role hotel-manager with users.manage) PATCH /api/v1/users/{A} {all_hotels:true} -> 403 and allowedHotelIds unchanged; PATCH with roles:[group-owner] -> 403"
+  },
+  {
+    "fingerprint": "authz:scheduled-reports:runs-as-creator-after-edit-by-other-user",
+    "title": "Scheduled report edited by another user still runs with the creator's identity and hotel allow-list",
+    "attack_class": "authz",
+    "lower_trust_principal": "Staff user with reports.manage at hotel H (e.g. limited hotel scope, lower role)",
+    "boundary_crossed": "User identity / permission boundary (report runs as original creator, e.g. finance director with all_hotels)",
+    "entrypoint": {"file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 31, "description": "PUT /api/v1/scheduled-reports/{scheduledReport}: any reports.manage user of the hotel can change report, params, recipients"},
+    "sink": {"file": "app/Modules/Documents/Application/ScheduledReportRunner.php", "line": 31, "description": "Auth::guard('api')->setUser($creator); ctx->set($s->group_id,$s->hotel_id,$creator->allowedHotelIds(),$creator); then exporter renders the report through InternalApi as that user and mails it to $s->recipients"},
+    "propagation": [
+      {"file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 34, "description": "fill(validated) never resets created_by to the editor"},
+      {"file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 50, "description": "POST .../run lets the editor trigger it immediately"},
+      {"file": "app/Modules/Documents/Http/ScheduledReportController.php", "line": 58, "description": "'recipients.*' => email : attacker-controlled destination; 'report' => any key in ReportRegistry; 'params' free array"},
+      {"file": "app/Modules/Documents/Application/InternalApi.php", "line": 38, "description": "sub-request user resolver = creator, so permission checks in the underlying report controller pass with the creator's rights"}
+    ],
+    "intended_control": "Comment in Exporter/InternalApi: 'a document or export is only ever as visible as the resource it is built from' (checked for the caller) - but the caller at run time is the creator, not the editor",
+    "observed_or_expected_result": "User B (reports.manage, hotel-limited, no payroll/accounting permission) edits a report created by the finance director: sets report to a payroll/accounting export and recipients to B's address, calls /run -> receives data B is not allowed to read",
+    "conditions": ["ScheduledReport is hotel-scoped, so B must share the hotel with the creator", "any ReportRegistry key whose underlying endpoint B lacks permission for"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "On update(): set created_by = $request->user()->id (re-own the report) or forbid editing reports created by others; on run(): execute as $request->user() instead of created_by",
+    "regression_test_idea": "User B without accounting.view updates a director-created scheduled report to report='general-ledger' + recipients=[b@x] and POSTs /run -> expect 403 / last_status failed, no mail sent"
+  },
+  {
+    "fingerprint": "tenancy:webhooks:hotel-id-not-checked-against-allowed-hotels",
+    "title": "Webhook subscription accepts any hotel_id (or null = whole group) without checking the actor's allowed hotels",
+    "attack_class": "tenant-isolation",
+    "lower_trust_principal": "Staff user with integrations.manage limited to hotel A",
+    "boundary_crossed": "Hotel boundary within the group (allowedHotelIds)",
+    "entrypoint": {"file": "app/Modules/Platform/Http/WebhookController.php", "line": 28, "description": "POST /api/v1/webhooks: 'hotel_id' => ['nullable','integer'] - no exists/allowed check; null means all hotels"},
+    "sink": {"file": "app/Modules/Platform/Application/QueueWebhookDeliveries.php", "line": 21, "description": "subscriptions matched by group_id and (hotel_id null OR hotel_id = event.hotel_id) -> deliveries of hotel B's events are queued to the attacker's URL"},
+    "propagation": [
+      {"file": "app/Modules/Platform/Http/WebhookController.php", "line": 31, "description": "WebhookSubscription::create($data + secret) stamps group_id from context; hotel_id taken verbatim"},
+      {"file": "app/Modules/Platform/Application/DeliverWebhook.php", "line": 28, "description": "delivery job posts the event envelope (payload with reservation/guest/invoice data) to the subscriber URL"}
+    ],
+    "intended_control": "Per-user hotel allow-list; cross-group is already prevented by the group_id filter in QueueWebhookDeliveries",
+    "observed_or_expected_result": "Hotel-A-only integrator creates {url: attacker, event_types:['*'], hotel_id: <hotel B id>} or hotel_id omitted -> receives all domain events (bookings, folio, payments, HR) of hotel B / the whole group",
+    "conditions": ["actor has integrations.manage", "actor's all_hotels=false (otherwise group-wide access is legitimate)"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Validate hotel_id with Rule::exists('hotels','id')->where('group_id',$groupId) and, when actor->allowedHotelIds() !== null, require hotel_id in that list (and disallow null)",
+    "regression_test_idea": "Hotel-A user with integrations.manage POST /webhooks hotel_id=B -> 422; hotel_id null -> 422 (or auto-set to active hotel)"
+  },
+  {
+    "fingerprint": "tenancy:edge:child-row-parent-check-accepts-sister-hotel",
+    "title": "Edge push tenant check for child tables passes when the parent row belongs to another hotel of the same group",
+    "attack_class": "tenant-isolation",
+    "lower_trust_principal": "Edge node of hotel A (signed edge token; a compromised on-premise box or stolen node secret)",
+    "boundary_crossed": "Hotel boundary within the group (edge node context is [hotel A] only)",
+    "entrypoint": {"file": "app/Modules/Edge/Http/EdgeSyncController.php", "line": 11, "description": "POST /api/v1/edge/sync/push (public route, node signature) with changes[].table/row_id/data chosen by the node"},
+    "sink": {"file": "app/Modules/Edge/Application/RowStore.php", "line": 28, "description": "DB::table($table)->where('id',$id)->update/insert/delete with no tenant predicate"},
+    "propagation": [
+      {"file": "app/Modules/Edge/Application/CloudSync.php", "line": 184, "description": "if (! $p || (int)($p['hotel_id'] ?? 0) !== $node->hotel_id && (int)($p['group_id'] ?? 0) !== $node->group_id) - because && binds tighter than ||, a parent in hotel B of the same group (group matches) is NOT rejected"},
+      {"file": "app/Modules/Edge/Application/TablePolicy.php", "line": 32, "description": "PARENTS: pos_check_lines, purchase_order_lines, goods_receipt_lines, stock_count_lines, purchase_requisition_lines, reservation_nights, room_block_allocations, loyalty_transactions, loyalty_cards"},
+      {"file": "app/Modules/Edge/Application/CloudSync.php", "line": 143, "description": "op=delete -> RowStore::delete for operational tables (reservation_nights, pos_check_lines, loyalty_cards...); upsert overwrites amounts/quantities"}
+    ],
+    "intended_control": "tenantViolation() comment: 'an edge cannot take over a row owned by another tenant'; edge context set to [$node->hotel_id]",
+    "observed_or_expected_result": "Node of hotel A pushes {table:'reservation_nights', row_id:<night of hotel B reservation>, op:'upsert', data:{id, reservation_id:<B res>, amount:0}} -> accepted ('applied'), hotel B's night revenue rewritten; or op:'delete' on hotel B pos_check_lines / loyalty_cards (loyalty_transactions is append-only but insert of a fake earn row for a B membership is possible since loyalty_memberships is group-level)",
+    "conditions": ["attacker controls an active edge node secret of any hotel in the group", "target child table in TablePolicy::PARENTS", "row data omits hotel_id/group_id keys (the tables have none)"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Parenthesise: if (! $p || ((int)($p['hotel_id'] ?? 0) !== $node->hotel_id && ! (array_key_exists('hotel_id',$p) === false && (int)($p['group_id'] ?? 0) === $node->group_id))) i.e. require hotel match when the parent has a hotel_id column, group match only for group-level parents (loyalty_memberships)",
+    "regression_test_idea": "Unit test CloudSync::push with node(hotel A) and a change on reservation_nights whose reservation belongs to hotel B (same group) -> expect conflict 'tenant_rejected', row unchanged"
+  },
+  {
+    "fingerprint": "tenancy:edge:pull-replicates-group-users-with-secrets",
+    "title": "Edge pull sends every group-level row (hotel_id null) incl. users rows with password/pos_pin hashes and encrypted MFA secrets of all hotels' staff to each node",
+    "attack_class": "tenant-isolation",
+    "lower_trust_principal": "Edge node of hotel A",
+    "boundary_crossed": "Hotel boundary within group (staff credentials of hotel B replicated to hotel A's on-prem DB)",
+    "entrypoint": {"file": "app/Modules/Edge/Application/CloudSync.php", "line": 89, "description": "pull(): edge_changes where hotel_id = node.hotel_id OR (hotel_id null AND group_id = node.group_id)"},
+    "sink": {"file": "app/Modules/Edge/Application/ChangeFeed.php", "line": 30, "description": "RowStore::read returns the full raw row (no $hidden filtering) for each change"},
+    "propagation": [
+      {"file": "app/Modules/Edge/Application/TablePolicy.php", "line": 22, "description": "'users' is a replicated master table; users has group_id only, so its changes are group-level"},
+      {"file": "app/Models/User.php", "line": 10, "description": "columns password, pos_pin (hashed), mfa_secret (encrypted with APP_KEY), mfa_recovery_codes"}
+    ],
+    "intended_control": "Edge node context is restricted to its own hotel ([$node->hotel_id]); users are per-hotel scoped via pivot",
+    "observed_or_expected_result": "Operator of hotel A's edge box can dump users of hotel B (emails, bcrypt hashes, recovery codes) and attempt offline cracking; not verified whether ChangeCapture records users at all (only capture of models with group_id)",
+    "conditions": ["ChangeCapture logs users table changes with hotel_id null (not verified in this pass)", "attacker has DB access on the edge box"],
+    "confidence": "low",
+    "proposed_severity": "low",
+    "smallest_fix": "In ChangeFeed/RowStore::read strip sensitive columns for 'users' (password, pos_pin, mfa_secret, mfa_recovery_codes, remember_token) or restrict users replication to users allowed on the node's hotel (StaffDirectory::query)",
+    "regression_test_idea": "Pull as node A after a user of hotel B changes -> payload must not contain password/mfa_secret and must not include users not allowed on hotel A"
+  },
+  {
+    "fingerprint": "tenancy:guests:export-and-merge-ignore-allowed-hotels",
+    "title": "Guest data-protection export and merge read/re-point reservations and loyalty rows of every hotel in the group, ignoring the actor's allowed hotels",
+    "attack_class": "tenant-isolation",
+    "lower_trust_principal": "Staff user with guests.manage limited to hotel A",
+    "boundary_crossed": "Hotel boundary within group (allowedHotelIds)",
+    "entrypoint": {"file": "app/Modules/Guests/Http/GuestController.php", "line": 139, "description": "GET /api/v1/guests/{id}/export (authorize 'manage' only)"},
+    "sink": {"file": "app/Modules/Guests/Http/GuestController.php", "line": 145, "description": "DB::table('reservations')->where('guest_id',$g->id)->get() and loyalty_memberships: raw query, no hotel_id / allowed-hotel filter, returns full rows of sister hotels (rates, dates, notes, totals)"},
+    "propagation": [
+      {"file": "app/Modules/Guests/Http/GuestController.php", "line": 112, "description": "merge(): DB::table($table)->where('guest_id',$dup->id)->update(guest_id) across reservations/folios/invoices of all hotels - a hotel-A user can rewrite hotel B's folio/invoice ownership"},
+      {"file": "app/Modules/Guests/Http/GuestProfileController.php", "line": 166, "description": "contrast: history()/folios() apply scoped() with allowedHotelIds - the intended pattern"}
+    ],
+    "intended_control": "GuestProfileController::scoped() limits raw guest reads to the actor's allowed hotels",
+    "observed_or_expected_result": "Hotel-A receptionist with guests.manage exports a VIP guest and obtains their complete stay history and amounts at hotel B; merge lets them silently re-assign hotel B invoices/folios to another guest",
+    "conditions": ["actor has guests.manage", "actor all_hotels=false"],
+    "confidence": "high",
+    "proposed_severity": "low",
+    "smallest_fix": "Reuse the scoped() helper (group_id + whereIn hotel_id allowed) for export; in merge() either require all_hotels or restrict the re-pointing updates to allowed hotels",
+    "regression_test_idea": "Hotel-A user exports a guest with a hotel-B reservation -> response.reservations contains only hotel-A rows"
+  },
+  {
+    "fingerprint": "idor:booking-api:sequential-confirmation-plus-surname-yields-manage-token",
+    "title": "Public booking lookup turns a guessable confirmation number + surname into a manage token (cancel/modify/pay) and leaks loyalty number and points balance",
+    "attack_class": "idor",
+    "lower_trust_principal": "Anonymous internet client",
+    "boundary_crossed": "Guest-to-guest boundary inside a group's public booking site",
+    "entrypoint": {"file": "app/Modules/GuestPortal/public-routes.php", "line": 14, "description": "POST /api/v1/booking/{group}/reservations/lookup (throttle:public-write 20/min/IP)"},
+    "sink": {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 158, "description": "returns manage_token, guest name, special_requests, deposit figures, loyalty number/tier/points, online check-in ID type"},
+    "propagation": [
+      {"file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php", "line": 31, "description": "number lookup over the whole group by confirmation number (sequenced per hotel, per comment)"},
+      {"file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php", "line": 51, "description": "distinct responses: 404 when number unknown, 404 name mismatch (same here) but 422 'ambiguous' when number exists in several hotels - partial oracle"},
+      {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 198, "description": "cancel() accepts the manage_token obtained above"}
+    ],
+    "intended_control": "Lookup credential = confirmation + last name; the 8-char public_code is the intended unguessable reference",
+    "observed_or_expected_result": "Attacker iterates sequential confirmation numbers with common Cameroonian surnames (20 req/min/IP, no per-booking lockout) to obtain manage tokens, cancel competitors' bookings (fee charged to guest) and harvest loyalty balances",
+    "conditions": ["confirmation numbers are gapless sequences (NumberSequence)", "attacker has many IPs or patience", "surname distribution skewed"],
+    "confidence": "medium",
+    "proposed_severity": "low",
+    "smallest_fix": "Require the public_code (reference) or confirmation + last name + arrival date; add per-number failure counter/lockout; do not return loyalty points/number from lookup",
+    "regression_test_idea": "lookup with number + wrong surname 5 times -> subsequent correct attempt blocked for N minutes; lookup response must not contain 'loyalty.points'"
+  },
+  {
+    "fingerprint": "tenancy:memberportal:phone-suffix-match-links-other-guest",
+    "title": "Member sign-up links the new account to any guest whose phone ends with the same 9 digits",
+    "attack_class": "idor",
+    "lower_trust_principal": "Anonymous person who controls a phone number",
+    "boundary_crossed": "Guest-to-guest boundary (member account gets guest_id of another person's profile and thus their bookings, invoices, points)",
+    "entrypoint": {"file": "routes/web/member.php", "line": 14, "description": "POST /account/register then /account/register/verify (OTP to the attacker's own phone)"},
+    "sink": {"file": "app/Modules/MemberPortal/Application/MemberAuthService.php", "line": 275, "description": "matchGuest: whereRaw(\"length(digits) >= 9 and right(digits, 9) = ?\", [last 9 digits]) - different country code / prefix with same trailing 9 digits matches; then account->guest_id = that guest"},
+    "propagation": [
+      {"file": "app/Modules/MemberPortal/Application/MemberAuthService.php", "line": 109, "description": "verifySignup: $guest = matchGuest($contact); forceFill(['guest_id' => $guest->id, ...])"},
+      {"file": "app/Modules/MemberPortal/Application/MemberBookings.php", "line": 40, "description": "all member reads are keyed on $a->guest_id -> full stay history, invoices PDFs, pay links, cancel"}
+    ],
+    "intended_control": "OTP proves control of the contact; contact must identify exactly one guest",
+    "observed_or_expected_result": "Attacker registers +44xxx123456789 and is linked to a Cameroonian guest +237 123456789 (9 significant digits) -> sees and cancels that guest's bookings, downloads invoices",
+    "conditions": ["a staff-created guest whose phone has the same last 9 digits exists in the group", "guest has no verified member account yet (profile_taken check)"],
+    "confidence": "medium",
+    "proposed_severity": "low",
+    "smallest_fix": "Match on the full E.164-normalised number (or require country code equality); when several guests match, do not auto-link (create a new profile and let staff merge)",
+    "regression_test_idea": "Seed guest phone '+237650000001'; register member with '+33650000001' and verify -> account.guest_id must be a new guest, not the seeded one"
+  },
+  {
+    "fingerprint": "tenancy:idempotency:anonymous-scope-shared-across-clients",
+    "title": "Idempotency-Key replay cache for unauthenticated routes is keyed only by key|method|path, so any client can replay another client's stored response",
+    "attack_class": "idor",
+    "lower_trust_principal": "Anonymous client of public /api/v1 routes",
+    "boundary_crossed": "Client-to-client (and potentially group-to-group since path includes group slug only for booking routes)",
+    "entrypoint": {"file": "app/Platform/Http/Idempotency.php", "line": 24, "description": "$scope = ('anon')|method|path for every public-routes.php request (middleware ['api','idempotent'])"},
+    "sink": {"file": "app/Platform/Http/Idempotency.php", "line": 37, "description": "returns stored response_body (e.g. booking confirmation with manage_token, pay-link intent) when key and request_hash match"},
+    "propagation": [
+      {"file": "app/Platform/Http/Idempotency.php", "line": 29, "description": "request_hash must match too, which makes exploitation need the identical body - practical only for low-entropy bodies (e.g. /payments/callbacks, /booking/{group}/reservations/cancel {confirmation, token})"}
+    ],
+    "intended_control": "Idempotency keys are meant to be per client",
+    "observed_or_expected_result": "Mostly informational: a victim's response is replayable only with identical body; realistic abuse limited to replaying cancel/callback outcomes. Noted for completeness.",
+    "conditions": ["attacker knows key + exact body"],
+    "confidence": "medium",
+    "proposed_severity": "informational",
+    "smallest_fix": "Include client IP (or skip caching) for anonymous requests; or require Idempotency-Key only on authenticated routes",
+    "regression_test_idea": "Two different IPs send same key/body to a public route -> second must not get Idempotent-Replayed:true"
+  }
+]

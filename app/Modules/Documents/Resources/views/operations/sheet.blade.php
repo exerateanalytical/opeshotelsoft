@@ -15,6 +15,12 @@
             default => is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : (string) $v,
         };
     };
+    $code = fn ($label, $v) => in_array($label, \App\Modules\Documents\Application\DocWords::META_LABELS, true) ? \App\Modules\Documents\Application\DocWords::word($v, $lang) : $v;
+    $cell = function ($key, $v, $type) use ($fmt, $lang) {
+        if ($type === 'text' && in_array($key, \App\Modules\Documents\Application\DocWords::COLUMN_KEYS, true)) { return \App\Modules\Documents\Application\DocWords::word($v, $lang); }
+        if ($type === 'text' && $key === 'basis') { return \App\Modules\Documents\Application\DocWords::basis((string) $v, $lang); }
+        return $fmt($v, $type);
+    };
     $title = $pick($sheet['title']);
 @endphp
 @section('title', $title.' '.($sheet['number'] ?? ''))
@@ -26,7 +32,7 @@
 <table class="kv" style="margin-top:2mm">
     @foreach($sheet['meta'] as $row)
         @if(($row[2] ?? '') !== null && ($row[2] ?? '') !== '')
-        <tr><td class="k">{{ $pick([$row[0], $row[1]]) }}</td><td>{{ $row[2] }}</td></tr>
+        <tr><td class="k">{{ $pick([$row[0], $row[1]]) }}</td><td>{{ $code($row[1], $row[2]) }}</td></tr>
         @endif
     @endforeach
 </table>
@@ -36,7 +42,7 @@
         @if(!empty($b['title']))<h2>{{ $pick($b['title']) }}</h2>@endif
         <table class="kv" style="{{ collect($b['rows'])->contains(fn ($x) => ($x[3] ?? '') === 'money') ? 'width:125mm' : '' }}">
         @foreach($b['rows'] as $row)
-            <tr><td class="k">{{ $pick([$row[0], $row[1]]) }}</td><td class="{{ ($row[3] ?? '') === 'money' ? 'r' : '' }}">{{ $fmt($row[2], $row[3] ?? 'text') }}</td></tr>
+            <tr><td class="k">{{ $pick([$row[0], $row[1]]) }}</td><td class="{{ ($row[3] ?? '') === 'money' ? 'r' : '' }}">{{ $fmt($code($row[1], $row[2]), $row[3] ?? 'text') }}</td></tr>
         @endforeach
         </table>
     @elseif(($b['type'] ?? '') === 'text')
@@ -53,7 +59,7 @@
                 <tr>
                 @foreach($b['cols'] as $c)
                     @php($v = is_array($r) ? ($r[$c['k']] ?? null) : ($r->{$c['k']} ?? null))
-                    <td class="{{ in_array($c['t'] ?? 'text', ['money', 'int', 'qty']) ? 'r' : '' }}">{{ $fmt($v, $c['t'] ?? 'text') }}</td>
+                    <td class="{{ in_array($c['t'] ?? 'text', ['money', 'int', 'qty']) ? 'r' : '' }}">{{ $cell($c['k'], $v, $c['t'] ?? 'text') }}</td>
                 @endforeach
                 </tr>
             @empty

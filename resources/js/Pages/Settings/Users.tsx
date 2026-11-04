@@ -120,14 +120,14 @@ export default function SettingsUsers() {
                                     </>
                                 )}
                                 <Field label={t('settings.users.role')}>
-                                    <select className="input w-full" required value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })}>
+                                    <select className="select w-full" required value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })}>
                                         <option value="">{t('settings.users.choose_role')}</option>
                                         {(roles.data ?? []).map((r) => <option key={r.id} value={r.name}>{r.name}</option>)}
                                     </select>
                                 </Field>
                                 {editing !== 'new' && (
                                     <Field label={t('settings.users.status')}>
-                                        <select className="input w-full" value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}>
+                                        <select className="select w-full" value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}>
                                             <option value="active">{t('settings.users.active')}</option>
                                             <option value="suspended">{t('settings.users.suspended')}</option>
                                         </select>
@@ -157,18 +157,18 @@ export default function SettingsUsers() {
                         </form>
                     )}
 
-                    <div className="grid lg:grid-cols-3 gap-6">
+                    <div className="grid lg:grid-cols-3 gap-6 [&>*]:min-w-0">
                         <div className="lg:col-span-2 card overflow-x-auto">
                             <div className="flex flex-wrap gap-2 px-5 py-4 border-b border-slate-100">
                                 <div className="relative flex-1 min-w-[10rem]">
                                     <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-500" />
                                     <input className="input w-full pl-8" placeholder={t('settings.users.search')} aria-label={t('settings.users.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                                 </div>
-                                <select className="input" aria-label={t('ui2.users.filter_role')} value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+                                <select className="select" aria-label={t('ui2.users.filter_role')} value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                                     <option value="">{t('settings.users.all_roles')}</option>
                                     {(roles.data ?? []).map((r) => <option key={r.id} value={r.name}>{r.name}</option>)}
                                 </select>
-                                <select className="input" aria-label={t('ui2.users.filter_hotel')} value={hotelFilter} onChange={(e) => setHotelFilter(e.target.value)}>
+                                <select className="select" aria-label={t('ui2.users.filter_hotel')} value={hotelFilter} onChange={(e) => setHotelFilter(e.target.value)}>
                                     <option value="">{t('settings.users.all_hotels')}</option>
                                     {hotelList.map((h) => <option key={h.id} value={h.id}>{h.code}</option>)}
                                 </select>
@@ -198,11 +198,11 @@ export default function SettingsUsers() {
                             <div className="space-y-2">
                                 {(roles.data ?? []).map((r) => (
                                     <details key={r.id} className="border border-slate-100 rounded-lg px-3 py-2">
-                                        <summary className="cursor-pointer text-sm font-medium text-slate-700">
+                                        <summary className="cursor-pointer break-words text-sm font-medium text-slate-700">
                                             {r.name} <span className="text-xs text-slate-500">({r.permissions.length})</span>
                                         </summary>
                                         <div className="flex flex-wrap gap-1 mt-2">
-                                            {r.permissions.map((p) => <span key={p.id} className="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">{p.name}</span>)}
+                                            {r.permissions.map((p) => <span key={p.id} className="max-w-full break-all text-xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">{p.name}</span>)}
                                         </div>
                                     </details>
                                 ))}

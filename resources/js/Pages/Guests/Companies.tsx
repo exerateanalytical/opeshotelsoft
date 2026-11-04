@@ -136,7 +136,7 @@ export default function CompaniesTab() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <Field label={t('guests.companies.name_required')}><input className="input w-full" required value={form.name} onChange={(e) => set('name', e.target.value)} /></Field>
                         <Field label={t('guests.companies.kind')}>
-                            <select className="input w-full" value={form.kind} onChange={(e) => set('kind', e.target.value)}>
+                            <select className="select w-full" value={form.kind} onChange={(e) => set('kind', e.target.value)}>
                                 {KINDS.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
                             </select>
                         </Field>

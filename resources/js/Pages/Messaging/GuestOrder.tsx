@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { STRINGS } from './strings';
+import Alert from '@/Components/ui/Alert';
 
 interface Item { id: number; name: string; category: string | null; price: number }
 interface Props {
@@ -48,7 +49,7 @@ export default function GuestOrder(p: Props) {
                 <div className="text-sm text-slate-500">{s('title')}{p.stay.room ? ` · ${p.lang === 'en' ? 'Room' : 'Chambre'} ${p.stay.room}` : ''}</div>
             </header>
             <main className="mx-auto max-w-xl p-4 space-y-4 pb-40">
-                {!p.stay.in_house && <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">{s('closed')}</p>}
+                {!p.stay.in_house && <Alert variant="warning">{s('closed')}</Alert>}
                 {Object.entries(groups).map(([cat, items]) => (
                     <section key={cat} className="space-y-2">
                         {cat && <h2 className="font-medium">{cat}</h2>}

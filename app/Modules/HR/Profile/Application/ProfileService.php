@@ -197,7 +197,10 @@ class ProfileService
             'marital_status' => $e->marital_status, 'children' => $e->children,
             'phone' => $e->phone, 'email' => $e->email, 'address' => $e->address,
             'emergency_contact' => null, // no emergency contact is stored in the HR schema yet
-            'id_number' => $e->id_number, 'cnps_number' => $e->cnps_number, 'tax_number' => $e->tax_number,
+            // SEC2: social-security and tax numbers need hr.manage or payroll rights (not hr.view alone).
+            'id_number' => $e->id_number,
+            'cnps_number' => ($canPay || $u->can('hr.manage')) ? $e->cnps_number : null,
+            'tax_number' => ($canPay || $u->can('hr.manage')) ? $e->tax_number : null,
             'payment_method' => $e->payment_method,
             // Bank and Mobile Money details are payroll data.
             'bank_name' => $canPay ? $e->bank_name : null, 'bank_account' => $canPay ? $e->bank_account : null, 'momo_number' => $canPay ? $e->momo_number : null,

@@ -241,20 +241,25 @@ class PaymentService
         if ($intent->status !== 'succeeded') {
             throw new DomainException('Only a successful payment can be refunded.');
         }
-        if ($amount <= 0 || $amount > $intent->amount - $intent->refunded_amount) {
+        if ($amount <= 0) {
             throw new DomainException('The refund exceeds the amount still refundable on this payment.');
         }
-        $folio = Folio::findOrFail($intent->folio_id);
-        if ($folio->status !== 'open') {
-            throw new DomainException("Folio {$folio->number} is closed.", 'folio-closed');
-        }
-        if ($folio->balance > -$amount) {
-            throw new DomainException('A refund cannot exceed the credit balance on the folio.');
-        }
-        $res = $this->driverOf($intent)->refund($intent, $amount, $this->setting($intent->provider)?->credentials ?? []);
 
-        return $this->asHotel($intent->hotel_id, fn () => DB::transaction(function () use ($intent, $amount, $reason, $actor, $folio, $res) {
+        // Checks, provider call and posting happen under the row locks so two concurrent refunds of the
+        // same payment cannot both pass the "still refundable" and "credit balance" tests (SEC1 audit).
+        return $this->asHotel($intent->hotel_id, fn () => DB::transaction(function () use ($intent, $amount, $reason, $actor) {
             $intent = PaymentIntent::lockForUpdate()->findOrFail($intent->id);
+            if ($intent->status !== 'succeeded' || $amount > $intent->amount - $intent->refunded_amount) {
+                throw new DomainException('The refund exceeds the amount still refundable on this payment.');
+            }
+            $folio = Folio::lockForUpdate()->findOrFail($intent->folio_id);
+            if ($folio->status !== 'open') {
+                throw new DomainException("Folio {$folio->number} is closed.", 'folio-closed');
+            }
+            if ($folio->balance > -$amount) {
+                throw new DomainException('A refund cannot exceed the credit balance on the folio.');
+            }
+            $res = $this->driverOf($intent)->refund($intent, $amount, $this->setting($intent->provider)?->credentials ?? []);
             $line = $this->folios->refund($folio, $intent->methodCode(), $amount, $reason);
             $refund = PaymentRefund::create([
                 'payment_intent_id' => $intent->id, 'amount' => $amount, 'reason' => $reason, 'status' => $res['status'],

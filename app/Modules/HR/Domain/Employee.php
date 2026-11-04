@@ -13,6 +13,27 @@ class Employee extends Model
 
     protected $guarded = ['id', 'group_id', 'hotel_id'];
 
+    /** Pay and identity numbers only serialised for hr.manage / payroll.manage holders and the employee themself. */
+    public const SENSITIVE = ['bank_account', 'momo_number', 'cnps_number', 'tax_number'];
+
+    /**
+     * SEC2: API responses (toArray / JSON) drop the bank, Mobile Money, CNPS and tax numbers when the signed-in actor
+     * lacks hr.manage and payroll.manage and is not the employee. Code reading the attributes directly (payroll,
+     * documents, payouts) is unaffected; without an actor (console, queue) nothing is hidden.
+     */
+    public function toArray()
+    {
+        $data = parent::toArray();
+        $actor = app(\App\Platform\Tenancy\TenantContext::class)->actor() ?? auth()->user();
+        if ($actor && ! $actor->can('hr.manage') && ! $actor->can('payroll.manage') && (int) $this->user_id !== (int) $actor->id) {
+            foreach (self::SENSITIVE as $k) {
+                unset($data[$k]);
+            }
+        }
+
+        return $data;
+    }
+
     protected function casts(): array
     {
         return ['date_of_birth' => 'date', 'hire_date' => 'date', 'termination_date' => 'date', 'allowances' => 'array', 'leave_days_per_month' => 'float'];

@@ -26,7 +26,7 @@ class HrSheets
 {
     use SheetHelpers;
 
-    private const CONTRACT = ['permanent' => 'CDI', 'cdi' => 'CDI', 'fixed_term' => 'CDD', 'cdd' => 'CDD', 'internship' => 'Stage / Internship', 'day_worker' => 'Journalier / Day worker'];
+    private const CONTRACT = ['permanent' => ['CDI', 'CDI'], 'cdi' => ['CDI', 'CDI'], 'fixed_term' => ['CDD', 'CDD'], 'cdd' => ['CDD', 'CDD'], 'internship' => ['Stage', 'Internship'], 'day_worker' => ['Journalier', 'Day worker']];
 
     private const ACTION = [
         'verbal_warning' => ['Avertissement verbal', 'Verbal warning'], 'written_warning' => ['Avertissement écrit', 'Written warning'], 'suspension' => ['Mise à pied', 'Suspension'],
@@ -61,10 +61,10 @@ class HrSheets
         return $id ? Position::withoutGlobalScopes()->whereKey($id)->value('title') : null;
     }
 
-    private function employeeValues(Employee $e, string $number): array
+    private function employeeValues(Employee $e, string $number, string $lang = 'fr'): array
     {
         $c = $e->contracts()->first();
-        $kind = $c ? (self::CONTRACT[strtolower((string) $c->kind)] ?? $c->kind) : '';
+        $kind = $c ? (self::CONTRACT[strtolower((string) $c->kind)][$lang === 'en' ? 1 : 0] ?? $c->kind) : '';
         $v = TemplateRenderer::values($this->hotel());
 
         return $v + [
@@ -81,7 +81,7 @@ class HrSheets
     private function letter(string $docType, string $tplKind, string $lang, Employee $e, string $number, int $sourceId, array $extra, bool $ack = false): array
     {
         $number .= $this->suffix;
-        $values = $extra + $this->employeeValues($e, $number);
+        $values = $extra + $this->employeeValues($e, $number, $lang);
         $r = TemplateRenderer::renderFor($tplKind, $lang, $values);
 
         return [
@@ -143,9 +143,11 @@ class HrSheets
         $e = $this->employee($t->employee_id, true);
         $lang = $this->lang($lang, $e, $hl);
         $hn = fn ($hid) => (string) Hotel::withoutGlobalScopes()->whereKey($hid)->value('name');
-        $dept = $t->to_department_id ? Department::withoutGlobalScopes()->whereKey($t->to_department_id)->value('name') : $e->department_id;
-        $extra = ['transfer.from_hotel' => $hn($t->from_hotel_id), 'transfer.to_hotel' => $hn($t->to_hotel_id), 'transfer.to_department' => (string) ($t->to_department_id ? $dept : ''),
-            'transfer.to_position' => (string) $this->positionTitle($t->to_position_id), 'transfer.effective_date' => $this->date($t->effective_date),
+        $deptName = fn ($id) => $id ? Department::withoutGlobalScopes()->whereKey($id)->value('name') : null;
+        $dept = $deptName($t->to_department_id) ?: $deptName($e->department_id) ?: trans()->get('documents5.fallback.department', [], $lang);
+        $position = $this->positionTitle($t->to_position_id) ?: $this->positionTitle($e->position_id) ?: trans()->get('documents5.fallback.position', [], $lang);
+        $extra = ['transfer.from_hotel' => $hn($t->from_hotel_id), 'transfer.to_hotel' => $hn($t->to_hotel_id), 'transfer.to_department' => (string) $dept,
+            'transfer.to_position' => (string) $position, 'transfer.effective_date' => $this->date($t->effective_date),
             'transfer.new_salary' => $this->money($t->new_base_salary ?: $e->base_salary), 'transfer.reason' => (string) $t->reason];
 
         return $this->letter('transfer_letter', 'hr_transfer', $lang, $e, 'MUT-'.str_pad((string) $t->id, 5, '0', STR_PAD_LEFT), $t->id, $extra, true);
@@ -161,7 +163,7 @@ class HrSheets
         $lang = $this->lang($lang, $e, $hl);
         $suspension = $a->kind === 'suspension';
         $extra = ['action.kind' => self::ACTION[$a->kind][$lang === 'en' ? 1 : 0] ?? $a->kind, 'action.incident_date' => $this->date($a->incident_date), 'action.reason' => (string) $a->reason,
-            'action.facts' => (string) $a->facts, 'action.suspension_start' => $this->date($a->suspension_start), 'action.suspension_end' => $this->date($a->suspension_end)];
+            'action.facts' => trim((string) $a->facts) !== '' ? (string) $a->facts : trans()->get('documents5.fallback.facts', [], $lang), 'action.suspension_start' => $this->date($a->suspension_start), 'action.suspension_end' => $this->date($a->suspension_end)];
 
         return $this->letter('warning_letter', $suspension ? 'hr_suspension' : 'hr_warning', $lang, $e, ($suspension ? 'MAP-' : 'AVT-').str_pad((string) $a->id, 5, '0', STR_PAD_LEFT), $a->id, $extra, true);
     }

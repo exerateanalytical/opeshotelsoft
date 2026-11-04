@@ -5,6 +5,7 @@ import EmptyState from '@/Components/ui/EmptyState';
 import QueryStatus from '@/Components/ui/QueryStatus';
 import { activeHotelId, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Block { id: number; code: string; name: string }
 interface Outcome { status: string; rows_total: number; rows_ok: number; errors: { line: number; message: string }[]; created: { number: string }[] }
@@ -48,12 +49,12 @@ export default function RoomingImport() {
             <Head title={t('experience.rooming.title')} />
             <div className="space-y-4">
                 <p className="text-sm text-slate-600">{t('experience.rooming.hint')} <a className="underline" href="/api/v1/experience/rooming/template" download>{t('experience.rooming.template')}</a></p>
-                {error && <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+                {error && <Alert variant="danger">{error}</Alert>}
                 <QueryStatus query={blocks} variant="form" rows={2} />
                 {blocks.data?.data.length === 0 && <div className="card"><EmptyState title={t('states3.empty.blocks.title')} description={t('states3.empty.blocks.text')} action={<a href="/groups" className="btn-primary">{t('states3.empty.blocks.action')}</a>} /></div>}
                 <div className="card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div><label className="label" htmlFor="blk">{t('experience.rooming.block')}</label>
-                        <select id="blk" className="input" value={block} onChange={(e) => setBlock(e.target.value)}>
+                        <select id="blk" className="select" value={block} onChange={(e) => setBlock(e.target.value)}>
                             <option value="" />{(blocks.data?.data ?? []).map((b) => <option key={b.id} value={b.id}>{b.code} - {b.name}</option>)}
                         </select></div>
                     <div><label className="label" htmlFor="file">{t('experience.rooming.file')}</label><input id="file" type="file" accept=".csv,.xlsx" className="input" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>

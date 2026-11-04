@@ -21,11 +21,15 @@ class StaffDirectoryTest extends TestCase
         $this->assertContains($this->user->id, $ids); // all_hotels
         $this->assertNotContains($there->id, $ids);
         $this->assertNotContains($foreign->id, $ids);
-        $this->assertSame(['id', 'name', 'roles'], array_keys($rows[0]));
+        // SEC2: without users.view the directory gives id and name only (roles are account data).
+        $this->assertSame(['id', 'name'], array_keys($rows[0]));
 
         $att = $this->getJson('/api/v1/staff?role=room-attendant')->assertOk()->json();
         $this->assertSame([$here->id], array_column($att, 'id'));
+        $this->actAs($this->user, $this->hotel); // general manager: users.view
+        $att = $this->getJson('/api/v1/staff?role=room-attendant')->assertOk()->json();
         $this->assertSame(['room-attendant'], $att[0]['roles']);
+        $this->actAs($here, $this->hotel);
 
         $this->assertSame([], $this->getJson('/api/v1/staff?q=zzznomatch')->assertOk()->json());
         $this->getJson('/api/v1/users')->assertForbidden();

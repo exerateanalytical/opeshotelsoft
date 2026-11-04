@@ -320,7 +320,8 @@ class LifecycleService
     }
 
     /** Requester cannot approve; nobody approves a change about themselves. */
-    private function assertSod(?int $requestedBy, int $employeeId): void
+    /** Four-eyes: the actor is neither the requester nor the employee concerned. Also used by HrController and SelfService. */
+    public function assertSod(?int $requestedBy, int $employeeId): void
     {
         $actor = $this->ctx->actor();
         if ($requestedBy && $actor && $requestedBy === $actor->id) {

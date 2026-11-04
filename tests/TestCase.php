@@ -55,6 +55,9 @@ abstract class TestCase extends BaseTestCase
             $hotel = new Hotel(['code' => $code, 'name' => "$groupName $code", 'country' => 'CM', 'city' => 'Douala']);
             $hotel->group_id = $group->id;
             $hotel->business_date = now()->toDateString();
+            // Fixture hotels behave like hotels that existed before the A-C hardening (legacy manual entries without a
+            // document stay allowed). ControlsHardeningTest switches this off to test the strict default of new hotels.
+            $hotel->settings = ['accounting.attachments_optional' => true];
             $hotel->save();
 
             return [$group, $hotel];

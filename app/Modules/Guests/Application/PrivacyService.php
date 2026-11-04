@@ -109,6 +109,38 @@ class PrivacyService
             Storage::delete($path);
         }
 
+        // SEC2: financial and payment copies of the person's data. Amounts, accounts, numbers and statuses stay as they
+        // are (the books still balance and every document keeps its number and verify code); only the name and contact
+        // details of the individual are replaced.
+        $anon = $label.' Guest #'.$guest->id;
+        $reservationIds = DB::table('reservations')->where('guest_id', $guest->id)->pluck('id')->all();
+        $folioIds = DB::table('folios')->where('guest_id', $guest->id)->whereNull('company_id')->pluck('id')->all();
+        DB::table('folios')->whereIn('id', $folioIds)->update(['name' => $anon, 'updated_at' => now()]);
+        // Invoices to the individual only: a company invoice keeps its bill-to (the company is the customer).
+        $invoiceIds = DB::table('invoices')->where('guest_id', $guest->id)->whereNull('company_id')->pluck('id')->all();
+        DB::table('invoices')->whereIn('id', $invoiceIds)
+            ->update(['bill_to_name' => $anon, 'bill_to_tax_id' => null, 'bill_to_address' => null, 'updated_at' => now()]);
+        if (Schema::hasTable('payment_intents')) {
+            DB::table('payment_intents')->where(fn ($q) => $q->whereIn('folio_id', $folioIds)->orWhereIn('reservation_id', $reservationIds))
+                ->update(['payer_phone' => null, 'payer_email' => null, 'updated_at' => now()]);
+        }
+        if (Schema::hasTable('payment_links')) {
+            DB::table('payment_links')->where(fn ($q) => $q
+                ->where(fn ($w) => $w->where('target_type', 'folio')->whereIn('target_id', $folioIds))
+                ->orWhere(fn ($w) => $w->where('target_type', 'reservation')->whereIn('target_id', $reservationIds))
+                ->orWhere(fn ($w) => $w->where('target_type', 'invoice')->whereIn('target_id', $invoiceIds)))
+                ->update(['payer_phone' => null, 'updated_at' => now()]);
+        }
+        if (Schema::hasTable('guest_portal_checkins')) {
+            $checkins = DB::table('guest_portal_checkins')->whereIn('reservation_id', $reservationIds);
+            $photos = (clone $checkins)->whereNotNull('id_photo_path')->pluck('id_photo_path')->all();
+            (clone $checkins)->update(['id_number' => '', 'nationality' => null, 'id_expiry' => null, 'id_country' => null,
+                'birth_date' => null, 'address' => null, 'id_photo_path' => null, 'signature' => null, 'notes' => null, 'updated_at' => now()]);
+            foreach ($photos as $path) {
+                Storage::delete($path);
+            }
+        }
+
         DB::table('company_contacts')->where('guest_id', $guest->id)
             ->update(['name' => $label, 'email' => null, 'phone' => null, 'guest_id' => null, 'updated_at' => now()]);
 

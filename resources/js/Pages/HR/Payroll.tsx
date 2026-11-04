@@ -6,6 +6,7 @@ import { Fragment, useState } from 'react';
 import { Badge, Banner, downloadCsv, downloadJson, errMsg, Field, Paged } from './shared';
 import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import Alert from '@/Components/ui/Alert';
 
 interface Run {
     id: number; period: string; status: string; payroll_rule_pack_id: number; gross: number; net: number;
@@ -117,7 +118,7 @@ function RunDetail({ id, onClose, onChanged, onError }: { id: number; onClose: (
         <div className="card mb-5">
             <div className="mb-3 flex items-center justify-between">
                 <h3 className="flex flex-wrap items-center gap-2 font-semibold">{t('hr.pay.title', { period: r?.period ?? '' })} {r && <Badge s={r.status} />} {r && <OpsPrintButton path={`payroll-journal/${r.id}`} label={t('documents4.journal')} />}</h3>
-                <button onClick={onClose}><X className="h-4 w-4" /></button>
+                <button className="btn-ghost btn-icon btn-sm" onClick={onClose} aria-label={t('ui.nav.close')}><X className="h-4 w-4" /></button>
             </div>
             {run.loading && !r && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
             {run.error && <p className="text-sm text-red-600">{run.error.message}</p>}
@@ -171,7 +172,7 @@ function SlipView({ slip, onClose }: { slip: Payslip; onClose: () => void }) {
         <div className="mt-4 rounded-lg border p-4">
             <div className="mb-2 flex items-center justify-between">
                 <h4 className="font-semibold">{t('hr.pay.payslip')} {slip.employee ? `${slip.employee.last_name} ${slip.employee.first_name}` : `#${slip.id}`}</h4>
-                <button onClick={onClose}><X className="h-4 w-4" /></button>
+                <button className="btn-ghost btn-icon btn-sm" onClick={onClose} aria-label={t('ui.nav.close')}><X className="h-4 w-4" /></button>
             </div>
             <div className="overflow-x-auto">
                 <table className="table-auto w-full text-sm">
@@ -236,13 +237,9 @@ function Packs() {
         <div>
             <Banner ok={ok} err={err} />
             <QueryStatus query={packs} variant="list" rows={3} />
-            <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                <div>
-                    <p className="font-semibold">{t('hr.pay.cm_uncertified')}</p>
-                    <p>{t('hr.pay.cm_uncertified_text')}</p>
-                </div>
-            </div>
+            <Alert variant="warning" title={t('hr.pay.cm_uncertified')} className="mb-4">
+                <p>{t('hr.pay.cm_uncertified_text')}</p>
+            </Alert>
             <div className="card overflow-x-auto p-0">
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-3">{t('hr.pay.country')}</th><th>{t('hr.pay.version')}</th><th>{t('hr.pay.effective')}</th><th>{t('hr.pay.certification')}</th><th></th></tr></thead>

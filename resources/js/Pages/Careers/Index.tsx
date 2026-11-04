@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Post { id: number; title: string; description: string | null; requirements: string | null; location: string | null; contract_kind: string; hotel: string | null; closes_on: string | null }
 interface Props { group: { slug: string; name: string }; postId: number | null }
@@ -41,8 +42,8 @@ export default function CareersIndex({ group, postId }: Props) {
             <Head title={`${t('talent.careers.title')} - ${group.name}`} />
             <header className="border-b border-slate-200 bg-white px-4 py-5"><div className="mx-auto max-w-3xl"><h1 className="font-serif text-3xl">{group.name}</h1><p className="text-base text-slate-600">{t('talent.careers.title')}</p></div></header>
             <main className="mx-auto max-w-3xl space-y-4 px-4 py-6">
-                {done && <div role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-base">{t('talent.careers.received', { ref: done })}</div>}
-                {err && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</div>}
+                {done && <Alert variant="success">{t('talent.careers.received', { ref: done })}</Alert>}
+                {err && <Alert variant="danger">{err}</Alert>}
                 {posts && !posts.length && <p className="text-base text-slate-600">{t('talent.careers.none')}</p>}
                 {posts?.map((p) => (
                     <article key={p.id} className="rounded-lg border border-slate-200 bg-white p-4">

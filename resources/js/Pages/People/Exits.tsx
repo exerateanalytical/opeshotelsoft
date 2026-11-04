@@ -9,6 +9,7 @@ import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
 import { PeopleTabs } from './Index';
 import { Employee, EmployeeRef, errorText, listOf, money, openFile, post } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 interface Settlement { requires_review: boolean; seniority_years: number; notice_months: number; leave_days: number; lines: { code: string; amount: number; basis: string }[]; total: number }
 interface Exit { id: number; kind: string; status: string; notice_date: string; last_day: string; settlement: Settlement | null; certificate_number: string | null; employee: EmployeeRef | null }
@@ -28,15 +29,15 @@ export default function PeopleExits() {
             <Head title={t('people.exits.title')} />
             <QueryStatus query={list} variant="table" />
             <PeopleTabs active="/people/exits" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
             <form className="card mb-4 grid gap-3 p-4 text-sm sm:grid-cols-3" onSubmit={(e) => { e.preventDefault(); run(async () => { await post('people/exits', { ...form, employee_id: Number(form.employee_id), reason: form.reason || null }); setForm(EMPTY); }); }}>
                 <label>{t('people.employee')}
-                    <select className="input w-full" required value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })}>
+                    <select className="select w-full" required value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })}>
                         <option value="" />{listOf(employees.data).map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}
                     </select>
                 </label>
                 <label>{t('people.exits.kind')}
-                    <select className="input w-full" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+                    <select className="select w-full" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                         {['resignation', 'termination', 'end_of_contract'].map((k) => <option key={k} value={k}>{t(`people.exit_kind.${k}`)}</option>)}
                     </select>
                 </label>
@@ -60,9 +61,9 @@ export default function PeopleExits() {
                             <span>{t(`people.exit_status.${x.status}`)}</span>
                         </div>
                         {x.settlement && (<>
-                            {x.settlement.requires_review && <p className="my-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">{t('people.exits.review_warning')}</p>}
+                            {x.settlement.requires_review && <Alert variant="warning" className="my-2">{t('people.exits.review_warning')}</Alert>}
                             <p className="text-slate-500">{t('people.exits.seniority')}: {x.settlement.seniority_years} · {t('people.exits.notice')}: {x.settlement.notice_months} · {t('people.exits.leave_days')}: {x.settlement.leave_days}</p>
-                            <div className="overflow-x-auto"><table className="mt-2 w-full">
+                            <div className="table-wrap"><table className="table-auto w-full mt-2">
                                 <tbody>
                                     {x.settlement.lines.map((l) => (
                                         <tr key={l.code} className="border-t border-slate-100"><td className="py-1">{t(`people.settlement.${l.code}`)}</td><td className="text-xs text-slate-500">{l.basis}</td><td className="text-right">{money(l.amount)}</td></tr>

@@ -42,6 +42,10 @@ class ApiTokenIssuer
             $this->guard->failed($email, $ip, $user);
             throw new DomainException('These credentials do not match our records.', 'invalid-credentials', 401);
         }
+        if ($this->twoFactor->mustEnrol($user)) {
+            // Required roles get no API token until they have enrolled through the web profile (SEC1 audit, blocker #20).
+            throw new DomainException('Two-factor authentication must be set up for this account before signing in. Open your profile in the web application.', 'mfa-enrolment-required', 403);
+        }
         if ($this->twoFactor->enabled($user)) {
             if ($code === null || trim($code) === '') {
                 throw new TwoFactorRequired($this->challengeFor($user), self::CHALLENGE_TTL);

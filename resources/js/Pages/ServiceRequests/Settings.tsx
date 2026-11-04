@@ -92,7 +92,7 @@ export default function Settings() {
                         </div>
                     </fieldset>
                     <label className="grid gap-1">{t('servicerequests.voice.repeat')}
-                        <select className="input" value={s.repeat_seconds} onChange={(e) => set('repeat_seconds', Number(e.target.value))}>
+                        <select className="select" value={s.repeat_seconds} onChange={(e) => set('repeat_seconds', Number(e.target.value))}>
                             {[0, 30, 60, 120, 300].map((n) => <option key={n} value={n}>{n === 0 ? t('servicerequests.voice.repeat_off') : t('servicerequests.voice.repeat_every', { seconds: n })}</option>)}
                         </select>
                     </label>
@@ -108,7 +108,7 @@ export default function Settings() {
                         <input type="range" min={0.5} max={1.5} step={0.05} value={s.rate} onChange={(e) => set('rate', Number(e.target.value))} />
                     </label>
                     <label className="grid gap-1">{t('servicerequests.voice.voice')}
-                        <select className="input" value={s.voice} onChange={(e) => set('voice', e.target.value)}>
+                        <select className="select" value={s.voice} onChange={(e) => set('voice', e.target.value)}>
                             <option value="">{t('servicerequests.voice.voice_auto')}</option>
                             {localVoices.map((v) => <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>)}
                         </select>

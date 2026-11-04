@@ -29,7 +29,7 @@ export default function Valuation() {
             <StockTabs current="valuation" />
             <div className="mb-3 flex flex-wrap gap-2">
                 <input className="input" aria-label={t('stock.common.date')} type="date" max={today()} value={date} onChange={(e) => setDate(e.target.value)} />
-                <select className="input" value={store} onChange={(e) => setStore(e.target.value)} aria-label={t('stock2.valuation.all_stores')}>
+                <select className="select" value={store} onChange={(e) => setStore(e.target.value)} aria-label={t('stock2.valuation.all_stores')}>
                     <option value="">{t('stock2.valuation.all_stores')}</option>
                     {storeList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>

@@ -51,6 +51,9 @@ class ProfileController
             'password' => ['required', 'confirmed', Password::min(10)],
         ]);
         $request->user()->update(['password' => Hash::make($data['password'])]);
+        // Other browsers and API tokens issued with the old password stop working (SEC1 audit).
+        \Illuminate\Support\Facades\Auth::guard('web')->logoutOtherDevices($data['password']);
+        $request->user()->tokens()->update(['revoked' => true]);
 
         return back()->with('success', __('profile.password_changed'));
     }

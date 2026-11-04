@@ -47,7 +47,7 @@ export default function Assets() {
                     <Field label={t('fin.assets.asset_account')}><input className="input w-full" value={cls.asset_account} onChange={(e) => setCls({ ...cls, asset_account: e.target.value })} /></Field>
                     <Field label={t('fin.assets.depreciation_account')}><input className="input w-full" value={cls.depreciation_account} onChange={(e) => setCls({ ...cls, depreciation_account: e.target.value })} /></Field>
                     <Field label={t('fin.assets.method')}>
-                        <select className="input w-full" value={cls.method} onChange={(e) => setCls({ ...cls, method: e.target.value })}>
+                        <select className="select w-full" value={cls.method} onChange={(e) => setCls({ ...cls, method: e.target.value })}>
                             <option value="straight_line">{t('fin.assets.straight_line')}</option><option value="declining_balance">{t('fin.assets.declining_balance')}</option>
                         </select>
                     </Field>
@@ -63,7 +63,7 @@ export default function Assets() {
                 }}>
                     <h4 className="sm:col-span-2 font-semibold">{t('fin.assets.acquire')}</h4>
                     <Field label={t('fin.col.class')}>
-                        <select className="input w-full" required value={acq.asset_class_id} onChange={(e) => setAcq({ ...acq, asset_class_id: e.target.value })} aria-label={t('fin.choose')}>
+                        <select className="select w-full" required value={acq.asset_class_id} onChange={(e) => setAcq({ ...acq, asset_class_id: e.target.value })} aria-label={t('fin.choose')}>
                             <option value="">{t('fin.choose')}</option>
                             {classes.data?.map((c) => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}
                         </select>

@@ -121,7 +121,7 @@ export default function Currencies() {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
                                     <label className="label" htmlFor="r-cur">{t('admin.currency.currency')}</label>
-                                    <select id="r-cur" className="input w-full" required value={rate.currency} onChange={(e) => setRate({ ...rate, currency: e.target.value })}>
+                                    <select id="r-cur" className="select w-full" required value={rate.currency} onChange={(e) => setRate({ ...rate, currency: e.target.value })}>
                                         <option value="">—</option>
                                         {foreign.map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
                                     </select>

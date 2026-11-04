@@ -132,7 +132,7 @@ export default function VoiceNotifier() {
 
     const active = status.soundOn && status.unlocked;
     const label = active ? t('servicerequests.voice.sound_on') : status.soundOn ? t('servicerequests.voice.sound_click') : t('servicerequests.voice.sound_off');
-    const tone = active ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : status.soundOn ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-300 bg-white text-slate-700';
+    const tone = active ? 'btn-secondary' : status.soundOn ? 'btn-accent' : 'btn-ghost';
 
     const toggle = () => (active ? setSoundOn(false) : (setSoundOn(true), unlock()));
     const detail = [active && status.lastHeard ? t('servicerequests.voice.last_heard', { text: status.lastHeard }) : null, status.noVoiceFor ? t('servicerequests.voice.no_voice', { lang: status.noVoiceFor.toUpperCase() }) : null].filter(Boolean).join('. ');
@@ -141,7 +141,7 @@ export default function VoiceNotifier() {
     // and announced through a polite live region. Toasts drop in under the app bar.
     const phoneChip = slot && createPortal(
         <button type="button" onClick={toggle} title={label} aria-label={`${t('servicerequests.voice.sound_toggle')}: ${label}`} aria-pressed={active}
-            className={`flex h-11 w-11 items-center justify-center rounded-lg border ${tone}`}>
+            className={`${tone} btn-icon`}>
             <Icon className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only" role="status" aria-live="polite">{label}{detail ? `. ${detail}` : ''}</span>
         </button>,
@@ -177,7 +177,7 @@ export default function VoiceNotifier() {
                 </Link>
             ))}
             <button type="button" onClick={() => (active ? setSoundOn(false) : (setSoundOn(true), unlock()))}
-                className={`flex min-h-[44px] items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-semibold ${tone}`} title={t('servicerequests.voice.sound_toggle')}>
+                className={`${tone} h-auto`} title={t('servicerequests.voice.sound_toggle')}>
                 {active ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                 <span className="text-left">
                     {label}

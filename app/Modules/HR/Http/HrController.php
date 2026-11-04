@@ -108,6 +108,11 @@ class HrController
             $this->hr->assertNoCycle($employee, $data['reports_to']);
         }
 
+        // Four-eyes: nobody changes their own pay or where it is paid (salary, allowances, bank, Mobile Money).
+        if (array_intersect(array_keys($data), ['base_salary', 'allowances', 'payment_method', 'bank_account', 'momo_number'])) {
+            app(\App\Modules\HR\Application\Lifecycle\LifecycleService::class)->assertSod(null, $employee->id);
+        }
+
         return $this->hr->updateEmployee($employee, $data);
     }
 
@@ -186,6 +191,7 @@ class HrController
     {
         abort_unless($request->user()->can('payroll.manage'), 403);
         $data = $request->validate(['kind' => ['sometimes', 'in:advance,loan'], 'amount' => ['required', 'integer', 'min:1'], 'monthly_deduction' => ['required', 'integer', 'min:1']]);
+        app(\App\Modules\HR\Application\Lifecycle\LifecycleService::class)->assertSod(null, $employee->id); // no advance to oneself
 
         return response()->json(SalaryAdvance::create($data + ['employee_id' => $employee->id, 'balance' => $data['amount'], 'granted_on' => now()->toDateString()]), 201);
     }

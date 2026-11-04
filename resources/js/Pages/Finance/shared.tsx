@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import EmptyState from '@/Components/ui/EmptyState';
 import { ApiError } from '@/lib/api';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 export interface Page<T> { data: T[]; total: number; current_page: number; last_page: number }
 export interface Account { id: number; code: string; name: string; class: number; type: string; postable: boolean; reconcilable: boolean; active: boolean }
@@ -23,8 +24,8 @@ export const monthStart = () => today().slice(0, 8) + '01';
 export function Banner({ error, success }: { error?: string | null; success?: string | null }) {
     return (
         <>
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
-            {success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{success}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+            {success && <Alert variant="success" className="mb-4">{success}</Alert>}
         </>
     );
 }

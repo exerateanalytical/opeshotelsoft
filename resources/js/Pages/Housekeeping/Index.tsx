@@ -105,7 +105,7 @@ function RoomBoard({ setMsg }: { setMsg: (m: Msg) => void }) {
                 <div className="card p-4 space-y-3">
                     <div className="font-semibold">{t('hk.room_no', { number: editing.number })} <span className="text-xs text-slate-500">{editing.occupied ? t('hk.occupied') : t('hk.vacant')} · {t('hk.now', { status: tl(editing.hk_status) })}</span></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                        <select className="input capitalize" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <select className="select capitalize" value={status} onChange={(e) => setStatus(e.target.value)}>
                             {STATUSES.map((s) => <option key={s} value={s} disabled={editing.occupied && s.startsWith('vacant')}>{tl(s)}</option>)}
                         </select>
                         <input className="input sm:col-span-2" aria-label={t('hk.reason_optional')} placeholder={t('hk.reason_optional')} value={reason} onChange={(e) => setReason(e.target.value)} />
@@ -327,7 +327,7 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
             }}>
                 <input className="input sm:col-span-2" required maxLength={255} aria-label={t('hk.lf.description')} placeholder={t('hk.lf.description')} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 <input className="input" aria-label={t('hk.lf.location_found')} placeholder={t('hk.lf.location_found')} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-                <select className="input" value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })} aria-label={t('hk.lf.no_room')}>
+                <select className="select" value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })} aria-label={t('hk.lf.no_room')}>
                     <option value="">{t('hk.lf.no_room')}</option>
                     {rooms.data?.map((r) => <option key={r.id} value={r.id}>{r.number}</option>)}
                 </select>
@@ -337,7 +337,7 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
 
             <div className="flex flex-wrap gap-2">
                 <input className="input w-48" aria-label={t('hk.lf.search')} placeholder={t('hk.lf.search')} value={q} onChange={(e) => filter(() => setQ(e.target.value))} />
-                <select className="input w-40" value={show} onChange={(e) => filter(() => setShow(e.target.value))} aria-label={t('common.all')}>
+                <select className="select w-40" value={show} onChange={(e) => filter(() => setShow(e.target.value))} aria-label={t('common.all')}>
                     <option value="">{t('common.all')}</option><option value="stored">{t('hk.lf.stored')}</option><option value="returned">{t('hk.lf.returned')}</option><option value="disposed">{t('hk.lf.disposed')}</option>
                 </select>
                 <input type="date" className="input" aria-label={t('hk.lf.from')} title={t('hk.lf.from')} value={from} onChange={(e) => filter(() => setFrom(e.target.value))} />

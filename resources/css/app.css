@@ -290,7 +290,7 @@
   /* ---------- Forms ---------- */
   .input, .select, .textarea {
     display: block; width: 100%; min-height: 40px;
-    padding: 0.5rem 0.75rem; border-radius: 8px;
+    padding: 0.4375rem 0.75rem; border-radius: 8px; box-sizing: border-box; /* 24px line + 14px + 2px border = 40px, the same height as a medium button */
     border: 1px solid var(--c-border-control);
     background: var(--c-surface); color: var(--c-text-primary);
     font-size: 0.9375rem; line-height: 1.5rem;
@@ -331,7 +331,7 @@
   }
   .btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-accent {
     display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-    min-height: 40px; padding: 0.5rem 1rem; border-radius: 8px;
+    min-height: var(--btn-h-md); padding: 0.125rem 1rem; border-radius: 8px; box-sizing: border-box;
     border: 1px solid transparent;
     font-size: 0.9375rem; line-height: 1.25rem; font-weight: 600; text-align: center;
     cursor: pointer; user-select: none;
@@ -357,16 +357,26 @@
   [aria-disabled="true"].btn, [aria-disabled="true"].btn-primary, [aria-disabled="true"].btn-secondary, [aria-disabled="true"].btn-danger, [aria-disabled="true"].btn-ghost {
     background: var(--color-slate-200); color: var(--c-text-muted); border-color: var(--color-slate-200); cursor: not-allowed; pointer-events: none;
   }
-  .btn-sm { min-height: 36px; padding: 0.25rem 0.75rem; font-size: 0.8125rem; border-radius: 8px; }
-  .btn-lg { min-height: 48px; padding: 0.75rem 1.5rem; font-size: 1rem; border-radius: 12px; }
-  .btn-icon { padding: 0; width: 40px; flex-shrink: 0; }
+  /* Button heights are tokens: sm 36, md 40, lg 48 on desktop; 44 minimum on touch. Vertical padding is tiny so a text-sm or text-base line-height can never change the height. */
+  :root { --btn-h-sm: 36px; --btn-h-md: 40px; --btn-h-lg: 48px; }
+  @media (pointer: coarse), (max-width: 1023px) { :root { --btn-h-sm: 44px; --btn-h-md: 44px; --btn-h-lg: 48px; } }
+  .btn-sm { min-height: var(--btn-h-sm); padding: 0.125rem 0.75rem; font-size: 0.8125rem; border-radius: 8px; }
+  .btn-lg { min-height: var(--btn-h-lg); padding: 0.125rem 1.5rem; font-size: 1rem; border-radius: 12px; }
+  .btn-icon { padding: 0; width: var(--btn-h-md); flex-shrink: 0; }
   @media (pointer: coarse), (max-width: 1023px) {
-    .btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-accent, .btn-sm { min-height: 44px; min-width: 44px; }
-    .btn-lg { min-height: 48px; }
+    .btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-accent { min-width: 44px; }
     .btn-icon { width: 44px; }
   }
   /* Inline button rows wrap rather than shrink */
   .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+  /* ---------- Alerts (flat callouts: icon plus text, never colour alone; see Components/ui/Alert) ---------- */
+  .alert { display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.625rem 0.875rem; border: 1px solid; border-radius: 8px; font-size: 0.875rem; line-height: 1.375rem; overflow-wrap: anywhere; }
+  .alert-info    { background: var(--c-info-subtle);    color: var(--c-on-info-subtle);    border-color: var(--c-info); }
+  .alert-success { background: var(--c-success-subtle); color: var(--c-on-success-subtle); border-color: var(--c-success); }
+  .alert-warning { background: var(--c-warning-subtle); color: var(--c-on-warning-subtle); border-color: var(--c-warning); }
+  .alert-danger  { background: var(--c-danger-subtle);  color: var(--c-on-danger-subtle);  border-color: var(--c-danger); }
+  .alert-title { font-weight: 600; }
 
   /* ---------- Badges (status is never colour alone: keep a text label or icon) ---------- */
   .badge, .badge-green, .badge-yellow, .badge-red, .badge-blue, .badge-slate, .badge-navy, .badge-gold {
@@ -630,4 +640,21 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .l1-chart .recharts-layer, .l1-chart path, .l1-chart rect { transition: none !important; animation: none !important; }
+}
+
+/* ---------- UX7a shared layout rules (unlayered on purpose: they must win over utility classes that were set page by page) ---------- */
+/* Helper text: 14px minimum for running text on phones; badges, chips and column headers keep 13px */
+.hint { font-size: 0.875rem; line-height: 1.375rem; color: var(--c-text-muted); }
+@media (max-width: 767px) {
+  p.text-xs, li.text-xs, dd.text-xs, :is(p, li, dd) .text-xs:not(.badge):not([class*="badge-"]):not(th), .field-hint, .l1-caption.l1-prose { font-size: 0.875rem; line-height: 1.375rem; }
+  .page-header h1, .page-header h2 { overflow-wrap: anywhere; }
+}
+/* Ultra-wide: content stays readable. Containers are capped by .n1-*; these caps keep controls, forms and sparse tables from stretching inside them. */
+@media (min-width: 1280px) {
+  main :is(.input, input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="number"], input[type="url"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="time"]):not([data-wide-control]) { max-width: 28rem; }
+  main :is(.select, select):not([data-wide-control]) { max-width: 20rem; }
+  main textarea:not([data-wide-control]) { max-width: 40rem; }
+  main :is(.table-wrap, table) :is(.input, .select, input, select, textarea) { max-width: none; }
+  main:not([data-width="full"]) form:not([role="dialog"] form):not(:has(table)):not([data-wide-control]) { max-width: 48rem; }
+  main:not([data-width="full"]) table:not(:has(thead th:nth-child(6))) { width: auto; }
 }

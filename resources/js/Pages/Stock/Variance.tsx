@@ -36,7 +36,7 @@ export default function Variance() {
             <LastUpdated at={report.updatedAt} />
             <StockTabs current="variance" />
             <div className="mb-3 flex flex-wrap gap-2">
-                <select className="input" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('stock2.variance.pick_outlet')}>
+                <select className="select" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('stock2.variance.pick_outlet')}>
                     <option value="">{t('stock2.variance.pick_outlet')}</option>
                     {outletList.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </select>

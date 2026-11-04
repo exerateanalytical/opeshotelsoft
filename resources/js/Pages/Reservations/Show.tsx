@@ -157,7 +157,7 @@ export default function ReservationShow({ id }: { id: string }) {
                                     setCharge({ charge_code: '', amount: '', description: '' });
                             }}>
                                 <h3 className="font-semibold text-slate-800">{t('res.show.post_charge_title')}</h3>
-                                <select className="input" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })} aria-label={t('res.show.charge_code')}>
+                                <select className="select" required value={charge.charge_code} onChange={(e) => setCharge({ ...charge, charge_code: e.target.value })} aria-label={t('res.show.charge_code')}>
                                     <option value="" disabled>{t('res.show.charge_code')}</option>
                                     {chargeCodes.data?.filter((c) => c.code !== 'ROOM').map((c) => <option key={c.code} value={c.code}>{c.code} · {c.name}</option>)}
                                 </select>
@@ -174,7 +174,7 @@ export default function ReservationShow({ id }: { id: string }) {
                                     setPayment({ method: 'CASH', amount: '', reference: '' });
                             }}>
                                 <h3 className="font-semibold text-slate-800">{t('res.show.take_payment')}</h3>
-                                <select className="input" value={payment.method} onChange={(e) => setPayment({ ...payment, method: e.target.value })}>
+                                <select className="select" value={payment.method} onChange={(e) => setPayment({ ...payment, method: e.target.value })}>
                                     {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                                 </select>
                                 <div className="flex flex-wrap gap-2">

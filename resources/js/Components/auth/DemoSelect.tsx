@@ -33,7 +33,7 @@ export default function DemoSelect({ options, endpoint, label, placeholder }: Pr
         <form onSubmit={go} className="space-y-3">
             <label htmlFor={id} className="label text-slate-300">{label ?? t('brand.demo.select_label')}</label>
             <select id={id} value={value} onChange={(e) => { setValue(e.target.value); setMissing(false); }} aria-invalid={missing || undefined}
-                className="input bg-navy-800 border-slate-500 text-white focus:border-brand-500">
+                className="select bg-navy-800 border-slate-500 text-white focus:border-brand-500">
                 <option value="">{placeholder ?? t('brand.demo.select_placeholder')}</option>
                 {groups.map((g) => {
                     const items = options.filter((o) => (o.group ?? '') === g);

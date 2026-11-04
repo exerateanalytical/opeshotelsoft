@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { PeopleTabs } from './Index';
 import { Department, Employee, EmployeeRef, errorText, listOf, openFile, post, upload } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 interface Task {
     id: number; title: string; description: string | null; priority: string; status: string; due_at: string | null; overdue: boolean;
@@ -46,24 +47,24 @@ export default function PeopleTasks() {
             actions={<button className="btn-primary" onClick={() => setForm({ ...EMPTY })}>{t('people.tasks.new')}</button>}>
             <Head title={t('people.tasks.title')} />
             <PeopleTabs active="/people/tasks" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
             {form && (
                 <form onSubmit={save} className="card mb-4 grid gap-3 p-4 text-sm sm:grid-cols-3">
                     <label className="sm:col-span-3">{t('people.tasks.task')}<input className="input w-full" required maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
                     <label>{t('people.tasks.person')}
-                        <select className="input w-full" value={form.assignee_employee_id} onChange={(e) => setForm({ ...form, assignee_employee_id: e.target.value })}>
+                        <select className="select w-full" value={form.assignee_employee_id} onChange={(e) => setForm({ ...form, assignee_employee_id: e.target.value })}>
                             <option value="" />{listOf(employees.data).map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}
                         </select>
                     </label>
                     <label>{t('people.tasks.or_team')}
-                        <select className="input w-full" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
+                        <select className="select w-full" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
                             <option value="" />{departments.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                         </select>
                     </label>
                     <label>{t('people.tasks.due')}<input type="datetime-local" className="input w-full" value={form.due_at} onChange={(e) => setForm({ ...form, due_at: e.target.value })} /></label>
                     <label>{t('people.tasks.priority')}
-                        <select className="input w-full" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+                        <select className="select w-full" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                             {['low', 'normal', 'high', 'urgent'].map((p) => <option key={p} value={p}>{t(`people.priority.${p}`)}</option>)}
                         </select>
                     </label>

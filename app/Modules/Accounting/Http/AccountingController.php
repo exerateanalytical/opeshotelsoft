@@ -2,6 +2,9 @@
 
 namespace App\Modules\Accounting\Http;
 
+use App\Modules\Accounting\Application\Core\AuditTrail;
+use App\Modules\Accounting\Application\Core\ManualEntries;
+use App\Modules\Accounting\Application\Core\PeriodLocking;
 use App\Modules\Accounting\Application\Ledger;
 use App\Modules\Accounting\Domain\Account;
 use App\Modules\Accounting\Domain\ChartOfAccounts as C;
@@ -71,11 +74,20 @@ class AccountingController
         return $entry->load('lines');
     }
 
-    /** Manual journal entry (OD). Needs accounting.post_manual. */
-    public function postManual(Request $request)
+    /**
+     * Manual journal entry (OD), legacy path. Same rules as core/entries: accounting.post_manual, balanced lines and open
+     * period (Ledger), audit row (Ledger), and at least one supporting document unless the hotel setting
+     * `accounting.attachments_optional` is true. Accepts JSON or multipart (attachments[] + lines as JSON string).
+     */
+    public function postManual(Request $request, ManualEntries $manual)
     {
         abort_unless($request->user()->can('accounting.post_manual'), 403);
+        if (is_string($request->input('lines'))) {
+            $request->merge(['lines' => json_decode($request->input('lines'), true) ?: []]);
+        }
         $data = $request->validate([
+            'attachments' => ['nullable', 'array', 'max:10'],
+            'attachments.*' => ['file', 'max:'.ManualEntries::MAX_KB, 'mimes:pdf,png,jpg,jpeg,xlsx,csv,docx,txt'],
             'journal' => ['required', 'string', 'max:10'],
             'date' => ['required', 'date'],
             'description' => ['required', 'string', 'max:250'],
@@ -93,9 +105,7 @@ class AccountingController
             'lines.*.fx_rate' => ['nullable', 'numeric', 'gt:0'],
         ]);
 
-        return response()->json($this->ledger->post($data['journal'], $data['date'], $data['description'], $data['lines'], [
-            'source_type' => 'manual', 'approved_by' => $request->user()->id,
-        ])->load('lines'), 201);
+        return response()->json($manual->post($data['journal'], $data['date'], $data['description'], $data['lines'], $request->file('attachments', []), allowNoAttachment: true), 201);
     }
 
     public function reverse(Request $request, JournalEntry $entry)
@@ -127,20 +137,34 @@ class AccountingController
     public function generalLedger(Request $request)
     {
         $this->can($request, 'view');
-        $data = $request->validate(['account' => ['required', 'string'], 'from' => ['required', 'date'], 'to' => ['required', 'date']]);
+        $data = $request->validate([
+            'account' => ['required', 'string'], 'from' => ['required', 'date'], 'to' => ['required', 'date', 'after_or_equal:from'],
+            'page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'min:1', 'max:5000'],
+        ]);
+        // SEC2: at most 366 days per request, lines paged (5,000 by default, so the usual month or year fits one page).
+        if (Carbon::parse($data['from'])->diffInDays(Carbon::parse($data['to'])) > 366) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['to' => 'The general ledger covers at most 366 days per request.']);
+        }
+        $page = (int) ($data['page'] ?? 1);
+        $per = (int) ($data['per_page'] ?? 5000);
         $opening = $this->ledger->balances(null, Carbon::parse($data['from'])->subDay()->toDateString(), [$data['account']])[$data['account']]['balance'] ?? 0;
-        $lines = DB::table('journal_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')
+        $base = fn () => DB::table('journal_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')
             ->where('l.hotel_id', $this->ctx->requireHotelId())->where('l.account_code', $data['account'])
-            ->whereBetween('l.date', [$data['from'], $data['to']])
-            ->orderBy('l.date')->orderBy('l.id')
+            ->whereBetween('l.date', [$data['from'], $data['to']]);
+        $total = $base()->count();
+        // Running balance carries the lines of the earlier pages.
+        $carried = $page > 1 ? (int) DB::query()->fromSub($base()->orderBy('l.date')->orderBy('l.id')->limit(($page - 1) * $per)
+            ->select(['l.debit', 'l.credit']), 'p')->sum(DB::raw('p.debit - p.credit')) : 0;
+        $lines = $base()->orderBy('l.date')->orderBy('l.id')->offset(($page - 1) * $per)->limit($per)
             ->get(['l.date', 'e.number', 'e.journal_code', 'e.description', 'l.debit', 'l.credit', 'l.partner_type', 'l.partner_id']);
-        $running = $opening;
+        $running = $opening + $carried;
         foreach ($lines as $l) {
             $running += $l->debit - $l->credit;
             $l->balance = $running;
         }
 
-        return ['account' => $data['account'], 'opening' => $opening, 'lines' => $lines, 'closing' => $running];
+        return ['account' => $data['account'], 'opening' => $opening, 'lines' => $lines, 'closing' => $running,
+            'page' => $page, 'per_page' => $per, 'total_lines' => $total, 'has_more' => $page * $per < $total];
     }
 
     /** Income statement (compte de résultat): classes 6, 7, 8. */
@@ -266,20 +290,32 @@ class AccountingController
             ['hotel_id' => $hotelId, 'year' => $data['year'], 'month' => $data['month']],
             ['status' => 'closed', 'closed_at' => now(), 'closed_by' => $request->user()->id],
         );
+        app(AuditTrail::class)->record('period_closed', 'fiscal_period', $data['year'].'-'.$data['month'], ['via' => 'direct']);
         $bus->record('accounting.period_closed', $data, 'hotel', $hotelId);
 
         return ['status' => 'closed'] + $data;
     }
 
-    public function reopenPeriod(Request $request, EventBus $bus)
+    /**
+     * Legacy reopen, now a thin wrapper over the four-eyes PeriodLocking flow (needs accounting.period_approve and a reason).
+     * If another user already has a pending reopen request for this period, the caller approves it (200, period open).
+     * Otherwise a reopen request is created and returned with 202: a different approver must decide it.
+     */
+    public function reopenPeriod(Request $request, PeriodLocking $locking)
     {
-        abort_unless($request->user()->hasRole(['group-owner', 'finance-director']), 403, 'Only the finance director can reopen a period.');
-        $data = $request->validate(['year' => ['required', 'integer'], 'month' => ['required', 'integer', 'between:1,12'], 'reason' => ['required', 'string']]);
-        DB::table('fiscal_periods')->where(['hotel_id' => $this->ctx->requireHotelId(), 'year' => $data['year'], 'month' => $data['month']])->update(['status' => 'open']);
-        app(\App\Modules\Accounting\Application\Core\AuditTrail::class)->record('period_reopened', 'fiscal_period', $data['year'].'-'.$data['month'], ['reason' => $data['reason'], 'via' => 'direct']);
-        $bus->record('accounting.period_reopened', $data, 'hotel', $this->ctx->requireHotelId());
+        abort_unless($request->user()->can('accounting.period_approve'), 403, 'Only a user with accounting.period_approve can reopen a period.');
+        $data = $request->validate(['year' => ['required', 'integer'], 'month' => ['required', 'integer', 'between:1,12'], 'reason' => ['required', 'string', 'max:500']]);
+        $pending = DB::table('period_lock_requests')->where(['hotel_id' => $this->ctx->requireHotelId(), 'year' => $data['year'], 'month' => $data['month'], 'status' => 'pending'])->first();
+        if ($pending && $pending->action === 'reopen' && $pending->requested_by !== $request->user()->id) {
+            $decided = $locking->decide($pending->id, true, $data['reason']);
 
-        return ['status' => 'open'] + $data;
+            return ['status' => 'open', 'request' => $decided] + $data;
+        }
+        if ($pending && $pending->action === 'reopen') {
+            throw new DomainException('Your reopen request is pending: a different approver must decide it.', 'four-eyes');
+        }
+
+        return response()->json(['status' => 'pending', 'request' => $locking->request($data['year'], $data['month'], 'reopen', $data['reason'])] + $data, 202);
     }
 
     /** Group consolidation: income statement summed across all accessible hotels. */

@@ -21,9 +21,11 @@ class PurchaseService
 {
     public function __construct(private CheckoutFees $fees, private FolioService $folios) {}
 
-    public function services(): array
+    /** Catalogue for a language: the English name when asked for English and one is set, otherwise the French name. */
+    public function services(string $lang = 'fr'): array
     {
-        return ExperienceService::where('active', true)->orderBy('name')->get(['id', 'code', 'name', 'price'])->all();
+        return ExperienceService::where('active', true)->orderBy('name')->get(['id', 'code', 'name', 'name_en', 'price'])
+            ->map(fn (ExperienceService $s) => ['id' => $s->id, 'code' => $s->code, 'name' => $lang === 'en' && trim((string) $s->name_en) !== '' ? $s->name_en : $s->name, 'price' => $s->price])->all();
     }
 
     public function quote(Reservation $r, string $kind, string $time): array

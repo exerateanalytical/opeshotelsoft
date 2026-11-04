@@ -5,6 +5,7 @@ import EmptyState from '@/Components/ui/EmptyState';
 import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface RoomType { id: number; code: string; name: string }
 interface RatePlan { id: number; code: string; name: string }
@@ -43,11 +44,11 @@ export default function GroupBooking() {
         <AppLayout title={t('experience.group.title')}>
             <Head title={t('experience.group.title')} />
             <form onSubmit={submit} className="space-y-4">
-                {error && <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+                {error && <Alert variant="danger">{error}</Alert>}
                 {result && (
-                    <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
+                    <Alert variant="success">
                         {t('experience.group.done', { ref: result.booking_ref, count: result.rooms.length, total: result.total.toLocaleString() })}
-                    </div>
+                    </Alert>
                 )}
                 <div className="card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
                     <h2 className="font-semibold sm:col-span-4">{t('experience.group.payer')}</h2>
@@ -66,10 +67,10 @@ export default function GroupBooking() {
                     {types.data && list(types.data).length === 0 && <EmptyState title={t('states3.empty.group_types.title')} description={t('states3.empty.group_types.text')} action={<a href="/properties" className="btn-primary">{t('states3.empty.outlets.action')}</a>} />}
                     {rooms.map((r, i) => (
                         <div key={i} className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                            <select aria-label={t('experience.group.room_type')} className="input" value={r.room_type_id} onChange={(e) => set(i, { room_type_id: +e.target.value })}>
+                            <select aria-label={t('experience.group.room_type')} className="select" value={r.room_type_id} onChange={(e) => set(i, { room_type_id: +e.target.value })}>
                                 {list(types.data).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                             </select>
-                            <select aria-label={t('experience.group.rate_plan')} className="input" value={r.rate_plan_id} onChange={(e) => set(i, { rate_plan_id: +e.target.value })}>
+                            <select aria-label={t('experience.group.rate_plan')} className="select" value={r.rate_plan_id} onChange={(e) => set(i, { rate_plan_id: +e.target.value })}>
                                 {list(plans.data).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                             </select>
                             <input aria-label={t('experience.group.adults')} type="number" min={1} max={8} className="input" value={r.adults} onChange={(e) => set(i, { adults: +e.target.value })} />

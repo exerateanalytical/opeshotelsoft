@@ -46,10 +46,10 @@ export default function Alerts() {
             <Head title={t('insights.alerts.title')} />
             <QueryStatus query={list} variant="list" />
             <div className="mb-3 flex flex-wrap gap-2">
-                <select className="input" aria-label={t('ui2.insights.filter_status')} value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="select" aria-label={t('ui2.insights.filter_status')} value={status} onChange={(e) => setStatus(e.target.value)}>
                     {['active', 'open', 'acknowledged', 'resolved'].map((s) => <option key={s} value={s}>{t(`insights.alerts.status.${s}`)}</option>)}
                 </select>
-                <select className="input" aria-label={t('ui2.insights.filter_rule')} value={rule} onChange={(e) => setRule(e.target.value)}>
+                <select className="select" aria-label={t('ui2.insights.filter_rule')} value={rule} onChange={(e) => setRule(e.target.value)}>
                     <option value="">{t('insights.alerts.all_rules')}</option>
                     {RULES.map((r) => <option key={r} value={r}>{t(`insights.rule.${r}`)}</option>)}
                 </select>

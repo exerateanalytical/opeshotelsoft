@@ -38,7 +38,7 @@ export default function SearchForm({ p, hotels }: { p: PublicProps; hotels: { co
         <form onSubmit={submit} className="grid grid-cols-2 gap-3 md:grid-cols-6">
             <div className="col-span-2">
                 <label className="label" htmlFor="hotel">{d.ourHotels}</label>
-                <select id="hotel" className="input" value={f.hotel} onChange={set('hotel')}>
+                <select id="hotel" className="select" value={f.hotel} onChange={set('hotel')}>
                     <option value="">—</option>
                     {hotels.map((h) => <option key={h.code} value={h.code}>{h.name}</option>)}
                 </select>

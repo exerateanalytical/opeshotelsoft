@@ -45,11 +45,11 @@ export default function EmployeesTab() {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                     <input className="input pl-9" aria-label={t('hr.emp.search')} placeholder={t('hr.emp.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </div>
-                <select className="input w-full sm:w-40" aria-label={t('hr.common.all_statuses')} value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="select w-full sm:w-40" aria-label={t('hr.common.all_statuses')} value={status} onChange={(e) => setStatus(e.target.value)}>
                     <option value="">{t('hr.common.all_statuses')}</option>
                     {['active', 'on_leave', 'suspended', 'terminated'].map((s) => <option key={s} value={s}>{t(`hr.status.${s}`)}</option>)}
                 </select>
-                <select className="input w-full sm:w-44" aria-label={t('hr.common.all_departments')} value={dept} onChange={(e) => setDept(e.target.value)}>
+                <select className="select w-full sm:w-44" aria-label={t('hr.common.all_departments')} value={dept} onChange={(e) => setDept(e.target.value)}>
                     <option value="">{t('hr.common.all_departments')}</option>
                     {depts.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
@@ -123,11 +123,11 @@ function HireForm({ depts, positions, onClose, onDone, onError }: FormProps) {
 
     return (
         <form onSubmit={submit} className="card mb-5">
-            <div className="mb-4 flex items-center justify-between"><h3 className="font-semibold">{t('hr.emp.hire_title')}</h3><button type="button" onClick={onClose}><X className="h-4 w-4" /></button></div>
+            <div className="mb-4 flex items-center justify-between"><h3 className="font-semibold">{t('hr.emp.hire_title')}</h3><button className="btn-ghost btn-icon btn-sm" type="button" onClick={onClose} aria-label={t('ui.nav.close')}><X className="h-4 w-4" /></button></div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Field label={t('hr.emp.first_name_req')}><input className="input" required value={f.first_name} onChange={set('first_name')} /></Field>
                 <Field label={t('hr.emp.last_name_req')}><input className="input" required value={f.last_name} onChange={set('last_name')} /></Field>
-                <Field label={t('hr.emp.gender')}><select className="input" value={f.gender} onChange={set('gender')}><option value="">—</option><option value="M">M</option><option value="F">F</option></select></Field>
+                <Field label={t('hr.emp.gender')}><select className="select" value={f.gender} onChange={set('gender')}><option value="">—</option><option value="M">M</option><option value="F">F</option></select></Field>
                 <Field label={t('hr.emp.dob')}><input type="date" className="input" value={f.date_of_birth} onChange={set('date_of_birth')} /></Field>
                 <Field label={t('hr.common.phone')}><input className="input" value={f.phone} onChange={set('phone')} /></Field>
                 <Field label={t('hr.common.email')}><input type="email" className="input" value={f.email} onChange={set('email')} /></Field>
@@ -135,17 +135,17 @@ function HireForm({ depts, positions, onClose, onDone, onError }: FormProps) {
                 <Field label={t('hr.emp.id_number')}><input className="input" value={f.id_number} onChange={set('id_number')} /></Field>
                 <Field label={t('hr.emp.cnps_number')}><input className="input" value={f.cnps_number} onChange={set('cnps_number')} /></Field>
                 <Field label={t('hr.emp.tax_number_niu')}><input className="input" value={f.tax_number} onChange={set('tax_number')} /></Field>
-                <Field label={t('hr.emp.marital_status')}><select className="input" value={f.marital_status} onChange={set('marital_status')}><option value="">—</option><option value="single">{t('hr.emp.marital.single')}</option><option value="married">{t('hr.emp.marital.married')}</option><option value="divorced">{t('hr.emp.marital.divorced')}</option><option value="widowed">{t('hr.emp.marital.widowed')}</option></select></Field>
+                <Field label={t('hr.emp.marital_status')}><select className="select" value={f.marital_status} onChange={set('marital_status')}><option value="">—</option><option value="single">{t('hr.emp.marital.single')}</option><option value="married">{t('hr.emp.marital.married')}</option><option value="divorced">{t('hr.emp.marital.divorced')}</option><option value="widowed">{t('hr.emp.marital.widowed')}</option></select></Field>
                 <Field label={t('hr.emp.children')}><input type="number" min={0} max={20} className="input" value={f.children} onChange={set('children')} /></Field>
-                <Field label={t('hr.common.department')}><select className="input" value={f.department_id} onChange={set('department_id')}><option value="">—</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>
-                <Field label={t('hr.common.position')}><select className="input" value={f.position_id} onChange={set('position_id')}><option value="">—</option>{positions.filter((p) => !f.department_id || p.department_id === Number(f.department_id)).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select></Field>
+                <Field label={t('hr.common.department')}><select className="select" value={f.department_id} onChange={set('department_id')}><option value="">—</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>
+                <Field label={t('hr.common.position')}><select className="select" value={f.position_id} onChange={set('position_id')}><option value="">—</option>{positions.filter((p) => !f.department_id || p.department_id === Number(f.department_id)).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select></Field>
                 <Field label={t('hr.emp.hire_date_req')}><input type="date" required className="input" value={f.hire_date} onChange={set('hire_date')} /></Field>
-                <Field label={t('hr.emp.contract_req')}><select className="input" value={f.kind} onChange={set('kind')}>{['CDI', 'CDD', 'stage', 'journalier'].map((k) => <option key={k}>{k}</option>)}</select></Field>
+                <Field label={t('hr.emp.contract_req')}><select className="select" value={f.kind} onChange={set('kind')}>{['CDI', 'CDD', 'stage', 'journalier'].map((k) => <option key={k}>{k}</option>)}</select></Field>
                 <Field label={f.kind === 'CDD' ? t('hr.emp.contract_end_req') : t('hr.emp.contract_end')}><input type="date" className="input" required={f.kind === 'CDD'} value={f.end_date} onChange={set('end_date')} /></Field>
                 <Field label={t('hr.emp.probation_end')}><input type="date" className="input" value={f.probation_end} onChange={set('probation_end')} /></Field>
                 <Field label={t('hr.emp.base_salary_month_req')}><input type="number" min={0} required className="input" value={f.base_salary} onChange={set('base_salary')} /></Field>
                 <Field label={t('hr.emp.hours_week')}><input type="number" min={1} max={60} className="input" value={f.hours_per_week} onChange={set('hours_per_week')} /></Field>
-                <Field label={t('hr.emp.payment_method')}><select className="input" value={f.payment_method} onChange={set('payment_method')}><option value="bank">{t('hr.emp.pay.bank')}</option><option value="mobile_money">{t('hr.emp.pay.mobile_money')}</option><option value="cash">{t('hr.emp.pay.cash')}</option></select></Field>
+                <Field label={t('hr.emp.payment_method')}><select className="select" value={f.payment_method} onChange={set('payment_method')}><option value="bank">{t('hr.emp.pay.bank')}</option><option value="mobile_money">{t('hr.emp.pay.mobile_money')}</option><option value="cash">{t('hr.emp.pay.cash')}</option></select></Field>
                 {f.payment_method === 'bank' && <>
                     <Field label={t('hr.emp.pay.bank')}><input className="input" value={f.bank_name} onChange={set('bank_name')} /></Field>
                     <Field label={t('hr.emp.bank_account')}><input className="input" value={f.bank_account} onChange={set('bank_account')} /></Field>
@@ -203,7 +203,7 @@ function EmployeeDetail({ id, depts, positions, onClose, onDone, onError }: Form
         <div className="card mb-5">
             <div className="mb-3 flex items-center justify-between">
                 <h3 className="flex items-center gap-3 font-semibold">{e && <Avatar src={e.photo_url} name={`${e.first_name} ${e.last_name}`} size={48} />}{e ? `${e.first_name} ${e.last_name} · ${e.number}` : t('hr.emp.employee')}{e && <Link href={`/hr/employees/${e.id}`} className="btn-secondary inline-flex min-h-[44px] items-center text-sm font-normal">{t('profile.open')}</Link>}</h3>
-                <button onClick={onClose}><X className="h-4 w-4" /></button>
+                <button className="btn-ghost btn-icon btn-sm" onClick={onClose} aria-label={t('ui.nav.close')}><X className="h-4 w-4" /></button>
             </div>
             {emp.loading && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
             {emp.error && <p className="text-sm text-red-600">{emp.error.message}</p>}
@@ -260,11 +260,11 @@ function EmployeeDetail({ id, depts, positions, onClose, onDone, onError }: Form
                                 <Field label={t('hr.common.phone')}><input className="input" value={edit.phone} onChange={se('phone')} /></Field>
                                 <Field label={t('hr.common.email')}><input type="email" className="input" value={edit.email} onChange={se('email')} /></Field>
                                 <Field label={t('hr.common.address')}><input className="input" value={edit.address} onChange={se('address')} /></Field>
-                                <Field label={t('hr.common.status')}><select className="input" value={edit.status} onChange={se('status')}><option value="active">{t('hr.status.active')}</option><option value="on_leave">{t('hr.status.on_leave')}</option><option value="suspended">{t('hr.status.suspended')}</option></select></Field>
-                                <Field label={t('hr.common.department')}><select className="input" value={edit.department_id} onChange={se('department_id')}><option value="">—</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>
-                                <Field label={t('hr.common.position')}><select className="input" value={edit.position_id} onChange={se('position_id')}><option value="">—</option>{positions.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select></Field>
+                                <Field label={t('hr.common.status')}><select className="select" value={edit.status} onChange={se('status')}><option value="active">{t('hr.status.active')}</option><option value="on_leave">{t('hr.status.on_leave')}</option><option value="suspended">{t('hr.status.suspended')}</option></select></Field>
+                                <Field label={t('hr.common.department')}><select className="select" value={edit.department_id} onChange={se('department_id')}><option value="">—</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>
+                                <Field label={t('hr.common.position')}><select className="select" value={edit.position_id} onChange={se('position_id')}><option value="">—</option>{positions.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select></Field>
                                 <Field label={t('hr.emp.base_salary_fcfa')}><input type="number" min={0} className="input" value={edit.base_salary} onChange={se('base_salary')} /></Field>
-                                <Field label={t('hr.emp.payment_method')}><select className="input" value={edit.payment_method} onChange={se('payment_method')}><option value="bank">{t('hr.emp.pay.bank')}</option><option value="mobile_money">{t('hr.emp.pay.mobile_money')}</option><option value="cash">{t('hr.emp.pay.cash')}</option></select></Field>
+                                <Field label={t('hr.emp.payment_method')}><select className="select" value={edit.payment_method} onChange={se('payment_method')}><option value="bank">{t('hr.emp.pay.bank')}</option><option value="mobile_money">{t('hr.emp.pay.mobile_money')}</option><option value="cash">{t('hr.emp.pay.cash')}</option></select></Field>
                                 <Field label={t('hr.emp.bank_account')}><input className="input" value={edit.bank_account} onChange={se('bank_account')} /></Field>
                                 <Field label={t('hr.emp.pay.mobile_money')}><input className="input" value={edit.momo_number} onChange={se('momo_number')} /></Field>
                                 <Field label={t('hr.emp.cnps_number')}><input className="input" value={edit.cnps_number} onChange={se('cnps_number')} /></Field>
@@ -292,7 +292,7 @@ function EmployeeDetail({ id, depts, positions, onClose, onDone, onError }: Form
                                 t('hr.emp.advance_granted', { kind: t(`hr.emp.${adv.kind}`), amount: formatCurrency(Number(adv.amount)) }));
                         }}>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                <Field label={t('hr.common.kind')}><select className="input" value={adv.kind} onChange={(ev) => setAdv({ ...adv, kind: ev.target.value })}><option value="advance">{t('hr.emp.advance')}</option><option value="loan">{t('hr.emp.loan')}</option></select></Field>
+                                <Field label={t('hr.common.kind')}><select className="select" value={adv.kind} onChange={(ev) => setAdv({ ...adv, kind: ev.target.value })}><option value="advance">{t('hr.emp.advance')}</option><option value="loan">{t('hr.emp.loan')}</option></select></Field>
                                 <Field label={t('hr.common.amount_fcfa_req')}><input type="number" min={1} required className="input" value={adv.amount} onChange={(ev) => setAdv({ ...adv, amount: ev.target.value })} /></Field>
                                 <Field label={t('hr.emp.monthly_deduction_req')}><input type="number" min={1} required className="input" value={adv.monthly_deduction} onChange={(ev) => setAdv({ ...adv, monthly_deduction: ev.target.value })} /></Field>
                             </div>

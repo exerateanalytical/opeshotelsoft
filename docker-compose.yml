@@ -30,6 +30,9 @@ services:
     environment:
       ROLE: app
       RUN_MIGRATIONS: "${RUN_MIGRATIONS:-true}"
+      # The nginx container only listens on 127.0.0.1:8080 behind the host TLS proxy: trust the private Docker
+      # ranges it reaches php-fpm from (override TRUSTED_PROXIES in .env if your network differs).
+      TRUSTED_PROXIES: "${TRUSTED_PROXIES:-127.0.0.1,172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}"
       DB_HOST: postgres
       DB_PORT: "5432"
       REDIS_HOST: redis

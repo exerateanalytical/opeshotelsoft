@@ -68,7 +68,7 @@ function Table({ head, children, empty, query }: { head: string[]; children: Rea
 function Select({ value, onChange, list, placeholder }: { value: string; onChange: (v: string) => void; list: Ref[]; placeholder?: string }) {
     const t = useT();
     return (
-        <select className="input w-full" value={value} onChange={(e) => onChange(e.target.value)} aria-label={placeholder ?? t('stock.common.select')}>
+        <select className="select w-full" value={value} onChange={(e) => onChange(e.target.value)} aria-label={placeholder ?? t('stock.common.select')}>
             <option value="">{placeholder ?? t('stock.common.select')}</option>
             {list.map((r) => <option key={r.id} value={r.id}>{r.code} — {r.name}</option>)}
         </select>
@@ -127,7 +127,7 @@ export function Requisitions({ items, stores, suppliers, notify }: ExtrasProps) 
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-end gap-2">
                     <Field label={t('stock.common.status')}>
-                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock4.aria.status')}>
+                        <select className="select" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock4.aria.status')}>
                             <option value="">{t('stock.common.all')}</option>{['draft', 'submitted', 'approved', 'rejected', 'converted'].map((s) => <option key={s} value={s}>{t(`stock.status.${s}`)}</option>)}
                         </select>
                     </Field>
@@ -237,7 +237,7 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
                 <h3 className="font-semibold">{t('stock.ret.title')}</h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                     <Field label={t('stock.ret.grn')}>
-                        <select className="input w-full" value={grnId} onChange={(e) => { setGrnId(e.target.value); setQty({}); }} aria-label={t('stock4.aria.grn')}>
+                        <select className="select w-full" value={grnId} onChange={(e) => { setGrnId(e.target.value); setQty({}); }} aria-label={t('stock4.aria.grn')}>
                             <option value="">{t('stock.common.select')}</option>
                             {(grns.data?.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.number} — {nameOf(suppliers, g.supplier_id)} — {formatDate(g.date)}</option>)}
                         </select>
@@ -273,7 +273,7 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
                 {applying && (
                     <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-3">
                         <Field label={t('stock.ret.apply_label', { number: applying.number })}>
-                            <select className="input" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} aria-label={t('stock.ret.select_invoice')}>
+                            <select className="select" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} aria-label={t('stock.ret.select_invoice')}>
                                 <option value="">{t('stock.ret.select_invoice')}</option>
                                 {(invoices.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.reference} — {t('stock.ret.due_amount', { amount: formatCurrency(i.due) })}</option>)}
                             </select>
@@ -345,7 +345,7 @@ export function PaymentRun({ suppliers, notify }: ExtrasProps) {
                     <Field label={t('stock.pay.due_by')}><input className="input w-full" type="date" value={dueBy} onChange={(e) => setDueBy(e.target.value)} /></Field>
                     <Field label={t('stock.common.supplier')}><Select value={supplierId} onChange={setSupplierId} list={suppliers} placeholder={t('stock.common.all_suppliers')} /></Field>
                     <Field label={t('stock.pay.pay_from')}>
-                        <select className="input w-full" value={account} onChange={(e) => setAccount(e.target.value)} aria-label={t('stock.pay.treasury_ph')}>
+                        <select className="select w-full" value={account} onChange={(e) => setAccount(e.target.value)} aria-label={t('stock.pay.treasury_ph')}>
                             <option value="">{t('stock.pay.treasury_ph')}</option>
                             {(accounts.data ?? []).map((a) => <option key={a.id} value={a.code}>{a.code} — {a.name}</option>)}
                         </select>

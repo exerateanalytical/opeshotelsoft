@@ -15,7 +15,8 @@ class BrandTest extends TestCase
         foreach (['emblem' => 512, 'emblem-128' => 128, 'emblem-64' => 64] as $f => $px) {
             $this->assertSame([$px, $px], array_slice(getimagesize(public_path("brand/$f.png")), 0, 2), $f);
         }
-        $this->assertSame(1200, getimagesize(public_path('brand/logo-wordmark.png'))[0]);
+        // The wordmark is 600 px wide on purpose: it is shown at most 280 px wide (docs/PERFORMANCE.md).
+        $this->assertSame(600, getimagesize(public_path('brand/logo-wordmark.png'))[0]);
         $this->assertSame(480, getimagesize(public_path('brand/logo-wordmark-small.png'))[0]);
         $this->assertSame([1200, 630], array_slice(getimagesize(public_path('brand/og-image.png')), 0, 2));
         $this->assertSame(180, getimagesize(public_path('apple-touch-icon.png'))[0]);

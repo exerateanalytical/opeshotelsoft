@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Tenancy\Domain\Group;
+use App\Modules\Tenancy\Domain\Hotel;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,5 +22,7 @@ Route::get('book/{group}/review', function (string $group) {
         'group' => ['slug' => $g->slug, 'name' => $g->name],
         'lang' => in_array(request('lang'), ['fr', 'en'], true) ? request('lang') : 'fr',
         'query' => request()->query(),
+        // Hotels of the group, offered when a guest only has a per-hotel confirmation number.
+        'hotels' => Hotel::withoutGlobalScopes()->where('group_id', $g->id)->orderBy('name')->get(['code', 'name'])->map(fn ($h) => ['code' => $h->code, 'name' => $h->name])->all(),
     ]);
 })->middleware('throttle:public-read')->name('public.review');

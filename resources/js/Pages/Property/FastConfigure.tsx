@@ -8,6 +8,7 @@ import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { cn, formatCurrency } from '@/lib/utils';
+import Alert from '@/Components/ui/Alert';
 
 interface Bed { type: string; count: number }
 interface TypeCfg {
@@ -210,7 +211,7 @@ export default function FastConfigure() {
                 )}
             </div>
 
-            {error && <p role="alert" className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
             <div className="grid gap-4 pb-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:pb-0 [&>*]:min-w-0">
                 {/* ---------------------------------------------------------------- form */}
@@ -429,8 +430,8 @@ export default function FastConfigure() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-3 overflow-x-auto">
-                                    <table className="w-full text-sm">
+                                <div className="mt-3 table-wrap">
+                                    <table className="table-auto w-full text-sm">
                                         <thead><tr className="text-left text-slate-600"><th className="py-1 pr-2">{t('fastconfig.type.code')}</th><th className="pr-2">{t('fastconfig.total.rooms')}</th><th className="pr-2">{t('fastconfig.type.base_price')}</th><th className="pr-2">{t('fastconfig.type.weekend')}</th><th>{t('fastconfig.type.high_season')}</th></tr></thead>
                                         <tbody>{preview!.types.map((ty) => (
                                             <tr key={ty.code} className="border-t border-slate-200"><td className="py-1 pr-2 font-semibold">{ty.code}</td><td className="pr-2">{ty.rooms}</td><td className="pr-2">{formatCurrency(ty.base_price)}</td>
@@ -467,8 +468,8 @@ function ReportView({ report }: { report: Report }) {
         <section className="card p-4" aria-live="polite" aria-labelledby="fc-rep">
             <h2 id="fc-rep" className="text-base font-semibold text-slate-900">{report.dry_run ? t('fastconfig.report.dry') : t('fastconfig.report.done')}</h2>
             <p className="mb-2 text-sm text-slate-700">{report.hotel.name} ({report.hotel.code}){report.hotel.created ? ` — ${t('fastconfig.report.new_hotel')}` : ''}</p>
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+            <div className="table-wrap">
+                <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-600"><th className="py-1 pr-2" /><th className="pr-2">{t('fastconfig.report.created')}</th><th className="pr-2">{t('fastconfig.report.updated')}</th><th className="pr-2">{t('fastconfig.report.skipped')}</th><th className="pr-2">{t('fastconfig.report.blocked')}</th><th>{t('fastconfig.report.removed')}</th></tr></thead>
                     <tbody>{rows.map(([key, s]) => (
                         <tr key={key} className="border-t border-slate-200"><td className="py-1 pr-2 font-semibold">{t(`fastconfig.report.${key}`)}</td><td className="pr-2">{s.created.length}</td><td className="pr-2">{s.updated.length}</td><td className="pr-2">{s.skipped.length}</td><td className="pr-2">{s.blocked.length}</td><td>{s.removed.length}</td></tr>

@@ -6,6 +6,7 @@ import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Policy { room_type_id: number; room_type: string; max_rooms: number; max_percent: number; cap: number }
 interface Exposure { room_type: string; date: string; rooms: number; booked: number; over: number }
@@ -41,7 +42,7 @@ export default function RevenueOverbooking() {
         <AppLayout title={t('revenue.ob.title')}>
             <Head title={t('revenue.ob.title')} />
             <div className="mx-auto max-w-4xl space-y-4">
-                {msg && <div className={`rounded-md border p-3 text-sm ${msg.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-red-300 bg-red-50 text-red-800'}`}>{msg.text}</div>}
+                {msg && <Alert variant={msg.ok ? 'success' : 'danger'}>{msg.text}</Alert>}
 
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{t('revenue.ob.policies')}</h2>
@@ -61,7 +62,7 @@ export default function RevenueOverbooking() {
                     })}
                     <h3 className="pt-2 text-sm font-medium">{t('revenue.ob.apply')}</h3>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                        <select className="input" value={apply.room_type_id} onChange={(e) => setApply({ ...apply, room_type_id: e.target.value })} aria-label={t('revenue.common.room_type')}>
+                        <select className="select" value={apply.room_type_id} onChange={(e) => setApply({ ...apply, room_type_id: e.target.value })} aria-label={t('revenue.common.room_type')}>
                             <option value="">{t('revenue.common.room_type')}</option>
                             {policies.data?.data.map((x) => <option key={x.room_type_id} value={x.room_type_id}>{x.room_type}</option>)}
                         </select>

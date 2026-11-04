@@ -54,7 +54,13 @@ class GuestLinks
 
     public function review(Reservation $r, string $lang = 'fr'): string
     {
-        return config('notifications.whatsapp.review_url') ?: $this->manage($r, $lang, '#review');
+        if ($custom = config('notifications.whatsapp.review_url')) {
+            return $custom;
+        }
+        $slug = Group::withoutGlobalScopes()->find($r->group_id)?->slug;
+
+        // The review page identifies the booking by its unique reference (public_code), never by the per-hotel number alone.
+        return url("/book/$slug/review").'?'.http_build_query(['c' => $r->public_code ?: $r->number, 'lang' => $lang]);
     }
 
     /** Same stateless token as the public Booking API's manage token; bound to group, hotel and reservation id. */

@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { PeopleTabs } from './Index';
 import { EmployeeRef, errorText, post } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 interface Cycle { id: number; name: string; period_start: string; period_end: string; status: string; scale: number; reviews_count?: number }
 interface Objective { id: number; title: string; weight: number; self_score: number | null; manager_score: number | null }
@@ -43,7 +44,7 @@ export default function PeopleReviews() {
             <Head title={t('people.reviews.title')} />
             <QueryStatus query={cycles} variant="table" />
             <PeopleTabs active="/people/reviews" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
             <form className="card mb-4 grid gap-3 p-4 text-sm sm:grid-cols-4" onSubmit={(e) => { e.preventDefault(); run(() => post('people/cycles', form)); }}>
                 <label>{t('people.reviews.cycle_name')}<input className="input w-full" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
@@ -52,8 +53,8 @@ export default function PeopleReviews() {
                 <div className="flex items-end"><button className="btn-primary">{t('people.reviews.new_cycle')}</button></div>
             </form>
 
-            <div className="card mb-4 overflow-x-auto">
-                <table className="w-full text-sm">
+            <div className="card mb-4 table-wrap">
+                <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-2">{t('people.reviews.cycle_name')}</th><th>{t('people.reviews.period')}</th><th>{t('people.status')}</th><th>{t('people.reviews.count')}</th><th /></tr></thead>
                     <tbody>
                         {cycles.data?.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="events" /></td></tr>}
@@ -76,8 +77,8 @@ export default function PeopleReviews() {
 
             {cycle && (
                 <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="card overflow-x-auto">
-                        <table className="w-full text-sm">
+                    <div className="card table-wrap">
+                        <table className="table-auto w-full text-sm">
                             <thead><tr className="text-left text-slate-500"><th className="p-2">{t('people.employee')}</th><th>{t('people.status')}</th><th>{t('people.reviews.self')}</th><th>{t('people.reviews.manager')}</th><th>{t('people.reviews.final')}</th></tr></thead>
                             <tbody>
                                 {detail.data?.reviews.map((r) => (
@@ -91,7 +92,7 @@ export default function PeopleReviews() {
                     </div>
                     <div className="card p-4 text-sm">
                         <h3 className="mb-2 font-semibold">{t('people.reviews.summary')}</h3>
-                        <table className="w-full">
+                        <div className="table-wrap"><table className="table-auto w-full">
                             <thead><tr className="text-left text-slate-500"><th>{t('people.department')}</th><th>{t('people.reviews.completed')}</th><th>{t('people.reviews.self')}</th><th>{t('people.reviews.manager')}</th><th>{t('people.reviews.final')}</th><th>{t('people.reviews.distribution')}</th></tr></thead>
                             <tbody>
                                 {summary.data?.departments.map((d, i) => (
@@ -101,7 +102,7 @@ export default function PeopleReviews() {
                                     </tr>
                                 ))}
                             </tbody>
-                        </table>
+                        </table></div>
                     </div>
                 </div>
             )}

@@ -4,6 +4,7 @@ import { api, useApi } from '@/lib/api';
 import QueryStatus from '@/Components/ui/QueryStatus';
 import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Profile { name: string; number: string; phone: string | null; address: string | null; bank_name: string | null; bank_account: string | null; momo_number: string | null }
 interface Slip { id: number; net: number; gross: number; run: { period: string } }
@@ -58,7 +59,7 @@ export default function MeIndex() {
                 {TABS.map((x) => <button key={x} onClick={() => setTab(x)} aria-current={tab === x ? 'page' : undefined} className={`min-h-11 whitespace-nowrap rounded-lg border px-4 py-2 ${tab === x ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white'}`}>{t(`talent.me.tab.${x}`)}</button>)}
             </nav>
             <main className="space-y-3 px-4 text-base">
-                {err && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</div>}
+                {err && <Alert variant="danger">{err}</Alert>}
                 {ok && <div role="status" className="rounded-lg border border-slate-200 bg-white p-3 text-sm">{ok}</div>}
 
                 <QueryStatus query={meQ} variant="detail" rows={2} />
@@ -78,7 +79,7 @@ export default function MeIndex() {
                 {tab === 'leave' && leave && (<>
                     <div className="card p-3">{t('talent.me.balance')}: <strong>{leave.balance}</strong> {t('talent.me.days')}</div>
                     <div className="card grid gap-2 p-3">
-                        <select className="input" aria-label={t('talent.me.leave_type')} value={lf.leave_type_id} onChange={(e) => setLf({ ...lf, leave_type_id: e.target.value })}><option value="">{t('talent.me.leave_type')}</option>{leave.types.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
+                        <select className="select" aria-label={t('talent.me.leave_type')} value={lf.leave_type_id} onChange={(e) => setLf({ ...lf, leave_type_id: e.target.value })}><option value="">{t('talent.me.leave_type')}</option>{leave.types.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
                         <input className="input" type="date" aria-label={t('talent.me.leave_start')} value={lf.start_date} onChange={(e) => setLf({ ...lf, start_date: e.target.value })} />
                         <input className="input" type="date" aria-label={t('talent.me.leave_end')} value={lf.end_date} onChange={(e) => setLf({ ...lf, end_date: e.target.value })} />
                         <button className="btn-primary py-3" disabled={!lf.leave_type_id || !lf.start_date || !lf.end_date} onClick={() => run(() => post('hr/me/leave', { ...lf, leave_type_id: Number(lf.leave_type_id) }), t('talent.me.leave_sent'))}>{t('talent.me.request_leave')}</button>
@@ -104,7 +105,7 @@ export default function MeIndex() {
 
                 {tab === 'requests' && reqsQ.data && (<>
                     <div className="card grid gap-2 p-3">
-                        <select className="input" aria-label={t('talent.me.request_kind')} value={kind} onChange={(e) => setKind(e.target.value)}>{KINDS.map((k) => <option key={k} value={k}>{t(`talent.kind.${k}`)}</option>)}</select>
+                        <select className="select" aria-label={t('talent.me.request_kind')} value={kind} onChange={(e) => setKind(e.target.value)}>{KINDS.map((k) => <option key={k} value={k}>{t(`talent.kind.${k}`)}</option>)}</select>
                         {(fields[kind] ?? []).map((f) => <input key={f} className="input" aria-label={t(`talent.me.field.${f}`)} placeholder={t(`talent.me.field.${f}`)} value={val[f as keyof typeof val]} onChange={(e) => setVal({ ...val, [f]: e.target.value })} />)}
                         <p className="text-sm text-slate-600">{t('talent.me.hr_approves')}</p>
                         <button className="btn-primary py-3" onClick={() => run(() => post('hr/me/requests', { kind, ...Object.fromEntries((fields[kind] ?? []).map((f) => [f, val[f as keyof typeof val]])) }), t('talent.me.request_sent'))}>{t('talent.me.send_request')}</button>

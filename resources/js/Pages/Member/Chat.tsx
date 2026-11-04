@@ -55,7 +55,7 @@ export default function Chat({ hotels, thread }: { hotels: { id: number; code: s
             <div className="card flex flex-col h-[calc(100dvh-14rem)] min-h-[360px]">
                 <div className="p-3 border-b border-slate-200 flex items-center gap-2">
                     <label htmlFor="chat-hotel" className="text-sm">{t('member.chat.hotel')}</label>
-                    <select id="chat-hotel" className="input" value={hotel} onChange={(e) => switchHotel(Number(e.target.value))}>{hotels.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}</select>
+                    <select id="chat-hotel" className="select" value={hotel} onChange={(e) => switchHotel(Number(e.target.value))}>{hotels.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}</select>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-2" aria-live="polite">
                     {msgs.length === 0 && <p className="text-slate-500 text-sm">{t('member.chat.empty')}</p>}

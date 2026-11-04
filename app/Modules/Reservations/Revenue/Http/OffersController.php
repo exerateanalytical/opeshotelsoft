@@ -70,6 +70,10 @@ class OffersController extends RevenueController
             'valid_from' => ['required', 'date'], 'valid_to' => ['required', 'date', 'after_or_equal:valid_from'],
             'last_room_availability' => ['sometimes', 'boolean'], 'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+        // The public booking site bills the company for anyone who knows the code, so the code is generated here:
+        // the staff value is only a readable prefix (8 characters at most), followed by 13 random base-32 characters
+        // (65 bits). Codes created before this change keep working.
+        $data['code'] = $this->corporateCode($data['code'], $hotelId);
 
         return response()->json($svc->createContract($data)->load('ratePlan'), 201);
     }
@@ -98,5 +102,21 @@ class OffersController extends RevenueController
         $data = $request->validate(['room_type_id' => ['required', 'integer'], 'arrival' => ['required', 'date'], 'departure' => ['required', 'date', 'after:arrival']]);
 
         return $svc->availability($contract, $data['room_type_id'], Carbon::parse($data['arrival']), Carbon::parse($data['departure']));
+    }
+
+    /** PREFIX-XXXXXXXXXXXXX: readable prefix from staff, 13 random Crockford base-32 characters (65 bits). */
+    private function corporateCode(string $prefix, int $hotelId): string
+    {
+        $alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+        $prefix = substr(strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $prefix)), 0, 8);
+        do {
+            $random = '';
+            for ($i = 0; $i < 13; $i++) {
+                $random .= $alphabet[random_int(0, 31)];
+            }
+            $code = ($prefix !== '' ? $prefix.'-' : '').$random;
+        } while (CorporateContract::where('hotel_id', $hotelId)->where('code', $code)->exists());
+
+        return $code;
     }
 }

@@ -36,7 +36,7 @@ export default function Receivables() {
             <Banner error={list.error?.message} success={ok} />
             <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:items-end [&>*]:min-w-0">
                 <input className="input sm:col-span-2 w-full sm:w-56" placeholder={t('fin.recv.search')} aria-label={t('fin.recv.search')} value={q} onChange={(e) => setQ(e.target.value)} />
-                <select className="input" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label={t('fin.all_statuses')}>
+                <select className="select" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label={t('fin.all_statuses')}>
                     <option value="">{t('fin.all_statuses')}</option>
                     {['issued', 'partially_paid', 'paid', 'cancelled'].map((s) => <option key={s} value={s}>{t(`fin.status.${s}`)}</option>)}
                 </select>
@@ -189,7 +189,7 @@ function PayForm({ inv, onClose, onDone }: { inv: Invoice; onClose: () => void; 
             <Banner error={error ?? pm.error?.message} />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end [&>*]:min-w-0">
                 <Field label={t('fin.recv.amount_due', { amount: formatCurrency(due) })}><input type="number" min={1} max={due} className="input w-full" required value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
-                <Field label={t('fin.recv.method')}><select className="input w-full" value={method} onChange={(e) => setMethod(e.target.value)}>{methods.map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}</select></Field>
+                <Field label={t('fin.recv.method')}><select className="select w-full" value={method} onChange={(e) => setMethod(e.target.value)}>{methods.map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}</select></Field>
                 <Field label={t('fin.col.reference')}><input className="input w-full" value={reference} onChange={(e) => setReference(e.target.value)} /></Field>
                 <button className="btn-primary" disabled={busy || !method}>{t('fin.recv.record')}</button>
             </div>

@@ -15,6 +15,8 @@ interface Props {
     collapsed: boolean;
     onToggle: () => void;
     actions?: React.ReactNode;
+    /** Phone: the page body carries the h1, so the app bar shows the same text as a plain paragraph. */
+    titleAsText?: boolean;
 }
 
 interface HotelOption { id: number; code: string; name: string; city?: string }
@@ -210,7 +212,7 @@ function UserMenu() {
  * Top app bar. Phone: logo, page title (the h1), search and user menu. Desktop: sidebar toggle, title, search,
  * actions, notifications, language, hotel and user. The h1 is focused after each navigation (see AppLayout).
  */
-export default function Topbar({ title, subtitle, collapsed, onToggle, actions }: Props) {
+export default function Topbar({ title, subtitle, collapsed, onToggle, actions, titleAsText = false }: Props) {
     const t = useT();
     const [phoneSearch, setPhoneSearch] = useState(false);
     return (
@@ -222,8 +224,10 @@ export default function Topbar({ title, subtitle, collapsed, onToggle, actions }
                 </button>
 
                 <div className="flex-1 min-w-[2.5rem] md:min-w-[7rem]">
-                    {title && <h1 id="page-title" tabIndex={-1} data-page-title className="text-[1.375rem] md:text-[1.5rem] lg:text-[1.75rem] font-semibold text-slate-900 truncate leading-tight">{title}</h1>}
-                    {subtitle && <p className="text-xs md:text-sm text-slate-600 truncate">{subtitle}</p>}
+                    {title && (titleAsText
+                        ? <p data-app-title className="text-[1.375rem] font-semibold text-slate-900 truncate leading-tight">{title}</p>
+                        : <h1 id="page-title" tabIndex={-1} data-page-title className="text-[1.375rem] md:text-[1.5rem] lg:text-[1.75rem] font-semibold text-slate-900 truncate leading-tight">{title}</h1>)}
+                    {subtitle && <p className="text-sm text-slate-600 truncate">{subtitle}</p>}
                 </div>
 
                 <button type="button" onClick={openPalette} data-palette-button

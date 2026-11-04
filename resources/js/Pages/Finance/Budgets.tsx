@@ -89,17 +89,17 @@ export default function Budgets() {
                 <div className="card mb-4 p-4">
                     <div className="mb-3 flex flex-wrap items-end gap-2">
                         <Field label={t('acc2.budgets.by')}>
-                            <select className="input" value={by} onChange={(e) => setBy(e.target.value)}>
+                            <select className="select" value={by} onChange={(e) => setBy(e.target.value)}>
                                 {['account', 'department', 'month'].map((k) => <option key={k} value={k}>{t(`acc2.budgets.by_${k}`)}</option>)}
                             </select>
                         </Field>
                         <Field label={t('acc2.budgets.through')}>
-                            <select className="input" value={through} onChange={(e) => setThrough(Number(e.target.value))}>
+                            <select className="select" value={through} onChange={(e) => setThrough(Number(e.target.value))}>
                                 {Array.from({ length: 12 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
                             </select>
                         </Field>
                         <Field label={t('acc2.budgets.method')}>
-                            <select className="input" value={method} onChange={(e) => setMethod(e.target.value)}>
+                            <select className="select" value={method} onChange={(e) => setMethod(e.target.value)}>
                                 <option value="budget">{t('acc2.budgets.method_budget')}</option>
                                 <option value="run_rate">{t('acc2.budgets.method_run_rate')}</option>
                             </select>
@@ -133,13 +133,13 @@ export default function Budgets() {
                     <Field label={t('acc2.budgets.name')}><input className="input w-full" value={name} onChange={(e) => setName(e.target.value)} /></Field>
                     <Field label={t('acc2.budgets.year')}><input type="number" className="input w-full sm:w-28" value={year} onChange={(e) => setYear(Number(e.target.value))} /></Field>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
+                <div className="table-wrap">
+                    <table className="table-auto w-full text-xs">
                         <thead><tr className="text-left text-slate-500"><th className="p-1">{t('fin.col.account')}</th><th className="p-1">{t('acc2.budgets.dept')}</th>{Array.from({ length: 12 }, (_, m) => <th key={m} className="p-1 text-right">{m + 1}</th>)}<th /></tr></thead>
                         <tbody>
                             {lines.map((l, i) => (
                                 <tr key={i} className="border-t border-slate-100">
-                                    <td className="p-1"><select className="input w-44" aria-label={t('fin.col.account')} value={l.account} onChange={(e) => setLine(i, { account: e.target.value })}><option value="" />{plAccounts.map((a) => <option key={a.code} value={a.code}>{a.code} {a.name}</option>)}</select></td>
+                                    <td className="p-1"><select className="select w-44" aria-label={t('fin.col.account')} value={l.account} onChange={(e) => setLine(i, { account: e.target.value })}><option value="" />{plAccounts.map((a) => <option key={a.code} value={a.code}>{a.code} {a.name}</option>)}</select></td>
                                     <td className="p-1"><input className="input w-24" aria-label={t('acc2.budgets.dept')} value={l.department} onChange={(e) => setLine(i, { department: e.target.value })} /></td>
                                     {l.amounts.map((a, m) => <td key={m} className="p-1"><input type="number" min={0} aria-label={`${l.account} ${m + 1}`.trim()} className="input w-24 text-right" value={a} onChange={(e) => setAmount(i, m, e.target.value)} /></td>)}
                                     <td className="p-1"><button type="button" className="btn-secondary" title={t('acc2.budgets.spread_hint')} onClick={() => spread(i)}>{t('acc2.budgets.spread')}</button></td>

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Guest {
     id: number; title: string | null; first_name: string; last_name: string; full_name: string; email: string | null; phone: string | null;
@@ -71,8 +72,8 @@ export default function GuestShow({ id }: { id: string }) {
             actions={<Link href="/guests" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('guests.back')}</Link>}
         >
             <Head title={g ? g.full_name : t('guests.col.guest')} />
-            {msg && <div className={`mb-4 rounded-lg px-4 py-2 text-sm border ${msg.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{msg.text}</div>}
-            {guest.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{guest.error.message}</div>}
+            {msg && <Alert variant={msg.ok ? 'success' : 'danger'} className="mb-4">{msg.text}</Alert>}
+            {guest.error && <Alert variant="danger" className="mb-4">{guest.error.message}</Alert>}
             {guest.loading && !g && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             {g && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -189,7 +190,7 @@ export default function GuestShow({ id }: { id: string }) {
                             <p className="text-sm text-slate-500 mb-2">{t('guests.show.erasure_hint')}</p>
                             {privacyForm && (
                                 <form className="space-y-2 mb-3" onSubmit={(e) => { e.preventDefault(); post('priv', `guests/${id}/privacy-requests`, privacyForm, t('guests.show.request_sent')).then((ok) => ok && setPrivacyForm(null)); }}>
-                                    <select className="input w-full" value={privacyForm.kind} onChange={(e) => setPrivacyForm({ ...privacyForm, kind: e.target.value })} aria-label={t('guests.show.kind_anonymise')}>
+                                    <select className="select w-full" value={privacyForm.kind} onChange={(e) => setPrivacyForm({ ...privacyForm, kind: e.target.value })} aria-label={t('guests.show.kind_anonymise')}>
                                         <option value="anonymise">{t('guests.show.kind_anonymise')}</option>
                                         <option value="delete">{t('guests.show.kind_delete')}</option>
                                     </select>

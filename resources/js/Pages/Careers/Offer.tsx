@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Offer { applicant: string; title: string | null; hotel: string | null; contract_kind: string; base_salary: number; start_date: string; end_date: string | null; message: string | null }
 
@@ -26,8 +27,8 @@ export default function CareersOffer({ token }: { token: string }) {
             <Head title={t('talent.offer.title')} />
             <main className="mx-auto max-w-xl rounded-lg border border-slate-200 bg-white p-5">
                 <h1 className="mb-3 text-2xl font-semibold">{t('talent.offer.title')}</h1>
-                {err && <p className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</p>}
-                {result && <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-base">{result}</p>}
+                {err && <Alert variant="danger" className="mb-3">{err}</Alert>}
+                {result && <Alert variant="success">{result}</Alert>}
                 {o && !result && (
                     <div className="space-y-2 text-base">
                         <p>{t('talent.offer.hello', { name: o.applicant })}</p>

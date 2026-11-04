@@ -101,13 +101,13 @@ export default function SettingsHotels() {
                         <form onSubmit={save} className="card px-5 py-4 mb-6 space-y-4">
                             <div className="flex items-center">
                                 <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('settings.hotels.new') : t('settings.hotels.edit', { name: editing.name })}</h3>
-                                <button type="button" className="ml-auto text-slate-500 hover:text-slate-600" onClick={() => setEditing(null)}><X className="w-5 h-5" /></button>
+                                <button type="button" className="btn-ghost btn-icon btn-sm ml-auto" onClick={() => setEditing(null)} aria-label={t('ui.nav.close')}><X className="w-5 h-5" /></button>
                             </div>
                             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <Field label={t('settings.hotels.code')}><input className="input w-full" required maxLength={12} value={draft.code} onChange={set('code')} /></Field>
                                 <Field label={t('settings.hotels.name')}><input className="input w-full" required maxLength={150} value={draft.name} onChange={set('name')} /></Field>
                                 <Field label={t('settings.hotels.stars')}>
-                                    <select className="input w-full" value={draft.stars} onChange={set('stars')}>
+                                    <select className="select w-full" value={draft.stars} onChange={set('stars')}>
                                         <option value="">{t('settings.hotels.unrated')}</option>
                                         {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
                                     </select>
@@ -116,7 +116,7 @@ export default function SettingsHotels() {
                                 <Field label={t('settings.hotels.tax_id')}><input className="input w-full" value={draft.tax_id} onChange={set('tax_id')} /></Field>
                                 <Field label={t('settings.hotels.trade_register')}><input className="input w-full" value={draft.trade_register} onChange={set('trade_register')} /></Field>
                                 <Field label={t('settings.hotels.country')}>
-                                    <select className="input w-full" value={draft.country} onChange={set('country')}>
+                                    <select className="select w-full" value={draft.country} onChange={set('country')}>
                                         {Object.entries(COUNTRIES).map(([c, n]) => <option key={c} value={c}>{n}</option>)}
                                     </select>
                                 </Field>
@@ -127,7 +127,7 @@ export default function SettingsHotels() {
                                 <Field label={t('settings.hotels.currency')}><input className="input w-full" required maxLength={3} minLength={3} value={draft.currency} onChange={set('currency')} /></Field>
                                 <Field label={t('settings.hotels.timezone')}><input className="input w-full" required value={draft.timezone} onChange={set('timezone')} /></Field>
                                 <Field label={t('settings.hotels.language')}>
-                                    <select className="input w-full" value={draft.locale} onChange={set('locale')}>
+                                    <select className="select w-full" value={draft.locale} onChange={set('locale')}>
                                         <option value="fr">Français</option><option value="en">English</option>
                                     </select>
                                 </Field>
@@ -157,7 +157,7 @@ export default function SettingsHotels() {
                                         <td className="text-sm">{h.currency}</td>
                                         <td className="text-sm">{hm(h.check_in_time) || '—'} / {hm(h.check_out_time) || '—'}</td>
                                         <td className="text-sm font-medium">{h.business_date ? formatDate(h.business_date) : '—'}</td>
-                                        <td className="text-right"><button title={t('common.edit')} className="text-slate-500 hover:text-indigo-600" onClick={() => open(h)}><Pencil className="w-4 h-4" /></button></td>
+                                        <td className="text-right"><button title={t('common.edit')} className="btn-ghost btn-icon btn-sm" onClick={() => open(h)} aria-label={t('common.edit')}><Pencil className="w-4 h-4" /></button></td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -43,7 +43,7 @@ export default function PayablesWorkflow() {
             <div className="card mb-4 p-4">
                 <h3 className="mb-3 font-semibold">{t('acc3.pay.inbox')}</h3>
                 <QueryStatus query={inbox} variant="table" />
-                <input className="input mb-2 w-full sm:w-96" placeholder={t('acc3.pay.note')} aria-label={t('acc3.pay.note')} value={note} onChange={(e) => setNote(e.target.value)} />
+                <input className="input mb-2 w-full" placeholder={t('acc3.pay.note')} aria-label={t('acc3.pay.note')} value={note} onChange={(e) => setNote(e.target.value)} />
                 <Table head={<><Th>{t('acc3.pay.supplier')}</Th><Th>{t('acc3.pay.reference')}</Th><Th r>{t('acc3.amount')}</Th><Th>{t('acc3.pay.step')}</Th><Th /></>}>
                     {inbox.data?.map((a) => (
                         <tr key={a.id}>
@@ -110,7 +110,7 @@ export default function PayablesWorkflow() {
                         e.preventDefault();
                         run(() => api(`accounting3/payables/captures/${conv.id}/convert`, { method: 'POST', body: JSON.stringify({ supplier_id: Number(conv.supplier_id), reference: conv.reference, date: conv.date, net_total: Number(conv.net_total), tax_total: Number(conv.tax_total), expense_lines: [{ account: conv.account, amount: Number(conv.net_total) }] }) }), () => setConv(null));
                     }}>
-                        <Field label={t('acc3.pay.supplier')}><select required className="input w-full" value={conv.supplier_id} onChange={(e) => setConv({ ...conv, supplier_id: e.target.value })}><option value="" />{suppliers.data?.data.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
+                        <Field label={t('acc3.pay.supplier')}><select required className="select w-full" value={conv.supplier_id} onChange={(e) => setConv({ ...conv, supplier_id: e.target.value })}><option value="" />{suppliers.data?.data.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
                         <Field label={t('acc3.pay.reference')}><input required className="input w-full" value={conv.reference} onChange={(e) => setConv({ ...conv, reference: e.target.value })} /></Field>
                         <Field label={t('acc3.date')}><input type="date" required className="input w-full" value={conv.date} onChange={(e) => setConv({ ...conv, date: e.target.value })} /></Field>
                         <Field label={t('acc3.pay.expense_account')}><input required className="input w-full" value={conv.account} onChange={(e) => setConv({ ...conv, account: e.target.value })} /></Field>

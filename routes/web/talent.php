@@ -17,12 +17,8 @@ Route::middleware(['auth'])->prefix('hr/talent')->group(function () {
 Route::middleware(['auth'])->get('/me', fn () => Inertia::render('Me/Index'))->name('me');
 
 // Public careers site per group. The offer link comes first so a token is never read as a group slug.
-$careers = fn (string $component) => function (string $group, ?string $post = null) use ($component) {
-    $g = Group::where('slug', $group)->where('status', 'active')->firstOrFail();
-
-    return Inertia::render("Careers/$component", ['group' => ['slug' => $g->slug, 'name' => $g->name], 'postId' => $post ? (int) $post : null, 'lang' => in_array(request('lang'), ['fr', 'en'], true) ? request('lang') : 'fr']);
-};
+// Controller action (not a closure factory) so `php artisan route:cache` serialises it correctly.
 Route::get('/careers/offer/{token}', fn (string $token) => Inertia::render('Careers/Offer', ['token' => $token, 'lang' => in_array(request('lang'), ['fr', 'en'], true) ? request('lang') : 'fr']))
     ->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:public-read');
-Route::get('/careers/{group}', $careers('Index'))->middleware('throttle:public-read')->name('careers');
-Route::get('/careers/{group}/{post}', $careers('Index'))->whereNumber('post')->middleware('throttle:public-read')->name('careers.post');
+Route::get('/careers/{group}', [\App\Http\Controllers\PublicGroupPageController::class, 'careers'])->middleware('throttle:public-read')->name('careers');
+Route::get('/careers/{group}/{post}', [\App\Http\Controllers\PublicGroupPageController::class, 'careers'])->whereNumber('post')->middleware('throttle:public-read')->name('careers.post');

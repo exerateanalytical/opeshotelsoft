@@ -26,5 +26,6 @@
     "ui2.onboarding.doc_kind": "Document type",
     "ui2.chart_empty": "No data for this period",
     "ui2.chart_loading": "Loading chart",
-    "ui2.chart_date": "Date"
+    "ui2.chart_date": "Date",
+    "ui2.talent.issued_on": "Date issued"
 }

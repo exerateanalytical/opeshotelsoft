@@ -53,7 +53,7 @@ export default function TalentTraining() {
             </Section>
             <Section title={t('talent.sessions')}>
                 <div className="mb-3 flex flex-wrap gap-2 text-sm">
-                    <select className="input" aria-label={t('ui2.hr.course')} value={sess.course_id} onChange={(e) => setSess({ ...sess, course_id: e.target.value })}><option value="" />{courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                    <select className="select" aria-label={t('ui2.hr.course')} value={sess.course_id} onChange={(e) => setSess({ ...sess, course_id: e.target.value })}><option value="" />{courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                     <input className="input" type="date" aria-label={t('ui2.hr.session_start')} value={sess.starts_on} onChange={(e) => setSess({ ...sess, starts_on: e.target.value })} />
                     <button className="btn-primary" disabled={!sess.course_id || !sess.starts_on} onClick={() => run(() => tsend('sessions', { course_id: Number(sess.course_id), starts_on: sess.starts_on }))}>{t('talent.add_session')}</button>
                 </div>
@@ -68,7 +68,7 @@ export default function TalentTraining() {
                                     <button className="btn-secondary" onClick={() => run(() => tsend(`sessions/${s.id}/record`, { employee_id: a.employee_id, attendance: 'absent' }))}>{t('talent.absent')}</button></>}</p>))}
                         {s.status === 'planned' && (
                             <div className="mt-2 flex flex-wrap gap-2">
-                                <select className="input" aria-label={t('ui2.hr.employee')} value={enroll[s.id] ?? ''} onChange={(e) => setEnroll({ ...enroll, [s.id]: e.target.value })}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}</select>
+                                <select className="select" aria-label={t('ui2.hr.employee')} value={enroll[s.id] ?? ''} onChange={(e) => setEnroll({ ...enroll, [s.id]: e.target.value })}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}</select>
                                 <button className="btn-secondary" disabled={!enroll[s.id]} onClick={() => run(() => tsend(`sessions/${s.id}/enroll`, { employee_ids: [Number(enroll[s.id])] }))}>{t('talent.enroll')}</button>
                                 <button className="btn-primary" onClick={() => run(() => tsend(`sessions/${s.id}/complete`))}>{t('talent.complete')}</button>
                             </div>)}

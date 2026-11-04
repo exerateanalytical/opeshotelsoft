@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 const TABS = [
     ['/hr/talent', 'talent.nav.recruitment'], ['/hr/talent/skills', 'talent.nav.skills'], ['/hr/talent/training', 'talent.nav.training'],
@@ -27,7 +28,7 @@ export const unwrap = <T,>(r: T[] | { data: T[] }): T[] => (Array.isArray(r) ? r
 
 export function Banner({ error, ok }: { error?: string | null; ok?: string | null }) {
     if (!error && !ok) return null;
-    return <div className={`mb-4 rounded-lg border px-4 py-2 text-sm ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-200 bg-white text-slate-800'}`}>{error ?? ok}</div>;
+    return <Alert variant={error ? 'danger' : 'info'} className="mb-4">{error ?? ok}</Alert>;
 }
 
 export function Section({ title, children, right }: { title: string; children: ReactNode; right?: ReactNode }) {

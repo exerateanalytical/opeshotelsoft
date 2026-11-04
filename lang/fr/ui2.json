@@ -26,5 +26,6 @@
     "ui2.onboarding.doc_kind": "Type de document",
     "ui2.chart_empty": "Aucune donnée pour cette période",
     "ui2.chart_loading": "Chargement du graphique",
-    "ui2.chart_date": "Date"
+    "ui2.chart_date": "Date",
+    "ui2.talent.issued_on": "Date de délivrance"
 }

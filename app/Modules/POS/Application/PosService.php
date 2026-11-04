@@ -36,19 +36,22 @@ class PosService
         $outlet = Outlet::where('active', true)->findOrFail($outletId);
         $hotel = Hotel::findOrFail($this->ctx->requireHotelId());
 
-        $check = Check::create([
-            'outlet_id' => $outlet->id,
-            'number' => NumberSequence::next($hotel->id, 'pos-check', $outlet->code.'-'),
-            'client_uuid' => $data['client_uuid'] ?? null,
-            'table_number' => $data['table_number'] ?? null,
-            'pos_table_id' => $data['pos_table_id'] ?? null,
-            'covers' => $data['covers'] ?? 1,
-            'business_date' => $hotel->business_date,
-            'opened_by' => $this->ctx->actor()?->id,
-        ])->refresh();
-        $this->bus->record('pos.check_opened', $check->only(['id', 'number', 'outlet_id', 'table_number']), 'pos_check', $check->id);
+        // One transaction: the sequence row lock is held until the check exists, so no number is lost or reused.
+        return DB::transaction(function () use ($outlet, $hotel, $data) {
+            $check = Check::create([
+                'outlet_id' => $outlet->id,
+                'number' => NumberSequence::next($hotel->id, 'pos-check', $outlet->code.'-'),
+                'client_uuid' => $data['client_uuid'] ?? null,
+                'table_number' => $data['table_number'] ?? null,
+                'pos_table_id' => $data['pos_table_id'] ?? null,
+                'covers' => $data['covers'] ?? 1,
+                'business_date' => $hotel->business_date,
+                'opened_by' => $this->ctx->actor()?->id,
+            ])->refresh();
+            $this->bus->record('pos.check_opened', $check->only(['id', 'number', 'outlet_id', 'table_number']), 'pos_check', $check->id);
 
-        return $check;
+            return $check;
+        });
     }
 
     public function addItem(Check $check, int $menuItemId, float $qty = 1, array $modifiers = [], ?string $notes = null): CheckLine

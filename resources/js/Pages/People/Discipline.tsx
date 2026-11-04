@@ -9,6 +9,7 @@ import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
 import { PeopleTabs } from './Index';
 import { Employee, EmployeeRef, errorText, listOf, openFile, post, upload } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 interface Sanction { id: number; kind: string; incident_date: string; reason: string; status: string; suspension_start: string | null; suspension_end: string | null; documents_count: number; employee: EmployeeRef | null }
 
@@ -40,15 +41,15 @@ export default function PeopleDiscipline() {
             <Head title={t('people.discipline.title')} />
             <QueryStatus query={list} variant="table" />
             <PeopleTabs active="/people/discipline" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
             <form onSubmit={save} className="card mb-4 grid gap-3 p-4 text-sm sm:grid-cols-3">
                 <label>{t('people.employee')}
-                    <select className="input w-full" required value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })}>
+                    <select className="select w-full" required value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })}>
                         <option value="" />{listOf(employees.data).map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}
                     </select>
                 </label>
                 <label>{t('people.discipline.kind')}
-                    <select className="input w-full" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+                    <select className="select w-full" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                         {['verbal_warning', 'written_warning', 'suspension'].map((k) => <option key={k} value={k}>{t(`people.sanction.${k}`)}</option>)}
                     </select>
                 </label>
@@ -62,8 +63,8 @@ export default function PeopleDiscipline() {
                 </>)}
                 <div className="sm:col-span-3"><button className="btn-primary">{t('people.discipline.issue')}</button></div>
             </form>
-            <div className="card overflow-x-auto">
-                <table className="w-full text-sm">
+            <div className="card table-wrap">
+                <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-2">{t('people.date')}</th><th>{t('people.employee')}</th><th>{t('people.discipline.kind')}</th><th>{t('people.discipline.reason')}</th><th>{t('people.status')}</th><th /></tr></thead>
                     <tbody>
                         {list.data?.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="staff" /></td></tr>}

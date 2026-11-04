@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Tier {
     id: number;
@@ -81,8 +82,8 @@ export default function LoyaltyIndex() {
             }
         >
             <Head title={t('loyalty.title')} />
-            {error && <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm">{error}</div>}
-            {success && <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 text-sm">{success}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+            {success && <Alert variant="success" className="mb-4">{success}</Alert>}
             {program.error && !program.loading ? (
                 <div className="card"><ErrorState error={program.error} onRetry={program.reload} /></div>
             ) : program.loading && !p ? (

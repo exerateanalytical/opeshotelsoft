@@ -50,7 +50,7 @@ export default function TalentRecruitment() {
                     <input className="input" placeholder={t('talent.post_title')} aria-label={t('talent.post_title')} value={title} onChange={(e) => setTitle(e.target.value)} />
                     <button className="btn-primary" disabled={!title} onClick={() => run(async () => { await tsend('posts', { title }); setTitle(''); })}>{t('talent.add_post')}</button>
                 </div>
-                <div className="overflow-x-auto"><table className="w-full text-sm">
+                <div className="table-wrap"><table className="table-auto w-full text-sm">
                     <thead><tr className="text-left"><th className="p-2">{t('talent.post_title')}</th><th>{t('talent.status')}</th><th>{t('talent.applicants')}</th><th /></tr></thead>
                     <tbody>{posts.map((p) => (
                         <tr key={p.id} className="border-t border-slate-100">
@@ -62,7 +62,7 @@ export default function TalentRecruitment() {
             </Section>
 
             <Section title={t('talent.pipeline')} right={
-                <select className="input" aria-label={t('ui2.hr.filter_stage')} value={stage} onChange={(e) => setStage(e.target.value)}>
+                <select className="select" aria-label={t('ui2.hr.filter_stage')} value={stage} onChange={(e) => setStage(e.target.value)}>
                     <option value="">{t('talent.all_stages')}</option>{STAGES.concat('hired').map((s) => <option key={s} value={s}>{t(`talent.stage.${s}`)}</option>)}
                 </select>}>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -94,7 +94,7 @@ export default function TalentRecruitment() {
                                     <div key={i.id} className="mb-2 border-t border-slate-100 pt-2">
                                         <p>{i.scheduled_at.slice(0, 16).replace('T', ' ')} - {t('talent.overall')}: {i.scorecard.overall ?? '-'} ({i.scorecard.tally.hire}/{i.scorecard.tally.maybe}/{i.scorecard.tally.no})</p>
                                         <div className="grid grid-cols-2 gap-2">{i.criteria.map((c) => (
-                                            <label key={c}>{c}<select className="input w-full" value={marks[`${i.id}-${c}`] ?? ''} onChange={(e) => setMarks({ ...marks, [`${i.id}-${c}`]: Number(e.target.value) })}>
+                                            <label key={c}>{c}<select className="select w-full" value={marks[`${i.id}-${c}`] ?? ''} onChange={(e) => setMarks({ ...marks, [`${i.id}-${c}`]: Number(e.target.value) })}>
                                                 <option value="" />{[1, 2, 3, 4, 5].map((n) => <option key={n}>{n}</option>)}</select></label>))}</div>
                                         <div className="mt-2 flex gap-2">{['hire', 'maybe', 'no'].map((r) => (
                                             <button key={r} className="btn-secondary" onClick={() => run(() => tsend(`interviews/${i.id}/scores`, { recommendation: r, scores: i.criteria.filter((c) => marks[`${i.id}-${c}`]).map((c) => ({ criterion: c, score: marks[`${i.id}-${c}`] })) }), t('talent.score_saved'))}>{t(`talent.rec.${r}`)}</button>))}</div>

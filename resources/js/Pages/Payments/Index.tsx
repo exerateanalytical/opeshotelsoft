@@ -112,7 +112,7 @@ function CreateIntent({ onDone }: { onDone: (id?: number) => void }) {
             }
         }}>
             <label className="label">{t('payments.method')}
-                <select className="input mt-1" value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })}>
+                <select className="select mt-1" value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })}>
                     {Object.entries(PROVIDERS).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
                 </select>
             </label>
@@ -121,7 +121,7 @@ function CreateIntent({ onDone }: { onDone: (id?: number) => void }) {
             </label>
             <div className="grid grid-cols-2 gap-2">
                 <label className="label">{t('payments.target')}
-                    <select className="input mt-1" value={form.target} onChange={(e) => setForm({ ...form, target: e.target.value })}>
+                    <select className="select mt-1" value={form.target} onChange={(e) => setForm({ ...form, target: e.target.value })}>
                         <option value="folio">{t('payments.index.folio_id')}</option>
                         <option value="reservation">{t('payments.index.reservation_id')}</option>
                     </select>

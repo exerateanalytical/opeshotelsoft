@@ -54,7 +54,9 @@ hotel.example.com {
 }
 ```
 
-Caddy gets and renews Let's Encrypt certificates on its own and sends `X-Forwarded-Proto`. Make sure Laravel trusts the proxy (trusted proxies set to `127.0.0.1`/the Docker network) so URLs are generated as `https://`.
+Caddy gets and renews Let's Encrypt certificates on its own and sends `X-Forwarded-Proto`. Make sure Laravel trusts the proxy so URLs are generated as `https://` and the client IP is the real one: set `TRUSTED_PROXIES` (comma-separated IPs or CIDR ranges, read by `config/trustedproxy.php`). Default is none, so `X-Forwarded-For` is ignored. `docker-compose.yml` sets `127.0.0.1,172.16.0.0/12,10.0.0.0/8,192.168.0.0/16` for the app container (the nginx container is only published on `127.0.0.1:8080`); on bare metal with the proxy on the same host use `TRUSTED_PROXIES=127.0.0.1`. Never use `*` when the application port is reachable without the proxy.
+
+`DEMO_LOGINS=true` is refused when `APP_ENV=production` (a warning is logged) unless `ALLOW_DEMO_LOGINS_IN_PRODUCTION=true` is also set.
 
 ---
 
@@ -104,7 +106,7 @@ sudo -u www-data php artisan migrate --force
 sudo -u www-data php artisan passport:keys           # first install only
 sudo -u www-data php artisan db:seed --force         # first install only
 sudo -u www-data php artisan storage:link
-sudo -u www-data php artisan optimize
+sudo -u www-data php artisan optimize                 # config, events, routes, views (see docs/PERFORMANCE.md)
 sudo ln -sfn $R /var/www/opeshotelsoft/current
 sudo systemctl reload php8.3-fpm
 ```

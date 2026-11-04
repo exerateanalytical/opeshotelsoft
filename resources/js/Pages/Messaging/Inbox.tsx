@@ -91,7 +91,7 @@ export default function MessagingInbox() {
                                 </div>
                                 <div className="flex gap-2 items-center">
                                     <label className="text-sm" htmlFor="assign">{t('messaging.assign')}</label>
-                                    <select id="assign" className="input" value={d.assigned_to ?? ''} onChange={(e) => run(() => post('assign', { user_id: e.target.value ? Number(e.target.value) : null }))}>
+                                    <select id="assign" className="select" value={d.assigned_to ?? ''} onChange={(e) => run(() => post('assign', { user_id: e.target.value ? Number(e.target.value) : null }))}>
                                         <option value="">{t('messaging.unassigned')}</option>
                                         {staff.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                                     </select>
@@ -128,7 +128,7 @@ export default function MessagingInbox() {
                                 {!d.opted_out && (
                                     <div className="flex gap-2 items-center">
                                         <label className="text-sm" htmlFor="tpl">{t('messaging.send_template')}</label>
-                                        <select id="tpl" className="input" value="" onChange={(e) => e.target.value && run(() => post('template', { journey: e.target.value }))}>
+                                        <select id="tpl" className="select" value="" onChange={(e) => e.target.value && run(() => post('template', { journey: e.target.value }))}>
                                             <option value="">—</option>
                                             {JOURNEYS.map((j) => <option key={j} value={j}>{t(`messaging.journey.${j}`)}</option>)}
                                         </select>
@@ -142,7 +142,7 @@ export default function MessagingInbox() {
 
             <div className="card p-4 mt-4">
                 <h2 className="font-medium mb-2">{t('messaging.quick_replies')}</h2>
-                <form className="grid gap-2 sm:grid-cols-[200px_1fr_auto]" onSubmit={(e) => { e.preventDefault(); run(async () => { await api('messaging/quick-replies', { method: 'POST', body: JSON.stringify(qr) }); setQr({ title: '', body: '' }); quick.reload(); }); }}>
+                <form className="grid max-w-3xl gap-2 sm:grid-cols-[200px_1fr_auto]" onSubmit={(e) => { e.preventDefault(); run(async () => { await api('messaging/quick-replies', { method: 'POST', body: JSON.stringify(qr) }); setQr({ title: '', body: '' }); quick.reload(); }); }}>
                     <input className="input" aria-label={t('messaging.title')} placeholder={t('messaging.title')} value={qr.title} onChange={(e) => setQr({ ...qr, title: e.target.value })} />
                     <input className="input" aria-label={t('messaging.body')} placeholder={t('messaging.body')} value={qr.body} onChange={(e) => setQr({ ...qr, body: e.target.value })} />
                     <button className="btn-secondary" disabled={!qr.title || !qr.body}>{t('messaging.quick_reply_new')}</button>

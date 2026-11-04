@@ -61,7 +61,7 @@ class GuestOrderService
     public function place(Reservation $r, array $items, ?string $notes = null, ?string $clientUuid = null): GuestOrder
     {
         return $this->asHotelOf($r, function () use ($r, $items, $notes, $clientUuid) {
-            if ($clientUuid && ($done = GuestOrder::where('client_uuid', $clientUuid)->first())) {
+            if ($clientUuid && ($done = GuestOrder::where('reservation_id', $r->id)->where('client_uuid', $clientUuid)->first())) {
                 return $done; // double tap / retry
             }
             $r = Reservation::findOrFail($r->id);

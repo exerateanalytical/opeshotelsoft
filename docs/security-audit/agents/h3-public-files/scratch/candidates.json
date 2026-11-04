@@ -1,0 +1,191 @@
+[
+  {
+    "fingerprint": "public:booking:guest-profile-takeover-by-email",
+    "title": "Public booking attaches a reservation to any existing guest profile matched by email; lookup then discloses that guest's loyalty number, points and QR text, and online check-in overwrites the guest's ID data",
+    "attack_class": "public-auth",
+    "lower_trust_principal": "Anonymous internet user who knows a guest's email address and last name",
+    "boundary_crossed": "Unauthenticated public booking API -> another guest's profile (Guests.guest row, loyalty membership) in the group",
+    "entrypoint": {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 120, "description": "book(): Guest::where('email', $data['guest']['email'])->first() reuses an existing guest row with no proof that the caller owns that email; member_number on line 118 likewise binds the booking to Membership->guest without the last-name check used elsewhere"},
+    "sink": {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 165, "description": "lookup(): returns loyalty number, tier, points_balance and 'OPES-LOYALTY:<number>' QR text for the guest attached to the booking (and guest first/last name on line 162)"},
+    "propagation": [
+      {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 127, "description": "reservation created with guest_id of the victim's profile"},
+      {"file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php", "line": 114, "description": "lookup proof is confirmation/public_code + guest last name (strcasecmp) -> attacker knows both since they created the booking under the victim's profile"},
+      {"file": "app/Modules/GuestPortal/Application/GuestLinks.php", "line": 63, "description": "manage token is issued for that reservation, unlocking ManageController::checkin"},
+      {"file": "app/Modules/Reservations/Experience/Application/DigitalCheckin.php", "line": 59, "description": "digital check-in writes id_number, birth_date, address etc. onto the victim's Guest row ($guest->update(array_filter([...])))"}
+    ],
+    "intended_control": "Guest identity on the public site is proven by confirmation number + last name; loyalty data should only be returned to the member",
+    "observed_or_expected_result": "Attacker POSTs /api/v1/booking/{group}/reservations with guest.email = victim email and guest.last_name = victim last name (first name arbitrary), receives confirmation + manage token; POST reservations/lookup with that confirmation + victim last name returns the victim's loyalty card number, tier and points balance plus the QR string staff scan for earn/redeem; the attacker can also submit online check-in that rewrites the victim's stored ID number / birth date / address, and the fake booking appears under the victim's profile (member portal, history, marketing consent flag on the shared profile is untouched but the reservation and any special_requests are theirs). Cancellation later is free when the plan is refundable.",
+    "conditions": ["Victim has a Guest row (any prior stay) in the group; loyalty disclosure additionally requires an active membership", "Attacker knows victim email + last name (both commonly public)"],
+    "confidence": "high",
+    "proposed_severity": "high",
+    "smallest_fix": "In book(): never attach a public booking to an existing guest by email alone; create a new guest row (or only reuse when the member_number + last name pair matches, as member() does on line 228-236) and require last-name match for member_number on line 118. In lookup(): drop the 'loyalty' block (or only return it when the request also carries the member's own credential).",
+    "regression_test_idea": "Feature test: seed guest G (email e, membership M); POST public book with guest.email=e, last_name=G.last_name from an anonymous client; assert reservation.guest_id != G.id and lookup response has no 'loyalty' key."
+  },
+  {
+    "fingerprint": "public:booking:corporate-code-low-entropy-bills-company",
+    "title": "Public booking honours staff-chosen corporate codes (e.g. 'ACME') and books on the company's contract: negotiated rates, allotment rooms and company_id on the reservation, with a 300/min validity oracle",
+    "attack_class": "public-auth",
+    "lower_trust_principal": "Anonymous internet user",
+    "boundary_crossed": "Public booking API -> B2B corporate contract (confidential negotiated rate, allotment, company account)",
+    "entrypoint": {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 108, "description": "book()/availability() accept corporate_code (max 24 chars) from anyone"},
+    "sink": {"file": "app/Modules/Reservations/Revenue/Application/CorporateService.php", "line": 173, "description": "bookingFields(): reservation gets company_id, contract rate_plan_id, room_block_id (allotment) and source corporate:<code>"},
+    "propagation": [
+      {"file": "app/Modules/Reservations/Revenue/Application/CorporateService.php", "line": 126, "description": "find(): CorporateContract::where('code', strtoupper(trim($code)))->where('active', true) -- code is the only secret"},
+      {"file": "app/Modules/Reservations/Revenue/Http/OffersController.php", "line": 67, "description": "codes are staff-chosen, regex [A-Za-z0-9_-]{1,20}, typically company names"},
+      {"file": "app/Modules/Reservations/Revenue/Application/BookingSiteRevenue.php", "line": 32, "description": "availability() (throttle public-read 300/min) decorates offers with the contract when the code is valid -> code-guessing oracle"}
+    ],
+    "intended_control": "Corporate contract bookings are restricted to the company's travellers",
+    "observed_or_expected_result": "Guessing a short code lets anyone consume a company's allotment and book at the confidential negotiated rate with company_id set (depending on folio routing, charges may route to the company's city ledger).",
+    "conditions": ["Corporate contracts with guessable codes exist (default usage)", "Impact on billing depends on folio routing rules for company_id reservations (not verified here)"],
+    "confidence": "medium",
+    "proposed_severity": "medium",
+    "smallest_fix": "Require a second factor for corporate bookings on the public site (email domain of the company, or per-company random booking token of >= 64 bits generated by the system instead of a staff-chosen code); throttle corporate_code lookups per IP with a lockout; never set company_id as bill-to from a public booking without staff confirmation.",
+    "regression_test_idea": "Test that availability with a wrong corporate_code returns the same body as without one, and that a public booking with a valid code yields a reservation with company_id null / status pending staff validation."
+  },
+  {
+    "fingerprint": "export:csv:formula-injection",
+    "title": "CSV/XLSX exports write guest- and public-supplied text (names, special requests, cover notes, review comments) unescaped: cells starting with = + - @ become formulas in Excel",
+    "attack_class": "csv-injection",
+    "lower_trust_principal": "Anonymous public user (booking form, careers application, review, demo request)",
+    "boundary_crossed": "Public form input -> staff workstation via downloaded export",
+    "entrypoint": {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 104, "description": "guest.first_name / last_name / special_requests accepted as free strings (max 100/1000)"},
+    "sink": {"file": "app/Modules/Documents/Application/Exporter.php", "line": 79, "description": "csv(): fputcsv($out, $r, ';', '\"', '') with cell() (line 64) passing strings through unchanged; same in app/Modules/Accounting/Support/Sheets.php line 41 and the xlsx writers"},
+    "propagation": [
+      {"file": "app/Modules/Documents/Application/Exporter.php", "line": 64, "description": "cell(): no neutralisation of leading =,+,-,@,\\t,\\r"}
+    ],
+    "intended_control": "Exports are trusted spreadsheets for staff",
+    "observed_or_expected_result": "A guest named '=HYPERLINK(\"http://evil\",\"click\")' or '=cmd|/C calc!A0' (with DDE prompts) lands in a report export; Excel evaluates it on the staff machine.",
+    "conditions": ["Staff opens the export in Excel/LibreOffice with formulas enabled (default for CSV)"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "In Exporter::cell() and Sheets::csv(): if a string starts with one of = + - @ \\t \\r, prefix it with a single quote (') or a space; for xlsx force string cell type.",
+    "regression_test_idea": "Unit test Exporter::csv with a row ['=1+1'] asserting the output cell starts with \"'=\"."
+  },
+  {
+    "fingerprint": "public:paylink:dryrun-autosucceed-nonprod",
+    "title": "Outside APP_ENV=production, providers without credentials fall back to DryRunGateway whose status() auto-succeeds: the public status poll settles a deposit/pay-link as paid with no money",
+    "attack_class": "public-auth",
+    "lower_trust_principal": "Anonymous payer on the booking site or a pay link",
+    "boundary_crossed": "Public status poll -> folio payment posting / reservation deposit_paid",
+    "entrypoint": {"file": "app/Modules/Payments/Http/PublicPaymentController.php", "line": 55, "description": "status(): public GET with manage token calls PaymentService::refresh()"},
+    "sink": {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 144, "description": "refresh(): $status from DryRunGateway::status() (Drivers/DryRunGateway.php line 158-162 returns 'succeeded') -> settle() posts the folio payment and increments deposit_paid"},
+    "propagation": [
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 41, "description": "driverFor(): DryRunGateway whenever the hotel has no credentials and app()->isProduction() is false"}
+    ],
+    "intended_control": "Dry run is for development only; production refuses unconfigured providers",
+    "observed_or_expected_result": "Any staging/demo/UAT deployment (APP_ENV=staging, demo, local) lets guests mark bookings as paid; a production host misconfigured with APP_ENV != production is fully exposed.",
+    "conditions": ["APP_ENV is not 'production' on an internet-facing instance (e.g. the demo/landing environment that ships DemoLoginController accounts)"],
+    "confidence": "medium",
+    "proposed_severity": "medium",
+    "smallest_fix": "Gate DryRunGateway on an explicit config flag (payments.dry_run=true) that defaults to false, independent of APP_ENV, and log loudly when enabled; refuse dry-run intents on the public channel.",
+    "regression_test_idea": "Test with APP_ENV=staging and no gateway credentials: public deposit + status must return 'gateway-not-configured' (422) rather than a succeeded intent."
+  },
+  {
+    "fingerprint": "public:checkin:id-photo-no-magic-check",
+    "title": "Public digital check-in stores the ID photo from a base64 data URL with only a prefix check (no magic-byte/finfo validation), unlike the staff path",
+    "attack_class": "file-upload",
+    "lower_trust_principal": "Guest with a manage token (or attacker holding one via the email-reuse issue)",
+    "boundary_crossed": "Public form -> private local disk file later served inline to staff",
+    "entrypoint": {"file": "app/Modules/GuestPortal/Http/ManageController.php", "line": 65, "description": "checkin(): id_photo string accepted"},
+    "sink": {"file": "app/Modules/Reservations/Experience/Application/DigitalCheckin.php", "line": 123, "description": "storePhoto(): Storage::disk('local')->put(\"checkins/{hotel}/{id}-id.<ext>\", base64 bytes) with extension taken from the declared mime, bytes never checked"},
+    "propagation": [
+      {"file": "app/Modules/FrontOffice/Http/FrontDeskExtrasController.php", "line": 220, "description": "staff path uses finfo buffer check (store()) and Storage::disk('local')->response() serves by extension-derived mime; nosniff is set by SecurityHeaders so browser execution is unlikely"}
+    ],
+    "intended_control": "Only JPEG/PNG/WebP images accepted (as enforced on the staff path)",
+    "observed_or_expected_result": "Arbitrary bytes up to 2 MB written under storage/app/checkins with a .jpg/.png/.webp name; when later decoded by image libraries (thumbnails, PDF embedding) malformed input reaches the decoder. No direct code execution path identified.",
+    "conditions": ["Staff or a PDF renderer later opens the file"],
+    "confidence": "high",
+    "proposed_severity": "low",
+    "smallest_fix": "Reuse the finfo-based store() logic from FrontDeskExtrasController (check magic bytes/mime of the decoded bytes before writing).",
+    "regression_test_idea": "POST checkin with id_photo='data:image/png;base64,'+base64('<html>') and assert 422 'bad-photo'."
+  },
+  {
+    "fingerprint": "public:guest-order:client-uuid-cross-reservation",
+    "title": "Guest room-service order idempotency key (client_uuid) is looked up hotel-wide, not per reservation: another guest's order is returned for a colliding/guessed uuid",
+    "attack_class": "enumeration",
+    "lower_trust_principal": "Guest holding a signed ordering link for their own reservation",
+    "boundary_crossed": "Own reservation -> other reservation's GuestOrder (id, total, status, pos check id)",
+    "entrypoint": {"file": "app/Modules/GuestPortal/Http/GuestOrderController.php", "line": 45, "description": "place(): client_uuid is any string <= 64 chars"},
+    "sink": {"file": "app/Modules/GuestPortal/Application/GuestOrderService.php", "line": 64, "description": "GuestOrder::where('client_uuid', $clientUuid)->first() without reservation_id filter; the order is returned as if it were the caller's"},
+    "propagation": [],
+    "intended_control": "Retry protection for one guest's own double tap",
+    "observed_or_expected_result": "If uuids are predictable on the client, a guest can read another in-house guest's order totals/check ids and skip placing their own order; also an attacker can poison a uuid so that the real guest's first order silently returns the attacker's record.",
+    "conditions": ["Guessable client_uuid values"],
+    "confidence": "high",
+    "proposed_severity": "low",
+    "smallest_fix": "Add ->where('reservation_id', $r->id) to the client_uuid lookup (and a unique index on (reservation_id, client_uuid)).",
+    "regression_test_idea": "Two reservations, same client_uuid: second place() must create a new order."
+  },
+  {
+    "fingerprint": "public:channels:sandbox-unsigned-inbound",
+    "title": "Channel inbound webhooks for connections in 'sandbox' environment without a webhook_secret accept unsigned bookings",
+    "attack_class": "webhook",
+    "lower_trust_principal": "Anyone who learns a sandbox connection uuid",
+    "boundary_crossed": "Unauthenticated POST -> reservation import into the hotel",
+    "entrypoint": {"file": "app/Modules/Channels/Http/InboundController.php", "line": 35, "description": "receive(): $driver->verify() decides"},
+    "sink": {"file": "app/Modules/Channels/Application/Drivers/BaseDriver.php", "line": 57, "description": "verify(): return $c->environment === 'sandbox' when webhook_secret is empty -> true"},
+    "propagation": [
+      {"file": "app/Modules/Channels/Http/InboundController.php", "line": 46, "description": "BookingImporter::import() creates reservations"}
+    ],
+    "intended_control": "Each connection authenticates its provider by HMAC",
+    "observed_or_expected_result": "Fake OTA bookings (and XML payloads up to the body limit) can be injected into a hotel whose connection was left in sandbox with no secret; the uuid (whereUuid) is the only secret and appears in provider configuration screens/logs.",
+    "conditions": ["A connection with environment=sandbox, receive_reservations=true and no webhook_secret is reachable on the public host"],
+    "confidence": "high",
+    "proposed_severity": "low",
+    "smallest_fix": "Require a webhook_secret for every connection that receives reservations, sandbox included (generate one at connection creation).",
+    "regression_test_idea": "Sandbox connection without secret: unsigned POST must be 401."
+  },
+  {
+    "fingerprint": "public:edge:signed-request-replay-window",
+    "title": "Edge sync signature has a 300 s clock-skew window but no nonce; pull requests (and any non-idempotent future endpoint) can be replayed within the window",
+    "attack_class": "webhook",
+    "lower_trust_principal": "Network attacker who captures one edge request (TLS termination / proxy logs)",
+    "boundary_crossed": "Captured request -> cloud edge API as that node",
+    "entrypoint": {"file": "app/Modules/Edge/Application/CloudSync.php", "line": 44, "description": "authenticate(): only timestamp skew and HMAC(method, path, ts, body-hash) are checked"},
+    "sink": {"file": "app/Modules/Edge/Application/CloudSync.php", "line": 98, "description": "pull(): moves pull_cursor backwards/forwards to the replayed cursor and returns the hotel's change feed again"},
+    "propagation": [
+      {"file": "app/Modules/Edge/Application/CloudSync.php", "line": 61, "description": "push is idempotent via edge_batches batch_key so push replay is harmless"}
+    ],
+    "intended_control": "Signed edge token per request",
+    "observed_or_expected_result": "Replayed pull re-discloses the feed to whoever captured the request and resets the node's pull cursor; limited because TLS normally protects the channel.",
+    "conditions": ["Attacker can observe traffic between edge and cloud"],
+    "confidence": "medium",
+    "proposed_severity": "low",
+    "smallest_fix": "Include a random nonce header in the signature and reject (node, nonce) seen within the skew window (cache), or sign over the cursor and require strictly increasing timestamps per node.",
+    "regression_test_idea": "Replay the same signed pull twice: second must be 401."
+  },
+  {
+    "fingerprint": "public:booking:lookup-status-oracle",
+    "title": "PublicBookingResolver answers 403 'Invalid link' for a wrong manage token but 404 for an unknown reference, and 422 'ambiguous' when several bookings share a confirmation number: existence oracle on booking references",
+    "attack_class": "enumeration",
+    "lower_trust_principal": "Anonymous internet user",
+    "boundary_crossed": "Public API -> existence of a reservation reference / confirmation number in a group",
+    "entrypoint": {"file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php", "line": 104, "description": "fail(404) when empty vs fail(403) on token mismatch (line 110) vs fail(422) ambiguous (line 121)"},
+    "sink": {"file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php", "line": 121, "description": "422 'Several bookings share this confirmation number' returned before any ownership proof when lastName/token are absent (review path allows token null + last_name)"},
+    "propagation": [],
+    "intended_control": "Comment: 'Never picks the first of several matches' and uniform 404 on name mismatch",
+    "observed_or_expected_result": "Distinguishable responses let an attacker confirm that a confirmation number / 8-char public_code exists (public_code space is 31^8 so brute force is impractical; sequential confirmation numbers are trivially enumerable but reveal only existence).",
+    "conditions": ["public-write throttle 20/min per ip+uri limits volume"],
+    "confidence": "high",
+    "proposed_severity": "informational",
+    "smallest_fix": "Return the same 404 body for not-found, bad token and name mismatch; only emit the 'ambiguous' hint after the last name or token matched at least one candidate (it already does for the name path; make the token path identical).",
+    "regression_test_idea": "Assert identical status/body for unknown reference and wrong token."
+  },
+  {
+    "fingerprint": "public:deposit:return-url-forwarded-to-provider",
+    "title": "Booking-site deposit and pay flows forward an arbitrary return_url to Orange Money / card gateway as return_url and cancel_url (open redirect after payment)",
+    "attack_class": "open-redirect",
+    "lower_trust_principal": "Attacker crafting a deposit request on behalf of a guest (requires manage token) or any pay-link payer",
+    "boundary_crossed": "Public input -> third-party payment page redirect target",
+    "entrypoint": {"file": "app/Modules/Payments/Http/PublicPaymentController.php", "line": 37, "description": "return_url validated only as 'url' (any host)"},
+    "sink": {"file": "app/Modules/Payments/Application/Drivers/OrangeMoneyGateway.php", "line": 44, "description": "return_url / cancel_url sent to the provider; CardGateway.php line 40 likewise"},
+    "propagation": [{"file": "app/Modules/Payments/Application/PaymentService.php", "line": 107, "description": "stored in intent meta"}],
+    "intended_control": "Return to the booking site after payment",
+    "observed_or_expected_result": "After paying, the guest is sent by the provider to an attacker-chosen site (phishing continuation); needs the attacker to initiate the intent whose redirect_url the victim then follows.",
+    "conditions": ["Attacker must get the victim to use an intent they created (e.g. shared link with the provider redirect_url)"],
+    "confidence": "high",
+    "proposed_severity": "low",
+    "smallest_fix": "Validate return_url host against config('app.url') (or allow only paths) before storing it.",
+    "regression_test_idea": "POST deposit with return_url=https://evil.example -> 422."
+  }
+]

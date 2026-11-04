@@ -60,7 +60,7 @@ export default function Reconciliation() {
             {bank && <div><PrintPdfButton path={`bank-reconciliation/${bank.id}`} /></div>}
             <div className="card grid grid-cols-1 gap-2 p-4 sm:flex sm:items-end">
                 <Field label={t('fin.recon.treasury_account')}>
-                    <select className="input w-full sm:w-64" value={bank?.id ?? ''} onChange={(e) => setBankId(Number(e.target.value))}>
+                    <select className="select w-full sm:w-64" value={bank?.id ?? ''} onChange={(e) => setBankId(Number(e.target.value))}>
                         {banks.data?.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.gl_account}) · {t('fin.recon.n_open', { count: b.unmatched })}</option>)}
                     </select>
                 </Field>
@@ -73,7 +73,7 @@ export default function Reconciliation() {
                 onSubmit={(e) => { e.preventDefault(); act('accounting/bank-accounts', newBank, t('fin.recon.account_added')); }}>
                 <Field label={t('fin.recon.new_account_name')}><input className="input w-full" required value={newBank.name} onChange={(e) => setNewBank({ ...newBank, name: e.target.value })} /></Field>
                 <Field label={t('fin.recon.kind')}>
-                    <select className="input w-full" value={newBank.kind} onChange={(e) => setNewBank({ ...newBank, kind: e.target.value, gl_account: e.target.value === 'mobile_money' ? '521500' : '521100' })}>
+                    <select className="select w-full" value={newBank.kind} onChange={(e) => setNewBank({ ...newBank, kind: e.target.value, gl_account: e.target.value === 'mobile_money' ? '521500' : '521100' })}>
                         <option value="bank">{t('fin.recon.bank')}</option><option value="mobile_money">{t('fin.recon.mobile_money')}</option>
                     </select>
                 </Field>

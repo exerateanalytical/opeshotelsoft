@@ -51,7 +51,7 @@ export default function PaymentLinks() {
                 <div className="card p-4 mb-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label className="label"><span className="label">{t('payments2.links.target')}</span>
-                            <select className="input" value={form.target_type} onChange={(e) => setForm({ ...form, target_type: e.target.value })}>
+                            <select className="select" value={form.target_type} onChange={(e) => setForm({ ...form, target_type: e.target.value })}>
                                 {TARGETS.map((x) => <option key={x} value={x}>{t(`payments2.target.${x}`)}</option>)}
                             </select></label>
                         <label className="label"><span className="label">{t('payments2.links.target_id')}</span>

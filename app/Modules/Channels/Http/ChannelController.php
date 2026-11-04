@@ -49,7 +49,8 @@ class ChannelController
         $c = Connection::create($data);
         $bus->record('channel.connection_created', ['id' => $c->id, 'provider' => $c->provider], 'channel_connection', $c->id);
 
-        return response()->json($this->present($c->fresh('roomMappings', 'rateMappings')), 201);
+        // The inbound signing secret is shown once, at creation (as for outgoing webhooks).
+        return response()->json($this->present($c->fresh('roomMappings', 'rateMappings')) + ['inbound_secret' => $c->inbound_secret], 201);
     }
 
     public function update(Request $request, Connection $connection)

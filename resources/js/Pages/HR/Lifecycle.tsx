@@ -37,7 +37,7 @@ function EmployeePicker({ value, onChange }: { value: string; onChange: (v: stri
     const t = useT();
     const list = useApi<Paged<Employee>>('hr/employees?status=active');
     return (
-        <select className="input w-full" required value={value} disabled={list.loading && !list.data} aria-busy={list.loading && !list.data} onChange={(e) => onChange(e.target.value)}>
+        <select className="select w-full" required value={value} disabled={list.loading && !list.data} aria-busy={list.loading && !list.data} onChange={(e) => onChange(e.target.value)}>
             <option value="">{list.loading && !list.data ? t('states.loading') : list.error ? t('states.err.unknown.title') : t('hr2.common.choose_employee')}</option>
             {list.data?.data.map((e) => <option key={e.id} value={e.id}>{name(e)}</option>)}
         </select>
@@ -80,18 +80,18 @@ function ContractsTab() {
                     <h3 className="font-semibold">{t('hr2.contracts.new')}</h3>
                     <Field label={t('hr2.common.employee')}><EmployeePicker value={emp} onChange={setEmp} /></Field>
                     <Field label={t('hr2.contracts.kind')}>
-                        <select className="input w-full" value={kind} onChange={(e) => setKind(e.target.value)}>
+                        <select className="select w-full" value={kind} onChange={(e) => setKind(e.target.value)}>
                             <option value="">{t('hr2.contracts.kind_current')}</option>
                             {['CDI', 'CDD', 'stage', 'journalier'].map((k) => <option key={k} value={k}>{t(`hr2.kind.${k}`)}</option>)}
                         </select>
                     </Field>
                     <Field label={t('hr2.common.language')}>
-                        <select className="input w-full" value={locale} onChange={(e) => setLocale(e.target.value)}><option value="fr">Français</option><option value="en">English</option></select>
+                        <select className="select w-full" value={locale} onChange={(e) => setLocale(e.target.value)}><option value="fr">Français</option><option value="en">English</option></select>
                     </Field>
                     <button className="btn-primary w-full"><FileSignature className="h-4 w-4" /> {t('hr2.contracts.generate')}</button>
                 </form>
-                <div className="card lg:col-span-2 overflow-x-auto">
-                    <table className="w-full text-sm">
+                <div className="card lg:col-span-2 table-wrap">
+                    <table className="table-auto w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.number')}</th><th>{t('hr2.common.employee')}</th><th>{t('hr2.contracts.kind')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
                             {docs.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
@@ -102,7 +102,7 @@ function ContractsTab() {
                                         <a className="text-emerald-700 underline" href={`/api/v1/hr/econtracts/${d.id}/pdf`} target="_blank" rel="noreferrer">PDF</a>
                                         {['draft', 'sent'].includes(d.status) && <button className="btn-secondary" onClick={() => send(d)}><Send className="h-3 w-3" /> {d.status === 'sent' ? t('hr2.contracts.resend') : t('hr2.contracts.send')}</button>}
                                         {d.status === 'employee_signed' && <button className="btn-primary" onClick={() => setSigning(d)}>{t('hr2.contracts.countersign')}</button>}
-                                        {!['completed', 'cancelled'].includes(d.status) && <button className="text-slate-500" title={t('hr2.common.cancel')} onClick={() => cancel(d)}><X className="h-4 w-4" /></button>}
+                                        {!['completed', 'cancelled'].includes(d.status) && <button className="btn-ghost btn-icon btn-sm" title={t('hr2.common.cancel')} onClick={() => cancel(d)} aria-label={t('hr2.common.cancel')}><X className="h-4 w-4" /></button>}
                                     </td>
                                 </tr>
                             ))}
@@ -153,12 +153,12 @@ function ChangesTab() {
                     <h3 className="font-semibold">{t('hr2.changes.new')}</h3>
                     <Field label={t('hr2.common.employee')}><EmployeePicker value={f.employee} onChange={(v) => setF({ ...f, employee: v })} /></Field>
                     <Field label={t('hr2.changes.type')}>
-                        <select className="input w-full" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}><option value="raise">{t('hr2.changes.raise')}</option><option value="promotion">{t('hr2.changes.promotion')}</option></select>
+                        <select className="select w-full" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}><option value="raise">{t('hr2.changes.raise')}</option><option value="promotion">{t('hr2.changes.promotion')}</option></select>
                     </Field>
                     <Field label={t('hr2.changes.new_salary')}><input type="number" min={0} required className="input w-full" value={f.to_salary} onChange={(e) => setF({ ...f, to_salary: e.target.value })} /></Field>
                     {f.type === 'promotion' && (
                         <Field label={t('hr2.changes.new_position')}>
-                            <select className="input w-full" required value={f.to_position_id} onChange={(e) => setF({ ...f, to_position_id: e.target.value })}>
+                            <select className="select w-full" required value={f.to_position_id} onChange={(e) => setF({ ...f, to_position_id: e.target.value })}>
                                 <option value="" />{positions.data?.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
                             </select>
                         </Field>
@@ -168,8 +168,8 @@ function ChangesTab() {
                     <button className="btn-primary w-full"><TrendingUp className="h-4 w-4" /> {t('hr2.changes.submit')}</button>
                     <p className="text-xs text-slate-500">{t('hr2.common.sod_hint')}</p>
                 </form>
-                <div className="card lg:col-span-2 overflow-x-auto">
-                    <table className="w-full text-sm">
+                <div className="card lg:col-span-2 table-wrap">
+                    <table className="table-auto w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.employee')}</th><th>{t('hr2.changes.type')}</th><th className="text-right">{t('hr2.changes.salary')}</th><th>{t('hr2.common.effective_date')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
                             {list.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
@@ -234,15 +234,15 @@ function PayTab() {
                     </div>
                     <Field label={t('hr2.pay.label')}><input required className="input w-full" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
                     <Field label={t('hr2.pay.kind')}>
-                        <select className="input w-full" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })}><option value="one_off">{t('hr2.pay.one_off')}</option><option value="recurring">{t('hr2.pay.recurring')}</option></select>
+                        <select className="select w-full" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })}><option value="one_off">{t('hr2.pay.one_off')}</option><option value="recurring">{t('hr2.pay.recurring')}</option></select>
                     </Field>
                     {f.kind === 'recurring' && <Field label={t('hr2.pay.until')}><input type="month" className="input w-full" value={f.end_period} onChange={(e) => setF({ ...f, end_period: e.target.value })} /></Field>}
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.taxable} onChange={(e) => setF({ ...f, taxable: e.target.checked })} /> {t('hr2.pay.taxable')}</label>
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.cnps} onChange={(e) => setF({ ...f, cnps: e.target.checked })} /> {t('hr2.pay.cnps')}</label>
                     <button className="btn-primary w-full"><Gift className="h-4 w-4" /> {t('hr2.pay.add')}</button>
                 </form>
-                <div className="card lg:col-span-2 overflow-x-auto">
-                    <table className="w-full text-sm">
+                <div className="card lg:col-span-2 table-wrap">
+                    <table className="table-auto w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.employee')}</th><th>{t('hr2.pay.label')}</th><th>{t('hr2.pay.kind')}</th><th className="text-right">{t('hr2.pay.amount')}</th><th>{t('hr2.pay.flags')}</th><th></th></tr></thead>
                         <tbody>
                             {els.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
@@ -250,7 +250,7 @@ function PayTab() {
                                 <tr key={x.id} className="border-t">
                                     <td className="py-2">{name(x.employee)}</td><td>{x.code} · {x.name}</td><td>{t(`hr2.pay.${x.kind}`)}</td><td className="text-right">{money(x.amount)}</td>
                                     <td className="text-xs">{x.taxable ? 'IRPP' : '—'} / {x.cnps ? 'CNPS' : '—'}</td>
-                                    <td className="text-right"><button className="text-slate-500" title={t('hr2.common.cancel')} onClick={() => cancelEl(x)}><X className="h-4 w-4" /></button></td>
+                                    <td className="text-right"><button className="btn-ghost btn-icon btn-sm" title={t('hr2.common.cancel')} onClick={() => cancelEl(x)} aria-label={t('hr2.common.cancel')}><X className="h-4 w-4" /></button></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -262,7 +262,7 @@ function PayTab() {
                     <h3 className="font-semibold">{t('hr2.pool.new')}</h3>
                     <Field label={t('hr2.pool.amount')}><input required type="number" min={1} className="input w-full" value={pool.amount} onChange={(e) => setPool({ ...pool, amount: e.target.value })} /></Field>
                     <Field label={t('hr2.pool.method')}>
-                        <select className="input w-full" value={pool.method} onChange={(e) => setPool({ ...pool, method: e.target.value })}><option value="points">{t('hr2.pool.points')}</option><option value="days">{t('hr2.pool.days')}</option></select>
+                        <select className="select w-full" value={pool.method} onChange={(e) => setPool({ ...pool, method: e.target.value })}><option value="points">{t('hr2.pool.points')}</option><option value="days">{t('hr2.pool.days')}</option></select>
                     </Field>
                     <div className="max-h-64 space-y-1 overflow-y-auto">
                         {emps.data?.data.map((e) => (
@@ -274,8 +274,8 @@ function PayTab() {
                     </div>
                     <button className="btn-primary w-full">{t('hr2.pool.compute')}</button>
                 </form>
-                <div className="card lg:col-span-2 overflow-x-auto">
-                    <table className="w-full text-sm">
+                <div className="card lg:col-span-2 table-wrap">
+                    <table className="table-auto w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.period')}</th><th className="text-right">{t('hr2.pool.amount')}</th><th>{t('hr2.pool.method')}</th><th>{t('hr2.pool.shares')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
                             {pools.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
@@ -332,15 +332,15 @@ function TransfersTab() {
                     <h3 className="font-semibold">{t('hr2.transfers.new')}</h3>
                     <Field label={t('hr2.common.employee')}><EmployeePicker value={f.employee} onChange={(v) => setF({ ...f, employee: v })} /></Field>
                     <Field label={t('hr2.transfers.to_hotel')}>
-                        <select className="input w-full" required value={f.to_hotel_id} onChange={(e) => pickHotel(e.target.value)}>
+                        <select className="select w-full" required value={f.to_hotel_id} onChange={(e) => pickHotel(e.target.value)}>
                             <option value="" />{hotels.hotels?.filter((h) => h.id !== hotels.property?.id).map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
                         </select>
                     </Field>
                     <Field label={t('hr2.transfers.department')}>
-                        <select className="input w-full" value={f.to_department_id} onChange={(e) => setF({ ...f, to_department_id: e.target.value })}><option value="" />{target.depts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select>
+                        <select className="select w-full" value={f.to_department_id} onChange={(e) => setF({ ...f, to_department_id: e.target.value })}><option value="" />{target.depts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select>
                     </Field>
                     <Field label={t('hr2.transfers.position')}>
-                        <select className="input w-full" value={f.to_position_id} onChange={(e) => setF({ ...f, to_position_id: e.target.value })}><option value="" />{target.positions.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select>
+                        <select className="select w-full" value={f.to_position_id} onChange={(e) => setF({ ...f, to_position_id: e.target.value })}><option value="" />{target.positions.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select>
                     </Field>
                     <Field label={t('hr2.transfers.new_salary')}><input type="number" min={0} className="input w-full" value={f.new_base_salary} onChange={(e) => setF({ ...f, new_base_salary: e.target.value })} /></Field>
                     <Field label={t('hr2.common.effective_date')}><input type="date" required className="input w-full" value={f.effective_date} onChange={(e) => setF({ ...f, effective_date: e.target.value })} /></Field>
@@ -348,8 +348,8 @@ function TransfersTab() {
                     <button className="btn-primary w-full"><ArrowRightLeft className="h-4 w-4" /> {t('hr2.transfers.submit')}</button>
                     <p className="text-xs text-slate-500">{t('hr2.transfers.hint')}</p>
                 </form>
-                <div className="card lg:col-span-2 overflow-x-auto">
-                    <table className="w-full text-sm">
+                <div className="card lg:col-span-2 table-wrap">
+                    <table className="table-auto w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.number')}</th><th>{t('hr2.transfers.route')}</th><th>{t('hr2.common.effective_date')}</th><th>{t('hr2.transfers.leave')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
                             {list.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}

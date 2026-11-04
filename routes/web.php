@@ -71,7 +71,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', fn () => Inertia::render('Finance/Index'))->middleware('can:accounting.view')->name('index');
     });
 
-    Route::prefix('stock')->name('stock.')->group(fn () => Route::get('/', fn () => Inertia::render('Stock/Index'))->middleware('can:stock.view')->name('index'));
+    // Two closures on one line serialise wrongly under `route:cache` (the page returned the Route object).
+    Route::prefix('stock')->name('stock.')->group(function () {
+        Route::get('/', fn () => Inertia::render('Stock/Index'))->middleware('can:stock.view')->name('index');
+    });
 
     // POS
     Route::prefix('pos')->name('pos.')->group(function () {

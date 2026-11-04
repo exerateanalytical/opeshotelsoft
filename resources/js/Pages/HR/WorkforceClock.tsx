@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, msg } from './WorkforceTabs';
+import Alert from '@/Components/ui/Alert';
 
 function deviceId(): string | undefined {
     try {
@@ -33,7 +34,7 @@ export default function WorkforceClock() {
         <AppLayout title={t('workforce.clock.title')} subtitle={t('workforce.clock.subtitle')}>
             <Head title={t('workforce.clock.title')} />
             <WorkforceTabs active="/hr/workforce/clock" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
             {out && <div className="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm">{out}</div>}
             <div className="card max-w-md space-y-3 p-4 text-sm">
                 <label className="block">{t('workforce.clock.photo')}<input type="file" accept="image/*" capture="user" className="input w-full" onChange={(e) => pick(e.target.files?.[0])} /></label>

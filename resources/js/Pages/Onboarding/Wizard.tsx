@@ -173,7 +173,7 @@ function RoomsStep({ s, busy, run }: StepProps) {
             <div className="grid gap-3 sm:grid-cols-4 items-end">
                 <label className="block">
                     <span className="label">{t('onboarding.f.room_type')}</span>
-                    <select className="input" value={room.f.room_type_id} onChange={(e) => room.set('room_type_id')(e.target.value)}>
+                    <select className="select" value={room.f.room_type_id} onChange={(e) => room.set('room_type_id')(e.target.value)}>
                         <option value="">—</option>
                         {(types.data?.data ?? []).map((rt) => <option key={rt.id} value={rt.id}>{rt.code} · {rt.name}</option>)}
                     </select>
@@ -201,7 +201,7 @@ function RatesStep({ s, busy, run }: StepProps) {
                 <Field label={t('onboarding.f.name')} value={plan.f.name} onChange={plan.set('name')} />
                 <label className="block">
                     <span className="label">{t('onboarding.f.meal_plan')}</span>
-                    <select className="input" value={plan.f.meal_plan} onChange={(e) => plan.set('meal_plan')(e.target.value)}>
+                    <select className="select" value={plan.f.meal_plan} onChange={(e) => plan.set('meal_plan')(e.target.value)}>
                         {['RO', 'BB', 'HB', 'FB', 'AI'].map((m) => <option key={m}>{m}</option>)}
                     </select>
                 </label>
@@ -225,7 +225,7 @@ function OutletsStep({ s, busy, run }: StepProps) {
                 <Field label={t('onboarding.f.name')} value={o.f.name} onChange={o.set('name')} />
                 <label className="block">
                     <span className="label">{t('onboarding.f.kind')}</span>
-                    <select className="input" value={o.f.kind} onChange={(e) => o.set('kind')(e.target.value)}>
+                    <select className="select" value={o.f.kind} onChange={(e) => o.set('kind')(e.target.value)}>
                         {['restaurant', 'bar', 'room_service', 'spa', 'laundry', 'minibar', 'shop', 'events'].map((k) => <option key={k} value={k}>{t(`onboarding.outlet.${k}`)}</option>)}
                     </select>
                 </label>
@@ -247,7 +247,7 @@ function TaxesStep({ busy, run }: Omit<StepProps, 's'>) {
         <div className="space-y-3">
             <QueryStatus query={taxes} variant="table" rows={3} />
             {taxes.data && list.length === 0 && <EmptyFor kind="generic" />}
-            <div className="overflow-x-auto"><table className="w-full text-sm">
+            <div className="table-wrap"><table className="table-auto w-full text-sm">
                 <thead><tr className="text-left text-slate-500"><th className="py-1">{t('onboarding.f.code')}</th><th>{t('onboarding.f.name')}</th><th>{t('onboarding.f.rate')}</th><th /></tr></thead>
                 <tbody>
                     {list.map((tc) => (
@@ -286,7 +286,7 @@ function UsersStep({ s, busy, run }: StepProps) {
                 <Field label={t('onboarding.f.email')} value={u.f.email} onChange={u.set('email')} type="email" />
                 <label className="block">
                     <span className="label">{t('onboarding.f.role')}</span>
-                    <select className="input" value={u.f.role} onChange={(e) => u.set('role')(e.target.value)}>
+                    <select className="select" value={u.f.role} onChange={(e) => u.set('role')(e.target.value)}>
                         {list.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
                     </select>
                 </label>

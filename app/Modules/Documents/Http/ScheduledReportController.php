@@ -32,6 +32,9 @@ class ScheduledReportController
     {
         $this->can($request, 'manage');
         $scheduledReport->fill($this->validated($request, true));
+        // The runner executes with the owner's permissions: whoever edits the definition becomes its owner, so a user
+        // cannot make a report run with a colleague's wider rights.
+        $scheduledReport->created_by = $request->user()->id;
         $scheduledReport->computeNextRun();
         $scheduledReport->save();
 

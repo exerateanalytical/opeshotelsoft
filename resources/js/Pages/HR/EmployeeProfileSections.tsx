@@ -33,8 +33,8 @@ function Card({ title, children, empty }: { title: string; children?: React.Reac
 /** Tables scroll inside their own container, never the page. */
 function Table({ head, children }: { head: string[]; children: React.ReactNode }) {
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] text-left text-sm">
+        <div className="table-wrap">
+            <table className="table-auto w-full min-w-[480px] text-left text-sm">
                 <thead><tr className="text-slate-600">{head.map((h) => <th key={h} className="whitespace-nowrap py-2 pr-3 font-medium">{h}</th>)}</tr></thead>
                 <tbody className="[&>tr]:border-t [&_td]:py-2 [&_td]:pr-3">{children}</tbody>
             </table>
@@ -400,7 +400,7 @@ function Upload({ api: path, t, onDone }: { api: string; t: T; onDone: () => voi
     return (
         <form onSubmit={submit} className="mt-4 grid gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-5">
             <label className="block text-sm"><span className="mb-1 block text-slate-600">{t('profile.docs.type')}</span>
-                <select className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                <select className="select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
                     {['contract', 'id', 'diploma', 'medical', 'permit', 'other'].map((k) => <option key={k} value={k}>{k}</option>)}
                 </select></label>
             <label className="block text-sm"><span className="mb-1 block text-slate-600">{t('profile.docs.title')}</span><input className="input" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>

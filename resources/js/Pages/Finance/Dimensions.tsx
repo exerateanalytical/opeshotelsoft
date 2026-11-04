@@ -39,7 +39,7 @@ export default function Dimensions() {
             <div className="card mb-4 p-4">
                 <div className="mb-3 flex flex-wrap items-end gap-2">
                     <Field label={t('acc2.dim.by')}>
-                        <select className="input" value={by} onChange={(e) => setBy(e.target.value as typeof by)}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc2.dim.kind.${k}`)}</option>)}</select>
+                        <select className="select" value={by} onChange={(e) => setBy(e.target.value as typeof by)}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc2.dim.kind.${k}`)}</option>)}</select>
                     </Field>
                     <Field label={t('acc2.from')}><input type="date" className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
                     <Field label={t('acc2.to')}><input type="date" className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
@@ -57,7 +57,7 @@ export default function Dimensions() {
                 <div className="card p-4">
                     <h3 className="mb-3 font-semibold">{t('acc2.dim.values')}</h3>
                     <form className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:items-end [&>*]:min-w-0" onSubmit={(e) => { e.preventDefault(); post('accounting/core/dimensions', d, () => setD({ ...d, code: '', name: '' })); }}>
-                        <Field label={t('acc2.dim.kind')}><select className="input w-full" value={d.kind} onChange={(e) => setD({ ...d, kind: e.target.value })}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc2.dim.kind.${k}`)}</option>)}</select></Field>
+                        <Field label={t('acc2.dim.kind')}><select className="select w-full" value={d.kind} onChange={(e) => setD({ ...d, kind: e.target.value })}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc2.dim.kind.${k}`)}</option>)}</select></Field>
                         <Field label={t('acc2.dim.code')}><input className="input w-full" required value={d.code} onChange={(e) => setD({ ...d, code: e.target.value })} /></Field>
                         <Field label={t('fin.col.name')}><input className="input w-full" required value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })} /></Field>
                         <button className="btn-primary sm:col-span-2">{t('common.save')}</button>

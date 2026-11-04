@@ -17,9 +17,12 @@ return [
 
     /*
     | One-click demo logins on the sign-in page (DemoUsersSeeder accounts).
-    | Never available in production, whatever the env says.
+    | Refused when APP_ENV=production unless ALLOW_DEMO_LOGINS_IN_PRODUCTION=true is also set
+    | (AppServiceProvider logs a warning in both cases). demo_logins_requested keeps the raw flag for that warning.
     */
-    'demo_logins' => env('DEMO_LOGINS', false) && env('APP_ENV') !== 'production',
+    'demo_logins' => (bool) env('DEMO_LOGINS', false)
+        && (env('APP_ENV') !== 'production' || (bool) env('ALLOW_DEMO_LOGINS_IN_PRODUCTION', false)),
+    'demo_logins_requested' => (bool) env('DEMO_LOGINS', false),
 
     // Local-only query/time headers for scripts/perf/bench.php (App\Http\Middleware\PerfDebug).
     // PERF_DEBUG=sql also appends each request's SQL to storage/logs/perf-sql.log.

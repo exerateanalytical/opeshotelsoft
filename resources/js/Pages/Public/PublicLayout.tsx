@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import BrandLogo from '@/Components/ui/BrandLogo';
 import { t, type Lang } from './i18n';
+import Alert from '@/Components/ui/Alert';
 
 export interface PublicProps {
     group: { slug: string; name: string };
@@ -37,6 +38,7 @@ export async function publicApi<T>(slug: string, path: string, body?: unknown): 
         const first = json.errors ? (Object.values(json.errors)[0] as string[])[0] : undefined;
         const err = new Error(first ?? json.detail ?? json.message ?? json.title ?? 'Error') as Error & { status: number };
         err.status = res.status;
+        (err as Error & { code?: string }).code = json.code;
         throw err;
     }
     return json as T;
@@ -44,9 +46,9 @@ export async function publicApi<T>(slug: string, path: string, body?: unknown): 
 
 export function Notice({ kind, children }: { kind: 'error' | 'ok'; children: ReactNode }) {
     return (
-        <div role="status" className={`rounded-md border px-4 py-3 text-sm ${kind === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
+        <Alert variant={kind === 'error' ? 'danger' : 'success'}>
             {children}
-        </div>
+        </Alert>
     );
 }
 

@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { api, useApi, ApiError } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Subscription {
     id: number;
@@ -40,7 +41,7 @@ function errText(e: unknown) {
 }
 
 function Banner({ msg }: { msg: string | null }) {
-    return msg ? <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">{msg}</div> : null;
+    return msg ? <Alert variant="danger">{msg}</Alert> : null;
 }
 
 function Deliveries({ sub }: { sub: Subscription }) {
@@ -132,10 +133,10 @@ function Webhooks() {
             <h2 className="flex items-center gap-2 font-semibold text-slate-900"><Webhook className="w-4 h-4" /> {t('dev.webhooks')}</h2>
             <Banner msg={err ?? (error ? errText(error) : null)} />
             {secret && (
-                <div className="rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3 break-all">
+                <Alert variant="warning" className="break-all">
                     {t('dev.signing_secret')} <code className="font-mono">{secret}</code>
                     <button className="ml-3 underline text-xs" onClick={() => setSecret(null)}>{t('dev.dismiss')}</button>
-                </div>
+                </Alert>
             )}
             <form onSubmit={create} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-end">
                 <div>
@@ -162,7 +163,7 @@ function Webhooks() {
                                 {open === s.id ? t('dev.hide_deliveries') : t('dev.deliveries')}
                             </button>
                             {s.active && (
-                                <button className="text-slate-500 hover:text-red-600" aria-label={t('dev.disable')} onClick={() => remove(s)}><Trash2 className="w-4 h-4" /></button>
+                                <button className="btn-ghost btn-icon btn-sm" aria-label={t('dev.disable')} onClick={() => remove(s)}><Trash2 className="w-4 h-4" /></button>
                             )}
                         </div>
                         <p className="text-xs text-slate-500 mt-1">{(s.event_types ?? []).join(', ')}</p>

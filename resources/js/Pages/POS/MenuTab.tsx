@@ -72,7 +72,7 @@ export default function MenuTab({ outlets }: { outlets: Outlet[] }) {
                     <input className="input w-full pl-9" placeholder={t('pos.menu.search')} aria-label={t('pos.menu.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                 </div>
                 <input className="input w-full sm:w-40" placeholder={t('pos.menu.category')} aria-label={t('pos.menu.category')} value={cat} onChange={(e) => setCat(e.target.value)} />
-                <select className="input w-full sm:w-44" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('pos.menu.any_outlet')}>
+                <select className="select w-full sm:w-44" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('pos.menu.any_outlet')}>
                     <option value="">{t('pos.menu.any_outlet')}</option>
                     {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </select>
@@ -90,7 +90,7 @@ export default function MenuTab({ outlets }: { outlets: Outlet[] }) {
                     {field('kitchen_station', t('pos.menu.station_full'), { maxLength: 30, placeholder: t('pos.menu.station_ph') })}
                     <label className="text-sm">
                         <span className="text-slate-600">{t('pos.menu.outlet')}</span>
-                        <select className="input w-full" value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} aria-label={t('pos.common.all_outlets')}>
+                        <select className="select w-full" value={form.outlet_id} onChange={(e) => setForm({ ...form, outlet_id: e.target.value })} aria-label={t('pos.common.all_outlets')}>
                             <option value="">{t('pos.common.all_outlets')}</option>
                             {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                         </select>

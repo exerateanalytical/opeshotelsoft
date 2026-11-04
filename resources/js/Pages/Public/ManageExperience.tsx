@@ -55,7 +55,7 @@ const toDataUrl = (f: File) => new Promise<string>((res, rej) => { const r = new
 
 export default function ManageExperience({ b, slug, lang, onChanged, hidePay = false }: { b: ManageBooking; slug: string; lang: Lang; onChanged: () => void; hidePay?: boolean }) {
     const d = L[lang] ?? L.fr;
-    const auth = { confirmation: b.public_code ?? b.number, token: b.manage_token };
+    const auth = { confirmation: b.public_code ?? b.number, token: b.manage_token, lang };
     const [o, setO] = useState<Opts | null>(null);
     const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
     const [dates, setDates] = useState({ arrival: b.arrival, departure: b.departure });
@@ -65,7 +65,7 @@ export default function ManageExperience({ b, slug, lang, onChanged, hidePay = f
     const [rv, setRv] = useState({ rating: 5, comment: '' });
 
     const onSig = useCallback((v: string) => setCi((c) => ({ ...c, signature: v })), []);
-    const load = useCallback(() => publicApi<Opts>(slug, '/manage/options', auth).then(setO).catch(() => setO(null)), [slug, b.number, b.manage_token]);
+    const load = useCallback(() => publicApi<Opts>(slug, '/manage/options', auth).then(setO).catch(() => setO(null)), [slug, b.number, b.manage_token, lang]);
     useEffect(() => { load(); }, [load]);
 
     const run = async (fn: () => Promise<void>) => {
@@ -136,7 +136,7 @@ export default function ManageExperience({ b, slug, lang, onChanged, hidePay = f
                     {o.services.length > 0 && (
                         <form onSubmit={addService} className="flex flex-wrap items-end gap-2">
                             <div className="grow"><label className="label" htmlFor="svc">{d.service}</label>
-                                <select id="svc" className="input" value={svc.code} onChange={(e) => setSvc({ ...svc, code: e.target.value })} required>
+                                <select id="svc" className="select" value={svc.code} onChange={(e) => setSvc({ ...svc, code: e.target.value })} required>
                                     <option value="" />{o.services.map((s) => <option key={s.code} value={s.code}>{s.name} - {money(s.price, b.currency, lang)}</option>)}
                                 </select></div>
                             <div className="w-24"><label className="label" htmlFor="q">{d.qty}</label><input id="q" type="number" min={1} max={20} className="input" value={svc.quantity} onChange={(e) => setSvc({ ...svc, quantity: +e.target.value })} /></div>
@@ -162,7 +162,7 @@ export default function ManageExperience({ b, slug, lang, onChanged, hidePay = f
                     <p className="text-sm"><span className={o.readiness.status === 'ready' ? 'badge-green' : 'badge-yellow'}>{o.readiness.status === 'ready' ? d.ready : `${d.missing}: ${o.readiness.missing.map((k) => d.items[k]).join(', ')}`}</span></p>
                     <form onSubmit={sendCheckin} className="grid gap-3 sm:grid-cols-2">
                         <div><label className="label" htmlFor="x-idt">{d.idType}</label>
-                            <select id="x-idt" className="input" value={ci.id_type} onChange={(e) => setCi({ ...ci, id_type: e.target.value })}>
+                            <select id="x-idt" className="select" value={ci.id_type} onChange={(e) => setCi({ ...ci, id_type: e.target.value })}>
                                 {(['passport', 'national_id', 'residence_permit', 'driving_licence'] as const).map((k) => <option key={k} value={k}>{d[k]}</option>)}
                             </select></div>
                         <div><label className="label" htmlFor="x-idn">{d.idNumber}</label><input id="x-idn" className="input" value={ci.id_number} onChange={(e) => setCi({ ...ci, id_number: e.target.value })} required /></div>
@@ -184,7 +184,7 @@ export default function ManageExperience({ b, slug, lang, onChanged, hidePay = f
                 <Card id="review" title={d.review}>
                     <form onSubmit={sendReview} className="space-y-3">
                         <div><label className="label" htmlFor="rt">{d.rating}</label>
-                            <select id="rt" className="input" value={rv.rating} onChange={(e) => setRv({ ...rv, rating: +e.target.value })}>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} / 5</option>)}</select></div>
+                            <select id="rt" className="select" value={rv.rating} onChange={(e) => setRv({ ...rv, rating: +e.target.value })}>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} / 5</option>)}</select></div>
                         <div><label className="label" htmlFor="rc">{d.comment}</label><textarea id="rc" rows={3} maxLength={1000} className="input" value={rv.comment} onChange={(e) => setRv({ ...rv, comment: e.target.value })} /></div>
                         <button type="submit" className={btn} disabled={busy}>{d.send}</button>
                     </form>

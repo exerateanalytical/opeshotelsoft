@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Contact { id: number; name: string; role: string | null; email: string | null; phone: string | null; primary: boolean }
 interface Overview {
@@ -53,7 +54,7 @@ export default function CompanyShow({ id }: { id: string }) {
             }
         >
             <Head title={d?.company.name ?? t('guests.company')} />
-            {(error || o.error) && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{error ?? o.error?.message}</div>}
+            {(error || o.error) && <Alert variant="danger" className="mb-4">{error ?? o.error?.message}</Alert>}
             {o.loading && !d && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             {d && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -84,7 +85,7 @@ export default function CompanyShow({ id }: { id: string }) {
                                         <button className="btn-secondary text-red-600" disabled={busy} onClick={() => call(`companies/${id}/contacts/${c.id}`, 'DELETE').then(() => setConfirmDel(null))}>{t('guests.remove')}</button>
                                         <button className="btn-secondary" onClick={() => setConfirmDel(null)}>{t('guests.keep')}</button>
                                     </span>
-                                ) : <button title={t('guests.company.remove_contact')} className="text-slate-500" onClick={() => setConfirmDel(c.id)}><Trash2 className="w-4 h-4" /></button>}
+                                ) : <button title={t('guests.company.remove_contact')} className="btn-ghost btn-icon btn-sm" onClick={() => setConfirmDel(c.id)} aria-label={t('guests.company.remove_contact')}><Trash2 className="w-4 h-4" /></button>}
                             </div>
                         ))}
                     </div>

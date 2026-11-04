@@ -55,7 +55,7 @@ export default function Book({ hotels, hotel }: { hotels: { code: string; name: 
                 <label className="text-sm">{t('member.departure')}<input type="date" className="input" min={plus(f.arrival, 1)} value={f.departure} onChange={(e) => setF({ ...f, departure: e.target.value })} required /></label>
                 <label className="text-sm">{t('member.book.adults')}<input type="number" min={1} max={8} className="input" value={f.adults} onChange={(e) => setF({ ...f, adults: Number(e.target.value) })} /></label>
                 <label className="text-sm">{t('member.book.hotel')}
-                    <select className="input" value={f.hotel_code} onChange={(e) => setF({ ...f, hotel_code: e.target.value })}>
+                    <select className="select" value={f.hotel_code} onChange={(e) => setF({ ...f, hotel_code: e.target.value })}>
                         <option value="">{t('member.book.all_hotels')}</option>
                         {hotels.map((h) => <option key={h.code} value={h.code}>{h.name} · {h.city}</option>)}
                     </select>

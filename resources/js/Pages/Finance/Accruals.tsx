@@ -48,7 +48,7 @@ export default function Accruals() {
                     e.preventDefault();
                     call('accounting/core/schedules', { ...s, total: Number(s.total), months: Number(s.months), debit_account: s.debit_account || null, credit_account: s.credit_account || null, cost_centre: s.cost_centre || null, department: s.department || null }, t('acc2.saved'), [schedules.reload]);
                 }}>
-                    <Field label={t('acc2.acc.kind')}><select className="input w-full" value={s.kind} onChange={(e) => setS({ ...s, kind: e.target.value })}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc2.acc.kind.${k}`)}</option>)}</select></Field>
+                    <Field label={t('acc2.acc.kind')}><select className="select w-full" value={s.kind} onChange={(e) => setS({ ...s, kind: e.target.value })}>{KINDS.map((k) => <option key={k} value={k}>{t(`acc2.acc.kind.${k}`)}</option>)}</select></Field>
                     <Field label={t('acc2.acc.description')}><input className="input w-full" required value={s.description} onChange={(e) => setS({ ...s, description: e.target.value })} /></Field>
                     <Field label={t('acc2.acc.debit')}><input className="input w-full" value={s.debit_account} onChange={(e) => setS({ ...s, debit_account: e.target.value })} /></Field>
                     <Field label={t('acc2.acc.credit')}><input className="input w-full" value={s.credit_account} onChange={(e) => setS({ ...s, credit_account: e.target.value })} /></Field>
@@ -94,7 +94,7 @@ export default function Accruals() {
                     call('accounting/core/recurring', { name: r.name, journal: r.journal, frequency: r.frequency, next_date: r.next_date, lines: [{ account: r.account_d, debit: amt }, { account: r.account_c, credit: amt }] }, t('acc2.saved'), [recurring.reload]);
                 }}>
                     <Field label={t('acc2.acc.description')}><input className="input w-full" required value={r.name} onChange={(e) => setR({ ...r, name: e.target.value })} /></Field>
-                    <Field label={t('acc2.rec.frequency')}><select className="input w-full" value={r.frequency} onChange={(e) => setR({ ...r, frequency: e.target.value })}>{['monthly', 'quarterly', 'yearly'].map((f) => <option key={f} value={f}>{t(`acc2.rec.freq.${f}`)}</option>)}</select></Field>
+                    <Field label={t('acc2.rec.frequency')}><select className="select w-full" value={r.frequency} onChange={(e) => setR({ ...r, frequency: e.target.value })}>{['monthly', 'quarterly', 'yearly'].map((f) => <option key={f} value={f}>{t(`acc2.rec.freq.${f}`)}</option>)}</select></Field>
                     <Field label={t('acc2.rec.next')}><input type="date" className="input w-full" value={r.next_date} onChange={(e) => setR({ ...r, next_date: e.target.value })} /></Field>
                     <Field label={t('fin.col.amount')}><input type="number" min={1} required className="input w-full" value={r.amount} onChange={(e) => setR({ ...r, amount: e.target.value })} /></Field>
                     <Field label={t('acc2.acc.debit')}><input className="input w-full" required value={r.account_d} onChange={(e) => setR({ ...r, account_d: e.target.value })} /></Field>
@@ -114,7 +114,7 @@ export default function Accruals() {
                 <form className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:items-end [&>*]:min-w-0" onSubmit={(e) => { e.preventDefault(); call('accounting/core/period-locks', lk, t('acc2.lock.requested'), [locks.reload]); }}>
                     <Field label={t('fin.periods.year')}><input type="number" className="input w-full sm:w-24" value={lk.year} onChange={(e) => setLk({ ...lk, year: Number(e.target.value) })} /></Field>
                     <Field label={t('fin.periods.month')}><input type="number" min={1} max={12} className="input w-full sm:w-20" value={lk.month} onChange={(e) => setLk({ ...lk, month: Number(e.target.value) })} /></Field>
-                    <Field label={t('acc2.lock.action')}><select className="input w-full" value={lk.action} onChange={(e) => setLk({ ...lk, action: e.target.value })}><option value="close">{t('acc2.lock.close')}</option><option value="reopen">{t('acc2.lock.reopen')}</option></select></Field>
+                    <Field label={t('acc2.lock.action')}><select className="select w-full" value={lk.action} onChange={(e) => setLk({ ...lk, action: e.target.value })}><option value="close">{t('acc2.lock.close')}</option><option value="reopen">{t('acc2.lock.reopen')}</option></select></Field>
                     <Field label={t('acc2.lock.reason')}><input className="input w-full" value={lk.reason} onChange={(e) => setLk({ ...lk, reason: e.target.value })} /></Field>
                     <button className="btn-primary sm:col-span-2">{t('acc2.lock.request')}</button>
                 </form>

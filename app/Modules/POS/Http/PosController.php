@@ -146,9 +146,11 @@ class PosController
             'checks.*.table_number' => ['nullable', 'string'],
             'checks.*.items' => ['required', 'array', 'min:1'],
             'checks.*.items.*.menu_item_id' => ['required', 'integer'],
-            'checks.*.items.*.quantity' => ['sometimes', 'numeric'],
+            'checks.*.items.*.quantity' => ['sometimes', 'numeric', 'min:0.001'],
             'checks.*.items.*.notes' => ['nullable', 'string', 'max:255'],
             'checks.*.payments' => ['nullable', 'array'],
+            'checks.*.payments.*.method' => ['required', 'string', 'max:20'],
+            'checks.*.payments.*.amount' => ['required', 'integer', 'min:1'],
             'checks.*.reservation_id' => ['nullable', 'integer'],
         ]);
         $results = [];
@@ -283,8 +285,10 @@ class PosController
         return $this->pos->decideComps($check, $data['approve']);
     }
 
+    /** Reads need pos.view; every state change (checks, lines, settlement, room charges, sync) needs pos.manage (SEC1 audit). */
     private function can(Request $request): void
     {
-        abort_unless($request->user()->can('pos.manage') || $request->user()->can('pos.view'), 403);
+        $u = $request->user();
+        abort_unless($u->can('pos.manage') || ($request->isMethod('GET') && $u->can('pos.view')), 403);
     }
 }

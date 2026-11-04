@@ -53,7 +53,7 @@ export default function Batches() {
     return (
         <AppLayout title={t('stock2.batches.title')} subtitle={t('stock2.batches.subtitle')}
             actions={canWriteOff ? (
-                <select className="input" aria-label={t('stock4.aria.write_off_reason')} value={reason} onChange={(e) => setReason(e.target.value)}>
+                <select className="select" aria-label={t('stock4.aria.write_off_reason')} value={reason} onChange={(e) => setReason(e.target.value)}>
                     {REASONS.map((r) => <option key={r} value={r}>{t(`stock2.reason.${r}`)}</option>)}
                 </select>
             ) : undefined}>

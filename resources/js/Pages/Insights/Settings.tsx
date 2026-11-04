@@ -75,7 +75,7 @@ export default function InsightsSettings() {
                                 <textarea className="input w-full" rows={3} value={s.digest_whatsapp.join('\n')} onChange={(e) => setS({ ...s, digest_whatsapp: lines(e.target.value) })} /></label>
                         </div>
                         <label className="block max-w-xs"><span className="label">{t('insights.settings.digest_locale')}</span>
-                            <select className="input w-full" value={s.digest_locale} onChange={(e) => setS({ ...s, digest_locale: e.target.value })}>
+                            <select className="select w-full" value={s.digest_locale} onChange={(e) => setS({ ...s, digest_locale: e.target.value })}>
                                 <option value="fr">Français</option><option value="en">English</option>
                             </select></label>
                         <button type="button" className="btn-secondary" onClick={() => run(() => api('insights/digest/send', { method: 'POST', body: '{}' }), t('insights.settings.sent'))}>

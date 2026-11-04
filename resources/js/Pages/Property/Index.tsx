@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import CrudTab, { Banner, Column, errMsg, Field, Page, Row, SetupTab } from './Crud';
 import RatesGrid from './RatesGrid';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 const TABS = [
     ['room-types', 'prop.tabs.room-types'], ['rooms', 'prop.tabs.rooms'], ['outlets', 'prop.tabs.outlets'], ['assets', 'prop.tabs.assets'], ['rate-plans', 'prop.tabs.rate-plans'],
@@ -148,13 +149,13 @@ function BulkRooms({ types, onDone }: { types: [string, string][]; onDone: () =>
             <h3 className="mb-3 font-semibold text-slate-800">{t('prop.bulk.title')}</h3>
             <Banner error={error} success={success} />
             {skipped.length > 0 && (
-                <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                <Alert variant="warning" className="mb-3">
                     <div className="mb-1 font-medium">{t('prop.bulk.skipped', { count: skipped.length })}</div>
                     <ul className="list-disc pl-5">{skipped.map((s) => <li key={s.number}>{s.number}: {s.reason}</li>)}</ul>
-                </div>
+                </Alert>
             )}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 [&>*]:min-w-0">
-                <select className="input" required value={f.room_type_id} onChange={(e) => setF({ ...f, room_type_id: e.target.value })} aria-label={t('prop.bulk.room_type_pick')}>
+                <select className="select" required value={f.room_type_id} onChange={(e) => setF({ ...f, room_type_id: e.target.value })} aria-label={t('prop.bulk.room_type_pick')}>
                     <option value="">{t('prop.bulk.room_type_pick')}</option>
                     {types.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>

@@ -8,6 +8,7 @@ import { activeHotelId, api, ApiError, useApi } from '@/lib/api';
 import { useLocale, useT } from '@/lib/i18n';
 import ChartFrame, { axisFormatter, dayTick, makeTooltip, seriesColor, seriesDash, useAxisProps, type ChartSeries } from '@/Components/ui/ChartFrame';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import Alert from '@/Components/ui/Alert';
 
 interface Kpis {
     business_date: string; rooms_total: number; out_of_order: number; rooms_available: number; rooms_sold: number;
@@ -48,8 +49,8 @@ const today = () => iso(new Date());
 const daysAgo = (n: number) => iso(new Date(Date.now() - n * 86400000));
 
 function Banner({ error, success }: { error?: string | null; success?: string | null }) {
-    if (error) return <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>;
-    if (success) return <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{success}</div>;
+    if (error) return <Alert variant="danger">{error}</Alert>;
+    if (success) return <Alert variant="success">{success}</Alert>;
     return null;
 }
 function Loading() { const t = useT(); return <div className="py-10 text-center text-sm text-slate-500">{t('common.loading')}</div>; }
@@ -128,7 +129,7 @@ function Daily() {
     return (
         <div className="space-y-4">
             <p className="text-sm text-slate-500">{t('reports.business_date')} <b>{formatDate(k.business_date)}</b></p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3 [&>*]:min-w-0">
                 <Kpi label={t('reports.occupancy')} value={formatPercent(k.occupancy_percent)} icon={BedDouble} hint={t('reports.rooms_hint', { sold: k.rooms_sold, available: k.rooms_available, ooo: k.out_of_order })} />
                 <Kpi label={t('reports.adr')} value={formatCurrency(k.adr)} icon={TrendingUp} />
                 <Kpi label={t('reports.revpar')} value={formatCurrency(k.revpar)} icon={TrendingUp} />

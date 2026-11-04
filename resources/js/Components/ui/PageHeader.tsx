@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
+import { LayoutTitleContext } from '@/Layouts/AppLayout';
 import Breadcrumbs, { type Crumb } from './Breadcrumbs';
 
 interface Props {
@@ -13,14 +14,16 @@ interface Props {
 
 /** In-page header: title, subtitle and an actions row that wraps instead of overflowing. Inside AppLayout use heading={false} (renders an h2). */
 export default function PageHeader({ title, subtitle, actions, heading = true, breadcrumbs }: Props) {
+    const layoutTitle = useContext(LayoutTitleContext);
+    const dup = !heading && layoutTitle !== undefined && layoutTitle === title; // phone: AppLayout already shows this title as the h1
     return (
         <div className="page-header">
             <div className="min-w-0 flex-1">
                 {breadcrumbs && <Breadcrumbs items={Array.isArray(breadcrumbs) ? breadcrumbs : undefined} className="mb-1" />}
                 {heading
                     ? <h1 tabIndex={-1} data-page-title className="text-xl font-semibold text-slate-900 md:text-2xl">{title}</h1>
-                    : <h2 className="text-xl font-semibold text-slate-900">{title}</h2>}
-                {subtitle && <p className="n1-prose mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+                    : <h2 className={dup ? 'sr-only' : 'text-xl font-semibold text-slate-900'}>{title}</h2>}
+                {subtitle && <p className="n1-prose hint mt-0.5">{subtitle}</p>}
             </div>
             {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>

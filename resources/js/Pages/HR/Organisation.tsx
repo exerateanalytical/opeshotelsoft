@@ -65,7 +65,7 @@ export function OrgTab() {
                 <div className="card">
                     <h3 className="mb-3 font-semibold">{t('hr.org.positions')}</h3>
                     <form onSubmit={savePos} className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-4">
-                        <select className="input" required value={p.department_id} onChange={(e) => setP({ ...p, department_id: e.target.value })}>
+                        <select className="select" required value={p.department_id} onChange={(e) => setP({ ...p, department_id: e.target.value })}>
                             <option value="">{t('hr.org.department_pick')}</option>{depts.data?.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                         </select>
                         <input className="input" required placeholder={t('hr.org.title')} value={p.title} onChange={(e) => setP({ ...p, title: e.target.value })} />
@@ -146,7 +146,7 @@ export function ShiftsTab() {
                 {!linked && <span className="text-xs text-slate-500">{status.error?.message}</span>}
             </div>
             <form onSubmit={add} className="card mb-5 grid grid-cols-1 gap-2 sm:grid-cols-6">
-                <select className="input sm:col-span-2" required value={f.employee_id} onChange={(e) => setF({ ...f, employee_id: e.target.value })}>
+                <select className="select sm:col-span-2" required value={f.employee_id} onChange={(e) => setF({ ...f, employee_id: e.target.value })}>
                     <option value="">{t('hr.shift.employee_pick')}</option>{people.map((p) => <option key={p.id} value={p.id}>{p.last_name} {p.first_name}</option>)}
                 </select>
                 <input type="date" className="input" required value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
@@ -234,7 +234,7 @@ export function LeaveTab() {
             <Banner ok={m.ok} err={m.err} />
             <QueryStatus query={list} variant="table" rows={3} />
             <div className="mb-4 flex flex-wrap items-center gap-3">
-                <select className="input w-44" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="select w-44" value={status} onChange={(e) => setStatus(e.target.value)}>
                     <option value="">{t('common.all')}</option>{['pending', 'approved', 'rejected', 'cancelled'].map((s) => <option key={s} value={s}>{t(`hr.status.${s}`)}</option>)}
                 </select>
                 <div className="flex-1" />
@@ -242,10 +242,10 @@ export function LeaveTab() {
             </div>
             {open && (
                 <form onSubmit={submit} className="card mb-5">
-                    <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">{t('hr.leave.new_title')}</h3><button type="button" onClick={() => setOpen(false)}><X className="h-4 w-4" /></button></div>
+                    <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">{t('hr.leave.new_title')}</h3><button className="btn-ghost btn-icon btn-sm" type="button" onClick={() => setOpen(false)} aria-label={t('ui.nav.close')}><X className="h-4 w-4" /></button></div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                        <Field label={t('hr.emp.employee')}><select className="input" value={f.employee_id} onChange={(e) => setF({ ...f, employee_id: e.target.value })}><option value="">{t('hr.leave.myself')}</option>{emps.data?.data.map((p) => <option key={p.id} value={p.id}>{p.last_name} {p.first_name}</option>)}</select></Field>
-                        <Field label={t('hr.leave.type_req')}><select className="input" required value={f.leave_type_id} onChange={(e) => setF({ ...f, leave_type_id: e.target.value })}><option value="">—</option>{types.data?.map((lt) => <option key={lt.id} value={lt.id}>{lt.name}{lt.paid ? '' : t('hr.leave.unpaid')}</option>)}</select></Field>
+                        <Field label={t('hr.emp.employee')}><select className="select" value={f.employee_id} onChange={(e) => setF({ ...f, employee_id: e.target.value })}><option value="">{t('hr.leave.myself')}</option>{emps.data?.data.map((p) => <option key={p.id} value={p.id}>{p.last_name} {p.first_name}</option>)}</select></Field>
+                        <Field label={t('hr.leave.type_req')}><select className="select" required value={f.leave_type_id} onChange={(e) => setF({ ...f, leave_type_id: e.target.value })}><option value="">—</option>{types.data?.map((lt) => <option key={lt.id} value={lt.id}>{lt.name}{lt.paid ? '' : t('hr.leave.unpaid')}</option>)}</select></Field>
                         <Field label={t('hr.common.from_req')}><input type="date" className="input" required value={f.start_date} onChange={(e) => setF({ ...f, start_date: e.target.value })} /></Field>
                         <Field label={t('hr.common.to_req')}><input type="date" className="input" required min={f.start_date} value={f.end_date} onChange={(e) => setF({ ...f, end_date: e.target.value })} /></Field>
                         <Field label={t('hr.common.reason')}><input className="input" value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} /></Field>

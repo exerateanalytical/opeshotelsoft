@@ -7,6 +7,7 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import SignaturePad from './SignaturePad';
+import Alert from '@/Components/ui/Alert';
 
 interface Suggestion { id: number; room_id: number; room: string; floor: string | null; score: number; reasons: string[] }
 interface Arrival {
@@ -62,7 +63,7 @@ export default function Arrivals() {
                 <div className="flex flex-wrap gap-2 text-sm">
                     {(['ready', 'partial', 'missing'] as const).map((s) => <span key={s} className={BADGE[s]}>{t(`experience.readiness.${s}`)}: {feed.data?.summary[s] ?? 0}</span>)}
                 </div>
-                {msg && <div className={cn('rounded-md border p-3 text-sm', msg.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-red-300 bg-red-50 text-red-800')}>{msg.text}</div>}
+                {msg && <Alert variant={msg.ok ? 'success' : 'danger'}>{msg.text}</Alert>}
                 <QueryStatus query={feed} variant="table" />
                 {feed.data && (
                     <div className="card overflow-x-auto">
@@ -104,7 +105,7 @@ export default function Arrivals() {
                         <h2 className="font-semibold">{t('experience.card.title')}: {card.guest.first_name} {card.guest.last_name}</h2>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div><label className="label" htmlFor="idt">{t('experience.card.id_type')}</label>
-                                <select id="idt" className="input" value={form.id_type} onChange={(e) => setForm({ ...form, id_type: e.target.value })}>
+                                <select id="idt" className="select" value={form.id_type} onChange={(e) => setForm({ ...form, id_type: e.target.value })}>
                                     {['passport', 'national_id', 'residence_permit', 'driving_licence'].map((k) => <option key={k} value={k}>{t(`experience.card.${k}`)}</option>)}
                                 </select></div>
                             <div><label className="label" htmlFor="idn">{t('experience.card.id_number')}</label><input id="idn" className="input" value={form.id_number} onChange={(e) => setForm({ ...form, id_number: e.target.value })} /></div>

@@ -176,6 +176,8 @@ class MemberPortalService
             'hotels' => Hotel::where('status', 'active')->orderBy('name')->get()->map(fn (Hotel $h) => [
                 'id' => $h->id, 'code' => $h->code, 'name' => $h->name, 'city' => $h->city, 'country' => $h->country, 'address' => $h->address, 'phone' => $h->phone,
                 'stars' => $h->stars, 'currency' => $h->currency, 'description' => $h->settings['description'] ?? null,
+                // Optional photo set in the hotel settings; only an http(s) or site-relative URL is ever passed on.
+                'photo' => preg_match('#^(https?://|/(?!/))#', (string) ($h->settings['photo_url'] ?? '')) ? $h->settings['photo_url'] : null,
             ])->all(),
         ];
     }

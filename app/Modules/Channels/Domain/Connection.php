@@ -22,14 +22,15 @@ class Connection extends Model
 
     protected $table = 'channel_connections';
 
-    protected $guarded = ['id', 'group_id', 'hotel_id', 'uuid'];
+    protected $guarded = ['id', 'group_id', 'hotel_id', 'uuid', 'inbound_secret'];
 
-    protected $hidden = ['credentials'];
+    /** inbound_secret: HMAC key generated at creation; every inbound booking must be signed with it (sandbox included). */
+    protected $hidden = ['credentials', 'inbound_secret'];
 
     protected function casts(): array
     {
         return [
-            'credentials' => 'encrypted:array', 'settings' => 'array',
+            'credentials' => 'encrypted:array', 'inbound_secret' => 'encrypted', 'settings' => 'array',
             'push_rates' => 'boolean', 'push_availability' => 'boolean', 'receive_reservations' => 'boolean',
             'last_push_at' => 'datetime', 'last_pull_at' => 'datetime',
         ];
@@ -37,7 +38,10 @@ class Connection extends Model
 
     protected static function booted(): void
     {
-        static::creating(fn (Connection $c) => $c->uuid ??= (string) Str::uuid());
+        static::creating(function (Connection $c) {
+            $c->uuid ??= (string) Str::uuid();
+            $c->inbound_secret ??= 'chsec_'.Str::random(40);
+        });
     }
 
     public function roomMappings()

@@ -106,7 +106,7 @@ export function RoomMovePanel({ id, onDone, notify }: { id: number | string; onD
             }
         }}>
             <h3 className="font-semibold text-slate-800">{t('fo.stay.move_room')}</h3>
-            <select className="input" required value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+            <select className="select" required value={roomId} onChange={(e) => setRoomId(e.target.value)}>
                 <option value="" disabled>{rooms.loading ? t('common.loading') : rooms.error ? t('states3.rooms_error') : rooms.data?.length === 0 ? t('states3.rooms_none') : t('fo.stay.vacant_room')}</option>
                 {rooms.data?.map((r) => <option key={r.id} value={r.id}>{r.number} · {r.room_type?.code} · {t(`fo.hk.${r.hk_status}`) === `fo.hk.${r.hk_status}` ? r.hk_status.replace(/_/g, ' ') : t(`fo.hk.${r.hk_status}`)}</option>)}
             </select>
@@ -159,8 +159,8 @@ export function RoutingPanel({ id, companyId, chargeCodes, notify }: { id: numbe
                     <li key={r.id} className="flex items-center gap-2 text-sm">
                         <span className="badge-blue">{r.match_type === 'all' ? t('fo.stay.all_charges_badge') : r.match_type === 'department' ? t('fo.stay.dept_badge', { value: label('fo.dept', r.match_value ?? '') }) : t('fo.stay.code_badge', { value: r.match_value ?? '' })}</span>
                         <span className="truncate">→ {r.target ? `${r.target.number} ${r.target.name}` : t('fo.stay.missing_folio')}</span>
-                        <button type="button" title={t('fo.stay.remove_rule')} className="ml-auto text-slate-500 hover:text-red-600" disabled={busy}
-                            onClick={() => call(`reservations/${id}/routing-rules/${r.id}`, { method: 'DELETE' }, t('fo.stay.rule_removed'))}>
+                        <button type="button" title={t('fo.stay.remove_rule')} className="btn-ghost btn-icon btn-sm ml-auto" disabled={busy}
+                            onClick={() => call(`reservations/${id}/routing-rules/${r.id}`, { method: 'DELETE' }, t('fo.stay.rule_removed'))} aria-label={t('fo.stay.remove_rule')}>
                             <Trash2 className="w-4 h-4" />
                         </button>
                     </li>
@@ -171,23 +171,23 @@ export function RoutingPanel({ id, companyId, chargeCodes, notify }: { id: numbe
                 call(`reservations/${id}/routing-rules`, { method: 'POST', body: JSON.stringify({ ...form, target_folio_id: Number(form.target_folio_id), match_value: form.match_type === 'all' ? null : form.match_value }) }, t('fo.stay.rule_added'));
             }}>
                 <div className="flex gap-2">
-                    <select className="input" value={form.match_type} onChange={(e) => setForm({ ...form, match_type: e.target.value, match_value: e.target.value === 'department' ? 'rooms' : e.target.value === 'charge_code' ? (chargeCodes[0]?.code ?? '') : '' })} aria-label={t('fo.stay.department')}>
+                    <select className="select" value={form.match_type} onChange={(e) => setForm({ ...form, match_type: e.target.value, match_value: e.target.value === 'department' ? 'rooms' : e.target.value === 'charge_code' ? (chargeCodes[0]?.code ?? '') : '' })} aria-label={t('fo.stay.department')}>
                         <option value="department">{t('fo.stay.department')}</option>
                         <option value="charge_code">{t('fo.stay.charge_code')}</option>
                         <option value="all">{t('fo.stay.all_charges')}</option>
                     </select>
                     {form.match_type === 'department' && (
-                        <select className="input" value={form.match_value} onChange={(e) => setForm({ ...form, match_value: e.target.value })}>
+                        <select className="select" value={form.match_value} onChange={(e) => setForm({ ...form, match_value: e.target.value })}>
                             {DEPARTMENTS.map((d) => <option key={d} value={d}>{label('fo.dept', d)}</option>)}
                         </select>
                     )}
                     {form.match_type === 'charge_code' && (
-                        <select className="input" value={form.match_value} onChange={(e) => setForm({ ...form, match_value: e.target.value })}>
+                        <select className="select" value={form.match_value} onChange={(e) => setForm({ ...form, match_value: e.target.value })}>
                             {chargeCodes.map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
                         </select>
                     )}
                 </div>
-                <select className="input" required value={form.target_folio_id} onChange={(e) => setForm({ ...form, target_folio_id: e.target.value })}>
+                <select className="select" required value={form.target_folio_id} onChange={(e) => setForm({ ...form, target_folio_id: e.target.value })}>
                     <option value="" disabled>{folios.loading ? t('common.loading') : t('fo.stay.route_to')}</option>
                     {targets.map((f) => <option key={f.id} value={f.id}>{f.number} · {f.name} ({label('fo.folio_kind', f.kind)})</option>)}
                 </select>
@@ -334,7 +334,7 @@ export function RegistrationCardPanel({ id, editable, notify }: { id: number | s
                                 onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
                             <div className="flex items-center">
                                 <span className="label">{t('fo.stay.guest_signature')}</span>
-                                <button type="button" className="ml-auto text-xs text-slate-500 hover:text-slate-800 inline-flex items-center gap-1" onClick={clear}>
+                                <button type="button" className="btn-ghost btn-sm ml-auto" onClick={clear}>
                                     <Eraser className="w-3 h-3" /> {t('fo.stay.clear')}
                                 </button>
                             </div>

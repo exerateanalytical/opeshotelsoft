@@ -40,8 +40,8 @@ export default function BankFeed() {
 
             <div className="card mb-4 p-4">
                 <div className="flex flex-wrap items-end gap-2">
-                    <Field label={t('acc3.feed.account')}><select className="input" value={bankId ?? ''} onChange={(e) => setBank(Number(e.target.value))}>{banks.data?.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></Field>
-                    <Field label={t('acc3.feed.format')}><select className="input" value={format} onChange={(e) => setFormat(e.target.value)}><option value="mt940">MT940</option><option value="camt053">CAMT.053</option><option value="csv">CSV</option></select></Field>
+                    <Field label={t('acc3.feed.account')}><select className="select" value={bankId ?? ''} onChange={(e) => setBank(Number(e.target.value))}>{banks.data?.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></Field>
+                    <Field label={t('acc3.feed.format')}><select className="select" value={format} onChange={(e) => setFormat(e.target.value)}><option value="mt940">MT940</option><option value="camt053">CAMT.053</option><option value="csv">CSV</option></select></Field>
                     <input type="file" className="input w-full sm:w-auto" aria-label={t('acc3.feed.format')} onChange={(e) => {
                         const f = e.target.files?.[0];
                         if (!f || !bankId) return;
@@ -70,14 +70,14 @@ export default function BankFeed() {
 
             <div className="card p-4">
                 <h3 className="mb-3 font-semibold">{t('acc3.feed.rules')}</h3>
-                <form className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-6 [&>*]:min-w-0" onSubmit={(e) => { e.preventDefault(); run(() => api('accounting3/bank-rules', { method: 'POST', body: JSON.stringify(rule) })); }}>
+                <form className="mb-3 grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-2 [&>*]:min-w-0" onSubmit={(e) => { e.preventDefault(); run(() => api('accounting3/bank-rules', { method: 'POST', body: JSON.stringify(rule) })); }}>
                     <Field label={t('acc3.name')}><input required className="input w-full" value={rule.name} onChange={(e) => setRule({ ...rule, name: e.target.value })} /></Field>
                     <Field label={t('acc3.feed.pattern')}><input required className="input w-full" value={rule.pattern} onChange={(e) => setRule({ ...rule, pattern: e.target.value })} /></Field>
-                    <Field label={t('acc3.feed.mode')}><select className="input w-full" value={rule.match_mode} onChange={(e) => setRule({ ...rule, match_mode: e.target.value })}><option value="contains">{t('acc3.feed.contains')}</option><option value="regex">Regex</option></select></Field>
-                    <Field label={t('acc3.feed.direction')}><select className="input w-full" value={rule.direction} onChange={(e) => setRule({ ...rule, direction: e.target.value })}><option value="any">{t('acc3.feed.any')}</option><option value="in">{t('acc3.feed.in')}</option><option value="out">{t('acc3.feed.out')}</option></select></Field>
+                    <Field label={t('acc3.feed.mode')}><select className="select w-full" value={rule.match_mode} onChange={(e) => setRule({ ...rule, match_mode: e.target.value })}><option value="contains">{t('acc3.feed.contains')}</option><option value="regex">Regex</option></select></Field>
+                    <Field label={t('acc3.feed.direction')}><select className="select w-full" value={rule.direction} onChange={(e) => setRule({ ...rule, direction: e.target.value })}><option value="any">{t('acc3.feed.any')}</option><option value="in">{t('acc3.feed.in')}</option><option value="out">{t('acc3.feed.out')}</option></select></Field>
                     <Field label={t('acc3.feed.account_code')}><input required className="input w-full" value={rule.account_code} onChange={(e) => setRule({ ...rule, account_code: e.target.value })} /></Field>
                     <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5 shrink-0" checked={rule.auto_post} onChange={(e) => setRule({ ...rule, auto_post: e.target.checked })} />{t('acc3.feed.auto_post')}</label>
-                    <button className="btn-primary col-span-2 sm:col-span-6">{t('common.save')}</button>
+                    <button className="btn-primary col-span-full">{t('common.save')}</button>
                 </form>
                 <Table head={<><Th>{t('acc3.name')}</Th><Th>{t('acc3.feed.pattern')}</Th><Th>{t('acc3.feed.direction')}</Th><Th>{t('acc3.feed.account_code')}</Th><Th>{t('acc3.feed.auto_post')}</Th></>}>
                     {rules.data?.map((r) => <tr key={r.id}><Td b>{r.name}</Td><Td mono>{r.pattern}</Td><Td>{r.direction}</Td><Td mono>{r.account_code}</Td><Td>{r.auto_post ? t('acc3.yes') : t('acc3.no')}</Td></tr>)}

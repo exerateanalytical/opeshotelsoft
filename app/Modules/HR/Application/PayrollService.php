@@ -73,7 +73,8 @@ class PayrollService
                     $totals[$k] += $slip[$k];
                 }
             }
-            $run->update($totals + ['payroll_rule_pack_id' => $pack->id]);
+            // computed_by: whoever computed last also counts as a preparer for the four-eyes check on approval.
+            $run->update($totals + ['payroll_rule_pack_id' => $pack->id, 'computed_by' => $this->ctx->actor()?->id]);
             $this->bus->record('payroll.run_computed', ['id' => $run->id, 'period' => $period, 'employees' => $employees->count()] + $totals, 'payroll_run', $run->id);
 
             return $run->fresh('payslips.employee');
@@ -91,7 +92,8 @@ class PayrollService
         if ($run->status !== 'draft') {
             throw new DomainException("Payroll {$run->period} is {$run->status}.", 'invalid-state');
         }
-        if ($run->prepared_by && $run->prepared_by === $this->ctx->actor()?->id) {
+        $actorId = $this->ctx->actor()?->id;
+        if ($actorId && in_array((int) $actorId, array_filter([(int) $run->prepared_by, (int) $run->computed_by]), true)) {
             throw new DomainException('The payroll must be approved by someone other than the preparer.', 'sod');
         }
         // H-B: variance and audit checklist; blocks only when the hotel configured payroll_review_required.

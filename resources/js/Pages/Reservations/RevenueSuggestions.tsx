@@ -6,6 +6,7 @@ import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Reason { factor: string; pct: number; detail: string }
 interface Suggestion { id: number; date: string; room_type_id: number; rate_plan_id: number; current_rate: number; suggested_rate: number; change_pct: number; reasons: Reason[] }
@@ -45,7 +46,7 @@ export default function RevenueSuggestions() {
             <Head title={t('revenue.sug.title')} />
             <div className="mx-auto max-w-5xl space-y-4">
                 <p className="text-sm text-slate-600">{t('revenue.sug.intro')}</p>
-                {msg && <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">{msg}</div>}
+                {msg && <Alert variant="danger">{msg}</Alert>}
 
                 <section className="card space-y-3 p-4">
                     <div className="flex flex-wrap items-end gap-3">

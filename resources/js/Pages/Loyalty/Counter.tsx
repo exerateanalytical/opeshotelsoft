@@ -7,6 +7,7 @@ import { api, useApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { errorText } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 interface Check { id: number; number: string; total: number; status: string; outlet_id: number; table_number?: string | null; guest_id?: number | null }
 interface MemberHit { id: number; number: string; points_balance: number; guest: { first_name: string; last_name: string } | null; tier: { code: string; name: string } | null }
@@ -66,7 +67,7 @@ export default function LoyaltyCounter() {
         <AppLayout title={t('loyalty.counter.title')} subtitle={t('loyalty.counter.subtitle')}>
             <Head title={t('loyalty.counter.title')} />
             <QueryStatus query={checks} variant="list" />
-            {msg && <div className={`mb-4 rounded-lg border px-4 py-2 text-sm ${msg.kind === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>{msg.text}</div>}
+            {msg && <Alert variant={msg.kind === 'error' ? 'danger' : 'success'} className="mb-4">{msg.text}</Alert>}
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="card p-4 text-sm">
                     <h3 className="font-semibold mb-2">{t('loyalty.counter.open_checks')}</h3>
@@ -117,7 +118,7 @@ export default function LoyaltyCounter() {
                             <div className="flex justify-between"><span className="text-slate-500">{t('loyalty.counter.points_value')}</span><span>{formatCurrency(value)}</span></div>
                             {rest > 0 && (
                                 <label className="block">{t('loyalty.counter.rest', { amount: formatCurrency(rest) })}
-                                    <select className="input w-full" value={method} onChange={(e) => setMethod(e.target.value)}>
+                                    <select className="select w-full" value={method} onChange={(e) => setMethod(e.target.value)}>
                                         {['CASH', 'CARD', 'MTN', 'OM'].map((m) => <option key={m} value={m}>{m}</option>)}
                                     </select>
                                 </label>

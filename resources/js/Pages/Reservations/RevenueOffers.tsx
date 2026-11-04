@@ -6,6 +6,7 @@ import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Promo { id: number; code: string; name: string; type: 'percent' | 'amount'; value: number; uses: number; max_uses: number | null; active: boolean }
 interface Contract { id: number; code: string; name: string; valid_from: string; valid_to: string; last_room_availability: boolean; active: boolean; company?: { name: string }; rate_plan?: { code: string; derived_adjust_percent: number }; allotments: { id: number; rooms: number; start_date: string; end_date: string; room_type_id: number }[] }
@@ -31,14 +32,14 @@ export default function RevenueOffers() {
         <AppLayout title={t('revenue.offers.title')}>
             <Head title={t('revenue.offers.title')} />
             <div className="mx-auto max-w-5xl space-y-4">
-                {msg && <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">{msg}</div>}
+                {msg && <Alert variant="danger">{msg}</Alert>}
 
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{t('revenue.offers.promos')}</h2>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                         <input className="input" aria-label={t('revenue.common.code')} placeholder={t('revenue.common.code')} value={p.code} onChange={(e) => setP({ ...p, code: e.target.value })} />
                         <input className="input" aria-label={t('revenue.common.name')} placeholder={t('revenue.common.name')} value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
-                        <select className="input" value={p.type} onChange={(e) => setP({ ...p, type: e.target.value })} aria-label={t('revenue.offers.percent')}>
+                        <select className="select" value={p.type} onChange={(e) => setP({ ...p, type: e.target.value })} aria-label={t('revenue.offers.percent')}>
                             <option value="percent">{t('revenue.offers.percent')}</option>
                             <option value="amount">{t('revenue.offers.amount')}</option>
                         </select>
@@ -59,13 +60,13 @@ export default function RevenueOffers() {
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{t('revenue.offers.contracts')}</h2>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <select className="input" value={c.company_id} onChange={(e) => setC({ ...c, company_id: e.target.value })} aria-label={t('revenue.offers.company')}>
+                        <select className="select" value={c.company_id} onChange={(e) => setC({ ...c, company_id: e.target.value })} aria-label={t('revenue.offers.company')}>
                             <option value="">{t('revenue.offers.company')}</option>
                             {companies.data?.data.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                         </select>
                         <input className="input" aria-label={t('revenue.common.code')} placeholder={t('revenue.common.code')} value={c.code} onChange={(e) => setC({ ...c, code: e.target.value })} />
                         <input className="input" aria-label={t('revenue.common.name')} placeholder={t('revenue.common.name')} value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
-                        <select className="input" value={c.parent_rate_plan_id} onChange={(e) => setC({ ...c, parent_rate_plan_id: e.target.value })} aria-label={t('revenue.offers.parent')}>
+                        <select className="select" value={c.parent_rate_plan_id} onChange={(e) => setC({ ...c, parent_rate_plan_id: e.target.value })} aria-label={t('revenue.offers.parent')}>
                             <option value="">{t('revenue.offers.parent')}</option>
                             {plans.data?.data.filter((x) => !x.parent_rate_plan_id).map((x) => <option key={x.id} value={x.id}>{x.code}</option>)}
                         </select>
@@ -86,7 +87,7 @@ export default function RevenueOffers() {
                             {x.allotments.map((a) => <div key={a.id}>{a.rooms} × {types.data?.data.find((y) => y.id === a.room_type_id)?.name} · {formatDate(a.start_date)} → {formatDate(a.end_date)}</div>)}
                             {al.contract === x.id ? (
                                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                                    <select className="input" value={al.room_type_id} onChange={(e) => setAl({ ...al, room_type_id: e.target.value })} aria-label={t('revenue.common.room_type')}>
+                                    <select className="select" value={al.room_type_id} onChange={(e) => setAl({ ...al, room_type_id: e.target.value })} aria-label={t('revenue.common.room_type')}>
                                         <option value="">{t('revenue.common.room_type')}</option>
                                         {types.data?.data.map((y) => <option key={y.id} value={y.id}>{y.name}</option>)}
                                     </select>

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, msg } from './WorkforceTabs';
+import Alert from '@/Components/ui/Alert';
 
 interface Anomaly { id: number; employee: string | null; date: string; kind: string; severity: string; detail: Record<string, unknown>; status: string }
 interface Settings { geo_lat: number | null; geo_lng: number | null; geo_radius_m: number; geo_required: boolean; photo_required: boolean; late_tolerance_min: number; rest_hours_min: number; max_weekly_hours: number }
@@ -23,7 +24,7 @@ export default function WorkforceTime() {
             <Head title={t('workforce.time.title')} />
             <QueryStatus query={list} variant="table" />
             <WorkforceTabs active="/hr/workforce/time" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
             <div className="card mb-4 p-4 text-sm"><div className="mb-2 flex justify-between"><h2 className="font-semibold">{t('workforce.time.anomalies')}</h2>
                 <button className="btn-secondary" onClick={() => act(() => wpost('workforce/scan'))}>{t('workforce.time.scan')}</button></div>
                 {list.data?.length === 0 && <p className="text-slate-500">{t('workforce.none')}</p>}

@@ -22,7 +22,7 @@ class ManageController
 
     public function options(Request $request, string $group)
     {
-        return $this->run($request, $group, fn (Reservation $r) => $this->manage->options($r));
+        return $this->run($request, $group, fn (Reservation $r) => $this->manage->options($r, is_string($request->input('lang')) ? $request->input('lang') : null));
     }
 
     public function modify(Request $request, string $group)

@@ -94,11 +94,11 @@ export default function Recipes() {
                     <div className="mb-2 grid grid-cols-2 gap-2 md:grid-cols-4 [&>*]:min-w-0">
                         <input className="input" placeholder={t('stock2.recipes.col.code')} aria-label={t('stock2.recipes.col.code')} value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
                         <input className="input" placeholder={t('stock2.recipes.col.name')} aria-label={t('stock2.recipes.col.name')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                        <select className="input" aria-label={t('stock2.recipes.col.kind')} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+                        <select className="select" aria-label={t('stock2.recipes.col.kind')} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                             <option value="dish">{t('stock2.recipes.kind.dish')}</option><option value="sub_recipe">{t('stock2.recipes.kind.sub_recipe')}</option>
                         </select>
                         {form.kind === 'dish' && (
-                            <select className="input" value={form.pos_menu_item_id} onChange={(e) => setForm({ ...form, pos_menu_item_id: e.target.value })} aria-label={t('stock2.recipes.menu_item')}>
+                            <select className="select" value={form.pos_menu_item_id} onChange={(e) => setForm({ ...form, pos_menu_item_id: e.target.value })} aria-label={t('stock2.recipes.menu_item')}>
                                 <option value="">{t('stock2.recipes.menu_item')}</option>
                                 {(menu.data?.data ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                             </select>
@@ -109,7 +109,7 @@ export default function Recipes() {
                     </div>
                     {lines.map((l, i) => (
                         <div key={i} className="mb-1 grid grid-cols-2 gap-2 md:grid-cols-4 [&>*]:min-w-0">
-                            <select className="input" value={l.ref} onChange={(e) => setLine(i, { ref: e.target.value })} aria-label={t('stock2.recipes.col.ingredient')}>
+                            <select className="select" value={l.ref} onChange={(e) => setLine(i, { ref: e.target.value })} aria-label={t('stock2.recipes.col.ingredient')}>
                                 <option value="">{t('stock2.recipes.col.ingredient')}</option>
                                 {(items.data?.data ?? []).map((it) => <option key={`i${it.id}`} value={`i${it.id}`}>{it.name}</option>)}
                                 {subs.map((s) => <option key={`s${s.id}`} value={`s${s.id}`}>{s.name} ({t('stock2.recipes.kind.sub_recipe')})</option>)}

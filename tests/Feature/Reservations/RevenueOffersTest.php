@@ -107,13 +107,13 @@ class RevenueOffersTest extends RevenueBaseTest
 
         $slug = $this->group->slug;
         $this->anonymous();
-        $offers = $this->getJson("/api/v1/booking/$slug/availability?arrival={$this->day(4)}&departure={$this->day(6)}&corporate_code=sonara")->json('results.0.offers');
+        $offers = $this->getJson("/api/v1/booking/$slug/availability?arrival={$this->day(4)}&departure={$this->day(6)}&corporate_code=".strtolower($c['code']))->json('results.0.offers');
         $corp = collect($offers)->first(fn ($o) => isset($o['corporate']) && $o['room_type']['code'] === 'STD');
         $this->assertSame(80_000, $corp['total']);
         $this->assertSame('allotment', $corp['corporate']['source']);
         $this->assertNull(collect($this->getJson("/api/v1/booking/$slug/availability?arrival={$this->day(4)}&departure={$this->day(6)}")->json('results.0.offers'))->first(fn ($o) => isset($o['corporate'])));
 
-        $b = $this->postJson("/api/v1/booking/$slug/reservations", $this->web(['rate_plan_id' => $corp['rate_plan']['id'], 'corporate_code' => 'SONARA']))->assertCreated()->json();
+        $b = $this->postJson("/api/v1/booking/$slug/reservations", $this->web(['rate_plan_id' => $corp['rate_plan']['id'], 'corporate_code' => $c['code']]))->assertCreated()->json();
         $this->assertSame(80_000, $b['total']);
         $r = Reservation::where('number', $b['confirmation'])->first();
         $this->assertNotNull($r->room_block_id);
@@ -133,7 +133,7 @@ class RevenueOffersTest extends RevenueBaseTest
         $body = ['hotel' => null];
         $payload = fn () => [
             'room_type_id' => $this->std->id, 'arrival' => $this->day(8), 'departure' => $this->day(9),
-            'rate_plan_id' => $c['rate_plan_id'], 'corporate_code' => 'SONARA',
+            'rate_plan_id' => $c['rate_plan_id'], 'corporate_code' => $c['code'],
         ];
         $this->getJson('/api/v1/revenue/quote?'.http_build_query($payload()))->assertStatus(422);
 

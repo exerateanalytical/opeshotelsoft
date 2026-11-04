@@ -21,6 +21,10 @@ class AdminModule
         // Token endpoints: per IP per route, on top of the per-account LoginGuard throttle.
         RateLimiter::for('auth-token', fn (Request $r) => Limit::perMinute(10)->by($r->ip().'|'.$r->route()?->uri()));
 
+        // Required roles get no API access until enrolled in 2FA (SEC1 audit, blocker #20). Runs in the
+        // api group after auth:api; it only acts on routes that carry auth:api, so public routes are untouched.
+        app('router')->pushMiddlewareToGroup('api', Http\Middleware\RequireMfaEnrolment::class);
+
         // Session hardening: HttpOnly, SameSite, Secure in production unless explicitly configured.
         config([
             'session.http_only' => true,

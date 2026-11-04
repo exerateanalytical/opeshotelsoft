@@ -17,7 +17,8 @@ const OUT = path.join(__dirname, 'results', 'raw', 'modals.jsonl');
 const PAGES = ['/dashboard', '/reservations', '/reservations/create', '/reservations/tape-chart', '/reservations/waitlist', '/front-desk', '/front-desk/in-house', '/billing/folios', '/billing/cashier', '/guests', '/guests/1', '/housekeeping', '/maintenance', '/pos', '/stock', '/stock/issues', '/hr', '/hr/workforce/leave', '/finance', '/finance/budgets', '/loyalty', '/loyalty/members', '/groups', '/settings/users', '/payments', '/messaging', '/service-requests', '/properties', '/reservations/seasons'];
 const VPS = [[320, 640, true], [375, 812, true], [1280, 720, false]];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const TRIGGER = /^(\+|new|add|create|nouveau|nouvelle|ajouter|cr[ée]er|edit|modifier|record|enregistrer|register|issue|filters?|filtres?|assign|invite|import|schedule|book|reserve|log|adjust|configure|manage|details?|view|open|quick|more|rooming|walk|room|rate|guest|template|rule)/i;
+const WORDS = ['new', 'add', 'create', 'nouveau', 'nouvelle', 'ajouter', 'créer', 'creer', 'edit', 'modifier', 'record', 'enregistrer', 'register', 'issue', 'filter', 'filtre', 'assign', 'invite', 'import', 'schedule', 'book', 'reserve', 'log', 'adjust', 'configure', 'manage', 'detail', 'view', 'open', 'quick', 'more', 'rooming', 'walk', 'room', 'rate', 'guest', 'template', 'rule'];
+const TRIGGER = { source: '^([+]|' + WORDS.join('|') + ')' };
 
 const findDialog = () => {
   const d = document.querySelector('[role=dialog],[role=alertdialog]');

@@ -115,9 +115,17 @@ class BookingEngineController
             $plan = $prepared['plan'];
 
             return DB::transaction(function () use ($data, $plan, $reservations, $revenue, $prepared) {
+                // An existing profile is reused only when the booker also knows its last name: an email or a
+                // member number alone must not attach a stranger's booking to a guest's profile, loyalty
+                // account and stored ID data (SEC1 audit). Otherwise the booking gets its own new profile.
+                $sameName = fn ($q) => $q->whereRaw('lower(last_name) = ?', [mb_strtolower(trim($data['guest']['last_name']))]);
                 $member = ! empty($data['member_number']) ? Membership::where('number', $data['member_number'])->first() : null;
-                $guest = $member?->guest
-                    ?? Guest::where('email', $data['guest']['email'])->first()
+                $memberGuest = $member?->guest;
+                if ($memberGuest && mb_strtolower(trim($memberGuest->last_name)) !== mb_strtolower(trim($data['guest']['last_name']))) {
+                    $memberGuest = null;
+                }
+                $guest = $memberGuest
+                    ?? Guest::where('email', $data['guest']['email'])->where($sameName)->first()
                     ?? Guest::create([
                         'first_name' => $data['guest']['first_name'], 'last_name' => $data['guest']['last_name'],
                         'email' => $data['guest']['email'], 'phone' => $data['guest']['phone'], 'country' => $data['guest']['country'] ?? null,

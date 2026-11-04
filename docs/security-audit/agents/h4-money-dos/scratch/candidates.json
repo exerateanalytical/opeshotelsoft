@@ -1,0 +1,327 @@
+[
+  {
+    "fingerprint": "money:payments:refund-toctou-double-refund",
+    "title": "Gateway refund amount is checked on an unlocked intent and sent to the provider before the row lock, so concurrent refunds exceed the paid amount",
+    "attack_class": "race",
+    "lower_trust_principal": "Staff user holding payments.refund (or an idempotency-less retry/duplicate click from the UI)",
+    "boundary_crossed": "Refundable-amount invariant (sum(refunds) <= intent.amount) and folio credit balance",
+    "entrypoint": {"file": "app/Modules/Payments/Http/PaymentController.php", "line": 56, "description": "POST /api/v1/payments/intents/{intent}/refunds validates only amount min:1 and calls PaymentService::refund with an unlocked PaymentIntent"},
+    "sink": {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 254, "description": "driverOf($intent)->refund(...) sends money back through MTN/Orange/card BEFORE the transaction and lockForUpdate at line 256-257; after the lock no re-check of refunded_amount is done"},
+    "propagation": [
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 244, "description": "refundable check uses $intent->refunded_amount read without lock"},
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 251, "description": "folio credit check uses stale $folio->balance"},
+      {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 111, "description": "FolioService::refund re-checks balance on the stale Folio instance passed in, then post() locks the folio only when writing"},
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 263, "description": "refunded_amount incremented after the fact"}
+    ],
+    "intended_control": "amount <= intent.amount - refunded_amount and refund <= folio credit balance",
+    "observed_or_expected_result": "Two simultaneous refund requests of the full refundable amount both pass the checks, both call the provider refund API, both post a refund line; the hotel refunds up to 2x the payment and the folio goes into debit.",
+    "conditions": ["two requests in flight concurrently (no Idempotency-Key header or different keys)", "real gateway credentials configured (otherwise dry-run refund succeeds too)"],
+    "confidence": "high",
+    "proposed_severity": "high",
+    "smallest_fix": "Open the DB::transaction and PaymentIntent::lockForUpdate() first, re-read refunded_amount and Folio::lockForUpdate()->balance inside it, insert the PaymentRefund row as pending, then call the gateway; mark succeeded afterwards.",
+    "regression_test_idea": "Feature test spawning two parallel refund requests (or calling refund() twice inside a transaction with a sleep hook) for an intent of 10000 with amount 10000; assert only one PaymentRefund row and refunded_amount == 10000."
+  },
+  {
+    "fingerprint": "money:payouts:process-race-double-disbursement",
+    "title": "PayoutService::process reads pending MoMo items without any lock, so two concurrent /process calls disburse each salary twice",
+    "attack_class": "race",
+    "lower_trust_principal": "Staff user holding payments.payouts (or UI double-submit / retry)",
+    "boundary_crossed": "One disbursement per payout item",
+    "entrypoint": {"file": "app/Modules/Payments/Http/MobileMoneyController.php", "line": 135, "description": "POST /api/v1/payments/payouts/{payout}/process"},
+    "sink": {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 110, "description": "$driver->disburse($item, ...) called for every item still 'pending' in the unlocked collection fetched at line 97-98; status update at line 111 happens after the provider call"},
+    "propagation": [
+      {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 97, "description": "items selected with plain ->get(), no lockForUpdate, outside a transaction"},
+      {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 176, "description": "only postPaid() locks the run, after the money has already left"}
+    ],
+    "intended_control": "item.status transitions pending -> sent/succeeded exactly once; attempts counter",
+    "observed_or_expected_result": "Both workers see the same pending items and call MtnDisbursement/OrangeDisbursement twice per employee; the second update overwrites the first provider_reference. Salaries are paid twice; GL posts once.",
+    "conditions": ["two concurrent requests (no Idempotency-Key)", "MoMo credentials configured (in dry run the duplicate is only visible in logs)"],
+    "confidence": "high",
+    "proposed_severity": "high",
+    "smallest_fix": "Wrap process() in DB::transaction with PayoutRun::lockForUpdate() (or a cache lock per run) and re-select items with lockForUpdate(); mark an item 'sent' with its reference before calling the provider.",
+    "regression_test_idea": "Two parallel process() calls against a run with one pending MoMo item and a fake gateway counting disburse() calls; assert exactly one call."
+  },
+  {
+    "fingerprint": "money:payouts:single-role-destination-diversion",
+    "title": "One payments.payouts user can reject a bank/cash payout item, rewrite its destination to any string and re-run it (no four-eyes, no audit event)",
+    "attack_class": "business-logic",
+    "lower_trust_principal": "Staff user holding only payments.payouts",
+    "boundary_crossed": "Employee bank/MoMo destination is HR master data (changed only via HR or an approved self-service request)",
+    "entrypoint": {"file": "app/Modules/Payments/Http/MobileMoneyController.php", "line": 168, "description": "PUT /api/v1/payments/payouts/{payout}/items/{item} validates destination as free string max:60"},
+    "sink": {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 167, "description": "updateDestination() writes destination/channel on the item and re-queues it; bankFile() (line 123) and process() (line 94) then pay to it"},
+    "propagation": [
+      {"file": "app/Modules/Payments/Http/MobileMoneyController.php", "line": 160, "description": "rejectPayoutItems lets the same user move any pending bank/cash item to 'failed' first"},
+      {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 161, "description": "no SoD check, no comparison against Employee.bank_account/momo_number, no EventBus record"},
+      {"file": "app/Modules/Payments/Http/MobileMoneyController.php", "line": 152, "description": "confirmPayout by the same user marks items paid and posts GL (empty item_ids confirms ALL)"}
+    ],
+    "intended_control": "Salary destinations come from the employee record; sensitive changes go through HR approval (SelfService::decide)",
+    "observed_or_expected_result": "Attacker rejects a colleague's bank item, sets destination to their own account/number, downloads the bank CSV or processes the MoMo item; salary is diverted. Only the payout_run row changes; no audit trail of the edit.",
+    "conditions": ["user has payments.payouts", "payout run in pending/processing state"],
+    "confidence": "high",
+    "proposed_severity": "high",
+    "smallest_fix": "Restrict updateDestination to the value currently on the Employee record (or require hr.manage + record an event with old/new), validate format per channel, and forbid reject+update by the run creator.",
+    "regression_test_idea": "As payments.payouts user: reject item, PUT destination '999999999', assert 403/422 or that the stored destination still equals Employee.momo_number."
+  },
+  {
+    "fingerprint": "authz:pos:view-permission-can-settle-and-charge-rooms",
+    "title": "PosController::can() accepts pos.view for every write action: a read-only POS user can open checks, add items, settle and charge to any in-house guest folio",
+    "attack_class": "authz",
+    "lower_trust_principal": "Staff user holding only pos.view",
+    "boundary_crossed": "pos.manage write boundary (checks, settlement, room charges)",
+    "entrypoint": {"file": "app/Modules/POS/Http/PosController.php", "line": 286, "description": "private can(): abort_unless(pos.manage || pos.view) used by store, addItem, fire, updateLine, removeLine, split, settle, chargeToRoom, sync, transfer, comp"},
+    "sink": {"file": "app/Modules/POS/Application/PosService.php", "line": 216, "description": "chargeToRoom posts charges to the guest folio via FolioService::charge (no folios.manage needed); settle (line 178) records payments"},
+    "propagation": [
+      {"file": "app/Modules/POS/Http/PosController.php", "line": 118, "description": "chargeToRoom calls $this->can() only"},
+      {"file": "app/Modules/POS/Http/PosController.php", "line": 138, "description": "sync (offline batch) also only $this->can()"}
+    ],
+    "intended_control": "pos.view = read-only; pos.manage required to write",
+    "observed_or_expected_result": "A viewer account (e.g. auditor, trainee) can create checks and charge them to any checked-in reservation, or settle checks for cash without a cashier shift being theirs (settle requires an open shift only for cash/card/mobile kinds).",
+    "conditions": ["user has pos.view but not pos.manage"],
+    "confidence": "high",
+    "proposed_severity": "high",
+    "smallest_fix": "Give can() an $ability argument like the other controllers and require pos.manage for all non-GET actions.",
+    "regression_test_idea": "User with only pos.view POSTs /pos/checks and /pos/checks/{id}/charge-to-room; expect 403."
+  },
+  {
+    "fingerprint": "business-logic:pos:sync-bypasses-line-and-payment-validation",
+    "title": "POS offline sync accepts negative/zero quantities and unvalidated payment arrays, letting a server lower a check total or settle with arbitrary methods/amounts",
+    "attack_class": "business-logic",
+    "lower_trust_principal": "Staff user with pos.view/pos.manage (no pos.void or pos.discount)",
+    "boundary_crossed": "Supervisor-only void/discount controls",
+    "entrypoint": {"file": "app/Modules/POS/Http/PosController.php", "line": 149, "description": "'checks.*.items.*.quantity' => ['sometimes','numeric'] (no min); 'checks.*.payments' => ['nullable','array'] with no per-payment rules (compare addItem line 51 min:0.001 and settle line 110-112)"},
+    "sink": {"file": "app/Modules/POS/Application/PosService.php", "line": 66, "description": "addItem stores quantity and amount = round(price*qty) with negative qty; Check::recalculate (Domain/Check.php:52) sums amounts so the total drops; settle() only requires sum(payments.amount) == total"},
+    "propagation": [
+      {"file": "app/Modules/POS/Http/PosController.php", "line": 166, "description": "sync feeds each item straight to addItem"},
+      {"file": "app/Modules/POS/Http/PosController.php", "line": 172, "description": "sync feeds raw payments to settle; negative 'amount' entries are accepted and stored in pos_payments (PosService 201-205)"}
+    ],
+    "intended_control": "quantity >= 0.001; payments.*.amount integer min:1; voids/discounts need pos.void/pos.discount",
+    "observed_or_expected_result": "A server syncs a check with lines [item A x1 = 5000, item A x-0.9 = -4500], total 500, settles for 500 cash and serves 5000 worth of goods (stock consumed by pos.check_settled items). Or settles [CASH 10000, CASH -9500] making the drawer expect 500.",
+    "conditions": ["user can reach POST /pos/sync (any pos.view/pos.manage user)"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Apply the same rules as addItem/settle inside sync ('quantity' min:0.001, 'payments.*.method' required string, 'payments.*.amount' integer min:1) and reject negative line amounts in PosService::addItem.",
+    "regression_test_idea": "POST /pos/sync with an item quantity -1 and a payment amount -100; expect 422."
+  },
+  {
+    "fingerprint": "business-logic:folio:transfer-bypasses-city-ledger-credit-limit-and-sign",
+    "title": "Folio transfer accepts any destination folio (including city-ledger folios) and negative amounts, bypassing the company credit-limit/approval check",
+    "attack_class": "business-logic",
+    "lower_trust_principal": "Staff user holding folios.manage",
+    "boundary_crossed": "Company credit billing approval (company.city_ledger) and credit_limit enforced only in transferToCityLedger",
+    "entrypoint": {"file": "app/Modules/FrontOffice/Http/FolioController.php", "line": 114, "description": "transfer validates 'amount' => ['required','integer'] (no min) and 'to_folio_id' any integer"},
+    "sink": {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 163, "description": "transfer() posts transfer_out/transfer_in to any two open folios regardless of kind; no check against from-folio balance"},
+    "propagation": [
+      {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 172, "description": "transferToCityLedger() has the credit_limit and city_ledger-approved checks that transfer() lacks"},
+      {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 159, "description": "only amount === 0 or same folio is rejected"}
+    ],
+    "intended_control": "Direct billing only to approved companies within credit limit; transfers move charges, not arbitrary credit",
+    "observed_or_expected_result": "A guest's balance can be moved to an open city-ledger folio of a company that is not approved or already over its limit (receivable risk), and a negative transfer pulls credit from another guest's/company's folio onto the attacker's chosen folio, which can then be refunded (folios.adjust) or used to close the folio at check-out.",
+    "conditions": ["user has folios.manage", "an open city_ledger folio exists for the company (created by any earlier direct bill)"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "In transfer(): require amount > 0, forbid to->kind === 'city_ledger' (route those through transferToCityLedger), and optionally cap amount at from->balance for guest folios.",
+    "regression_test_idea": "Transfer -5000 from folio A to B and transfer 5000 into a city-ledger folio of a company with credit_limit 1000; expect DomainException in both cases."
+  },
+  {
+    "fingerprint": "race:folio:refund-check-on-stale-balance",
+    "title": "Folio refund validates the credit balance on the unlocked Folio instance; concurrent refunds exceed the credit",
+    "attack_class": "race",
+    "lower_trust_principal": "Staff user holding folios.adjust",
+    "boundary_crossed": "Refund <= folio credit balance",
+    "entrypoint": {"file": "app/Modules/FrontOffice/Http/FolioController.php", "line": 94, "description": "POST /folios/{folio}/refunds"},
+    "sink": {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 111, "description": "if ($folio->balance > -$amount) uses the route-bound model; post() at line 238 locks the folio only to insert the line and increment"},
+    "propagation": [
+      {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 246, "description": "balance incremented after insert; no re-validation under lock"}
+    ],
+    "intended_control": "Refund cannot exceed the credit balance",
+    "observed_or_expected_result": "Two parallel refunds of a 10000 credit each pass the check; folio ends at +10000 debit and the cashier pays out 20000.",
+    "conditions": ["concurrent requests without a shared Idempotency-Key"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Move the balance check into post() (or re-fetch with lockForUpdate before checking) for type refund.",
+    "regression_test_idea": "Concurrency test with two refunds on a folio with balance -10000; assert the second raises and final balance is 0."
+  },
+  {
+    "fingerprint": "authz:accounting:manual-entry-self-approved-and-reverse-system-entries",
+    "title": "accounting.post_manual posts journal entries that are marked approved_by the poster, and can reverse any system-generated entry (folio, payroll, stock) without a second person",
+    "attack_class": "authz",
+    "lower_trust_principal": "Staff user holding accounting.post_manual",
+    "boundary_crossed": "Four-eyes on GL postings (PeriodLocking implements it for periods, nothing does for entries)",
+    "entrypoint": {"file": "app/Modules/Accounting/Http/AccountingController.php", "line": 75, "description": "POST /accounting/entries -> Ledger::post(..., ['approved_by' => $request->user()->id])"},
+    "sink": {"file": "app/Modules/Accounting/Application/Ledger.php", "line": 91, "description": "approved_by stored from meta with no distinct-user check; reverse() at line 121 reverses any entry regardless of source_type"},
+    "propagation": [
+      {"file": "app/Modules/Accounting/Http/AccountingController.php", "line": 101, "description": "reverse endpoint only checks accounting.post_manual"},
+      {"file": "app/Modules/Accounting/Application/Core/ManualEntries.php", "line": 28, "description": "core variant also sets approved_by to the actor"},
+      {"file": "app/Modules/Accounting/Http/AccountingController.php", "line": 79, "description": "'journal' free-form string max:10 and any date in an open period accepted"}
+    ],
+    "intended_control": "Preparer/approver separation for manual journals; subledger-driven entries corrected via their source document",
+    "observed_or_expected_result": "One user can post Dr cash / Cr revenue adjustments or reverse the automatic Cr 411 / Dr treasury entry of a payment, making the GL disagree with folios and hiding cash shortages; approved_by shows them as approver.",
+    "conditions": ["user has accounting.post_manual", "period open"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Do not set approved_by on post; add an approve step requiring a different user with accounting.approve (or at least record approved_by null and flag in reports); restrict reverse() to source_type manual/reversal.",
+    "regression_test_idea": "Post a manual entry and assert approved_by is null; reverse a journal entry with source_type 'folio' and expect 422."
+  },
+  {
+    "fingerprint": "authz:payroll:sod-check-only-against-original-creator",
+    "title": "Payroll preparer check compares against prepared_by set at first compute; a second user can recompute with arbitrary bonus inputs and then approve as 'not the preparer'",
+    "attack_class": "authz",
+    "lower_trust_principal": "Staff user holding payroll.manage and payroll.approve (or payroll.approve alone after any colleague created the draft)",
+    "boundary_crossed": "Segregation of duties between payroll preparation and approval",
+    "entrypoint": {"file": "app/Modules/HR/Http/PayrollController.php", "line": 31, "description": "POST /payroll/runs recompute with 'inputs.*.bonuses' integer min:0 (no max), per employee"},
+    "sink": {"file": "app/Modules/HR/Application/PayrollService.php", "line": 94, "description": "approve() only refuses when prepared_by === actor; prepared_by is set once by firstOrCreate at line 51 and never updated on recompute"},
+    "propagation": [
+      {"file": "app/Modules/HR/Application/PayrollService.php", "line": 55, "description": "recompute deletes and rebuilds all payslips with the new inputs, prepared_by unchanged"},
+      {"file": "app/Modules/HR/Application/PayrollService.php", "line": 70, "description": "bonuses/service_charge flow straight into net"}
+    ],
+    "intended_control": "The payroll must be approved by someone other than the preparer (sod)",
+    "observed_or_expected_result": "User A creates the draft; user B (approver) recomputes with bonuses => 5,000,000 for themselves and approves immediately; GL posts and the run becomes payable via PayoutService.",
+    "conditions": ["two users exist; approver also has payroll.manage (common 'HR manager' role)"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Set prepared_by (and last_computed_by) on every compute and refuse approval if either equals the actor; cap bonus inputs or require review when inputs change.",
+    "regression_test_idea": "A computes, B recomputes with inputs, B approves -> expect DomainException 'sod'."
+  },
+  {
+    "fingerprint": "authz:hr:self-modification-of-own-salary-bank-and-advances",
+    "title": "hr.manage / payroll.manage / talent.requests users can change their own employee salary, bank or MoMo destination, grant themselves advances and approve their own self-service change request",
+    "attack_class": "authz",
+    "lower_trust_principal": "Staff user who is also an employee and holds hr.manage, payroll.manage or talent.requests",
+    "boundary_crossed": "Self-dealing on compensation data (LifecycleService::assertSod exists for compensation changes but not for these paths)",
+    "entrypoint": {"file": "app/Modules/HR/Http/HrController.php", "line": 96, "description": "PATCH /hr/employees/{employee}: base_salary, bank_account, momo_number, payment_method with no check that $employee->user_id !== actor"},
+    "sink": {"file": "app/Modules/HR/Application/PayrollService.php", "line": 68, "description": "base_salary feeds proratedBase; PayoutService::create (Payouts/PayoutService.php:49-53) pays to employee.bank_account/momo_number"},
+    "propagation": [
+      {"file": "app/Modules/HR/Http/HrController.php", "line": 185, "description": "grantAdvance: payroll.manage can create a SalaryAdvance for any employee including themselves (no SoD, no limit)"},
+      {"file": "app/Modules/HR/Talent/Http/TalentController.php", "line": 432, "description": "decideRequest -> SelfService::decide (SelfService/SelfService.php:82) applies bank_change/momo_change with no requester != decider check"},
+      {"file": "app/Modules/HR/Application/Lifecycle/LifecycleService.php", "line": 325, "description": "contrast: compensation changes DO enforce assertSod (requester and subject)"}
+    ],
+    "intended_control": "Sensitive changes (address, phone, bank, MoMo) are requests that HR decides; compensation changes require a different approver",
+    "observed_or_expected_result": "An HR manager raises their own base_salary or redirects their payout destination directly; a talent.requests holder approves their own bank_change request; a payroll.manage user grants themselves a loan that the next payroll only partially recovers.",
+    "conditions": ["actor's user is linked to an Employee row in the same hotel"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Reuse LifecycleService::assertSod semantics: abort when $employee->user_id === actor id for updateEmployee (salary/bank fields), grantAdvance and SelfService::decide.",
+    "regression_test_idea": "User linked to employee E with hr.manage PATCHes own base_salary; expect 403/422."
+  },
+  {
+    "fingerprint": "business-logic:loyalty:unbounded-manual-point-credit",
+    "title": "loyalty.adjust_points can credit an unlimited number of points in one call; points are cash-equivalent via folio/POS redemption",
+    "attack_class": "business-logic",
+    "lower_trust_principal": "Staff user holding loyalty.adjust_points (+ loyalty.manage or pos access to redeem)",
+    "boundary_crossed": "Loyalty liability (419800) created without a sale",
+    "entrypoint": {"file": "app/Modules/Loyalty/Http/LoyaltyController.php", "line": 96, "description": "POST /loyalty/members/{member}/adjust validates points integer not_in:0, reason string; no max, no 4-eyes"},
+    "sink": {"file": "app/Modules/Loyalty/Application/LoyaltyService.php", "line": 185, "description": "credit() adds the points; redeemOnFolio (line 141) converts them to a PTS folio payment and PosLoyalty::redeemTender (PosLoyalty.php:55) to a POS tender"},
+    "propagation": [
+      {"file": "app/Modules/Loyalty/Application/LoyaltyService.php", "line": 171, "description": "positive branch has no cap and no lock"}
+    ],
+    "intended_control": "Manual adjustments should be bounded and/or approved",
+    "observed_or_expected_result": "Staff credits 1,000,000 points to an accomplice member, who pays a folio or bar check with points; revenue is offset against loyalty liability that never corresponded to earned points.",
+    "conditions": ["user has loyalty.adjust_points"],
+    "confidence": "high",
+    "proposed_severity": "medium",
+    "smallest_fix": "Add a per-adjustment cap (program setting) above which a second approver is required; record adjustments to the EventBus with actor for alerting.",
+    "regression_test_idea": "Adjust +10,000,000 points as a single user; expect 422 above the configured cap."
+  },
+  {
+    "fingerprint": "business-logic:payments:dry-run-gateway-auto-succeeds-outside-production-env",
+    "title": "DryRunGateway reports every intent as 'succeeded' on status poll; any public pay/deposit status request settles the folio without money whenever APP_ENV is not exactly 'production' or the intent was created as dry_run",
+    "attack_class": "business-logic",
+    "lower_trust_principal": "Anonymous guest holding a manage-booking token or a pay-link URL",
+    "boundary_crossed": "Folio payment posted only on confirmed provider settlement",
+    "entrypoint": {"file": "app/Modules/Payments/Http/PublicPayLinkController.php", "line": 225, "description": "GET /pay/{code}/{sig}/intents/{reference} (and PublicPaymentController::status line 55) -> PaymentService::refresh"},
+    "sink": {"file": "app/Modules/Payments/Application/Drivers/DryRunGateway.php", "line": 305, "description": "status() returns 'succeeded' for any intent; PaymentService::settle then posts the folio payment (PaymentService.php:224-231)"},
+    "propagation": [
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 41, "description": "driverFor falls back to DryRun whenever the hotel has no credentials and app()->isProduction() is false (APP_ENV='staging','prod','local'...)"},
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 59, "description": "driverOf returns DryRun for any intent with driver='dry_run' even in production"},
+      {"file": "app/Modules/Payments/Application/Payouts/PayoutService.php", "line": 82, "description": "same pattern for disbursements"}
+    ],
+    "intended_control": "Dry run only for development; production refuses unconfigured gateways",
+    "observed_or_expected_result": "On a live deployment whose APP_ENV is e.g. 'staging' or 'prod' (or a hotel onboarded before credentials were set), a guest starts a pay-link payment and polls status: the deposit/folio is credited and deposit_paid incremented with no funds received.",
+    "conditions": ["APP_ENV !== 'production' on an operational instance, or an intent created while the hotel had no credentials"],
+    "confidence": "medium",
+    "proposed_severity": "medium",
+    "smallest_fix": "Gate DryRunGateway on an explicit config flag (payments.allow_dry_run) that defaults false, and refuse to settle a dry_run intent when the flag is off.",
+    "regression_test_idea": "With APP_ENV=staging and no credentials, create an intent and poll status; expect 'pending'/failure, not a folio line."
+  },
+  {
+    "fingerprint": "retention:guests:erasure-does-not-cover-financial-and-payment-copies-of-personal-data",
+    "title": "Approved data-protection requests anonymise the guest row, register entries, company contacts and activity log, but guest names/contacts persist in folios, invoices, payment intents, pay links and online check-ins",
+    "attack_class": "retention",
+    "lower_trust_principal": "Guest exercising erasure; any later staff reader of those tables",
+    "boundary_crossed": "Erasure/anonymisation promise (PrivacyService header: 'only personal fields are blanked')",
+    "entrypoint": {"file": "app/Modules/Guests/Application/PrivacyService.php", "line": 79, "description": "anonymise() updates guests, guest_register_entries, company_contacts, activity_log only"},
+    "sink": {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 50, "description": "folios.name is built from guest full_name and is never blanked; invoices.bill_to_name/address copy it at line 216-218"},
+    "propagation": [
+      {"file": "app/Modules/Payments/Application/PaymentService.php", "line": 105, "description": "payment_intents.payer_phone / payer_email kept indefinitely"},
+      {"file": "app/Modules/Payments/Application/PayLinkService.php", "line": 85, "description": "payment_links.payer_phone kept"},
+      {"file": "app/Modules/GuestPortal/Http/BookingEngineController.php", "line": 156, "description": "online_checkins (id_type, document data) not touched by anonymise"},
+      {"file": "app/Modules/Reservations/Http/ReservationController.php", "line": 71, "description": "reservations.special_requests/notes free text about the guest remain"}
+    ],
+    "intended_control": "Personal fields blanked across modules; financial amounts kept",
+    "observed_or_expected_result": "After approval the guest still appears by name in folio lists, invoices, payment-intent searches (payer_phone ilike), pay links and online check-in records; erasure is partial and the audit entry claims full anonymisation.",
+    "conditions": ["guest had a stay with folio/invoice/online payment"],
+    "confidence": "medium",
+    "proposed_severity": "medium",
+    "smallest_fix": "Extend anonymise() to blank folios.name, invoices.bill_to_name/address (where company_id is null), payment_intents.payer_*, payment_links.payer_phone, online_checkins and reservation free-text for the guest; add a retention job for payer contact data on settled intents.",
+    "regression_test_idea": "Create guest with reservation, folio, invoice and intent; approve a delete request; assert none of those rows contain the original name/phone/email."
+  },
+  {
+    "fingerprint": "pii:hr:employee-model-returns-bank-tax-ids-to-view-roles",
+    "title": "Employee has no $hidden; employees index/show return bank_account, momo_number, cnps_number, tax_number, base_salary and allowances to hr.view and payroll.manage holders",
+    "attack_class": "pii-exposure",
+    "lower_trust_principal": "Staff user holding hr.view (e.g. department supervisors) ",
+    "boundary_crossed": "Need-to-know for payment destinations and government identifiers",
+    "entrypoint": {"file": "app/Modules/HR/Http/HrController.php", "line": 52, "description": "GET /hr/employees returns Employee models paginated (full toArray)"},
+    "sink": {"file": "app/Modules/HR/Domain/Employee.php", "line": 14, "description": "only $guarded defined, no $hidden/serialisation whitelist"},
+    "propagation": [
+      {"file": "app/Modules/HR/Http/HrController.php", "line": 63, "description": "showEmployee loads contracts (salary history) too"},
+      {"file": "app/Modules/HR/Http/HrController.php", "line": 228, "description": "can('view') accepted for hr.view and payroll.manage"}
+    ],
+    "intended_control": "SelfService::profile masks bank_account/momo_number even for the employee themselves (SelfService.php:48-55)",
+    "observed_or_expected_result": "Any hr.view user can export every colleague's bank account and MoMo number (useful for social engineering a payout diversion) and salary.",
+    "conditions": ["user has hr.view"],
+    "confidence": "high",
+    "proposed_severity": "low",
+    "smallest_fix": "Add an Employee API resource (or $hidden for bank_account, momo_number, cnps_number, tax_number) and expose those fields only to hr.manage/payroll.manage via an explicit endpoint.",
+    "regression_test_idea": "hr.view user GETs /hr/employees; assert response lacks bank_account and momo_number."
+  },
+  {
+    "fingerprint": "dos:accounting:general-ledger-unbounded-date-range",
+    "title": "General-ledger report loads every journal line of an account for an arbitrary date range into memory with no cap",
+    "attack_class": "dos",
+    "lower_trust_principal": "Staff user holding accounting.view",
+    "boundary_crossed": "Request-time resource limits (memory_limit 256M, request timeout)",
+    "entrypoint": {"file": "app/Modules/Accounting/Http/AccountingController.php", "line": 130, "description": "validate from/to only as dates; no max span"},
+    "sink": {"file": "app/Modules/Accounting/Http/AccountingController.php", "line": 136, "description": "->get() of all journal_lines for the account between from and to, then PHP loop computing running balance"},
+    "propagation": [
+      {"file": "app/Modules/Accounting/Http/AccountingController.php", "line": 109, "description": "trialBalance/incomeStatement aggregate in SQL (safe); generalLedger does not"}
+    ],
+    "intended_control": "Paginate or cap reporting ranges",
+    "observed_or_expected_result": "Repeated requests for account 411100 from 2000-01-01 to 2100-01-01 on a busy hotel (tens of thousands of lines/month) exhaust worker memory/time; 1200/min api limit does not help.",
+    "conditions": ["large journal_lines table", "user with accounting.view"],
+    "confidence": "medium",
+    "proposed_severity": "low",
+    "smallest_fix": "Cap the range (e.g. 366 days) and paginate or stream lines with a cursor.",
+    "regression_test_idea": "Request a 50-year range and expect 422."
+  },
+  {
+    "fingerprint": "race:folio:open-number-sequence-outside-transaction",
+    "title": "FolioService::open consumes the gapless folio number outside a transaction, so the row lock is released immediately and concurrent opens collide on the unique (hotel_id, number) index",
+    "attack_class": "race",
+    "lower_trust_principal": "Two staff users / online payments opening folios at the same time",
+    "boundary_crossed": "Gapless, unique legal numbering",
+    "entrypoint": {"file": "app/Modules/FrontOffice/Application/FolioService.php", "line": 34, "description": "NumberSequence::next() called from Folio::create outside DB::transaction (contrast invoice() line 201 which wraps it)"},
+    "sink": {"file": "app/Platform/Domain/NumberSequence.php", "line": 20, "description": "lockForUpdate() in autocommit mode: lock released after the SELECT, two callers read the same 'last'"},
+    "propagation": [
+      {"file": "app/Modules/FrontOffice/Database/Migrations/2026_11_02_000500_create_front_office_tables.php", "line": 100, "description": "unique(hotel_id, number) turns the duplicate into a 500 for one caller; guestFolioFor (FolioService:47) is also unlocked so two guest folios can be opened for one reservation"},
+      {"file": "app/Modules/POS/Application/PosService.php", "line": 41, "description": "PosService::open has the same pattern for pos-check numbers (split() wraps it, open() does not)"}
+    ],
+    "intended_control": "NumberSequence docblock: 'must run inside the caller's transaction'",
+    "observed_or_expected_result": "Under load (night audit + online deposit settle + front desk), one of the concurrent folio creations fails with a unique-violation 500 or two open guest folios are created for the same reservation, splitting charges across folios.",
+    "conditions": ["concurrent folio/check creation for the same hotel"],
+    "confidence": "medium",
+    "proposed_severity": "low",
+    "smallest_fix": "Wrap open() (and PosService::open) in DB::transaction; in guestFolioFor lock the reservation row first.",
+    "regression_test_idea": "Parallel open() calls x10; assert 10 distinct numbers and no exception."
+  }
+]

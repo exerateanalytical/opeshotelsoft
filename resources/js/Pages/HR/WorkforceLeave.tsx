@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, msg } from './WorkforceTabs';
+import Alert from '@/Components/ui/Alert';
 
 interface Row { leave_type_id: number; code: string; name: string; policy: { accrual_per_month: number; max_balance: number | null; carry_over_max: number; carry_over_expiry_months: number | null } | null }
 
@@ -23,10 +24,10 @@ export default function WorkforceLeave() {
             <Head title={t('workforce.leave.title')} />
             <QueryStatus query={list} variant="table" />
             <WorkforceTabs active="/hr/workforce/leave" />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
             {info && <div className="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm">{info}</div>}
             {list.data?.length === 0 && <div className="card mb-4"><EmptyFor kind="generic" /></div>}
-            <div className="card mb-4 overflow-x-auto p-4 text-sm"><table className="w-full"><thead><tr className="text-left text-slate-500"><th>{t('workforce.leave.type')}</th><th>{t('workforce.leave.accrual')}</th><th>{t('workforce.leave.cap')}</th><th>{t('workforce.leave.carry')}</th><th>{t('workforce.leave.expiry')}</th></tr></thead>
+            <div className="card mb-4 table-wrap p-4 text-sm"><table className="table-auto w-full"><thead><tr className="text-left text-slate-500"><th>{t('workforce.leave.type')}</th><th>{t('workforce.leave.accrual')}</th><th>{t('workforce.leave.cap')}</th><th>{t('workforce.leave.carry')}</th><th>{t('workforce.leave.expiry')}</th></tr></thead>
                 <tbody>{list.data?.map((r) => (<tr key={r.leave_type_id}><td>{r.name}</td>
                     <td><input type="number" step="0.25" className="input w-24" aria-label={`${r.name}: ${t('workforce.leave.accrual')}`} defaultValue={val(r.policy?.accrual_per_month)} onBlur={(e) => e.target.value && save(r, { accrual_per_month: Number(e.target.value) })} /></td>
                     <td><input type="number" className="input w-24" aria-label={`${r.name}: ${t('workforce.leave.cap')}`} defaultValue={val(r.policy?.max_balance)} onBlur={(e) => r.policy && save(r, { max_balance: e.target.value ? Number(e.target.value) : null })} /></td>

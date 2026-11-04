@@ -10,14 +10,34 @@ use Illuminate\Validation\Rule;
 
 class HotelController
 {
-    public function index()
+    /** Columns every staff member may read (hotel pickers). Full rows need hotels.view or hotels.manage. */
+    private const PUBLIC_COLUMNS = ['id', 'code', 'name', 'city'];
+
+    /** Printed on every invoice and receipt, so also readable by staff who print documents. */
+    private const DOCUMENT_COLUMNS = ['legal_name', 'tax_id', 'trade_register', 'address', 'phone', 'email'];
+
+    public function index(Request $request)
     {
-        return Hotel::orderBy('name')->paginate(50);
+        $q = Hotel::orderBy('name');
+
+        return $this->full($request) ? $q->paginate(50) : $q->paginate(50, self::PUBLIC_COLUMNS);
     }
 
-    public function show(Hotel $hotel)
+    public function show(Request $request, Hotel $hotel)
     {
-        return $hotel;
+        if ($this->full($request)) {
+            return $hotel;
+        }
+        $cols = array_merge(self::PUBLIC_COLUMNS, self::DOCUMENT_COLUMNS);
+
+        return collect($hotel->getAttributes())->only($cols)->all();
+    }
+
+    private function full(Request $request): bool
+    {
+        $u = $request->user();
+
+        return $u->can('hotels.view') || $u->can('hotels.manage');
     }
 
     public function store(Request $request, EventBus $bus)

@@ -5,6 +5,7 @@ import EmptyState from '@/Components/ui/EmptyState';
 import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Plan { id: number; code: string; name: string; parent_rate_plan_id: number | null }
 interface Detail {
@@ -47,7 +48,7 @@ export default function RevenueRules() {
                 <QueryStatus query={plans} variant="form" rows={2} />
                 {plans.data?.data.length === 0 && <div className="card"><EmptyState title={t('states3.empty.rate_plans.title')} description={t('states3.empty.rate_plans.text')} action={<a href="/properties" className="btn-secondary">{t('states3.empty.outlets.action')}</a>} /></div>}
                 <QueryStatus query={detail} variant="form" rows={2} />
-                {msg && <div className={`rounded-md border p-3 text-sm ${msg.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-red-300 bg-red-50 text-red-800'}`}>{msg.text}</div>}
+                {msg && <Alert variant={msg.ok ? 'success' : 'danger'}>{msg.text}</Alert>}
 
                 <section className="card space-y-3 p-4">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -77,7 +78,7 @@ export default function RevenueRules() {
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <label className="label">{t('revenue.rules.pkg_name')}<input className="input w-full" value={pkg.name} onChange={(e) => setPkg({ ...pkg, name: e.target.value })} /></label>
                         <label className="label">{t('revenue.rules.pricing')}
-                            <select className="input w-full" value={pkg.pricing} onChange={(e) => setPkg({ ...pkg, pricing: e.target.value })}>
+                            <select className="select w-full" value={pkg.pricing} onChange={(e) => setPkg({ ...pkg, pricing: e.target.value })}>
                                 <option value="per_room">{t('revenue.rules.per_room')}</option>
                                 <option value="per_person">{t('revenue.rules.per_person')}</option>
                             </select>

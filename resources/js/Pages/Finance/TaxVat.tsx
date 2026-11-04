@@ -46,7 +46,7 @@ export default function TaxVat() {
             <div className="card mb-4 p-4">
                 <div className="flex flex-wrap items-end gap-2">
                     <Field label={t('acc3.tax.country')}>
-                        <select className="input" value={prof.data?.profile.country ?? ''} onChange={(e) => run(() => api('accounting3/tax/profile', { method: 'PUT', body: JSON.stringify({ country: e.target.value }) }))}>
+                        <select className="select" value={prof.data?.profile.country ?? ''} onChange={(e) => run(() => api('accounting3/tax/profile', { method: 'PUT', body: JSON.stringify({ country: e.target.value }) }))}>
                             {prof.data?.countries.map((c) => <option key={c.code} value={c.code}>{c.name} ({c.vat_rate}%)</option>)}
                         </select>
                     </Field>

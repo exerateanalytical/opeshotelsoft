@@ -107,12 +107,14 @@ async function pool(items, n, fn) {
 }
 
 (async () => {
-  const RESUME = process.argv.includes('--resume');
+  const ONLYROUTES = arg('routes', '') ? arg('routes', '').split(',') : null; // re-run only these routes: their old rows are replaced
+  const RESUME = process.argv.includes('--resume') || !!ONLYROUTES;
   const open = (kind) => fs.createWriteStream(path.join(OUT, kind + '.jsonl'), { flags: RESUME ? 'a' : 'w' });
   const lim = (a) => (LIMIT ? a.slice(0, LIMIT) : a);
 
   // one browser per worker: tabs of a single headless browser are throttled as background pages
   async function group(kind, role, list, who) {
+    if (ONLYROUTES) { list = list.filter((r) => ONLYROUTES.includes(r)); const f = path.join(OUT, kind + '-' + role + '.jsonl'); if (fs.existsSync(f)) fs.writeFileSync(f, fs.readFileSync(f, 'utf8').split(String.fromCharCode(10)).filter((l) => { try { return !ONLYROUTES.includes(JSON.parse(l).route); } catch (e) { return false; } }).map((l) => l + String.fromCharCode(10)).join('')); }
     const ws = open(kind + '-' + role);
     const sink = (o) => ws.write(JSON.stringify(o) + '\n');
     const have = {};

@@ -85,7 +85,7 @@ export default function Board() {
             <Head title={t('servicerequests.title')} />
             <QueryStatus query={active} variant="cards" />
             <div className="mb-3 flex flex-wrap gap-2">
-                <select className="input" value={dept} onChange={(e) => setDept(e.target.value)} aria-label={t('servicerequests.filter.department')}>
+                <select className="select" value={dept} onChange={(e) => setDept(e.target.value)} aria-label={t('servicerequests.filter.department')}>
                     <option value="">{t('servicerequests.filter.all')}</option>
                     {catalog.data?.departments.map((d) => <option key={d} value={d}>{t(`servicerequests.dept.${d}`)}</option>)}
                 </select>
@@ -113,7 +113,7 @@ export default function Board() {
                                         <div className="mt-2 flex flex-wrap items-center gap-2">
                                             {r.status === 'new' && <button type="button" className="btn-secondary" onClick={() => act(r, 'acknowledge')}>{t('servicerequests.action.acknowledge')}</button>}
                                             {r.status !== 'in_progress' && <button type="button" className="btn-secondary" onClick={() => act(r, 'start')}>{t('servicerequests.action.start')}</button>}
-                                            <select className="input" value="" aria-label={t('servicerequests.action.assign')} onChange={(e) => e.target.value && act(r, 'assign', { user_id: Number(e.target.value) })}>
+                                            <select className="select" value="" aria-label={t('servicerequests.action.assign')} onChange={(e) => e.target.value && act(r, 'assign', { user_id: Number(e.target.value) })}>
                                                 <option value="">{t('servicerequests.action.assign')}</option>
                                                 {catalog.data?.staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                                             </select>
@@ -155,7 +155,7 @@ function NewRequest({ catalog, locale, onDone }: { catalog: Catalog; locale: 'fr
                 <input className="input" required maxLength={20} value={f.room_number} onChange={(e) => setF({ ...f, room_number: e.target.value })} />
             </label>
             <label className="grid gap-1">{t('servicerequests.form.category')}
-                <select className="input" value={f.category} onChange={(e) => { setF({ ...f, category: e.target.value }); setItems([]); }}>
+                <select className="select" value={f.category} onChange={(e) => { setF({ ...f, category: e.target.value }); setItems([]); }}>
                     {catalog.categories.map((c) => <option key={c.code} value={c.code}>{t(`servicerequests.cat.${c.code}`)}</option>)}
                 </select>
             </label>
@@ -176,12 +176,12 @@ function NewRequest({ catalog, locale, onDone }: { catalog: Catalog; locale: 'fr
                 <input className="input" maxLength={1000} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
             </label>
             <label className="grid gap-1">{t('servicerequests.form.priority')}
-                <select className="input" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })}>
+                <select className="select" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })}>
                     {['low', 'normal', 'high', 'urgent'].map((p) => <option key={p} value={p}>{t(`servicerequests.priority.${p}`)}</option>)}
                 </select>
             </label>
             <label className="grid gap-1">{t('servicerequests.form.source')}
-                <select className="input" value={f.source} onChange={(e) => setF({ ...f, source: e.target.value })}>
+                <select className="select" value={f.source} onChange={(e) => setF({ ...f, source: e.target.value })}>
                     {['room_phone', 'reception', 'staff'].map((s) => <option key={s} value={s}>{t(`servicerequests.source.${s}`)}</option>)}
                 </select>
             </label>

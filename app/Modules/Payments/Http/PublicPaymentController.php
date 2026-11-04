@@ -37,6 +37,18 @@ class PublicPaymentController
             'amount' => ['nullable', 'integer', 'min:1'], 'return_url' => ['nullable', 'url', 'max:500'],
         ]);
         $r = $this->reservation($group, $confirmation, $data['token']);
+        // The provider sends the guest back to return_url after paying: only this site's own host is allowed (SEC1 audit).
+        if (! empty($data['return_url'])) {
+            $host = strtolower((string) parse_url($data['return_url'], PHP_URL_HOST));
+            $allowed = array_filter([strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST)), strtolower($request->getHost())]);
+            if (! app()->isProduction()) {
+                $allowed[] = 'localhost';
+                $allowed[] = '127.0.0.1';
+            }
+            if (! in_array($host, $allowed, true)) {
+                throw new DomainException('The return address must be on this site.', 'invalid-return-url');
+            }
+        }
         $due = max(0, (int) $r->deposit_required - (int) $r->deposit_paid);
         $amount = $data['amount'] ?? ($due ?: (int) $r->total_amount);
         if ($amount > max($due, (int) $r->total_amount - (int) $r->deposit_paid)) {

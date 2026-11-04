@@ -29,25 +29,34 @@ class FolioService
 
     public function open(string $kind, string $name, ?Reservation $reservation = null, ?int $guestId = null, ?int $companyId = null): Folio
     {
-        $hotel = Hotel::findOrFail($this->ctx->requireHotelId());
-        $folio = Folio::create([
-            'number' => NumberSequence::next($hotel->id, 'folio', 'F'),
-            'kind' => $kind,
-            'reservation_id' => $reservation?->id,
-            'guest_id' => $guestId ?? $reservation?->guest_id,
-            'company_id' => $companyId,
-            'name' => $name,
-            'currency' => $hotel->currency,
-        ])->refresh();
-        $this->bus->record('folio.opened', $folio->only(['id', 'number', 'kind', 'reservation_id', 'guest_id', 'company_id']), 'folio', $folio->id);
+        // One transaction: the number taken from the sequence is never lost or reused if the insert fails.
+        return DB::transaction(function () use ($kind, $name, $reservation, $guestId, $companyId) {
+            $hotel = Hotel::findOrFail($this->ctx->requireHotelId());
+            $folio = Folio::create([
+                'number' => NumberSequence::next($hotel->id, 'folio', 'F'),
+                'kind' => $kind,
+                'reservation_id' => $reservation?->id,
+                'guest_id' => $guestId ?? $reservation?->guest_id,
+                'company_id' => $companyId,
+                'name' => $name,
+                'currency' => $hotel->currency,
+            ])->refresh();
+            $this->bus->record('folio.opened', $folio->only(['id', 'number', 'kind', 'reservation_id', 'guest_id', 'company_id']), 'folio', $folio->id);
 
-        return $folio;
+            return $folio;
+        });
     }
 
     public function guestFolioFor(Reservation $r): Folio
     {
-        return Folio::where('reservation_id', $r->id)->where('kind', 'guest')->where('status', 'open')->first()
-            ?? $this->open('guest', $r->guest->full_name.' / '.$r->number, $r);
+        $find = fn () => Folio::where('reservation_id', $r->id)->where('kind', 'guest')->where('status', 'open')->first();
+
+        // Lock the reservation row so two concurrent requests cannot both open a guest folio for it.
+        return $find() ?? DB::transaction(function () use ($r, $find) {
+            Reservation::whereKey($r->id)->lockForUpdate()->first();
+
+            return $find() ?? $this->open('guest', $r->guest->full_name.' / '.$r->number, $r);
+        });
     }
 
     /**
@@ -236,6 +245,10 @@ class FolioService
     {
         return DB::transaction(function () use ($folio, $line) {
             $folio = Folio::lockForUpdate()->findOrFail($folio->id);
+            // Re-checked on the locked row: two concurrent refunds cannot both pass the check made on a stale balance.
+            if (($line['type'] ?? null) === 'refund' && $folio->balance + (int) $line['amount'] > 0) {
+                throw new DomainException('A refund cannot exceed the credit balance on the folio.');
+            }
             $hotel = Hotel::findOrFail($folio->hotel_id);
             $record = FolioLine::create($line + [
                 'folio_id' => $folio->id,

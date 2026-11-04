@@ -74,7 +74,7 @@ export function OvertimeTab() {
             <div className="card mt-5">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <h3 className="font-semibold">{t('hr.ot.lines')}</h3>
-                    <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <select className="select w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
                         <option value="pending">{t('hr.status.pending')}</option><option value="approved">{t('hr.status.approved')}</option><option value="rejected">{t('hr.status.rejected')}</option>
                     </select>
                 </div>

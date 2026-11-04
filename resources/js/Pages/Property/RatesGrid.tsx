@@ -90,7 +90,7 @@ export default function RatesGrid() {
             <QueryStatus query={inv} variant="table" rows={4} />
             <QueryStatus query={rates} variant="list" rows={1} />
             <div className="mb-4 flex flex-wrap items-center gap-3">
-                <select className="input w-full sm:w-auto" aria-label={t('prop.rates.pick_plan')} value={planId} onChange={(e) => setPlanId(e.target.value)}>
+                <select className="select w-full sm:w-auto" aria-label={t('prop.rates.pick_plan')} value={planId} onChange={(e) => setPlanId(e.target.value)}>
                     {!plans.data?.data.length && <option value="">{t('prop.rates.no_plans')}</option>}
                     {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.code} · {p.name}</option>)}
                 </select>
@@ -163,9 +163,9 @@ export default function RatesGrid() {
                     <label><span className="mb-1 block text-xs text-slate-500">{t('prop.rates.rate_fcfa')}</span><input type="number" min={0} className="input" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('prop.rates.unchanged')} /></label>
                     <label><span className="mb-1 block text-xs text-slate-500">{t('prop.rates.min_stay')}</span><input type="number" min={1} max={30} className="input" value={minStay} onChange={(e) => setMinStay(e.target.value)} placeholder={t('prop.rates.unchanged')} /></label>
                     <label><span className="mb-1 block text-xs text-slate-500">{t('prop.rates.closed_plan')}</span>
-                        <select className="input" value={closed} onChange={(e) => setClosed(e.target.value)} aria-label={t('prop.rates.unchanged')}><option value="">{t('prop.rates.unchanged')}</option><option value="1">{t('prop.rates.closed')}</option><option value="0">{t('prop.rates.open')}</option></select></label>
+                        <select className="select" value={closed} onChange={(e) => setClosed(e.target.value)} aria-label={t('prop.rates.unchanged')}><option value="">{t('prop.rates.unchanged')}</option><option value="1">{t('prop.rates.closed')}</option><option value="0">{t('prop.rates.open')}</option></select></label>
                     <label><span className="mb-1 block text-xs text-slate-500">{t('prop.rates.stop_sell_type')}</span>
-                        <select className="input" value={stopSell} onChange={(e) => setStopSell(e.target.value)} aria-label={t('prop.rates.unchanged')}><option value="">{t('prop.rates.unchanged')}</option><option value="1">{t('prop.rates.on')}</option><option value="0">{t('prop.rates.off')}</option></select></label>
+                        <select className="select" value={stopSell} onChange={(e) => setStopSell(e.target.value)} aria-label={t('prop.rates.unchanged')}><option value="">{t('prop.rates.unchanged')}</option><option value="1">{t('prop.rates.on')}</option><option value="0">{t('prop.rates.off')}</option></select></label>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                     <span className="text-xs text-slate-500">{t('prop.rates.weekdays')}</span>

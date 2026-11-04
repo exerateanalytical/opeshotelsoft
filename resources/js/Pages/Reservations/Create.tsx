@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { activeHotelId, api, ApiError, Problem } from '@/lib/api';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Offer {
     room_type: { id: number; code: string; name: string; max_adults: number; max_children: number };
@@ -33,14 +34,14 @@ function ProblemBox({ problem }: { problem: Problem | null }) {
     if (!problem) return null;
     const label = problem.status === 409 ? t('res.create.sold_out') : problem.status === 422 ? t('res.create.cannot_book') : t('res.create.error');
     return (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <Alert variant="danger">
             <p className="font-semibold">{label}: {problem.detail ?? problem.title}</p>
             {problem.errors && (
                 <ul className="mt-1 list-disc pl-5">
                     {Object.entries(problem.errors).flatMap(([k, v]) => v.map((m) => <li key={k + m}>{m}</li>))}
                 </ul>
             )}
-        </div>
+        </Alert>
     );
 }
 
@@ -322,14 +323,14 @@ export default function ReservationCreate() {
                         </>
                     )}
                     {dupes.length > 0 && (
-                        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                        <Alert variant="warning">
                             <p className="font-medium">{t('res.create.duplicates')}</p>
                             {dupes.map((d) => (
                                 <button key={d.id} type="button" className="mt-1 block min-h-11 text-left font-medium underline" onClick={() => (setGuest(d), setDupes([]))}>
                                     {t('res.create.use_profile', { name: `${d.first_name} ${d.last_name}`, id: d.id })}
                                 </button>
                             ))}
-                        </div>
+                        </Alert>
                     )}
                 </section>
 

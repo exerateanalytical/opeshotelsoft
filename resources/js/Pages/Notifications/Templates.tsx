@@ -98,7 +98,7 @@ export default function NotificationTemplates() {
                     <div className="card p-4 space-y-3">
                         <div>
                             <label className="label" htmlFor="event">{t('notif.event')}</label>
-                            <select id="event" className="input" value={event} onChange={(e) => { setEvent(e.target.value); setSelected(null); }}>
+                            <select id="event" className="select" value={event} onChange={(e) => { setEvent(e.target.value); setSelected(null); }}>
                                 {data.data.events.map((e) => (
                                     <option key={e.event} value={e.event}>{EVENT_LABELS[e.event] ? t(EVENT_LABELS[e.event]) : e.event}</option>
                                 ))}

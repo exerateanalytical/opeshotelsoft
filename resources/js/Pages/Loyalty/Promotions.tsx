@@ -6,6 +6,7 @@ import { api, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { errorText } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 type Kind = 'multiplier' | 'birthday' | 'enrolment';
 interface Promotion { id: number; name: string; kind: Kind; multiplier: number; bonus_points: number; starts_on: string | null; ends_on: string | null; outlet_ids: number[] | null; active: boolean }
@@ -49,13 +50,13 @@ export default function LoyaltyPromotions() {
         <AppLayout title={t('loyalty.promo.title')} subtitle={t('loyalty.promo.subtitle')}
             actions={<button className="btn-primary inline-flex items-center gap-2" onClick={() => setForm({ ...EMPTY })}><Plus className="w-4 h-4" /> {t('loyalty.promo.new')}</button>}>
             <Head title={t('loyalty.promo.title')} />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
             {form && (
                 <form onSubmit={save} className="card p-4 mb-4 grid gap-3 sm:grid-cols-3 text-sm">
                     <label className="sm:col-span-2">{t('loyalty.promo.name')}<input className="input w-full" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
                     <label>{t('loyalty.promo.kind')}
-                        <select className="input w-full" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as Kind })}>
+                        <select className="select w-full" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as Kind })}>
                             {(['multiplier', 'birthday', 'enrolment'] as Kind[]).map((k) => <option key={k} value={k}>{t(`loyalty.promo.kind_${k}`)}</option>)}
                         </select>
                     </label>
@@ -86,8 +87,8 @@ export default function LoyaltyPromotions() {
             {list.loading && !list.data && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
             {list.error && <div className="text-sm text-red-600">{list.error.message}</div>}
             {list.data && (
-                <div className="card overflow-x-auto">
-                    <table className="w-full text-sm">
+                <div className="card table-wrap">
+                    <table className="table-auto w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500 border-b">
                             <th className="p-2">{t('loyalty.promo.name')}</th><th className="p-2">{t('loyalty.promo.kind')}</th><th className="p-2">{t('loyalty.promo.rule')}</th>
                             <th className="p-2">{t('loyalty.promo.period')}</th><th className="p-2">{t('loyalty.promo.outlets')}</th><th className="p-2" />

@@ -14,6 +14,9 @@ use Illuminate\Validation\Rule;
 
 class GuestController extends ResourceController
 {
+    /** Hotel-level tables holding a guest's history (all carry hotel_id). */
+    private const HISTORY_TABLES = ['reservations', 'waitlist_entries', 'folios', 'invoices', 'guest_register_entries', 'pos_checks', 'lost_found_items'];
+
     protected string $model = Guest::class;
 
     protected string $permission = 'guests';
@@ -98,6 +101,17 @@ class GuestController extends ResourceController
         }
         $survivor = Guest::findOrFail($id);
         $dup = Guest::findOrFail($data['duplicate_id']);
+        // A hotel-scoped user cannot move history held by hotels they are not allowed in.
+        $allowed = app(TenantContext::class)->allowedHotelIds();
+        if ($allowed !== null) {
+            foreach ([$dup->id, $survivor->id] as $gid) {
+                foreach (self::HISTORY_TABLES as $table) {
+                    if (DB::table($table)->where('guest_id', $gid)->whereNotIn('hotel_id', $allowed)->exists()) {
+                        throw new DomainException('This guest has history in a hotel you are not allowed in; ask a group-level user to merge.', 'guest-merge-scope');
+                    }
+                }
+            }
+        }
 
         DB::transaction(function () use ($survivor, $dup, $bus) {
             foreach (['email', 'phone', 'id_type', 'id_number', 'id_expiry', 'nationality', 'date_of_birth', 'address', 'city'] as $f) {
@@ -108,7 +122,7 @@ class GuestController extends ResourceController
             $survivor->save();
 
             // Re-point the duplicate's history at the survivor (both are already tenant-checked above).
-            foreach (['reservations', 'waitlist_entries', 'folios', 'invoices', 'guest_register_entries', 'pos_checks', 'lost_found_items'] as $table) {
+            foreach (self::HISTORY_TABLES as $table) {
                 DB::table($table)->where('guest_id', $dup->id)->update(['guest_id' => $survivor->id]);
             }
             // One loyalty membership per guest: move it, or fold its points into the survivor's.
@@ -139,11 +153,17 @@ class GuestController extends ResourceController
     {
         $this->authorize($request, 'manage');
         $g = Guest::findOrFail($id);
+        $ctx = app(TenantContext::class);
+        // Group plus allowed-hotels scope: a hotel-scoped user exports only the stays of their own hotels.
+        $reservations = DB::table('reservations')->where('guest_id', $g->id)->where('group_id', $ctx->groupId());
+        if (($allowed = $ctx->allowedHotelIds()) !== null) {
+            $reservations->whereIn('hotel_id', $allowed);
+        }
 
         return response()->json([
             'profile' => $g,
-            'reservations' => DB::table('reservations')->where('guest_id', $g->id)->get(),
-            'loyalty' => DB::table('loyalty_memberships')->where('guest_id', $g->id)->get(),
+            'reservations' => $reservations->get(),
+            'loyalty' => DB::table('loyalty_memberships')->where('guest_id', $g->id)->where('group_id', $ctx->groupId())->get(),
         ], 200, ['Content-Disposition' => 'attachment; filename="guest-'.$g->id.'-export.json"']);
     }
 }

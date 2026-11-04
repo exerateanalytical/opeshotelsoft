@@ -5,6 +5,7 @@ import { useLocale, useT } from '@/lib/i18n';
 import ConfirmSheet from './ConfirmSheet';
 import MemberLayout from './MemberLayout';
 import { fmtDate, mapi, MemberApiError } from './api';
+import { formatNumber } from '@/lib/utils';
 
 interface Data {
     can_join: boolean;
@@ -63,7 +64,7 @@ export default function Card({ data }: { data: Data }) {
             <div className="card p-4">
                 <p className="font-semibold mb-2">{t('member.card.benefits')}</p>
                 <ul className="list-disc pl-5 text-sm space-y-1">{m.tier.benefits.map((b) => <li key={b}>{t(`member.benefit.${b}`) === `member.benefit.${b}` ? b.replace(/_/g, ' ') : t(`member.benefit.${b}`)}</li>)}</ul>
-                {m.next_tier && <p className="text-sm text-slate-600 mt-3">{t('member.home.next_tier', { name: m.next_tier.name, points: m.next_tier.points_needed })}</p>}
+                {m.next_tier && <p className="text-sm text-slate-600 mt-3">{t('member.home.next_tier', { name: m.next_tier.name, points: formatNumber(m.next_tier.points_needed, { locale }) })}</p>}
             </div>
 
             <div className="flex flex-wrap gap-2">

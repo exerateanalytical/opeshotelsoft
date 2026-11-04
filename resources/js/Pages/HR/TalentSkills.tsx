@@ -47,7 +47,7 @@ export default function TalentSkills() {
 
             <Section title={t('talent.matrix')}>
                 {m && m.rows.length === 0 && <EmptyFor kind="staff" />}
-                <div className="overflow-x-auto"><table className="w-full text-sm">
+                <div className="table-wrap"><table className="table-auto w-full text-sm">
                     <thead><tr className="text-left"><th className="p-2">{t('talent.employee')}</th>{m?.skills.map((s) => <th key={s.id} className="p-2">{s.name}</th>)}</tr></thead>
                     <tbody>{m?.rows.map((r) => (
                         <tr key={r.employee_id} className="border-t border-slate-100"><td className="p-2">{r.name}</td>
@@ -67,8 +67,8 @@ export default function TalentSkills() {
             </Section>
 
             <Section title={t('talent.certifications')} right={<button className="btn-secondary" onClick={() => run(() => tsend('certifications/scan'), t('talent.scan_done'))}>{t('talent.scan')}</button>}>
-                <table className="w-full text-sm"><tbody>{certs.map((c) => (
-                    <tr key={c.id} className="border-t border-slate-100"><td className="p-2">{c.employee}</td><td>{c.type}</td><td>{c.expires_on ?? '-'}</td><td><Pill tone={certTone(c.status)}>{t(`talent.cert_status.${c.status}`)}</Pill></td></tr>))}</tbody></table>
+                <div className="table-wrap"><table className="table-auto w-full text-sm"><tbody>{certs.map((c) => (
+                    <tr key={c.id} className="border-t border-slate-100"><td className="p-2">{c.employee}</td><td>{c.type}</td><td>{c.expires_on ?? '-'}</td><td><Pill tone={certTone(c.status)}>{t(`talent.cert_status.${c.status}`)}</Pill></td></tr>))}</tbody></table></div>
             </Section>
 
             <Section title={t('talent.setup')}>
@@ -86,15 +86,15 @@ export default function TalentSkills() {
                         <button className="btn-secondary" disabled={!ct.code || !ct.name} onClick={() => run(() => tsend('cert-types', { ...ct, validity_months: Number(ct.validity_months) }))}>{t('talent.add_cert_type')}</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <select className="input" aria-label={t('talent.employee')} value={sf.employee_id} onChange={(e) => setSf({ ...sf, employee_id: e.target.value })}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}</select>
-                        <select className="input" aria-label={t('talent.skill_name')} value={sf.skill_id} onChange={(e) => setSf({ ...sf, skill_id: e.target.value })}><option value="" />{cat.skills.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-                        <select className="input" aria-label={t('talent.set_level')} value={sf.level} onChange={(e) => setSf({ ...sf, level: e.target.value })}>{[1, 2, 3, 4, 5].map((n) => <option key={n}>{n}</option>)}</select>
+                        <select className="select" aria-label={t('talent.employee')} value={sf.employee_id} onChange={(e) => setSf({ ...sf, employee_id: e.target.value })}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}</select>
+                        <select className="select" aria-label={t('talent.skill_name')} value={sf.skill_id} onChange={(e) => setSf({ ...sf, skill_id: e.target.value })}><option value="" />{cat.skills.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+                        <select className="select" aria-label={t('talent.set_level')} value={sf.level} onChange={(e) => setSf({ ...sf, level: e.target.value })}>{[1, 2, 3, 4, 5].map((n) => <option key={n}>{n}</option>)}</select>
                         <button className="btn-secondary" disabled={!sf.employee_id || !sf.skill_id} onClick={() => run(() => tsend(`employees/${sf.employee_id}/skills`, { skill_id: Number(sf.skill_id), level: Number(sf.level) }))}>{t('talent.set_level')}</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <select className="input" aria-label={t('talent.employee')} value={cf.employee_id} onChange={(e) => setCf({ ...cf, employee_id: e.target.value })}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}</select>
-                        <select className="input" aria-label={t('talent.cert_name')} value={cf.cert_type_id} onChange={(e) => setCf({ ...cf, cert_type_id: e.target.value })}><option value="" />{cat.cert_types.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-                        <input className="input" type="date" value={cf.issued_on} onChange={(e) => setCf({ ...cf, issued_on: e.target.value })} />
+                        <select className="select" aria-label={t('talent.employee')} value={cf.employee_id} onChange={(e) => setCf({ ...cf, employee_id: e.target.value })}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}</select>
+                        <select className="select" aria-label={t('talent.cert_name')} value={cf.cert_type_id} onChange={(e) => setCf({ ...cf, cert_type_id: e.target.value })}><option value="" />{cat.cert_types.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+                        <input className="input" type="date" aria-label={t('ui2.talent.issued_on')} value={cf.issued_on} onChange={(e) => setCf({ ...cf, issued_on: e.target.value })} />
                         <button className="btn-secondary" disabled={!cf.employee_id || !cf.cert_type_id || !cf.issued_on} onClick={() => run(() => tsend(`employees/${cf.employee_id}/certifications`, { cert_type_id: Number(cf.cert_type_id), issued_on: cf.issued_on }))}>{t('talent.add_certification')}</button>
                     </div>
                 </div>

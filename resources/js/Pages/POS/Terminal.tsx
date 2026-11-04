@@ -7,7 +7,8 @@ import FloorPlan, { FloorTable } from './FloorPlan';
 import { Banner, Check, Code, errText, MenuItem, Msg, Paginated } from './shared';
 import { useT } from '@/lib/i18n';
 import { refreshPosQueueFromStorage, registerSyncRetry, reportSync } from '@/lib/syncStatus';
-import PrintPdfButton from '@/Components/PrintPdfButton';
+import PrintPdfButton from '@/Components/PrintPdfButton';
+import Alert from '@/Components/ui/Alert';
 
 type Panel = null | 'discount' | 'split' | 'settle' | 'room' | 'void' | 'comp' | 'transfer' | { voidLine: number } | { compLine: number };
 
@@ -254,7 +255,7 @@ export default function Terminal({ outletId }: { outletId: number }) {
                                     <h3 className="font-semibold text-slate-800">{t('pos.term.check_header', { number: c.number, table: c.table_number ?? '-' })}</h3>
                                     <p className="text-xs text-slate-500">{t('pos.term.covers_n', { count: c.covers })} · {formatDateTime(c.created_at)} · {c.status}</p>
                                 </div>
-                                <button onClick={() => setSelectedId(null)} className="text-slate-500"><X className="w-4 h-4" /></button>
+                                <button onClick={() => setSelectedId(null)} className="btn-ghost btn-icon btn-sm" aria-label={t('ui.nav.close')}><X className="w-4 h-4" /></button>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="table-auto w-full text-sm">
@@ -279,7 +280,7 @@ export default function Terminal({ outletId }: { outletId: number }) {
                                                 <td className="py-1 text-right">{formatCurrency(l.amount)}</td>
                                                 <td className="py-1 text-right w-8">
                                                     {!l.voided && c.status === 'open' && !l.fired_at && (
-                                                        <button title={t('pos.term.remove_line')} disabled={busy === `rm${l.id}`} onClick={() => lineCall(`rm${l.id}`, `pos/checks/${c.id}/lines/${l.id}/remove`, 'POST')} className="text-slate-500"><X className="w-4 h-4" /></button>
+                                                        <button title={t('pos.term.remove_line')} disabled={busy === `rm${l.id}`} onClick={() => lineCall(`rm${l.id}`, `pos/checks/${c.id}/lines/${l.id}/remove`, 'POST')} className="btn-ghost btn-icon btn-sm" aria-label={t('pos.term.remove_line')}><X className="w-4 h-4" /></button>
                                                     )}
                                                     {!l.voided && c.status === 'open' && !l.comp_status && (
                                                         <button title={t('pos.term.comp_item')} onClick={() => setPanel({ compLine: l.id })} className="btn-ghost btn-icon" aria-label={t('pos.term.comp_item')}><Gift className="w-4 h-4" /></button>
@@ -317,13 +318,13 @@ export default function Terminal({ outletId }: { outletId: number }) {
                                 </div>
                             )}
                             {c.status === 'open' && pendingComps > 0 && (
-                                <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
-                                    <p className="text-amber-800 mb-2">{t('pos.term.comps_pending', { count: pendingComps })}</p>
+                                <Alert variant="warning" className="mt-3">
+                                    <p className="mb-2">{t('pos.term.comps_pending', { count: pendingComps })}</p>
                                     <div className="flex gap-2">
                                         <button className="btn-primary" disabled={busy === 'compd'} onClick={() => run('compd', `pos/checks/${c.id}/comp/decide`, { approve: true }, t('pos.term.comp_approved'))}>{t('pos.term.approve')}</button>
                                         <button className="btn-secondary" disabled={busy === 'compd'} onClick={() => run('compd', `pos/checks/${c.id}/comp/decide`, { approve: false }, t('pos.term.comp_rejected'))}>{t('pos.term.reject')}</button>
                                     </div>
-                                </div>
+                                </Alert>
                             )}
                             {panel && c.status === 'open' && (
                                 <div className="mt-4 border-t pt-3">
@@ -408,7 +409,7 @@ function SettleForm({ total, busy, onSubmit, onCancel }: { total: number; busy: 
             <p className="text-sm font-medium text-slate-700">{t('pos.term.settle_amount', { amount: formatCurrency(total) })}</p>
             {rows.map((r, i) => (
                 <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-2 border border-slate-200 rounded-lg p-2 [&>*]:min-w-0">
-                    <select className="input" value={r.method} onChange={(e) => set(i, { method: e.target.value })}>
+                    <select className="select" value={r.method} onChange={(e) => set(i, { method: e.target.value })}>
                         {active.length === 0 && <option value={r.method}>{r.method}</option>}
                         {active.map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                     </select>
@@ -416,7 +417,7 @@ function SettleForm({ total, busy, onSubmit, onCancel }: { total: number; busy: 
                     <input className="input" type="number" min={0} placeholder={t('pos.term.tendered')} aria-label={t('pos.term.tendered')} value={r.tendered} onChange={(e) => set(i, { tendered: e.target.value })} />
                     <div className="flex gap-1">
                         <input className="input w-full" placeholder={t('pos.term.reference')} aria-label={t('pos.term.reference')} value={r.reference} onChange={(e) => set(i, { reference: e.target.value })} />
-                        {rows.length > 1 && <button className="text-red-500" onClick={() => setRows(rows.filter((_, j) => j !== i))}><X className="w-4 h-4" /></button>}
+                        {rows.length > 1 && <button className="btn-ghost btn-icon btn-sm" onClick={() => setRows(rows.filter((_, j) => j !== i))} aria-label={t('ui.nav.close')}><X className="w-4 h-4" /></button>}
                     </div>
                 </div>
             ))}

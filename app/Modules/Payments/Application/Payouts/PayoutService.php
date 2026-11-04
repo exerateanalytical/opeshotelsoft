@@ -5,6 +5,7 @@ namespace App\Modules\Payments\Application\Payouts;
 use App\Models\User;
 use App\Modules\Accounting\Application\Ledger;
 use App\Modules\Accounting\Domain\ChartOfAccounts as C;
+use App\Modules\HR\Domain\Employee;
 use App\Modules\HR\Domain\PayrollRun;
 use App\Modules\Payments\Domain\PaymentGatewaySetting;
 use App\Modules\Payments\Domain\PayoutItem;
@@ -94,27 +95,34 @@ class PayoutService
     public function process(PayoutRun $run, bool $retryFailed = false): PayoutRun
     {
         $currency = Hotel::findOrFail($this->ctx->requireHotelId())->currency ?? 'XAF';
-        $items = $run->items()->whereIn('channel', ['mtn_momo', 'orange_money'])
-            ->whereIn('status', $retryFailed ? ['pending', 'sent', 'failed'] : ['pending', 'sent'])->get();
-        foreach ($items as $item) {
-            [$driver, $creds] = $this->driverFor($item->channel);
-            if ($item->status === 'sent') {
-                $status = $item->driver === 'dry_run' ? (new DryRunDisbursement)->status($item, []) : $driver->status($item, $creds);
-                $item->update(['status' => $status, 'paid_at' => $status === 'succeeded' ? now() : null]);
+        // The run row is locked for the whole pass so two overlapping /process calls (two browser tabs,
+        // a retry on timeout) cannot both read the same pending items and disburse a salary twice (SEC1 audit).
+        DB::transaction(function () use ($run, $retryFailed, $currency) {
+            PayoutRun::lockForUpdate()->findOrFail($run->id);
+            $items = $run->items()->whereIn('channel', ['mtn_momo', 'orange_money'])
+                ->whereIn('status', $retryFailed ? ['pending', 'sent', 'failed'] : ['pending', 'sent'])->lockForUpdate()->get();
+            foreach ($items as $item) {
+                [$driver, $creds] = $this->driverFor($item->channel);
+                if ($item->status === 'sent') {
+                    $status = $item->driver === 'dry_run' ? (new DryRunDisbursement)->status($item, []) : $driver->status($item, $creds);
+                    $item->update(['status' => $status, 'paid_at' => $status === 'succeeded' ? now() : null]);
 
-                continue;
+                    continue;
+                }
+                if (! $item->destination || $item->attempts >= self::MAX_ATTEMPTS) {
+                    continue;
+                }
+                // Claim the item before talking to the provider: a crash after the call leaves it 'sent', never 'pending'.
+                $item->update(['status' => 'sent', 'attempts' => $item->attempts + 1, 'driver' => $driver->name()]);
+                $res = $driver->disburse($item, $currency, $creds);
+                $item->update([
+                    'status' => $res['status'], 'driver' => $driver->name(),
+                    'provider_reference' => $res['provider_reference'] ?? null, 'error' => $res['reason'] ?? null,
+                    'paid_at' => $res['status'] === 'succeeded' ? now() : null,
+                ]);
             }
-            if (! $item->destination || $item->attempts >= self::MAX_ATTEMPTS) {
-                continue;
-            }
-            $res = $driver->disburse($item, $currency, $creds);
-            $item->update([
-                'status' => $res['status'], 'attempts' => $item->attempts + 1, 'driver' => $driver->name(),
-                'provider_reference' => $res['provider_reference'] ?? null, 'error' => $res['reason'] ?? null,
-                'paid_at' => $res['status'] === 'succeeded' ? now() : null,
-            ]);
-        }
-        $run->update(['status' => 'processing']);
+            $run->update(['status' => 'processing']);
+        });
 
         return $this->postPaid($run);
     }
@@ -158,14 +166,31 @@ class PayoutService
     }
 
     /** Fix a destination after a failure and re-queue the item. */
-    public function updateDestination(PayoutRun $run, int $itemId, string $destination): PayoutItem
+    public function updateDestination(PayoutRun $run, int $itemId, string $destination, ?User $actor = null): PayoutItem
     {
         $item = $run->items()->whereKey($itemId)->firstOrFail();
         if ($item->status !== 'failed') {
             throw new DomainException('Only a failed item can be changed.');
         }
+        // A payout operator may only re-point a salary to what HR holds on the employee record; anything else
+        // needs hr.manage (segregation of duties) and every change is written to the audit trail (SEC1 audit).
+        $employee = $item->employee_id ? Employee::find($item->employee_id) : null;
+        $onFile = array_values(array_filter([$employee?->momo_number, $employee?->bank_account], fn ($v) => $v !== null && $v !== ''));
+        $normalise = fn (string $v) => preg_replace('/\s+/', '', $v);
+        $matches = in_array($normalise($destination), array_map($normalise, $onFile), true);
+        // Bank items are failed by hand (rejectManual) so a re-pointed account must come from HR; Mobile Money
+        // items fail at the provider and a corrected number is accepted but audited below.
+        $strict = in_array($item->channel, ['bank', 'cash'], true);
+        if ($strict && $onFile && ! $matches && ! ($actor?->can('hr.manage') ?? false)) {
+            throw new DomainException('The destination must match the employee record; ask HR to update the employee first.', 'destination-mismatch', 403);
+        }
+        $previous = $item->destination;
         $item->update(['destination' => $destination, 'status' => 'pending', 'attempts' => 0, 'error' => null,
             'channel' => $item->channel === 'bank' || $item->channel === 'cash' ? $item->channel : self::operator($destination)]);
+        $this->bus->record('payout.item_destination_changed', [
+            'payout_run_id' => $run->id, 'item_id' => $item->id, 'employee_id' => $item->employee_id,
+            'from' => $previous, 'to' => $destination, 'actor_id' => $actor?->id, 'matches_employee_record' => $matches || ! $onFile,
+        ], 'payout_run', $run->id);
 
         return $item;
     }

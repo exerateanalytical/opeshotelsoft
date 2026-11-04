@@ -27,6 +27,22 @@ class TwoFactor
         return $user->mfa_confirmed_at !== null && $user->mfa_secret;
     }
 
+    /**
+     * Required role, not yet enrolled. The seeded demo accounts are exempt while DEMO_LOGINS is on
+     * (shared, non-production accounts); tests are exempt unless a test opts in (SEC1 audit).
+     */
+    public function mustEnrol(User $user): bool
+    {
+        if (app()->runningUnitTests() && ! self::$enforceInTests) {
+            return false;
+        }
+        if (config('app.demo_logins') && ($user->email === 'admin@opeshotelsoft.test' || str_ends_with((string) $user->email, '@demo.opeshotelsoft.test'))) {
+            return false;
+        }
+
+        return $this->required($user) && ! $this->enabled($user);
+    }
+
     /** Start (or restart) enrolment: a new unconfirmed secret. */
     public function begin(User $user): string
     {
@@ -66,8 +82,20 @@ class TwoFactor
         if (! $this->enabled($user)) {
             return false;
         }
-        if (Totp::verify($user->mfa_secret, $code)) {
-            return true;
+        $step = Totp::matchStep($user->mfa_secret, $code);
+        if ($step !== null) {
+            // Replay protection: a sign-in code is accepted once; a step at or before the last accepted one is refused.
+            // Atomic update so two concurrent sign-ins with the same code cannot both pass.
+            $won = User::whereKey($user->id)
+                ->where(fn ($q) => $q->whereNull('mfa_last_step')->orWhere('mfa_last_step', '<', $step))
+                ->update(['mfa_last_step' => $step]);
+            if ($won === 1) {
+                $user->forceFill(['mfa_last_step' => $step])->syncOriginalAttribute('mfa_last_step');
+
+                return true;
+            }
+
+            return false;
         }
         $code = Str::lower(trim($code));
         $hashes = json_decode((string) $user->mfa_recovery_codes, true) ?: [];

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface RatePlan { id: number; code: string; name: string }
 interface RoomType { id: number; code: string; name: string }
@@ -77,13 +78,13 @@ export default function Seasons() {
                         <label className="label">{t('res.seasons.from')}<input className="input w-full" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></label>
                         <label className="label">{t('res.seasons.to')}<input className="input w-full" type="date" min={form.start_date} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></label>
                         <label className="label">{t('res.room_type')}
-                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
+                            <select className="select w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
                                 <option value="">{t('res.seasons.all_types')}</option>
                                 {types.data?.data.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                             </select>
                         </label>
                         <label className="label">{t('res.seasons.price_rule')}
-                            <select className="input w-full" value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value as 'percent' | 'rate' })}>
+                            <select className="select w-full" value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value as 'percent' | 'rate' })}>
                                 <option value="percent">{t('res.seasons.mode_percent')}</option>
                                 <option value="rate">{t('res.seasons.mode_rate')}</option>
                             </select>
@@ -98,7 +99,7 @@ export default function Seasons() {
                     </div>
                 </section>
 
-                {message && <div className={cn('rounded-md border p-3 text-sm', message.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-red-300 bg-red-50 text-red-800')}>{message.text}</div>}
+                {message && <Alert variant={message.ok ? 'success' : 'danger'}>{message.text}</Alert>}
 
                 <section className="card p-4">
                     <h2 className="mb-2 font-medium">{t('res.seasons.short')}</h2>

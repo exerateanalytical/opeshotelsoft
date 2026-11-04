@@ -37,7 +37,7 @@ export default function Periods() {
                 onSubmit={(e) => { e.preventDefault(); run('close', { year, month }, t('fin.periods.closed_ok', { period: `${MONTHS[month - 1]} ${year}` })); }}>
                 <Field label={t('fin.periods.year')}><input type="number" className="input w-full sm:w-28" value={year} onChange={(e) => setYear(Number(e.target.value))} /></Field>
                 <Field label={t('fin.periods.month')}>
-                    <select className="input w-full" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
+                    <select className="select w-full" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                         {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                     </select>
                 </Field>

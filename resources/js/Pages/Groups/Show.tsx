@@ -174,12 +174,12 @@ export default function GroupShow({ id }: { id: string }) {
                                     {entries.map((e, i) => (
                                         <div key={i} className="grid grid-cols-[1fr_9rem_4rem_auto] gap-2 items-center">
                                             <span className="text-sm truncate">{e.guest.first_name} {e.guest.last_name}</span>
-                                            <select className="input" required value={e.room_type_id} onChange={(ev) => setEntries(entries.map((x, j) => j === i ? { ...x, room_type_id: ev.target.value } : x))} aria-label={t('groups.room_type_ph')}>
+                                            <select className="select" required value={e.room_type_id} onChange={(ev) => setEntries(entries.map((x, j) => j === i ? { ...x, room_type_id: ev.target.value } : x))} aria-label={t('groups.room_type_ph')}>
                                                 <option value="" disabled>{t('groups.room_type_ph')}</option>
                                                 {blockTypes.map((rt) => <option key={rt} value={rt}>{rtName(rt)}</option>)}
                                             </select>
                                             <input className="input" type="number" min={1} title={t('res.adults')} value={e.adults} onChange={(ev) => setEntries(entries.map((x, j) => j === i ? { ...x, adults: ev.target.value } : x))} />
-                                            <button type="button" className="text-slate-500 hover:text-red-600" title={t('groups.remove')} onClick={() => setEntries(entries.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4" /></button>
+                                            <button type="button" className="btn-ghost btn-icon btn-sm" title={t('groups.remove')} onClick={() => setEntries(entries.filter((_, j) => j !== i))} aria-label={t('groups.remove')}><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     ))}
                                 </div>
@@ -187,7 +187,7 @@ export default function GroupShow({ id }: { id: string }) {
 
                             {!b.rate_plan_id && (
                                 <label className="label">{t('groups.show.rate_plan_none')}
-                                    <select className="input mt-1" value={ratePlan} onChange={(e) => setRatePlan(e.target.value)}>
+                                    <select className="select mt-1" value={ratePlan} onChange={(e) => setRatePlan(e.target.value)}>
                                         <option value="" disabled>{t('groups.show.rate_plan_ph')}</option>
                                         {rowsOf(ratePlans.data).map((r) => <option key={r.id} value={r.id}>{r.code ? `${r.code} · ` : ''}{r.name}</option>)}
                                     </select>

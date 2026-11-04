@@ -259,7 +259,7 @@ function GuestsTab() {
                         <Field label={t('guests.field.first_name_req')}><input className="input w-full" required value={form.first_name} onChange={(e) => set('first_name', e.target.value)} /></Field>
                         <Field label={t('guests.field.last_name_req')}><input className="input w-full" required value={form.last_name} onChange={(e) => set('last_name', e.target.value)} /></Field>
                         <Field label={t('guests.field.gender')}>
-                            <select className="input w-full" value={form.gender} onChange={(e) => set('gender', e.target.value)}>
+                            <select className="select w-full" value={form.gender} onChange={(e) => set('gender', e.target.value)}>
                                 <option value="">—</option><option value="M">{t('guests.gender.m')}</option><option value="F">{t('guests.gender.f')}</option><option value="X">{t('guests.gender.x')}</option>
                             </select>
                         </Field>
@@ -267,14 +267,14 @@ function GuestsTab() {
                         <Field label={t('guests.field.nationality_iso')}><input className="input w-full" maxLength={2} aria-label="CM" placeholder="CM" value={form.nationality} onChange={(e) => set('nationality', e.target.value)} /></Field>
                         <Field label={t('guests.field.profession')}><input className="input w-full" value={form.profession} onChange={(e) => set('profession', e.target.value)} /></Field>
                         <Field label={t('guests.field.language')}>
-                            <select className="input w-full" value={form.language} onChange={(e) => set('language', e.target.value)}>
+                            <select className="select w-full" value={form.language} onChange={(e) => set('language', e.target.value)}>
                                 <option value="fr">Français</option><option value="en">English</option>
                             </select>
                         </Field>
                     </Section>
                     <Section title={t('guests.section.id')}>
                         <Field label={t('guests.field.id_type')}>
-                            <select className="input w-full" value={form.id_type} onChange={(e) => set('id_type', e.target.value)}>
+                            <select className="select w-full" value={form.id_type} onChange={(e) => set('id_type', e.target.value)}>
                                 <option value="">—</option>
                                 {ID_TYPES.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
                             </select>
@@ -290,7 +290,7 @@ function GuestsTab() {
                         <Field label={t('guests.field.city')}><input className="input w-full" value={form.city} onChange={(e) => set('city', e.target.value)} /></Field>
                         <Field label={t('guests.field.country_iso')}><input className="input w-full" maxLength={2} value={form.country} onChange={(e) => set('country', e.target.value)} /></Field>
                         <Field label={t('guests.company')}>
-                            <select className="input w-full" value={form.company_id} onChange={(e) => set('company_id', e.target.value)}>
+                            <select className="select w-full" value={form.company_id} onChange={(e) => set('company_id', e.target.value)}>
                                 <option value="">—</option>
                                 {editing !== 'new' && editing?.company && !companies.data?.data.some((c) => c.id === editing.company!.id) && (
                                     <option value={editing.company.id}>{editing.company.name}</option>

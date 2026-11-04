@@ -33,6 +33,14 @@ class HandleInertiaRequests extends Middleware
         app()->setLocale($this->locale($request));
 
         $user = $this->staffUser($request);
+        // A suspended account loses its live session on the next request (SEC1 audit).
+        if ($user && $user->status !== null && $user->status !== 'active') {
+            auth('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login');
+        }
         if ($user && $this->mustEnrol($request, $user) && ! $request->routeIs(...self::MFA_ALLOWED)) {
             return redirect()->route('profile')->with('error', __('auth.2fa.required'));
         }

@@ -77,7 +77,7 @@ export function RecordsTab() {
             <QueryStatus query={list} variant="form" rows={1} />
             <div className="card mb-5">
                 <Field label={t('hr.emp.employee')}>
-                    <select className="input" value={id ?? ''} onChange={(e) => setId(e.target.value ? Number(e.target.value) : null)}>
+                    <select className="select" value={id ?? ''} onChange={(e) => setId(e.target.value ? Number(e.target.value) : null)}>
                         <option value="">{t('hr.rec.choose_employee')}</option>
                         {list.data?.data.map((e) => <option key={e.id} value={e.id}>{e.last_name} {e.first_name} · {e.number}</option>)}
                     </select>
@@ -130,13 +130,13 @@ function EmployeeRecord({ id, employees }: { id: number; employees: Employee[] }
                     {e && (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Field label={t('hr.rec.reports_to')}>
-                                <select className="input" value={e.reports_to ?? ''} onChange={(ev) => patch({ reports_to: ev.target.value ? Number(ev.target.value) : null }, t('hr.rec.reporting_saved'))}>
+                                <select className="select" value={e.reports_to ?? ''} onChange={(ev) => patch({ reports_to: ev.target.value ? Number(ev.target.value) : null }, t('hr.rec.reporting_saved'))}>
                                     <option value="">{t('hr.rec.nobody')}</option>
                                     {employees.filter((x) => x.id !== id).map((x) => <option key={x.id} value={x.id}>{x.last_name} {x.first_name}</option>)}
                                 </select>
                             </Field>
                             <Field label={t('hr.rec.payslip_language')}>
-                                <select className="input" value={e.payslip_language ?? 'fr'} onChange={(ev) => patch({ payslip_language: ev.target.value }, t('hr.rec.language_saved'))}>
+                                <select className="select" value={e.payslip_language ?? 'fr'} onChange={(ev) => patch({ payslip_language: ev.target.value }, t('hr.rec.language_saved'))}>
                                     <option value="fr">Français</option><option value="en">English</option>
                                 </select>
                             </Field>
@@ -157,7 +157,7 @@ function EmployeeRecord({ id, employees }: { id: number; employees: Employee[] }
                 <div className="card">
                     <h3 className="mb-3 font-semibold">{t('hr.rec.documents')}</h3>
                     <form onSubmit={upload} className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <select className="input" value={up.type} onChange={(ev) => setUp({ ...up, type: ev.target.value })}>{DOC_TYPES.map(([k, l]) => <option key={k} value={k}>{t(l)}</option>)}</select>
+                        <select className="select" value={up.type} onChange={(ev) => setUp({ ...up, type: ev.target.value })}>{DOC_TYPES.map(([k, l]) => <option key={k} value={k}>{t(l)}</option>)}</select>
                         <input className="input" placeholder={t('hr.rec.title_optional')} value={up.title} onChange={(ev) => setUp({ ...up, title: ev.target.value })} />
                         <Field label={t('hr.rec.expiry_date')}><input type="date" className="input" value={up.expires_on} onChange={(ev) => setUp({ ...up, expires_on: ev.target.value })} /></Field>
                         <Field label={t('hr.rec.file_label')}><input type="file" required className="input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(ev) => setUp({ ...up, file: ev.target.files?.[0] ?? null })} /></Field>
@@ -208,7 +208,7 @@ function OnboardingTemplates() {
             <h3 className="mb-3 font-semibold">{t('hr.rec.templates')}</h3>
             <Banner ok={m.ok} err={m.err} />
             <Field label={t('hr.common.position')}>
-                <select className="input" value={pos ?? ''} onChange={(e) => pick(e.target.value ? Number(e.target.value) : null)}>
+                <select className="select" value={pos ?? ''} onChange={(e) => pick(e.target.value ? Number(e.target.value) : null)}>
                     <option value="">{t('hr.rec.choose_position')}</option>
                     {positions.data?.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>

@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api';
-import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 export interface Paged<T> { data: T[]; total: number; current_page: number; last_page: number }
 export interface Department { id: number; code: string; name: string; cost_center: string | null }
@@ -21,8 +21,8 @@ export const errMsg = (e: unknown) => (e instanceof ApiError ? e.message : Strin
 export function Banner({ ok, err }: { ok?: string | null; err?: string | null }) {
     return (
         <>
-            {err && <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />{err}</div>}
-            {ok && <div className="mb-4 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700"><CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />{ok}</div>}
+            {err && <Alert variant="danger" className="mb-4">{err}</Alert>}
+            {ok && <Alert variant="success" className="mb-4">{ok}</Alert>}
         </>
     );
 }

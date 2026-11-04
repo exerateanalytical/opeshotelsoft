@@ -138,19 +138,19 @@ export default function Landing() {
             </Head>
 
             <header className="sticky top-0 z-30 border-b border-navy-700 bg-navy-900 text-white">
-                <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+                <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-6">
                     <a href="#top" aria-label="OPES Hôtels Soft" className="flex min-w-11 min-h-11 shrink-0 items-center"><BrandLogo variant="lockup" size={36} textClassName="hidden whitespace-nowrap text-lg sm:inline" /></a>
-                    <nav className="hidden items-center gap-6 text-[0.9375rem] text-navy-100 lg:flex" aria-label="Main">
+                    <nav className="hidden min-w-0 flex-wrap items-center gap-x-6 gap-y-1 text-[0.9375rem] text-navy-100 xl:flex" aria-label="Main">
                         {NAV.map(([id, key]) => <a key={id} href={`#${id}`} className="hover:text-white">{t(`landing.${key}`)}</a>)}
                     </nav>
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
                         <div className="flex overflow-hidden rounded-md border border-navy-600 text-sm" role="group" aria-label={t('landing.nav.lang')}>
                             {(['fr', 'en'] as const).map((l) => (
                                 <button key={l} onClick={() => l !== locale && setLocale(l)} aria-pressed={locale === l} className={`min-h-11 min-w-11 px-2.5 font-semibold uppercase ${locale === l ? 'bg-white text-navy-900' : 'text-navy-100 hover:text-white'}`}>{l}</button>
                             ))}
                         </div>
                         <Link href="/login" className="hidden text-[0.9375rem] text-navy-100 hover:text-white sm:inline">{t('landing.nav.login')}</Link>
-                        <a href={demoLink} className="btn-accent whitespace-nowrap px-3 sm:px-4">{t('landing.nav.demo')}</a>
+                        <a href={demoLink} className="btn-accent px-3 sm:px-4">{t('landing.nav.demo')}</a>
                     </div>
                 </div>
             </header>
@@ -161,10 +161,10 @@ export default function Landing() {
                         <div>
                             <div className="mb-6 inline-block rounded-md bg-white p-3"><BrandLogo variant="wordmark" size={260} /></div>
                             <p className="mb-4 text-sm font-semibold text-brand-300">{t('landing.hero.eyebrow')}</p>
-                            <h1 className="text-4xl font-bold leading-tight md:text-5xl">{t('landing.hero.title')}</h1>
+                            <h1 className="text-3xl font-bold leading-tight md:text-5xl">{t('landing.hero.title')}</h1>
                             <p className="mt-5 text-lg text-navy-100">{t('landing.hero.sub')}</p>
                             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                                <a href={demoLink} className="btn-accent min-h-12 px-6 text-base">{t('landing.hero.cta')}</a>
+                                <a href={demoLink} className="btn-accent btn-lg">{t('landing.hero.cta')}</a>
                                 <Link href="/login" className="inline-flex items-center justify-center min-h-12 rounded-lg border border-navy-300 px-6 text-center text-base font-semibold text-white hover:bg-navy-800">{t('landing.hero.cta2')}</Link>
                             </div>
                             <p className="mt-4 text-sm text-navy-200">{t('landing.hero.note')}</p>

@@ -54,7 +54,8 @@ $e512 = square($emblem, 512, false, 0.02);
 save($e512, $b.'/emblem.png');
 save(scale($e512, 128), $b.'/emblem-128.png');
 save(scale($e512, 64), $b.'/emblem-64.png');
-save(scale($word, 1200), $b.'/logo-wordmark.png');
+// Shown at most 280 CSS px wide (Login), so 600 px covers 2x screens at a quarter of the 1200 px weight.
+save(scale($word, 600), $b.'/logo-wordmark.png');
 save(scale($word, 480), $b.'/logo-wordmark-small.png');
 
 // OG image 1200x630 white, wordmark centred

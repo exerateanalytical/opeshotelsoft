@@ -28,7 +28,9 @@ class TwoFactorController
     {
         $data = $request->validate(['code' => ['required', 'string', 'max:20']]);
         $user = User::find($request->session()->get('2fa.user_id'));
-        if (! $user) {
+        if (! $user || $user->status !== 'active') {
+            $request->session()->forget(['2fa.user_id', '2fa.remember']);
+
             return redirect()->route('login');
         }
         if (! $this->twoFactor->check($user, $data['code'])) {

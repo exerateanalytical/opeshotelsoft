@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 export type FieldType = 'text' | 'number' | 'money' | 'bool' | 'select' | 'date' | 'textarea' | 'list';
 export interface Field {
@@ -25,8 +26,8 @@ export interface Page<T> { data: T[]; total: number; current_page: number; last_
 export function Banner({ error, success }: { error?: string | null; success?: string | null }) {
     return (
         <>
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
-            {success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{success}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+            {success && <Alert variant="success" className="mb-4">{success}</Alert>}
         </>
     );
 }
@@ -99,7 +100,7 @@ export function FormFields({ fields, form, set }: { fields: Field[]; form: Recor
                         <>
                             <span className="mb-1 block text-xs font-medium text-slate-500">{f.label}{f.required && ' *'}</span>
                             {f.type === 'select' ? (
-                                <select className="input" value={form[f.name] ?? ''} onChange={(e) => set(f.name, e.target.value)}>
+                                <select className="select" value={form[f.name] ?? ''} onChange={(e) => set(f.name, e.target.value)}>
                                     {!f.required && <option value="">-</option>}
                                     {f.options?.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                                 </select>
@@ -199,7 +200,7 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
                     <input className="input pl-9" placeholder={t('prop.crud.search', { noun: noun.toLowerCase() })} aria-label={t('prop.crud.search', { noun: noun.toLowerCase() })} value={q} onChange={(e) => (setQ(e.target.value), setPage(1))} />
                 </div>
                 {filters.map((f) => (
-                    <select key={f.name} className="input w-full sm:w-auto sm:max-w-xs" value={flt[f.name] ?? ''} onChange={(e) => (setFlt({ ...flt, [f.name]: e.target.value }), setPage(1))} aria-label={t('prop.crud.filter_all', { label: f.label })}>
+                    <select key={f.name} className="select w-full sm:w-auto sm:max-w-xs" value={flt[f.name] ?? ''} onChange={(e) => (setFlt({ ...flt, [f.name]: e.target.value }), setPage(1))} aria-label={t('prop.crud.filter_all', { label: f.label })}>
                         <option value="">{t('prop.crud.filter_all', { label: f.label })}</option>
                         {f.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
@@ -214,7 +215,7 @@ export default function CrudTab({ path, noun, columns, fields, filters = [], del
                 <form onSubmit={save} className="card mb-4 p-4">
                     <div className="mb-3 flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{editing ? t('prop.crud.edit', { noun: noun.toLowerCase() }) : t('prop.crud.new', { noun: noun.toLowerCase() })}</h3>
-                        <button type="button" className="text-slate-500 hover:text-slate-600" onClick={() => setEditing(undefined)}><X className="h-4 w-4" /></button>
+                        <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => setEditing(undefined)} aria-label={t('ui.nav.close')}><X className="h-4 w-4" /></button>
                     </div>
                     <FormFields fields={fields} form={form} set={(k, v) => setForm((f) => ({ ...f, [k]: v }))} />
                     <div className="mt-4 flex gap-2">
@@ -316,7 +317,7 @@ export function SetupTab({ kind, noun, columns, fields }: { kind: string; noun: 
                 <form onSubmit={save} className="card mb-4 p-4">
                     <div className="mb-3 flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{editing ? t('prop.crud.edit', { noun: editing.code }) : t('prop.crud.new', { noun: noun.toLowerCase() })}</h3>
-                        <button type="button" className="text-slate-500 hover:text-slate-600" onClick={() => setEditing(undefined)}><X className="h-4 w-4" /></button>
+                        <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => setEditing(undefined)} aria-label={t('ui.nav.close')}><X className="h-4 w-4" /></button>
                     </div>
                     <p className="mb-3 text-xs text-slate-500">{t('prop.crud.setup_hint_before', { noun })}<strong>{t('prop.crud.active')}</strong>{t('prop.crud.setup_hint_after')}</p>
                     <FormFields fields={fields} form={form} set={(k, v) => setForm((f) => ({ ...f, [k]: v }))} />

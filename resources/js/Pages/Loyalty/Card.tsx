@@ -8,6 +8,7 @@ import { api, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { errorText, openPdf } from './lib';
+import Alert from '@/Components/ui/Alert';
 
 interface CardView {
     id: number;
@@ -54,7 +55,7 @@ export default function LoyaltyCard({ cardId }: { cardId: number }) {
         <AppLayout title={t('loyalty.cards.title')} subtitle={c ? c.member.number : ''}
             actions={c && <button className="btn-secondary inline-flex items-center gap-2" onClick={() => openPdf(`loyalty/cards/${cardId}/pdf`).catch((e) => setError(errorText(e)))}><Printer className="w-4 h-4" /> {t('loyalty.cards.print')}</button>}>
             <Head title={t('loyalty.cards.title')} />
-            {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+            {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
             <ApiState query={card} variant="detail" empty={<EmptyFor kind="loyalty" action={<Link href="/loyalty" className="btn-secondary">{t('loyalty.title')}</Link>} />} isEmpty={(d) => !d}>{() => null}</ApiState>
             {c && (
                 <div className="grid gap-6 lg:grid-cols-2">

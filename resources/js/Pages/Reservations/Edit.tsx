@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError, Problem } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface RoomType { id: number; name: string }
 interface Props {
@@ -51,7 +52,7 @@ export default function EditStay({ reservation, onSaved }: Props) {
                 <label className="label">{t('res.arrival')}<input className="input w-full" type="date" value={arrival} onChange={(e) => setArrival(e.target.value)} /></label>
                 <label className="label">{t('res.departure')}<input className="input w-full" type="date" value={departure} min={arrival} onChange={(e) => setDeparture(e.target.value)} /></label>
                 <label className="label">{t('res.room_type')}
-                    <select className="input w-full" value={typeId} disabled={typesState === 'loading'} onChange={(e) => setTypeId(e.target.value ? +e.target.value : '')}>
+                    <select className="select w-full" value={typeId} disabled={typesState === 'loading'} onChange={(e) => setTypeId(e.target.value ? +e.target.value : '')}>
                         <option value="">{typesState === 'loading' ? t('states.loading') : t('res.edit.keep_current')}</option>
                         {types.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                     </select>
@@ -65,9 +66,9 @@ export default function EditStay({ reservation, onSaved }: Props) {
                 </label>
             </div>
             {problem && (
-                <p className="rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-800">
+                <Alert variant="danger">
                     {problem.status === 409 ? `${t('res.create.sold_out')} : ` : problem.status === 422 ? `${t('res.edit.cannot_change')} : ` : ''}{problem.detail ?? problem.title}
-                </p>
+                </Alert>
             )}
             <div className="flex items-center justify-between text-sm">
                 <span>{t('res.total')}: <b>{formatCurrency(total ?? reservation.total_amount, reservation.currency)}</b>{total !== null && ` (${t('res.edit.updated')})`}</span>

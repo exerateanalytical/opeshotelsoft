@@ -9,6 +9,7 @@ use App\Modules\Reservations\Domain\Reservation;
 use App\Modules\Reservations\Revenue\Domain\CorporateContract;
 use App\Platform\Domain\DomainException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * Revenue rules on the public booking site: best-available-rate flags, promo codes and corporate codes.
@@ -20,6 +21,28 @@ class BookingSiteRevenue
     public function __construct(private PromoService $promos, private CorporateService $corporate, private Pricing $pricing, private UpsellService $upsell) {}
 
     /**
+     * Public corporate-code lookup, throttled: 10 lookups a minute per IP and code, 20 failed lookups an hour per IP
+     * (a known code is never blocked by someone else guessing). Over the limit answers 429.
+     */
+    private function findCorporate(string $code): ?CorporateContract
+    {
+        $ip = (string) request()->ip();
+        $norm = strtoupper(trim($code));
+        $perCode = 'corp-code:'.$ip.'|'.sha1($norm);
+        $failures = 'corp-code-fail:'.$ip;
+        if (RateLimiter::tooManyAttempts($perCode, 10) || RateLimiter::tooManyAttempts($failures, 20)) {
+            abort(429, 'Too many corporate code attempts. Try again later.');
+        }
+        RateLimiter::hit($perCode, 60);
+        $contract = $this->corporate->find($norm);
+        if (! $contract) {
+            RateLimiter::hit($failures, 3600);
+        }
+
+        return $contract;
+    }
+
+    /**
      * @param  array<int, array<string,mixed>>  $offers  offers built by the booking engine (public plans)
      * @param  array<string,mixed>  $input  request data (adults, children, promo_code, corporate_code)
      * @return array<int, array<string,mixed>>
@@ -29,7 +52,7 @@ class BookingSiteRevenue
         $adults = $input['adults'] ?? 1;
         $children = $input['children'] ?? 0;
 
-        if (! empty($input['corporate_code']) && ($contract = $this->corporate->find($input['corporate_code']))) {
+        if (! empty($input['corporate_code']) && ($contract = $this->findCorporate((string) $input['corporate_code']))) {
             foreach (RoomType::where('active', true)->orderBy('sort')->get() as $type) {
                 $a = $this->corporate->availability($contract, $type->id, $arrival, $departure);
                 if (! $a['bookable'] || $adults > $type->max_adults || $children > $type->max_children) {
@@ -89,7 +112,7 @@ class BookingSiteRevenue
     {
         $arrival = Carbon::parse($data['arrival'])->startOfDay();
         $departure = Carbon::parse($data['departure'])->startOfDay();
-        $contract = ! empty($data['corporate_code']) ? $this->corporate->find($data['corporate_code']) : null;
+        $contract = ! empty($data['corporate_code']) ? $this->findCorporate((string) $data['corporate_code']) : null;
         if (! empty($data['corporate_code']) && ! $contract) {
             throw new DomainException('This corporate code is not valid.', 'corporate-invalid');
         }

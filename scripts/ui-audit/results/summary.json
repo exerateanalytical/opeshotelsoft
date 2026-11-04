@@ -10,274 +10,439 @@
   "ff": {
    "mobile": {
     "audited": 144,
-    "pass": 9,
-    "passPolish": 90,
-    "fail": 45
+    "pass": 13,
+    "passPolish": 100,
+    "fail": 31
    },
    "tablet": {
     "audited": 144,
-    "pass": 9,
-    "passPolish": 123,
-    "fail": 12
+    "pass": 11,
+    "passPolish": 129,
+    "fail": 4
    },
    "desktop": {
     "audited": 144,
-    "pass": 9,
-    "passPolish": 91,
-    "fail": 44
+    "pass": 11,
+    "passPolish": 95,
+    "fail": 38
    },
    "zoom": {
     "audited": 144,
-    "pass": 0,
-    "passPolish": 88,
-    "fail": 56
+    "pass": 2,
+    "passPolish": 102,
+    "fail": 40
    }
   }
  },
  "sevRoutes": {
-  "P0": 9,
-  "P1": 15,
-  "P2": 54,
-  "P3": 66,
+  "P0": 0,
+  "P1": 4,
+  "P2": 55,
+  "P3": 85,
   "clean": 0
  },
  "findingsBySeverity": {
-  "P0": 9,
-  "P1": 25,
-  "P2": 102,
+  "P0": 0,
+  "P1": 5,
+  "P2": 75,
   "P3": 269
  },
  "ruleTotals": {
-  "body-small": 27,
-  "h1-size": 144,
   "btn-nonstandard": 121,
-  "btn-variant": 26,
-  "covered-by-fixed": 9,
-  "overlap": 2,
-  "overflow-x": 7,
-  "touch-target": 6,
-  "uppercase-block": 1,
-  "stretched": 35,
-  "h1": 3,
-  "landmark": 5,
-  "title": 3,
-  "no-label": 2,
-  "contrast": 3,
-  "glow": 2,
-  "small-text": 2,
-  "icon-family": 2,
-  "long-line": 1,
-  "no-tabular": 2,
+  "h1-size": 144,
+  "body-small": 25,
+  "btn-variant": 14,
+  "no-tabular": 3,
+  "overflow-x": 4,
+  "touch-target": 3,
+  "stretched": 33,
   "radius-off-scale": 1,
   "chart-overlap": 1
  },
  "perWidth": {
   "320x640": {
    "width": 320,
-   "routes": 148,
-   "withCritical": 10,
-   "critical": 96,
-   "withAdvisory": 136,
-   "advisory": 327
+   "routes": 144,
+   "failing": 31,
+   "findings": 31,
+   "advisory": 145
   },
   "360x740": {
    "width": 360,
-   "routes": 148,
-   "withCritical": 6,
-   "critical": 91,
-   "withAdvisory": 136,
-   "advisory": 326
+   "routes": 144,
+   "failing": 31,
+   "findings": 31,
+   "advisory": 145
   },
   "375x812": {
    "width": 375,
-   "routes": 148,
-   "withCritical": 6,
-   "critical": 91,
-   "withAdvisory": 136,
-   "advisory": 326
+   "routes": 144,
+   "failing": 31,
+   "findings": 31,
+   "advisory": 145
   },
   "390x844": {
    "width": 390,
-   "routes": 148,
-   "withCritical": 6,
-   "critical": 91,
-   "withAdvisory": 136,
-   "advisory": 325
+   "routes": 144,
+   "failing": 31,
+   "findings": 31,
+   "advisory": 145
   },
   "412x915": {
    "width": 412,
-   "routes": 148,
-   "withCritical": 8,
-   "critical": 94,
-   "withAdvisory": 136,
-   "advisory": 325
+   "routes": 144,
+   "failing": 31,
+   "findings": 31,
+   "advisory": 145
   },
   "430x932": {
    "width": 430,
-   "routes": 148,
-   "withCritical": 9,
-   "critical": 97,
-   "withAdvisory": 136,
-   "advisory": 325
+   "routes": 144,
+   "failing": 31,
+   "findings": 32,
+   "advisory": 145
   },
   "480x854": {
    "width": 480,
-   "routes": 148,
-   "withCritical": 7,
-   "critical": 97,
-   "withAdvisory": 136,
-   "advisory": 323
+   "routes": 144,
+   "failing": 31,
+   "findings": 32,
+   "advisory": 145
   },
   "768x1024": {
    "width": 768,
-   "routes": 146,
-   "withCritical": 4,
-   "critical": 100,
-   "withAdvisory": 41,
-   "advisory": 172
+   "routes": 143,
+   "failing": 4,
+   "findings": 5,
+   "advisory": 33
   },
   "820x1180": {
    "width": 820,
-   "routes": 146,
-   "withCritical": 4,
-   "critical": 101,
-   "withAdvisory": 41,
-   "advisory": 171
+   "routes": 143,
+   "failing": 4,
+   "findings": 5,
+   "advisory": 33
   },
   "834x1194": {
    "width": 834,
-   "routes": 146,
-   "withCritical": 4,
-   "critical": 101,
-   "withAdvisory": 41,
-   "advisory": 171
+   "routes": 143,
+   "failing": 4,
+   "findings": 5,
+   "advisory": 33
   },
   "1024x768": {
    "width": 1024,
-   "routes": 146,
-   "withCritical": 5,
-   "critical": 93,
-   "withAdvisory": 136,
-   "advisory": 287
+   "routes": 143,
+   "failing": 4,
+   "findings": 4,
+   "advisory": 132
   },
   "1280x720": {
    "width": 1280,
-   "routes": 145,
-   "withCritical": 6,
-   "critical": 11,
-   "withAdvisory": 134,
-   "advisory": 254
+   "routes": 144,
+   "failing": 13,
+   "findings": 13,
+   "advisory": 132
   },
   "1366x768": {
    "width": 1366,
-   "routes": 145,
-   "withCritical": 3,
-   "critical": 9,
-   "withAdvisory": 134,
-   "advisory": 255
+   "routes": 144,
+   "failing": 13,
+   "findings": 13,
+   "advisory": 132
   },
   "1440x900": {
    "width": 1440,
-   "routes": 145,
-   "withCritical": 5,
-   "critical": 13,
-   "withAdvisory": 134,
-   "advisory": 255
+   "routes": 144,
+   "failing": 13,
+   "findings": 13,
+   "advisory": 132
   },
   "1536x864": {
    "width": 1536,
-   "routes": 145,
-   "withCritical": 5,
-   "critical": 13,
-   "withAdvisory": 134,
-   "advisory": 255
+   "routes": 144,
+   "failing": 13,
+   "findings": 13,
+   "advisory": 132
   },
   "1600x900": {
    "width": 1600,
-   "routes": 145,
-   "withCritical": 5,
-   "critical": 13,
-   "withAdvisory": 134,
-   "advisory": 311
+   "routes": 144,
+   "failing": 34,
+   "findings": 42,
+   "advisory": 132
   },
   "1920x1080": {
    "width": 1920,
-   "routes": 145,
-   "withCritical": 4,
-   "critical": 13,
-   "withAdvisory": 134,
-   "advisory": 385
+   "routes": 144,
+   "failing": 37,
+   "findings": 45,
+   "advisory": 132
   },
   "2560x1440": {
    "width": 2560,
-   "routes": 145,
-   "withCritical": 3,
-   "critical": 11,
-   "withAdvisory": 134,
-   "advisory": 385
+   "routes": 144,
+   "failing": 38,
+   "findings": 46,
+   "advisory": 132
   },
   "zoom125@1280": {
    "width": 1024,
-   "routes": 145,
-   "withCritical": 5,
-   "critical": 10,
-   "withAdvisory": 134,
-   "advisory": 318
+   "routes": 144,
+   "failing": 13,
+   "findings": 13,
+   "advisory": 132
   },
   "zoom150@1280": {
    "width": 853,
-   "routes": 145,
-   "withCritical": 8,
-   "critical": 17,
-   "withAdvisory": 41,
-   "advisory": 195
+   "routes": 144,
+   "failing": 4,
+   "findings": 5,
+   "advisory": 35
   },
   "zoom200@1280": {
    "width": 640,
-   "routes": 145,
-   "withCritical": 8,
-   "critical": 23,
-   "withAdvisory": 134,
-   "advisory": 287
+   "routes": 144,
+   "failing": 30,
+   "findings": 31,
+   "advisory": 145
   },
   "zoom125@1920": {
    "width": 1536,
-   "routes": 145,
-   "withCritical": 5,
-   "critical": 13,
-   "withAdvisory": 134,
-   "advisory": 318
+   "routes": 144,
+   "failing": 13,
+   "findings": 13,
+   "advisory": 132
   },
   "zoom150@1920": {
    "width": 1280,
-   "routes": 145,
-   "withCritical": 6,
-   "critical": 11,
-   "withAdvisory": 134,
-   "advisory": 320
+   "routes": 144,
+   "failing": 13,
+   "findings": 13,
+   "advisory": 132
   },
   "zoom200@1920": {
    "width": 960,
-   "routes": 145,
-   "withCritical": 9,
-   "critical": 28,
-   "withAdvisory": 42,
-   "advisory": 196
+   "routes": 144,
+   "failing": 5,
+   "findings": 6,
+   "advisory": 35
   },
   "text200@1280": {
    "width": 1280,
-   "routes": 145,
-   "withCritical": 14,
-   "critical": 18,
-   "withAdvisory": 144,
-   "advisory": 170
+   "routes": 144,
+   "failing": 10,
+   "findings": 11,
+   "advisory": 145
+  }
+ },
+ "perWidthRaw": {
+  "320x640": {
+   "width": 320,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 84,
+   "withAdvisory": 132,
+   "advisory": 305
+  },
+  "360x740": {
+   "width": 360,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 84,
+   "withAdvisory": 132,
+   "advisory": 304
+  },
+  "375x812": {
+   "width": 375,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 84,
+   "withAdvisory": 132,
+   "advisory": 304
+  },
+  "390x844": {
+   "width": 390,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 84,
+   "withAdvisory": 132,
+   "advisory": 304
+  },
+  "412x915": {
+   "width": 412,
+   "routes": 144,
+   "withCritical": 3,
+   "critical": 86,
+   "withAdvisory": 132,
+   "advisory": 304
+  },
+  "430x932": {
+   "width": 430,
+   "routes": 144,
+   "withCritical": 4,
+   "critical": 88,
+   "withAdvisory": 132,
+   "advisory": 304
+  },
+  "480x854": {
+   "width": 480,
+   "routes": 144,
+   "withCritical": 5,
+   "critical": 91,
+   "withAdvisory": 132,
+   "advisory": 304
+  },
+  "768x1024": {
+   "width": 768,
+   "routes": 143,
+   "withCritical": 4,
+   "critical": 180,
+   "withAdvisory": 36,
+   "advisory": 199
+  },
+  "820x1180": {
+   "width": 820,
+   "routes": 143,
+   "withCritical": 4,
+   "critical": 180,
+   "withAdvisory": 36,
+   "advisory": 199
+  },
+  "834x1194": {
+   "width": 834,
+   "routes": 143,
+   "withCritical": 4,
+   "critical": 180,
+   "withAdvisory": 36,
+   "advisory": 199
+  },
+  "1024x768": {
+   "width": 1024,
+   "routes": 143,
+   "withCritical": 3,
+   "critical": 173,
+   "withAdvisory": 133,
+   "advisory": 316
+  },
+  "1280x720": {
+   "width": 1280,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 251
+  },
+  "1366x768": {
+   "width": 1366,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 251
+  },
+  "1440x900": {
+   "width": 1440,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 251
+  },
+  "1536x864": {
+   "width": 1536,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 251
+  },
+  "1600x900": {
+   "width": 1600,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 307
+  },
+  "1920x1080": {
+   "width": 1920,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 381
+  },
+  "2560x1440": {
+   "width": 2560,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 381
+  },
+  "zoom125@1280": {
+   "width": 1024,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 314
+  },
+  "zoom150@1280": {
+   "width": 853,
+   "routes": 144,
+   "withCritical": 3,
+   "critical": 9,
+   "withAdvisory": 38,
+   "advisory": 191
+  },
+  "zoom200@1280": {
+   "width": 640,
+   "routes": 144,
+   "withCritical": 4,
+   "critical": 11,
+   "withAdvisory": 131,
+   "advisory": 276
+  },
+  "zoom125@1920": {
+   "width": 1536,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 315
+  },
+  "zoom150@1920": {
+   "width": 1280,
+   "routes": 144,
+   "withCritical": 2,
+   "critical": 2,
+   "withAdvisory": 133,
+   "advisory": 317
+  },
+  "zoom200@1920": {
+   "width": 960,
+   "routes": 144,
+   "withCritical": 6,
+   "critical": 26,
+   "withAdvisory": 39,
+   "advisory": 192
+  },
+  "text200@1280": {
+   "width": 1280,
+   "routes": 144,
+   "withCritical": 9,
+   "critical": 9,
+   "withAdvisory": 142,
+   "advisory": 161
   }
  },
  "modalSummary": {
-  "triggers": 33,
+  "triggers": 53,
   "opened": 24,
   "failing": 0,
-  "pagesWithoutTrigger": 62
+  "pagesWithoutTrigger": 55
  },
  "modalFail": [],
  "screens": [
@@ -285,7 +450,7 @@
    "kind": "errors",
    "role": "Guest (signed out)",
    "route": "/dashboard",
-   "name": "Dashboard",
+   "name": "Dashboard (redirects to /login)",
    "httpStatus": 200,
    "finalUrl": "/login",
    "desktop": "FAIL P2",
@@ -301,7 +466,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.w-full.max-w-[400px] \"FR EN Équipe Membre Bon retour\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -328,8 +493,7 @@
      "zoom200@1280",
      "zoom125@1920",
      "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
+     "zoom200@1920"
     ],
     "h1-size": [
      "text200@1280"
@@ -350,14 +514,14 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
    "kind": "errors",
    "role": "Cashier",
    "route": "/finance",
-   "name": "Finance",
+   "name": "Finance (HTTP 403 page)",
    "httpStatus": 403,
    "finalUrl": "/finance",
    "desktop": "PASS*",
@@ -365,7 +529,7 @@
    "mobile": "FAIL P2",
    "zoom": "FAIL P2",
    "colour": "OK",
-   "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (320x640,360x740,375x812,390x844...)",
+   "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (text200@1280)",
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
@@ -373,7 +537,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.text-slate-600 \"Si le problème persiste, conta\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -385,17 +549,6 @@
      "430x932",
      "480x854",
      "zoom200@1280"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
-     "text200@1280"
     ],
     "btn-nonstandard": [
      "1024x768",
@@ -409,11 +562,13 @@
      "zoom125@1280",
      "zoom125@1920",
      "zoom150@1920"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
     "mobile": {
-     "h1-size": 1,
      "body-small": 1
     },
     "tablet": {
@@ -424,18 +579,18 @@
     },
     "zoom": {
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "body-small": 1
+     "body-small": 1,
+     "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
    "kind": "errors",
    "role": "Cashier",
    "route": "/hr",
-   "name": "Hr",
+   "name": "HR (HTTP 403 page)",
    "httpStatus": 403,
    "finalUrl": "/hr",
    "desktop": "PASS*",
@@ -443,7 +598,7 @@
    "mobile": "FAIL P2",
    "zoom": "FAIL P2",
    "colour": "OK",
-   "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (320x640,360x740,375x812,390x844...)",
+   "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (text200@1280)",
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
@@ -451,7 +606,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.text-slate-600 \"Si le problème persiste, conta\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -464,17 +619,6 @@
      "480x854",
      "zoom200@1280"
     ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
-     "text200@1280"
-    ],
     "btn-nonstandard": [
      "1024x768",
      "1280x720",
@@ -487,11 +631,13 @@
      "zoom125@1280",
      "zoom125@1920",
      "zoom150@1920"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
     "mobile": {
-     "h1-size": 1,
      "body-small": 1
     },
     "tablet": {
@@ -502,47 +648,36 @@
     },
     "zoom": {
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "body-small": 1
+     "body-small": 1,
+     "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
    "kind": "errors",
    "role": "Cashier",
    "route": "/this-page-does-not-exist",
-   "name": "This page does not exist",
+   "name": "This page does not exist (HTTP 404 page)",
    "httpStatus": 404,
    "finalUrl": "/this-page-does-not-exist",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "PASS*",
+   "mobile": "PASS",
    "zoom": "PASS*",
    "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "typography": "h1-size (text200@1280)",
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
    "severity": "P3",
-   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "rec": "Polish only (P3): Use `<Button>` or `.btn-*`. Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
-     "text200@1280"
-    ],
     "btn-nonstandard": [
      "1024x768",
      "1280x720",
@@ -555,12 +690,13 @@
      "zoom125@1280",
      "zoom125@1920",
      "zoom150@1920"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
-    "mobile": {
-     "h1-size": 1
-    },
+    "mobile": {},
     "tablet": {
      "btn-nonstandard": 1
     },
@@ -579,7 +715,7 @@
    "kind": "errors",
    "role": "Guest (signed out)",
    "route": "/this-page-does-not-exist",
-   "name": "This page does not exist",
+   "name": "This page does not exist (redirects to /login)",
    "httpStatus": 200,
    "finalUrl": "/login",
    "desktop": "FAIL P2",
@@ -595,7 +731,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.w-full.max-w-[400px] \"FR EN Équipe Membre Bon retour\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -622,8 +758,7 @@
      "zoom200@1280",
      "zoom125@1920",
      "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
+     "zoom200@1920"
     ],
     "h1-size": [
      "text200@1280"
@@ -656,32 +791,20 @@
    "finalUrl": "/account",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P0",
-   "zoom": "FAIL P0",
+   "mobile": "PASS*",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (320x640,zoom150@1280,zoom200@1280,zoom200@1920...)",
+   "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (360x740,375x812,text200@1280); btn-nonstandard (320x640,360x740,375x812,390x844...)",
-   "overlapDistortion": "covered-by-fixed (320x640,zoom150@1280,zoom200@1280,zoom200@1920...)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `a.card.p-4.block \"Your tier Gold 580 points ≈ 5 \"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main.p-4.max-w-3xl.mx-auto \"Hello Jean Your tier Gold 580 \"`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
+   "components": "btn-nonstandard (320x640,360x740,375x812,390x844...)",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "covered-by-fixed": [
-     "320x640",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom200@1920",
-     "text200@1280"
-    ],
-    "btn-variant": [
-     "360x740",
-     "375x812",
-     "text200@1280"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -727,10 +850,8 @@
    },
    "perFF": {
     "mobile": {
-     "covered-by-fixed": 1,
      "h1-size": 1,
-     "btn-nonstandard": 5,
-     "btn-variant": 1
+     "btn-nonstandard": 5
     },
     "tablet": {
      "h1-size": 1,
@@ -741,9 +862,7 @@
     },
     "zoom": {
      "h1-size": 1,
-     "covered-by-fixed": 4,
-     "btn-nonstandard": 5,
-     "btn-variant": 1
+     "btn-nonstandard": 5
     }
    },
    "modals": 0,
@@ -759,239 +878,6 @@
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P0",
-   "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (zoom200@1280,text200@1280)",
-   "responsiveness": "OK",
-   "accessibility": "OK",
-   "components": "OK",
-   "overlapDistortion": "covered-by-fixed (zoom200@1280,text200@1280)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `input.input`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
-   "rules": {
-    "covered-by-fixed": [
-     "zoom200@1280",
-     "text200@1280"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ]
-   },
-   "perFF": {
-    "mobile": {
-     "h1-size": 1
-    },
-    "tablet": {
-     "h1-size": 1
-    },
-    "desktop": {
-     "h1-size": 1
-    },
-    "zoom": {
-     "h1-size": 1,
-     "covered-by-fixed": 2
-    }
-   },
-   "modals": 0,
-   "nVps": 25
-  },
-  {
-   "kind": "member",
-   "role": "Loyalty member",
-   "route": "/account/bookings",
-   "name": "Account / Bookings",
-   "httpStatus": 200,
-   "finalUrl": "/account/bookings",
-   "desktop": "FAIL P0",
-   "tablet": "PASS*",
-   "mobile": "FAIL P0",
-   "zoom": "FAIL P0",
-   "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (320x640,360x740,390x844,412x915...)",
-   "responsiveness": "OK",
-   "accessibility": "OK",
-   "components": "OK",
-   "overlapDistortion": "covered-by-fixed (320x640,360x740,390x844,412x915...)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `button.w-full.text-left.p-4 \"Opes Resort Kribi · Kribi 30 O\"`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
-   "rules": {
-    "covered-by-fixed": [
-     "320x640",
-     "360x740",
-     "390x844",
-     "412x915",
-     "430x932",
-     "1280x720",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ]
-   },
-   "perFF": {
-    "mobile": {
-     "covered-by-fixed": 1,
-     "h1-size": 1
-    },
-    "tablet": {
-     "h1-size": 1
-    },
-    "desktop": {
-     "covered-by-fixed": 1,
-     "h1-size": 1
-    },
-    "zoom": {
-     "covered-by-fixed": 1,
-     "h1-size": 1
-    }
-   },
-   "modals": 0,
-   "nVps": 25
-  },
-  {
-   "kind": "member",
-   "role": "Loyalty member",
-   "route": "/account/bookings/1",
-   "name": "Account / Bookings / 1",
-   "httpStatus": 404,
-   "finalUrl": "/account/bookings/1",
-   "desktop": "PASS*",
-   "tablet": "PASS*",
-   "mobile": "PASS*",
-   "zoom": "FAIL P1",
-   "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "overlap (text200@1280)",
-   "responsiveness": "OK",
-   "accessibility": "OK",
-   "components": "OK",
-   "overlapDistortion": "overlap (text200@1280)",
-   "severity": "P1",
-   "rec": "Stack with `flex-wrap`/`grid`, or move one control; check absolute positioning. Sample: `a.skip-link \"Skip to main content\"`.",
-   "fixed": "No",
-   "blocker": "overlap (P1)",
-   "rules": {
-    "overlap": [
-     "text200@1280"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ]
-   },
-   "perFF": {
-    "mobile": {
-     "h1-size": 1
-    },
-    "tablet": {
-     "h1-size": 1
-    },
-    "desktop": {
-     "h1-size": 1
-    },
-    "zoom": {
-     "h1-size": 1,
-     "overlap": 1
-    }
-   },
-   "modals": 0,
-   "nVps": 25
-  },
-  {
-   "kind": "member",
-   "role": "Loyalty member",
-   "route": "/account/card",
-   "name": "Account / Card",
-   "httpStatus": 200,
-   "finalUrl": "/account/card",
-   "desktop": "PASS*",
-   "tablet": "PASS*",
-   "mobile": "PASS*",
    "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
@@ -1002,7 +888,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1053,30 +939,26 @@
   {
    "kind": "member",
    "role": "Loyalty member",
-   "route": "/account/chat",
-   "name": "Account / Chat",
+   "route": "/account/bookings",
+   "name": "Account / Bookings",
    "httpStatus": 200,
-   "finalUrl": "/account/chat",
+   "finalUrl": "/account/bookings",
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P0",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (zoom150@1280,text200@1280)",
+   "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
    "components": "OK",
-   "overlapDistortion": "covered-by-fixed (zoom150@1280,text200@1280)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `select#chat-hotel.input \"Demo Hôtel Douala Bonanjo Demo\"`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "covered-by-fixed": [
-     "zoom150@1280",
-     "text200@1280"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -1116,8 +998,189 @@
      "h1-size": 1
     },
     "zoom": {
-     "h1-size": 1,
-     "covered-by-fixed": 2
+     "h1-size": 1
+    }
+   },
+   "modals": 0,
+   "nVps": 25
+  },
+  {
+   "kind": "member",
+   "role": "Loyalty member",
+   "route": "/account/bookings/1",
+   "name": "Account / Bookings / 1 (HTTP 404 page)",
+   "httpStatus": 404,
+   "finalUrl": "/account/bookings/1",
+   "desktop": "PASS",
+   "tablet": "PASS*",
+   "mobile": "PASS*",
+   "zoom": "PASS",
+   "colour": "OK",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "spacing": "OK",
+   "responsiveness": "OK",
+   "accessibility": "OK",
+   "components": "OK",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
+   "rules": {
+    "h1-size": [
+     "320x640",
+     "360x740",
+     "375x812",
+     "390x844",
+     "412x915",
+     "430x932",
+     "480x854",
+     "768x1024",
+     "820x1180",
+     "834x1194",
+     "1024x768"
+    ]
+   },
+   "perFF": {
+    "mobile": {
+     "h1-size": 1
+    },
+    "tablet": {
+     "h1-size": 1
+    },
+    "desktop": {},
+    "zoom": {}
+   },
+   "modals": 0,
+   "nVps": 25
+  },
+  {
+   "kind": "member",
+   "role": "Loyalty member",
+   "route": "/account/card",
+   "name": "Account / Card",
+   "httpStatus": 200,
+   "finalUrl": "/account/card",
+   "desktop": "PASS*",
+   "tablet": "PASS",
+   "mobile": "PASS*",
+   "zoom": "PASS*",
+   "colour": "OK",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "spacing": "OK",
+   "responsiveness": "OK",
+   "accessibility": "OK",
+   "components": "OK",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
+   "rules": {
+    "h1-size": [
+     "320x640",
+     "360x740",
+     "375x812",
+     "390x844",
+     "412x915",
+     "430x932",
+     "480x854",
+     "1280x720",
+     "1366x768",
+     "1440x900",
+     "1536x864",
+     "1600x900",
+     "1920x1080",
+     "2560x1440",
+     "zoom125@1280",
+     "zoom150@1280",
+     "zoom200@1280",
+     "zoom125@1920",
+     "zoom150@1920",
+     "zoom200@1920",
+     "text200@1280"
+    ]
+   },
+   "perFF": {
+    "mobile": {
+     "h1-size": 1
+    },
+    "tablet": {},
+    "desktop": {
+     "h1-size": 1
+    },
+    "zoom": {
+     "h1-size": 1
+    }
+   },
+   "modals": 0,
+   "nVps": 21
+  },
+  {
+   "kind": "member",
+   "role": "Loyalty member",
+   "route": "/account/chat",
+   "name": "Account / Chat (HTTP 500 page)",
+   "httpStatus": 500,
+   "finalUrl": "/account/chat",
+   "desktop": "PASS*",
+   "tablet": "PASS*",
+   "mobile": "PASS*",
+   "zoom": "PASS*",
+   "colour": "OK",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...); no-tabular (768x1024,820x1180,834x1194,1024x768)",
+   "spacing": "OK",
+   "responsiveness": "OK",
+   "accessibility": "OK",
+   "components": "OK",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Add `tabular-nums` (body already sets it; a parent resets it).",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
+   "rules": {
+    "h1-size": [
+     "320x640",
+     "360x740",
+     "375x812",
+     "390x844",
+     "412x915",
+     "430x932",
+     "480x854",
+     "1280x720",
+     "1366x768",
+     "1440x900",
+     "1536x864",
+     "1600x900",
+     "1920x1080",
+     "2560x1440",
+     "zoom125@1280",
+     "zoom150@1280",
+     "zoom200@1280",
+     "zoom125@1920",
+     "zoom150@1920",
+     "zoom200@1920",
+     "text200@1280"
+    ],
+    "no-tabular": [
+     "768x1024",
+     "820x1180",
+     "834x1194",
+     "1024x768"
+    ]
+   },
+   "perFF": {
+    "mobile": {
+     "h1-size": 1
+    },
+    "tablet": {
+     "no-tabular": 2
+    },
+    "desktop": {
+     "h1-size": 1
+    },
+    "zoom": {
+     "h1-size": 1
     }
    },
    "modals": 0,
@@ -1130,37 +1193,22 @@
    "name": "Account / Hotels",
    "httpStatus": 200,
    "finalUrl": "/account/hotels",
-   "desktop": "FAIL P0",
-   "tablet": "FAIL P0",
-   "mobile": "FAIL P0",
-   "zoom": "FAIL P0",
+   "desktop": "PASS*",
+   "tablet": "PASS*",
+   "mobile": "PASS*",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (375x812,412x915,430x932,1024x768...)",
+   "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
    "components": "OK",
-   "overlapDistortion": "covered-by-fixed (375x812,412x915,430x932,1024x768...)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `a.btn-primary.inline-flex \"Book here\"`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "covered-by-fixed": [
-     "375x812",
-     "412x915",
-     "430x932",
-     "1024x768",
-     "1280x720",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "text200@1280"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -1191,19 +1239,15 @@
    },
    "perFF": {
     "mobile": {
-     "h1-size": 1,
-     "covered-by-fixed": 1
+     "h1-size": 1
     },
     "tablet": {
-     "h1-size": 1,
-     "covered-by-fixed": 1
+     "h1-size": 1
     },
     "desktop": {
-     "covered-by-fixed": 1,
      "h1-size": 1
     },
     "zoom": {
-     "covered-by-fixed": 1,
      "h1-size": 1
     }
    },
@@ -1219,157 +1263,6 @@
    "finalUrl": "/account/points",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P0",
-   "zoom": "FAIL P0",
-   "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (320x640,zoom150@1280,zoom200@1920)",
-   "responsiveness": "OK",
-   "accessibility": "OK",
-   "components": "OK",
-   "overlapDistortion": "covered-by-fixed (320x640,zoom150@1280,zoom200@1920)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `a.btn-secondary \"Statement (PDF)\"`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
-   "rules": {
-    "covered-by-fixed": [
-     "320x640",
-     "zoom150@1280",
-     "zoom200@1920"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ]
-   },
-   "perFF": {
-    "mobile": {
-     "covered-by-fixed": 1,
-     "h1-size": 1
-    },
-    "tablet": {
-     "h1-size": 1
-    },
-    "desktop": {
-     "h1-size": 1
-    },
-    "zoom": {
-     "h1-size": 1,
-     "covered-by-fixed": 1
-    }
-   },
-   "modals": 0,
-   "nVps": 25
-  },
-  {
-   "kind": "member",
-   "role": "Loyalty member",
-   "route": "/account/profile",
-   "name": "Account / Profile",
-   "httpStatus": 200,
-   "finalUrl": "/account/profile",
-   "desktop": "PASS*",
-   "tablet": "PASS*",
-   "mobile": "FAIL P0",
-   "zoom": "FAIL P0",
-   "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (320x640,zoom200@1280,zoom200@1920,text200@1280)",
-   "responsiveness": "OK",
-   "accessibility": "OK",
-   "components": "OK",
-   "overlapDistortion": "covered-by-fixed (320x640,zoom200@1280,zoom200@1920,text200@1280)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `button.btn-secondary \"Français\"`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
-   "rules": {
-    "covered-by-fixed": [
-     "320x640",
-     "zoom200@1280",
-     "zoom200@1920",
-     "text200@1280"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ]
-   },
-   "perFF": {
-    "mobile": {
-     "covered-by-fixed": 2,
-     "h1-size": 1
-    },
-    "tablet": {
-     "h1-size": 1
-    },
-    "desktop": {
-     "h1-size": 1
-    },
-    "zoom": {
-     "h1-size": 1,
-     "covered-by-fixed": 2
-    }
-   },
-   "modals": 0,
-   "nVps": 25
-  },
-  {
-   "kind": "member",
-   "role": "Loyalty member",
-   "route": "/account/requests",
-   "name": "Account / Requests",
-   "httpStatus": 200,
-   "finalUrl": "/account/requests",
-   "desktop": "PASS*",
-   "tablet": "PASS*",
    "mobile": "PASS*",
    "zoom": "PASS*",
    "colour": "OK",
@@ -1381,7 +1274,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1419,6 +1312,136 @@
     "tablet": {
      "h1-size": 1
     },
+    "desktop": {
+     "h1-size": 1
+    },
+    "zoom": {
+     "h1-size": 1
+    }
+   },
+   "modals": 0,
+   "nVps": 25
+  },
+  {
+   "kind": "member",
+   "role": "Loyalty member",
+   "route": "/account/profile",
+   "name": "Account / Profile",
+   "httpStatus": 200,
+   "finalUrl": "/account/profile",
+   "desktop": "PASS*",
+   "tablet": "PASS*",
+   "mobile": "PASS*",
+   "zoom": "PASS*",
+   "colour": "OK",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "spacing": "OK",
+   "responsiveness": "OK",
+   "accessibility": "OK",
+   "components": "OK",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
+   "rules": {
+    "h1-size": [
+     "320x640",
+     "360x740",
+     "375x812",
+     "390x844",
+     "412x915",
+     "430x932",
+     "480x854",
+     "768x1024",
+     "820x1180",
+     "834x1194",
+     "1024x768",
+     "1280x720",
+     "1366x768",
+     "1440x900",
+     "1536x864",
+     "1600x900",
+     "1920x1080",
+     "2560x1440",
+     "zoom125@1280",
+     "zoom150@1280",
+     "zoom200@1280",
+     "zoom125@1920",
+     "zoom150@1920",
+     "zoom200@1920",
+     "text200@1280"
+    ]
+   },
+   "perFF": {
+    "mobile": {
+     "h1-size": 1
+    },
+    "tablet": {
+     "h1-size": 1
+    },
+    "desktop": {
+     "h1-size": 1
+    },
+    "zoom": {
+     "h1-size": 1
+    }
+   },
+   "modals": 0,
+   "nVps": 25
+  },
+  {
+   "kind": "member",
+   "role": "Loyalty member",
+   "route": "/account/requests",
+   "name": "Account / Requests",
+   "httpStatus": 200,
+   "finalUrl": "/account/requests",
+   "desktop": "PASS*",
+   "tablet": "PASS",
+   "mobile": "PASS*",
+   "zoom": "PASS*",
+   "colour": "OK",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "spacing": "OK",
+   "responsiveness": "OK",
+   "accessibility": "OK",
+   "components": "OK",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
+   "rules": {
+    "h1-size": [
+     "320x640",
+     "360x740",
+     "375x812",
+     "390x844",
+     "412x915",
+     "430x932",
+     "480x854",
+     "1280x720",
+     "1366x768",
+     "1440x900",
+     "1536x864",
+     "1600x900",
+     "1920x1080",
+     "2560x1440",
+     "zoom125@1280",
+     "zoom150@1280",
+     "zoom200@1280",
+     "zoom125@1920",
+     "zoom150@1920",
+     "zoom200@1920",
+     "text200@1280"
+    ]
+   },
+   "perFF": {
+    "mobile": {
+     "h1-size": 1
+    },
+    "tablet": {},
     "desktop": {
      "h1-size": 1
     },
@@ -1436,43 +1459,23 @@
    "name": "Landing",
    "httpStatus": 200,
    "finalUrl": "/",
-   "desktop": "FAIL P0",
-   "tablet": "FAIL P0",
-   "mobile": "FAIL P0",
-   "zoom": "FAIL P0",
+   "desktop": "FAIL P2",
+   "tablet": "FAIL P2",
+   "mobile": "FAIL P2",
+   "zoom": "FAIL P1",
    "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...); uppercase-block (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (320x640,360x740,375x812,390x844...)",
-   "responsiveness": "overflow-x (1024x768,zoom125@1280,text200@1280)",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "spacing": "OK",
+   "responsiveness": "overflow-x (text200@1280)",
    "accessibility": "touch-target (430x932,480x854,768x1024,820x1180...)",
    "components": "btn-variant (320x640,360x740,375x812,390x844...); btn-nonstandard (320x640,360x740,375x812,390x844...)",
-   "overlapDistortion": "covered-by-fixed (320x640,360x740,375x812,390x844...)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `input.input.mt-1`. Find the widest element (sample), add `min-w-0`, `flex-wrap`, or wrap the table in `.table-wrap`. Sample: `html.h-full \"OPES Hôtels Soft Pourquoi Fonc\"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#top \"LOGICIEL HÔTELIER POUR LA ZONE\"`.",
+   "overlapDistortion": "OK",
+   "severity": "P1",
+   "rec": "Find the widest element (sample), add `min-w-0`, `flex-wrap`, or wrap the table in `.table-wrap`. Sample: `html.h-full \"OPES Hôtels Soft Pourquoi Fonc\"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#top \"Logiciel hôtelier pour la zone\"`. Use `.btn`/`.hit-44`, or wrap in a 44 px label. Sample: `summary.cursor-pointer.list-none.text-lg \"Combien de temps pour démarr`.",
    "fixed": "No",
-   "blocker": "covered-by-fixed (P0), overflow-x (P1)",
+   "blocker": "overflow-x (P1)",
    "rules": {
-    "covered-by-fixed": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "820x1180",
-     "834x1194",
-     "1280x720",
-     "1920x1080",
-     "zoom125@1280",
-     "zoom200@1280",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
     "overflow-x": [
-     "1024x768",
-     "zoom125@1280",
      "text200@1280"
     ],
     "btn-variant": [
@@ -1499,8 +1502,7 @@
      "zoom200@1280",
      "zoom125@1920",
      "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
+     "zoom200@1920"
     ],
     "touch-target": [
      "430x932",
@@ -1539,33 +1541,6 @@
      "zoom200@1920",
      "text200@1280"
     ],
-    "uppercase-block": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
     "btn-nonstandard": [
      "320x640",
      "360x740",
@@ -1595,9 +1570,7 @@
    },
    "perFF": {
     "mobile": {
-     "covered-by-fixed": 1,
      "h1-size": 1,
-     "uppercase-block": 1,
      "btn-variant": 1,
      "btn-nonstandard": 1,
      "touch-target": 4
@@ -1605,27 +1578,20 @@
     "tablet": {
      "touch-target": 7,
      "h1-size": 1,
-     "uppercase-block": 1,
      "btn-variant": 1,
-     "btn-nonstandard": 1,
-     "covered-by-fixed": 1,
-     "overflow-x": 1
+     "btn-nonstandard": 1
     },
     "desktop": {
-     "covered-by-fixed": 2,
      "h1-size": 1,
-     "uppercase-block": 1,
      "btn-variant": 1,
      "btn-nonstandard": 1
     },
     "zoom": {
-     "overflow-x": 1,
-     "covered-by-fixed": 2,
      "h1-size": 1,
-     "uppercase-block": 1,
      "btn-variant": 1,
      "btn-nonstandard": 1,
-     "touch-target": 7
+     "touch-target": 7,
+     "overflow-x": 1
     }
    },
    "modals": 0,
@@ -1651,7 +1617,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1689,7 +1655,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1727,7 +1693,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1765,7 +1731,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1803,7 +1769,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1841,7 +1807,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1879,7 +1845,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1917,7 +1883,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1933,7 +1899,7 @@
     }
    },
    "modals": 0,
-   "nVps": 50
+   "nVps": 25
   },
   {
    "kind": "public",
@@ -1955,7 +1921,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -1993,7 +1959,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.w-full.max-w-[400px] \"FR EN Équipe Membre Bon retour\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -2020,8 +1986,7 @@
      "zoom200@1280",
      "zoom125@1920",
      "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
+     "zoom200@1920"
     ],
     "h1-size": [
      "text200@1280"
@@ -2049,7 +2014,7 @@
    "kind": "public",
    "role": "Guest (signed out)",
    "route": "/verify/sample",
-   "name": "Verify / Sample",
+   "name": "Verify / Sample (HTTP 404 page)",
    "httpStatus": 404,
    "finalUrl": "/verify/sample",
    "desktop": "PASS*",
@@ -2065,7 +2030,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -2133,7 +2098,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -2199,7 +2164,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"XAF (FCFA) is the functional c\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -2277,7 +2242,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Cashier shift #3 open`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -2332,7 +2297,7 @@
      "btn-variant": 1
     }
    },
-   "modals": 3,
+   "modals": 2,
    "nVps": 25
   },
   {
@@ -2344,39 +2309,22 @@
    "finalUrl": "/billing/folios",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P2",
-   "zoom": "PASS*",
+   "mobile": "PASS",
+   "zoom": "FAIL P2",
    "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "typography": "h1-size (text200@1280)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "OK",
-   "components": "btn-variant (320x640,360x740,375x812,390x844...); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "accessibility": "touch-target (zoom200@1920)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
    "severity": "P2",
-   "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Cashier shift #3 open`.",
-   "fixed": "Partly (P2/P3 open)",
+   "rec": "Use `.btn`/`.hit-44`, or wrap in a 44 px label. Sample: `button.n1-sort \"Number\"`.",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
-    "btn-variant": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
-     "text200@1280"
+    "touch-target": [
+     "zoom200@1920"
     ],
     "btn-nonstandard": [
      "1024x768",
@@ -2389,14 +2337,15 @@
      "2560x1440",
      "zoom125@1280",
      "zoom125@1920",
-     "zoom150@1920"
+     "zoom150@1920",
+     "text200@1280"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
-    "mobile": {
-     "h1-size": 1,
-     "btn-variant": 1
-    },
+    "mobile": {},
     "tablet": {
      "btn-nonstandard": 1
     },
@@ -2404,11 +2353,12 @@
      "btn-nonstandard": 1
     },
     "zoom": {
-     "btn-nonstandard": 1,
+     "btn-nonstandard": 2,
+     "touch-target": 7,
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 2,
    "nVps": 25
   },
   {
@@ -2421,22 +2371,19 @@
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P2",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "touch-target (zoom200@1920)",
+   "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P2",
-   "rec": "Use `.btn`/`.hit-44`, or wrap in a 44 px label. Sample: `button.n1-sort \"Number\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
-    "touch-target": [
-     "zoom200@1920"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -2475,8 +2422,7 @@
     },
     "zoom": {
      "btn-nonstandard": 2,
-     "h1-size": 1,
-     "touch-target": 7
+     "h1-size": 1
     }
    },
    "modals": 0,
@@ -2502,7 +2448,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -2568,7 +2514,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Distribute rates and availabil\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -2646,7 +2592,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -2698,7 +2644,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -2721,7 +2667,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.text-slate-500 \"OpenAPI 3.1 document for /api/\"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"REST API v1 reference`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.flex-1.min-w-[180px] \"Filter type, e.g. reservation.\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -2820,7 +2766,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -2886,7 +2832,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -2952,7 +2898,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -2995,7 +2941,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -3005,54 +2951,22 @@
    "name": "Finance / Accruals",
    "httpStatus": 200,
    "finalUrl": "/finance/accruals",
-   "desktop": "FAIL P1",
-   "tablet": "FAIL P2",
+   "desktop": "PASS",
+   "tablet": "PASS*",
    "mobile": "FAIL P2",
-   "zoom": "FAIL P1",
+   "zoom": "PASS",
    "colour": "OK",
    "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "h1 (1280x720,1366x768,1440x900,1536x864...); landmark (1280x720,1366x768,1440x900,1536x864...); title (1280x720,1366x768,1440x900,1536x864...)",
-   "components": "btn-variant (768x1024,820x1180,834x1194,1024x768); btn-nonstandard (1024x768)",
+   "accessibility": "OK",
+   "components": "btn-nonstandard (1024x768)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Pass `title` to AppLayout; remove stray h1 elements. Sample: `body.h-full.font-sans.antialiased`. Render page content inside AppLayout / `<main>`. Sample: `body.h-full.font-sans.antialiased`. Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.sm:col-span-2.text-xs.text-slate-500 \"Leave accounts empty to use th`.",
-   "fixed": "No",
-   "blocker": "h1 (P1), landmark (P1)",
+   "severity": "P2",
+   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.sm:col-span-2.text-xs.text-slate-500 \"Leave accounts empty to use th`.",
+   "fixed": "Partly (P2 open)",
+   "blocker": "none",
    "rules": {
-    "h1": [
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
-    "landmark": [
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
     "body-small": [
      "320x640",
      "360x740",
@@ -3061,28 +2975,6 @@
      "412x915",
      "430x932",
      "480x854"
-    ],
-    "btn-variant": [
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768"
-    ],
-    "title": [
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
     ],
     "h1-size": [
      "320x640",
@@ -3103,19 +2995,10 @@
      "body-small": 2
     },
     "tablet": {
-     "btn-variant": 1,
      "btn-nonstandard": 1
     },
-    "desktop": {
-     "h1": 1,
-     "landmark": 1,
-     "title": 1
-    },
-    "zoom": {
-     "h1": 1,
-     "landmark": 1,
-     "title": 1
-    }
+    "desktop": {},
+    "zoom": {}
    },
    "modals": 0,
    "nVps": 25
@@ -3203,8 +3086,8 @@
    "name": "Finance / Budgets",
    "httpStatus": 200,
    "finalUrl": "/finance/budgets",
-   "desktop": "FAIL P2",
-   "tablet": "FAIL P2",
+   "desktop": "PASS*",
+   "tablet": "PASS*",
    "mobile": "FAIL P2",
    "zoom": "FAIL P2",
    "colour": "OK",
@@ -3212,11 +3095,11 @@
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (320x640,360x740,375x812,390x844...); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
    "severity": "P2",
-   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Budget by account, department \"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Finance Budgets Dimen`.",
-   "fixed": "Partly (P2/P3 open)",
+   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Budget by account, department \"`.",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -3228,32 +3111,6 @@
      "430x932",
      "480x854",
      "zoom200@1280"
-    ],
-    "btn-variant": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
     ],
     "h1-size": [
      "320x640",
@@ -3283,25 +3140,21 @@
    "perFF": {
     "mobile": {
      "h1-size": 1,
-     "body-small": 2,
-     "btn-variant": 1
+     "body-small": 2
     },
     "tablet": {
-     "btn-variant": 1,
      "btn-nonstandard": 1
     },
     "desktop": {
-     "btn-variant": 1,
      "btn-nonstandard": 1
     },
     "zoom": {
-     "btn-variant": 1,
      "btn-nonstandard": 1,
      "h1-size": 1,
      "body-small": 2
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -3324,7 +3177,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -3377,25 +3230,22 @@
    "name": "Finance / Consolidation",
    "httpStatus": 200,
    "finalUrl": "/finance/consolidation",
-   "desktop": "FAIL P2",
-   "tablet": "FAIL P2",
-   "mobile": "FAIL P1",
+   "desktop": "PASS*",
+   "tablet": "PASS*",
+   "mobile": "FAIL P2",
    "zoom": "FAIL P2",
    "colour": "OK",
-   "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (320x640,360x740,375x812,390x844...)",
+   "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (text200@1280)",
    "spacing": "OK",
-   "responsiveness": "overflow-x (320x640); stretched (1600x900,1920x1080,2560x1440)",
+   "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (320x640,360x740,375x812,390x844...); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Find the widest element (sample), add `min-w-0`, `flex-wrap`, or wrap the table in `.table-wrap`. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Finance Budgets Dimen`. Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Consolidated trial balance, in\"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Finance Budgets Dimen`.",
-   "fixed": "No",
-   "blocker": "overflow-x (P1)",
+   "severity": "P2",
+   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Consolidated trial balance, in\"`.",
+   "fixed": "Partly (P2 open)",
+   "blocker": "none",
    "rules": {
-    "overflow-x": [
-     "320x640"
-    ],
     "body-small": [
      "320x640",
      "360x740",
@@ -3405,49 +3255,6 @@
      "430x932",
      "480x854",
      "zoom200@1280"
-    ],
-    "btn-variant": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
-    "stretched": [
-     "1600x900",
-     "1920x1080",
-     "2560x1440"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
-     "text200@1280"
     ],
     "btn-nonstandard": [
      "1024x768",
@@ -3461,29 +3268,25 @@
      "zoom125@1280",
      "zoom125@1920",
      "zoom150@1920"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
     "mobile": {
-     "overflow-x": 1,
-     "h1-size": 1,
-     "body-small": 2,
-     "btn-variant": 1
+     "body-small": 2
     },
     "tablet": {
-     "btn-variant": 1,
      "btn-nonstandard": 1
     },
     "desktop": {
-     "btn-variant": 1,
-     "btn-nonstandard": 1,
-     "stretched": 1
+     "btn-nonstandard": 1
     },
     "zoom": {
-     "btn-variant": 1,
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "body-small": 2
+     "body-small": 2,
+     "h1-size": 1
     }
    },
    "modals": 0,
@@ -3509,7 +3312,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Departments, outlets, projects\"`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `table.table-auto.w-full.text-sm \"Outlet Revenue Expenses Result\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -3592,7 +3395,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.mt-2.text-xs.text-slate-500 \"Fees and interest appear on th\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -3670,7 +3473,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -3824,7 +3627,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.mb-4.border.border-amber-200 \"Columns come from approved pay\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -3902,7 +3705,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.mb-4.border.border-amber-200 \"Line mapping to be validated b\"`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `table.table-auto.w-full.text-sm \"Period Status Hash\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -3969,7 +3772,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/finance/tax",
-   "name": "Finance / Tax",
+   "name": "Finance / TAX",
    "httpStatus": 200,
    "finalUrl": "/finance/tax",
    "desktop": "PASS*",
@@ -3985,7 +3788,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.mb-4.border.border-amber-200 \"Indicative settings to be vali\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -4063,7 +3866,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4106,7 +3909,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -4129,7 +3932,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4172,7 +3975,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -4195,7 +3998,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4238,7 +4041,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -4261,7 +4064,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4327,7 +4130,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4383,22 +4186,19 @@
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P2",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (text200@1280); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P2",
-   "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Operations Guests #1 `.",
-   "fixed": "Partly (P2/P3 open)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
-    "btn-variant": [
-     "text200@1280"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -4436,11 +4236,10 @@
     },
     "zoom": {
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "btn-variant": 1
+     "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -4463,7 +4262,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4529,7 +4328,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Anonymise or delete guest pers\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -4607,7 +4406,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4664,39 +4463,36 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr",
-   "name": "Hr",
+   "name": "HR",
    "httpStatus": 200,
    "finalUrl": "/hr",
    "desktop": "FAIL P2",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P2",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "stretched (1600x900,1920x1080,2560x1440)",
-   "accessibility": "touch-target (zoom200@1920)",
+   "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
    "severity": "P2",
-   "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.pl-9 \"Search name or number…\"`. Use `.btn`/`.hit-44`, or wrap in a 44 px label. Sample: `a.underline.decoration-slate-300.hover:decoration-slate-700 \"Abena Ser`.",
-   "fixed": "Partly (P2/P3 open)",
+   "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.pl-9 \"Search name or number…\"`.",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
      "1600x900",
      "1920x1080",
      "2560x1440"
-    ],
-    "touch-target": [
-     "zoom200@1920"
     ],
     "h1-size": [
      "320x640",
@@ -4736,18 +4532,17 @@
     },
     "zoom": {
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "touch-target": 3
+     "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/employees/1",
-   "name": "Hr / Employees / 1",
+   "name": "HR / Employees / 1",
    "httpStatus": 200,
    "finalUrl": "/hr/employees/1",
    "desktop": "PASS*",
@@ -4763,7 +4558,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4813,28 +4608,25 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/lifecycle",
-   "name": "Hr / Lifecycle",
+   "name": "HR / Lifecycle",
    "httpStatus": 200,
    "finalUrl": "/hr/lifecycle",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P2",
+   "mobile": "PASS*",
    "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "touch-target (480x854)",
+   "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P2",
-   "rec": "Use `.btn`/`.hit-44`, or wrap in a 44 px label. Sample: `button.text-slate-500`.",
-   "fixed": "Partly (P2/P3 open)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
-    "touch-target": [
-     "480x854"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -4862,8 +4654,7 @@
    },
    "perFF": {
     "mobile": {
-     "h1-size": 1,
-     "touch-target": 1
+     "h1-size": 1
     },
     "tablet": {
      "btn-nonstandard": 1
@@ -4883,7 +4674,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/org-chart",
-   "name": "Hr / Org chart",
+   "name": "HR / Org chart",
    "httpStatus": 200,
    "finalUrl": "/hr/org-chart",
    "desktop": "PASS*",
@@ -4899,7 +4690,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -4949,7 +4740,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/talent",
-   "name": "Hr / Talent",
+   "name": "HR / Talent",
    "httpStatus": 200,
    "finalUrl": "/hr/talent",
    "desktop": "FAIL P2",
@@ -4965,7 +4756,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input \"Job title\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -5035,92 +4826,29 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/talent/compliance",
-   "name": "Hr / Talent / Compliance",
+   "name": "HR / Talent / Compliance",
    "httpStatus": 200,
    "finalUrl": "/hr/talent/compliance",
-   "desktop": "FAIL P1",
-   "tablet": "FAIL P1",
-   "mobile": "FAIL P1",
-   "zoom": "FAIL P1",
-   "colour": "contrast (320x640,360x740,375x812,390x844...)",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "desktop": "FAIL P2",
+   "tablet": "PASS*",
+   "mobile": "PASS*",
+   "zoom": "PASS*",
+   "colour": "OK",
+   "typography": "h1-size (text200@1280)",
    "spacing": "OK",
    "responsiveness": "stretched (1600x900,1920x1080,2560x1440)",
-   "accessibility": "no-label (320x640,360x740,375x812,390x844...)",
+   "accessibility": "OK",
    "components": "btn-nonstandard (320x640,360x740,375x812,390x844...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Wrap in `<Field label>` or add `aria-label` (new keys in lang/{fr,en}/ui2.json). Sample: `select.input.mb-3 \"Choose a payroll\"`. Use the semantic token pair (text-slate-500 minimum on light, `--c-on-chrome-muted` on navy). Sample: `a.btn-secondary.pointer-events-none.opacity-50 \"JSON\"`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input.mb-3 \"Choose a payroll 2026-10 (paid\"`.",
-   "fixed": "No",
-   "blocker": "no-label (P1), contrast (P1)",
+   "severity": "P2",
+   "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input.mb-3 \"Choose a payroll 2026-10 (paid\"`.",
+   "fixed": "Partly (P2 open)",
+   "blocker": "none",
    "rules": {
-    "no-label": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920"
-    ],
-    "contrast": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920"
-    ],
     "stretched": [
      "1600x900",
      "1920x1080",
      "2560x1440"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
-     "text200@1280"
     ],
     "btn-nonstandard": [
      "320x640",
@@ -5147,29 +4875,23 @@
      "zoom125@1920",
      "zoom150@1920",
      "zoom200@1920"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
     "mobile": {
-     "no-label": 2,
-     "contrast": 2,
-     "h1-size": 1,
      "btn-nonstandard": 5
     },
     "tablet": {
-     "no-label": 2,
-     "contrast": 2,
      "btn-nonstandard": 6
     },
     "desktop": {
-     "no-label": 2,
-     "contrast": 2,
      "btn-nonstandard": 6,
      "stretched": 2
     },
     "zoom": {
-     "no-label": 2,
-     "contrast": 2,
      "btn-nonstandard": 6,
      "h1-size": 1
     }
@@ -5181,7 +4903,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/talent/planning",
-   "name": "Hr / Talent / Planning",
+   "name": "HR / Talent / Planning",
    "httpStatus": 200,
    "finalUrl": "/hr/talent/planning",
    "desktop": "FAIL P2",
@@ -5197,7 +4919,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input \"Réception Hébergement / Étages\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -5267,44 +4989,26 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/talent/skills",
-   "name": "Hr / Talent / Skills",
+   "name": "HR / Talent / Skills",
    "httpStatus": 200,
    "finalUrl": "/hr/talent/skills",
-   "desktop": "FAIL P1",
-   "tablet": "FAIL P1",
-   "mobile": "FAIL P1",
-   "zoom": "FAIL P1",
+   "desktop": "FAIL P2",
+   "tablet": "PASS*",
+   "mobile": "PASS*",
+   "zoom": "FAIL P2",
    "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
+   "typography": "h1-size (text200@1280)",
    "spacing": "OK",
    "responsiveness": "stretched (1600x900,1920x1080,2560x1440)",
-   "accessibility": "no-label (430x932,768x1024,820x1180,834x1194...)",
-   "components": "btn-variant (320x640,768x1024,1280x720,1366x768...); btn-nonstandard (320x640,360x740,375x812,390x844...)",
+   "accessibility": "OK",
+   "components": "btn-variant (1280x720,1366x768,1440x900,1536x864...); btn-nonstandard (320x640,360x740,375x812,390x844...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Wrap in `<Field label>` or add `aria-label` (new keys in lang/{fr,en}/ui2.json). Sample: `select.input`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Recruitment Skills an`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `table.w-full.text-sm \"Employee\"`.",
-   "fixed": "No",
-   "blocker": "no-label (P1)",
+   "severity": "P2",
+   "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Back office HR & Staf`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `table.w-full.text-sm \"Employee\"`.",
+   "fixed": "Partly (P2 open)",
+   "blocker": "none",
    "rules": {
-    "no-label": [
-     "430x932",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1280x720",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1920",
-     "zoom150@1920"
-    ],
     "btn-variant": [
-     "320x640",
-     "768x1024",
      "1280x720",
      "1366x768",
      "1440x900",
@@ -5314,24 +5018,12 @@
      "2560x1440",
      "zoom125@1280",
      "zoom125@1920",
-     "zoom150@1920",
-     "text200@1280"
+     "zoom150@1920"
     ],
     "stretched": [
      "1600x900",
      "1920x1080",
      "2560x1440"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
-     "text200@1280"
     ],
     "btn-nonstandard": [
      "320x640",
@@ -5358,22 +5050,19 @@
      "zoom125@1920",
      "zoom150@1920",
      "zoom200@1920"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
     "mobile": {
-     "h1-size": 1,
-     "btn-variant": 1,
-     "btn-nonstandard": 5,
-     "no-label": 1
+     "btn-nonstandard": 5
     },
     "tablet": {
-     "no-label": 6,
-     "btn-variant": 1,
      "btn-nonstandard": 6
     },
     "desktop": {
-     "no-label": 6,
      "btn-variant": 1,
      "btn-nonstandard": 6,
      "stretched": 9
@@ -5381,8 +5070,7 @@
     "zoom": {
      "btn-variant": 1,
      "btn-nonstandard": 6,
-     "h1-size": 1,
-     "no-label": 6
+     "h1-size": 1
     }
    },
    "modals": 0,
@@ -5392,7 +5080,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/talent/training",
-   "name": "Hr / Talent / Training",
+   "name": "HR / Talent / Training",
    "httpStatus": 200,
    "finalUrl": "/hr/talent/training",
    "desktop": "FAIL P2",
@@ -5408,7 +5096,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Back office HR & Staf`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input \"Course title\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -5492,7 +5180,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/workforce",
-   "name": "Hr / Workforce",
+   "name": "HR / Workforce",
    "httpStatus": 200,
    "finalUrl": "/hr/workforce",
    "desktop": "FAIL P2",
@@ -5508,7 +5196,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input \"Open a roster\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -5572,70 +5260,31 @@
     }
    },
    "modals": 0,
-   "nVps": 36
+   "nVps": 25
   },
   {
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/workforce/clock",
-   "name": "Hr / Workforce / Clock",
+   "name": "HR / Workforce / Clock (HTTP 500 page)",
    "httpStatus": 500,
    "finalUrl": "/hr/workforce/clock",
    "desktop": "PASS*",
-   "tablet": "FAIL P1",
+   "tablet": "PASS*",
    "mobile": "PASS*",
    "zoom": "PASS*",
-   "colour": "glow (768x1024,820x1180,834x1194,1024x768); contrast (768x1024,820x1180,834x1194,1024x768)",
-   "typography": "small-text (768x1024,820x1180,834x1194,1024x768); body-small (768x1024,820x1180,834x1194,1024x768); long-line (1024x768); h1-size (320x640,360x740,375x812,390x844...); no-tabular (768x1024,820x1180,834x1194,1024x768)",
+   "colour": "OK",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...); no-tabular (768x1024,820x1180,834x1194,1024x768)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "landmark (768x1024,820x1180,834x1194,1024x768)",
-   "components": "icon-family (768x1024,820x1180,834x1194,1024x768); btn-nonstandard (320x640,360x740,375x812,390x844...)",
+   "accessibility": "OK",
+   "components": "btn-nonstandard (320x640,360x740,375x812,390x844...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Render page content inside AppLayout / `<main>`. Sample: `body.font-sans.antialiased.overflow-x-hidden \"Internal Server Error Il`. Remove the utility; elevation is border plus background step only. Sample: `button.text-sm.rounded-md.border`. Use the semantic token pair (text-slate-500 minimum on light, `--c-on-chrome-muted` on navy). Sample: `span.text-neutral-400.dark:text-neutral-500 \"LARAVEL\"`.",
-   "fixed": "No",
-   "blocker": "landmark (P1), glow (P1), contrast (P1)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "landmark": [
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768"
-    ],
-    "glow": [
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768"
-    ],
-    "contrast": [
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768"
-    ],
-    "small-text": [
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768"
-    ],
-    "body-small": [
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768"
-    ],
-    "icon-family": [
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768"
-    ],
-    "long-line": [
-     "1024x768"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -5682,14 +5331,7 @@
      "btn-nonstandard": 6
     },
     "tablet": {
-     "landmark": 1,
-     "glow": 22,
-     "small-text": 56,
-     "contrast": 5,
-     "no-tabular": 2,
-     "body-small": 13,
-     "icon-family": 22,
-     "long-line": 2
+     "no-tabular": 2
     },
     "desktop": {
      "btn-nonstandard": 7
@@ -5706,7 +5348,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/workforce/cost",
-   "name": "Hr / Workforce / Cost",
+   "name": "HR / Workforce / Cost",
    "httpStatus": 200,
    "finalUrl": "/hr/workforce/cost",
    "desktop": "FAIL P2",
@@ -5722,7 +5364,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input \"From date\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -5792,7 +5434,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/workforce/leave",
-   "name": "Hr / Workforce / Leave",
+   "name": "HR / Workforce / Leave",
    "httpStatus": 200,
    "finalUrl": "/hr/workforce/leave",
    "desktop": "PASS*",
@@ -5808,7 +5450,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -5865,14 +5507,14 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/workforce/requests",
-   "name": "Hr / Workforce / Requests",
+   "name": "HR / Workforce / Requests",
    "httpStatus": 200,
    "finalUrl": "/hr/workforce/requests",
    "desktop": "PASS*",
@@ -5888,7 +5530,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -5952,7 +5594,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/hr/workforce/time",
-   "name": "Hr / Workforce / Time",
+   "name": "HR / Workforce / Time",
    "httpStatus": 200,
    "finalUrl": "/hr/workforce/time",
    "desktop": "FAIL P2",
@@ -5968,7 +5610,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `form.card.grid.gap-3 \"Rules Hotel latitude Hotel lon\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -6044,32 +5686,23 @@
    "desktop": "FAIL P2",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P2",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "stretched (1600x900,1920x1080,2560x1440)",
    "accessibility": "OK",
-   "components": "btn-variant (1600x900,1920x1080,2560x1440,zoom125@1280...); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
    "severity": "P2",
-   "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input \"To handle Open Acknowledged Re\"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"To handle Open Acknow`.",
-   "fixed": "Partly (P2/P3 open)",
+   "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input \"To handle Open Acknowledged Re\"`.",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
      "1600x900",
      "1920x1080",
      "2560x1440"
-    ],
-    "btn-variant": [
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "text200@1280"
     ],
     "h1-size": [
      "320x640",
@@ -6105,11 +5738,9 @@
     },
     "desktop": {
      "btn-nonstandard": 1,
-     "stretched": 3,
-     "btn-variant": 1
+     "stretched": 3
     },
     "zoom": {
-     "btn-variant": 1,
      "btn-nonstandard": 1,
      "h1-size": 1
     }
@@ -6137,7 +5768,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -6203,7 +5834,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -6246,7 +5877,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -6258,47 +5889,20 @@
    "finalUrl": "/loyalty/cards/1",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P1",
+   "mobile": "PASS*",
    "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "h1 (320x640,360x740,375x812,390x844...); landmark (320x640,360x740,375x812,390x844...); title (320x640,360x740,375x812,390x844...)",
+   "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Pass `title` to AppLayout; remove stray h1 elements. Sample: `body.h-full.font-sans.antialiased`. Render page content inside AppLayout / `<main>`. Sample: `body.h-full.font-sans.antialiased`. Set `<Head title>`. Sample: `body.h-full.font-sans.antialiased`.",
-   "fixed": "No",
-   "blocker": "h1 (P1), landmark (P1)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "h1": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "landmark": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "title": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -6326,9 +5930,6 @@
    },
    "perFF": {
     "mobile": {
-     "h1": 1,
-     "landmark": 1,
-     "title": 1,
      "h1-size": 1
     },
     "tablet": {
@@ -6343,7 +5944,7 @@
     }
    },
    "modals": 0,
-   "nVps": 32
+   "nVps": 25
   },
   {
    "kind": "staff",
@@ -6365,7 +5966,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -6409,7 +6010,7 @@
     }
    },
    "modals": 0,
-   "nVps": 32
+   "nVps": 25
   },
   {
    "kind": "staff",
@@ -6431,7 +6032,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Look up card All tier`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.flex-1 \"Scan or type card number / QR \"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -6503,7 +6104,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -6526,7 +6127,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -6592,7 +6193,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -6635,14 +6236,14 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 2,
    "nVps": 25
   },
   {
    "kind": "staff",
    "role": "General Manager",
    "route": "/me",
-   "name": "Me",
+   "name": "ME",
    "httpStatus": 200,
    "finalUrl": "/me",
    "desktop": "PASS*",
@@ -6658,7 +6259,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -6726,7 +6327,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Loading… Open Assigne`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input \"Text\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -6790,7 +6391,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -6813,7 +6414,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -6879,7 +6480,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Every email, SMS and WhatsApp \"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -6957,7 +6558,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Email, SMS and WhatsApp messag\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -7035,7 +6636,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -7091,31 +6692,19 @@
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P2",
+   "zoom": "PASS*",
    "colour": "OK",
-   "typography": "body-small (zoom125@1280,zoom150@1280,zoom200@1280,zoom125@1920...); h1-size (320x640,360x740,375x812,390x844...)",
+   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (text200@1280); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P2",
-   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p \"Exemple de contenu de document\"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Settings Hotel setup `.",
-   "fixed": "Partly (P2/P3 open)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
-    "body-small": [
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
-    "btn-variant": [
-     "text200@1280"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -7152,10 +6741,8 @@
      "btn-nonstandard": 1
     },
     "zoom": {
-     "body-small": 1,
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "btn-variant": 2
+     "h1-size": 1
     }
    },
    "modals": 0,
@@ -7170,47 +6757,20 @@
    "finalUrl": "/onboarding/import",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P1",
+   "mobile": "PASS",
    "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (zoom200@1280,text200@1280)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "h1 (320x640,360x740,375x812,390x844...); landmark (320x640,360x740,375x812,390x844...); title (320x640,360x740,375x812,390x844...)",
+   "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Pass `title` to AppLayout; remove stray h1 elements. Sample: `body.h-full.font-sans.antialiased`. Render page content inside AppLayout / `<main>`. Sample: `body.h-full.font-sans.antialiased`. Set `<Head title>`. Sample: `body.h-full.font-sans.antialiased`.",
-   "fixed": "No",
-   "blocker": "h1 (P1), landmark (P1)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Use `<Button>` or `.btn-*`. Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "h1": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "landmark": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "title": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
     "btn-nonstandard": [
      "1024x768",
      "1280x720",
@@ -7230,11 +6790,7 @@
     ]
    },
    "perFF": {
-    "mobile": {
-     "h1": 1,
-     "landmark": 1,
-     "title": 1
-    },
+    "mobile": {},
     "tablet": {
      "btn-nonstandard": 1
     },
@@ -7253,61 +6809,25 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/onboarding/templates",
-   "name": "Onboarding / Templates",
+   "name": "Onboarding / Templates (HTTP 500 page)",
    "httpStatus": 500,
    "finalUrl": "/onboarding/templates",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P1",
+   "mobile": "FAIL P2",
    "zoom": "FAIL P2",
-   "colour": "glow (320x640,360x740,375x812,390x844...); contrast (320x640,360x740,375x812,390x844...)",
-   "typography": "small-text (320x640,360x740,375x812,390x844...); body-small (320x640,360x740,375x812,390x844...); no-tabular (320x640,360x740,375x812,390x844...); h1-size (zoom200@1280,text200@1280)",
+   "colour": "OK",
+   "typography": "body-small (320x640,360x740,375x812,390x844...); no-tabular (320x640,360x740,375x812,390x844...); h1-size (zoom200@1280,text200@1280)",
    "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "landmark (320x640,360x740,375x812,390x844...)",
-   "components": "icon-family (320x640,360x740,375x812,390x844...); btn-variant (text200@1280); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "accessibility": "OK",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Render page content inside AppLayout / `<main>`. Sample: `body.font-sans.antialiased.overflow-x-hidden \"Internal Server Error Il`. Remove the utility; elevation is border plus background step only. Sample: `button.text-sm.rounded-md.border`. Use the semantic token pair (text-slate-500 minimum on light, `--c-on-chrome-muted` on navy). Sample: `span.text-neutral-400.dark:text-neutral-500 \"LARAVEL\"`.",
-   "fixed": "No",
-   "blocker": "landmark (P1), glow (P1), contrast (P1)",
+   "severity": "P2",
+   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `code \"Illuminate\\Foundation\\Vite->__\"`.",
+   "fixed": "Partly (P2 open)",
+   "blocker": "none",
    "rules": {
-    "landmark": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "glow": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "contrast": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "small-text": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
     "body-small": [
      "320x640",
      "360x740",
@@ -7317,18 +6837,6 @@
      "430x932",
      "480x854",
      "zoom200@1280"
-    ],
-    "icon-family": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "btn-variant": [
-     "text200@1280"
     ],
     "no-tabular": [
      "320x640",
@@ -7359,13 +6867,8 @@
    },
    "perFF": {
     "mobile": {
-     "landmark": 1,
-     "glow": 22,
-     "small-text": 56,
-     "contrast": 5,
      "no-tabular": 2,
-     "body-small": 13,
-     "icon-family": 22
+     "body-small": 13
     },
     "tablet": {
      "btn-nonstandard": 1
@@ -7376,8 +6879,7 @@
     "zoom": {
      "btn-nonstandard": 1,
      "h1-size": 1,
-     "body-small": 2,
-     "btn-variant": 1
+     "body-small": 2
     }
    },
    "modals": 0,
@@ -7403,7 +6905,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -7469,7 +6971,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -7535,7 +7037,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -7578,7 +7080,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 2,
    "nVps": 25
   },
   {
@@ -7601,7 +7103,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -7657,22 +7159,19 @@
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "FAIL P2",
-   "zoom": "FAIL P1",
+   "zoom": "FAIL P2",
    "colour": "OK",
    "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
-   "responsiveness": "overflow-x (text200@1280)",
+   "responsiveness": "OK",
    "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Find the widest element (sample), add `min-w-0`, `flex-wrap`, or wrap the table in `.table-wrap`. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Billing Online paymen`. Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Credentials per hotel. Without\"`.",
-   "fixed": "No",
-   "blocker": "overflow-x (P1)",
+   "severity": "P2",
+   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Credentials per hotel. Without\"`.",
+   "fixed": "Partly (P2 open)",
+   "blocker": "none",
    "rules": {
-    "overflow-x": [
-     "text200@1280"
-    ],
     "body-small": [
      "320x640",
      "360x740",
@@ -7722,8 +7221,7 @@
     "zoom": {
      "btn-nonstandard": 1,
      "h1-size": 1,
-     "body-small": 4,
-     "overflow-x": 1
+     "body-small": 4
     }
    },
    "modals": 0,
@@ -7749,7 +7247,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Money received without a reque\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -7827,7 +7325,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Get folios, checks, invoices a\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -7905,7 +7403,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"MTN / Orange bulk transfers an\"`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `table.table-auto \"Period Net total Paid\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -7977,30 +7475,20 @@
    "finalUrl": "/payments/payouts/1",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P0",
+   "mobile": "PASS*",
    "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "covered-by-fixed (412x915,430x932,480x854)",
+   "spacing": "OK",
    "responsiveness": "OK",
-   "accessibility": "touch-target (412x915,430x932,480x854)",
+   "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
-   "overlapDistortion": "covered-by-fixed (412x915,430x932,480x854)",
-   "severity": "P0",
-   "rec": "Give the scroll pane bottom padding (`pb-[var(--bar-h)]`) or use `.above-tabbar`; check z-index against tokens. Sample: `a.btn-secondary \"Back\"`. Use `.btn`/`.hit-44`, or wrap in a 44 px label. Sample: `button.-m-2.p-2.text-slate-600 \"Dismiss notification\"`.",
-   "fixed": "No",
-   "blocker": "covered-by-fixed (P0)",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "covered-by-fixed": [
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
-    "touch-target": [
-     "412x915",
-     "430x932",
-     "480x854"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -8028,9 +7516,7 @@
    },
    "perFF": {
     "mobile": {
-     "h1-size": 1,
-     "touch-target": 1,
-     "covered-by-fixed": 1
+     "h1-size": 1
     },
     "tablet": {
      "btn-nonstandard": 1
@@ -8066,7 +7552,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -8146,7 +7632,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.w-full`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -8232,7 +7718,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `form.card.mb-4.grid \"Employee Type Resignation Term\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -8318,7 +7804,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input \"All Positive Neutral Negative\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -8404,7 +7890,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `form.card.mb-4.grid \"Cycle Start End New cycle\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -8490,7 +7976,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -8554,28 +8040,25 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/pos",
-   "name": "Pos",
+   "name": "POS",
    "httpStatus": 200,
    "finalUrl": "/pos",
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P1",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "overlap (text200@1280)",
+   "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
-   "overlapDistortion": "overlap (text200@1280)",
-   "severity": "P1",
-   "rec": "Stack with `flex-wrap`/`grid`, or move one control; check absolute positioning. Sample: `button.btn-secondary.btn-icon \"List\"`.",
-   "fixed": "No",
-   "blocker": "overlap (P1)",
+   "overlapDistortion": "OK",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
+   "blocker": "none",
    "rules": {
-    "overlap": [
-     "text200@1280"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -8613,11 +8096,10 @@
     },
     "zoom": {
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "overlap": 1
+     "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -8629,23 +8111,20 @@
    "finalUrl": "/profile",
    "desktop": "PASS*",
    "tablet": "PASS*",
-   "mobile": "FAIL P2",
+   "mobile": "PASS*",
    "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (320x640); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P2",
-   "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Account Name Email gm`.",
-   "fixed": "Partly (P2/P3 open)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
-    "btn-variant": [
-     "320x640"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -8673,8 +8152,7 @@
    },
    "perFF": {
     "mobile": {
-     "h1-size": 1,
-     "btn-variant": 1
+     "h1-size": 1
     },
     "tablet": {
      "btn-nonstandard": 1
@@ -8710,7 +8188,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.pl-9 \"Search room type…\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -8759,7 +8237,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -8778,11 +8256,11 @@
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (text200@1280); radius-off-scale (320x640,360x740,375x812,390x844...); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "radius-off-scale (320x640,360x740,375x812,390x844...); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
    "severity": "P2",
-   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Floors, rooms, types and price\"`. Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Back office Propertie`.",
-   "fixed": "Partly (P2/P3 open)",
+   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Floors, rooms, types and price\"`.",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [
@@ -8794,9 +8272,6 @@
      "430x932",
      "480x854",
      "zoom200@1280"
-    ],
-    "btn-variant": [
-     "text200@1280"
     ],
     "h1-size": [
      "320x640",
@@ -8868,8 +8343,7 @@
      "btn-nonstandard": 1,
      "radius-off-scale": 1,
      "h1-size": 1,
-     "body-small": 1,
-     "btn-variant": 1
+     "body-small": 1
     }
    },
    "modals": 0,
@@ -8882,65 +8356,26 @@
    "name": "Reports",
    "httpStatus": 200,
    "finalUrl": "/reports",
-   "desktop": "FAIL P1",
-   "tablet": "FAIL P1",
-   "mobile": "FAIL P1",
+   "desktop": "PASS*",
+   "tablet": "PASS*",
+   "mobile": "PASS",
    "zoom": "FAIL P1",
    "colour": "OK",
-   "typography": "h1-size (320x640,360x740,375x812,390x844...)",
-   "spacing": "chart-overlap (320x640,360x740,375x812,390x844...)",
-   "responsiveness": "overflow-x (text200@1280); stretched (1600x900,1920x1080,2560x1440)",
+   "typography": "h1-size (text200@1280)",
+   "spacing": "chart-overlap (text200@1280)",
+   "responsiveness": "overflow-x (text200@1280)",
    "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
-   "overlapDistortion": "chart-overlap (320x640,360x740,375x812,390x844...)",
+   "overlapDistortion": "chart-overlap (text200@1280)",
    "severity": "P1",
-   "rec": "Use `interval=\"preserveStartEnd\"` or fewer ticks on phones, rotate or abbreviate labels, give the chart a min height. Sample: `svg.recharts-surface \"Occupancy legend icon\"`. Find the widest element (sample), add `min-w-0`, `flex-wrap`, or wrap the table in `.table-wrap`. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Manager's report Fore`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `table.table-auto.w-full.text-sm \"Rooms total 120 Arrivals 0 Dep\"`.",
+   "rec": "Find the widest element (sample), add `min-w-0`, `flex-wrap`, or wrap the table in `.table-wrap`. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Manager's report Fore`. Use `interval=\"preserveStartEnd\"` or fewer ticks on phones, rotate or abbreviate labels, give the chart a min height. Sample: `svg.recharts-surface`.",
    "fixed": "No",
-   "blocker": "chart-overlap (P1), overflow-x (P1)",
+   "blocker": "overflow-x (P1), chart-overlap (P1)",
    "rules": {
-    "chart-overlap": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "768x1024",
-     "820x1180",
-     "834x1194",
-     "1024x768",
-     "1366x768",
-     "1440x900",
-     "1536x864",
-     "1600x900",
-     "1920x1080",
-     "2560x1440",
-     "zoom125@1280",
-     "zoom150@1280",
-     "zoom200@1280",
-     "zoom125@1920",
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
     "overflow-x": [
      "text200@1280"
     ],
-    "stretched": [
-     "1600x900",
-     "1920x1080",
-     "2560x1440"
-    ],
-    "h1-size": [
-     "320x640",
-     "360x740",
-     "375x812",
-     "390x844",
-     "412x915",
-     "430x932",
-     "480x854",
-     "zoom200@1280",
+    "chart-overlap": [
      "text200@1280"
     ],
     "btn-nonstandard": [
@@ -8955,27 +8390,24 @@
      "zoom125@1280",
      "zoom125@1920",
      "zoom150@1920"
+    ],
+    "h1-size": [
+     "text200@1280"
     ]
    },
    "perFF": {
-    "mobile": {
-     "chart-overlap": 3,
-     "h1-size": 1
-    },
+    "mobile": {},
     "tablet": {
-     "chart-overlap": 1,
      "btn-nonstandard": 1
     },
     "desktop": {
-     "btn-nonstandard": 1,
-     "chart-overlap": 1,
-     "stretched": 1
+     "btn-nonstandard": 1
     },
     "zoom": {
-     "chart-overlap": 1,
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "overflow-x": 1
+     "overflow-x": 1,
+     "chart-overlap": 1,
+     "h1-size": 1
     }
    },
    "modals": 0,
@@ -9001,7 +8433,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9050,7 +8482,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 2,
    "nVps": 25
   },
   {
@@ -9063,24 +8495,19 @@
    "desktop": "PASS*",
    "tablet": "PASS*",
    "mobile": "PASS*",
-   "zoom": "FAIL P2",
+   "zoom": "PASS*",
    "colour": "OK",
    "typography": "h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
    "responsiveness": "OK",
    "accessibility": "OK",
-   "components": "btn-variant (zoom150@1920,zoom200@1920,text200@1280); btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
+   "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P2",
-   "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Operations Reservatio`.",
-   "fixed": "Partly (P2/P3 open)",
+   "severity": "P3",
+   "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
-    "btn-variant": [
-     "zoom150@1920",
-     "zoom200@1920",
-     "text200@1280"
-    ],
     "h1-size": [
      "320x640",
      "360x740",
@@ -9118,8 +8545,7 @@
     },
     "zoom": {
      "btn-nonstandard": 1,
-     "h1-size": 1,
-     "btn-variant": 1
+     "h1-size": 1
     }
    },
    "modals": 0,
@@ -9145,7 +8571,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9211,7 +8637,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9277,7 +8703,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Operations Reservatio`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.pl-9 \"Search name, email, phone, ID\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -9340,7 +8766,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -9363,7 +8789,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9429,7 +8855,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Operations Reservatio`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `form.space-y-4 \"Payer First name Last name Ema\"`. Use `.btn`/`.hit-44`, or wrap in a 44 px label. Sample: `input#pf.input`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -9520,7 +8946,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9586,7 +9012,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9629,7 +9055,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -9652,7 +9078,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9697,7 +9123,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -9720,7 +9146,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -9786,7 +9212,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.w-full.pl-8 \"Search guest\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -9835,7 +9261,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -9858,7 +9284,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Promo codes Percent A`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -9939,7 +9365,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Remove local size/radius overrides on `.btn-*`; use `size` prop. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"Overbooking limits Ap`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `textarea.textarea \"Walk policy\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "btn-variant": [
@@ -10026,7 +9452,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `textarea.input.w-full`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -10098,7 +9524,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10164,7 +9590,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input \"All departments\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -10213,7 +9639,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -10236,7 +9662,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10302,7 +9728,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10358,22 +9784,19 @@
    "desktop": "FAIL P2",
    "tablet": "PASS*",
    "mobile": "FAIL P2",
-   "zoom": "FAIL P1",
+   "zoom": "FAIL P2",
    "colour": "OK",
    "typography": "body-small (320x640,360x740,375x812,390x844...); h1-size (320x640,360x740,375x812,390x844...)",
    "spacing": "OK",
-   "responsiveness": "overflow-x (text200@1280); stretched (1600x900,1920x1080,2560x1440)",
+   "responsiveness": "stretched (1600x900,1920x1080,2560x1440)",
    "accessibility": "OK",
    "components": "btn-nonstandard (1024x768,1280x720,1366x768,1440x900...)",
    "overlapDistortion": "OK",
-   "severity": "P1",
-   "rec": "Find the widest element (sample), add `min-w-0`, `flex-wrap`, or wrap the table in `.table-wrap`. Sample: `main#main.flex-1.scroll-pane.focus:outline-none \"All roles group-owner`. Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Staff accounts, their roles an\"`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.w-full.pl-8 \"Search name or email\"`.",
-   "fixed": "No",
-   "blocker": "overflow-x (P1)",
+   "severity": "P2",
+   "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Staff accounts, their roles an\"`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input.w-full.pl-8 \"Search name or email\"`.",
+   "fixed": "Partly (P2 open)",
+   "blocker": "none",
    "rules": {
-    "overflow-x": [
-     "text200@1280"
-    ],
     "body-small": [
      "320x640",
      "360x740",
@@ -10429,11 +9852,10 @@
     "zoom": {
      "btn-nonstandard": 1,
      "h1-size": 1,
-     "body-small": 1,
-     "overflow-x": 1
+     "body-small": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -10456,7 +9878,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10499,7 +9921,7 @@
      "h1-size": 1
     }
    },
-   "modals": 3,
+   "modals": 0,
    "nVps": 25
   },
   {
@@ -10522,7 +9944,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10588,7 +10010,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10654,7 +10076,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10720,7 +10142,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `table.w-full.table-auto \"ROOM TYPE ITEM PAR PRICE\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -10790,7 +10212,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10856,7 +10278,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10906,7 +10328,7 @@
    "kind": "staff",
    "role": "General Manager",
    "route": "/stock/rfq",
-   "name": "Stock / Rfq",
+   "name": "Stock / RFQ",
    "httpStatus": 200,
    "finalUrl": "/stock/rfq",
    "desktop": "PASS*",
@@ -10922,7 +10344,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -10988,7 +10410,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -11054,7 +10476,7 @@
    "overlapDistortion": "OK",
    "severity": "P3",
    "rec": "Polish only (P3): Phone app bar shows the h1 at 16 px by design; add a 24-28 px in-page title or enlarge the app bar title. Use `<Button>` or `.btn-*`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Yes (P3 polish open)",
    "blocker": "none",
    "rules": {
     "h1-size": [
@@ -11120,7 +10542,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `input.input \"Date\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "stretched": [
@@ -11192,7 +10614,7 @@
    "overlapDistortion": "OK",
    "severity": "P2",
    "rec": "Use `text-sm`/`text-base` for sentences; `text-xs` only for captions. Sample: `p.text-xs.md:text-sm.text-slate-600 \"Theoretical (sales x recipes) \"`. Cap with `max-w-3xl` (forms) / `max-w-5xl` (reading content) / `max-w-screen-2xl` (data pages); sparse tables `w-auto`. Sample: `select.input \"Pick an outlet Restaurant Le W\"`.",
-   "fixed": "Partly (P2/P3 open)",
+   "fixed": "Partly (P2 open)",
    "blocker": "none",
    "rules": {
     "body-small": [

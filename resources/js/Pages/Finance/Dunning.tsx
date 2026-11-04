@@ -35,7 +35,7 @@ export default function Dunning() {
 
             <div className="card mb-4 p-4">
                 <div className="mb-3 flex flex-wrap items-end gap-2">
-                    <Field label={t('acc3.dun.language')}><select className="input" value={locale} onChange={(e) => setLocale(e.target.value)}><option value="fr">Français</option><option value="en">English</option></select></Field>
+                    <Field label={t('acc3.dun.language')}><select className="select" value={locale} onChange={(e) => setLocale(e.target.value)}><option value="fr">Français</option><option value="en">English</option></select></Field>
                     <button className="btn-primary" onClick={() => run(() => api('accounting3/dunning/send', { method: 'POST', body: JSON.stringify({ invoice_ids: sel.length ? sel : null, locale }) }), t('acc3.dun.sent'))}>{sel.length ? t('acc3.dun.send_selected') : t('acc3.dun.send_all')}</button>
                 </div>
                 <Loading on={cands.loading} />

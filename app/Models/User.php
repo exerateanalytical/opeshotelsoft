@@ -23,7 +23,7 @@ class User extends Authenticatable implements OAuthenticatable
 
     protected $fillable = ['name', 'email', 'password', 'group_id', 'all_hotels', 'locale', 'phone', 'status', 'is_platform_admin'];
 
-    protected $hidden = ['password', 'remember_token', 'pos_pin', 'mfa_secret', 'mfa_recovery_codes'];
+    protected $hidden = ['password', 'remember_token', 'pos_pin', 'mfa_secret', 'mfa_recovery_codes', 'mfa_last_step'];
 
     protected function casts(): array
     {

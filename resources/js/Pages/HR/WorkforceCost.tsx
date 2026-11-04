@@ -31,11 +31,11 @@ export default function WorkforceCost() {
                     <div className="card p-4"><div className="text-slate-500">{t('workforce.cost.labour_pct')}</div><div className="text-lg font-semibold">{d.data.totals.labour_pct ?? '-'} %</div></div>
                 </div>
                 <div className="card mb-4 overflow-x-auto p-4 text-sm"><h2 className="mb-2 font-semibold">{t('workforce.cost.by_department')}</h2>
-                    <table className="w-full"><thead><tr className="text-left text-slate-500"><th>{t('workforce.cost.department')}</th><th>{t('workforce.cost.planned_cost')}</th><th>{t('workforce.cost.actual_cost')}</th><th>{t('workforce.cost.revenue')}</th><th>%</th></tr></thead>
-                        <tbody>{d.data.departments.map((r, i) => <tr key={i}><td>{r.department ?? '-'}</td><td>{n(r.planned_cost)}</td><td>{n(r.actual_cost)}</td><td>{n(r.revenue)}</td><td>{r.labour_pct ?? '-'}</td></tr>)}</tbody></table></div>
+                    <div className="table-wrap"><table className="table-auto w-full"><thead><tr className="text-left text-slate-500"><th>{t('workforce.cost.department')}</th><th>{t('workforce.cost.planned_cost')}</th><th>{t('workforce.cost.actual_cost')}</th><th>{t('workforce.cost.revenue')}</th><th>%</th></tr></thead>
+                        <tbody>{d.data.departments.map((r, i) => <tr key={i}><td>{r.department ?? '-'}</td><td>{n(r.planned_cost)}</td><td>{n(r.actual_cost)}</td><td>{n(r.revenue)}</td><td>{r.labour_pct ?? '-'}</td></tr>)}</tbody></table></div></div>
                 <div className="card overflow-x-auto p-4 text-sm"><h2 className="mb-2 font-semibold">{t('workforce.cost.by_day')}</h2>
-                    <table className="w-full"><thead><tr className="text-left text-slate-500"><th>{t('workforce.date')}</th><th>{t('workforce.cost.department')}</th><th>{t('workforce.cost.planned_cost')}</th><th>{t('workforce.cost.actual_cost')}</th><th>{t('workforce.cost.revenue')}</th><th>%</th></tr></thead>
-                        <tbody>{d.data.rows.map((r, i) => <tr key={i}><td>{r.date}</td><td>{r.department ?? '-'}</td><td>{n(r.planned_cost)}</td><td>{n(r.actual_cost)}</td><td>{n(r.revenue)}</td><td>{r.labour_pct ?? '-'}</td></tr>)}</tbody></table></div>
+                    <div className="table-wrap"><table className="table-auto w-full"><thead><tr className="text-left text-slate-500"><th>{t('workforce.date')}</th><th>{t('workforce.cost.department')}</th><th>{t('workforce.cost.planned_cost')}</th><th>{t('workforce.cost.actual_cost')}</th><th>{t('workforce.cost.revenue')}</th><th>%</th></tr></thead>
+                        <tbody>{d.data.rows.map((r, i) => <tr key={i}><td>{r.date}</td><td>{r.department ?? '-'}</td><td>{n(r.planned_cost)}</td><td>{n(r.actual_cost)}</td><td>{n(r.revenue)}</td><td>{r.labour_pct ?? '-'}</td></tr>)}</tbody></table></div></div>
             </>)}
         </AppLayout>
     );

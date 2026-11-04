@@ -74,6 +74,7 @@ final class TemplateRenderer
         $html = e($body);
         $html = preg_replace_callback(self::PATTERN, fn ($m) => isset($allowed[$m[1]]) ? e((string) ($values[$m[1]] ?? '')) : '', $html);
         $html = preg_replace('/\{\{.*?\}\}/s', '', $html); // any leftover braces are dropped, never evaluated
+        $html = preg_replace('/\*\*\s*\*\*/', '', $html);  // an empty bold value never prints as "****"
         $html = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $html);
         $out = [];
         foreach (preg_split('/\R{2,}/', trim($html)) as $para) {

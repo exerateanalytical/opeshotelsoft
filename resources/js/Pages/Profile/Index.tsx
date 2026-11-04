@@ -3,6 +3,7 @@ import { KeyRound, Languages, ShieldCheck, UserCircle } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { setLocale, useLocale, useT, type Locale } from '@/lib/i18n';
 import type { PageProps } from '@/types';
+import Alert from '@/Components/ui/Alert';
 
 interface TwoFactorState {
     enabled: boolean;
@@ -38,13 +39,12 @@ function TwoFactorCard({ state }: { state: TwoFactorState }) {
             </div>
 
             {state.recovery_codes && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <h3 className="text-sm font-semibold text-amber-900">{t('profile.2fa.recovery_title')}</h3>
-                    <p className="text-sm text-amber-800 mt-1 mb-3">{t('profile.2fa.recovery_text')}</p>
+                <Alert variant="warning" title={t('profile.2fa.recovery_title')}>
+                    <p className="mt-1 mb-3">{t('profile.2fa.recovery_text')}</p>
                     <div className="grid grid-cols-2 gap-2 font-mono text-sm text-slate-900">
                         {state.recovery_codes.map((c) => <span key={c}>{c}</span>)}
                     </div>
-                </div>
+                </Alert>
             )}
 
             {!state.enabled && !state.pending && (
@@ -120,8 +120,8 @@ export default function ProfileIndex({ profile, twoFactor }: Props) {
         <AppLayout title={t('profile.title')} subtitle={profile.email}>
             <Head title={t('profile.title')} />
             <div className="max-w-2xl space-y-6">
-                {flash?.success && <div className="rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3">{flash.success}</div>}
-                {flash?.error && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">{flash.error}</div>}
+                {flash?.success && <Alert variant="success">{flash.success}</Alert>}
+                {flash?.error && <Alert variant="danger">{flash.error}</Alert>}
 
                 <form onSubmit={saveInfo} className="card p-5 space-y-4">
                     <h2 className="flex items-center gap-2 font-semibold text-slate-900"><UserCircle className="w-4 h-4" /> {t('profile.account')}</h2>
@@ -146,7 +146,7 @@ export default function ProfileIndex({ profile, twoFactor }: Props) {
 
                 <div className="card p-5 space-y-3">
                     <h2 className="flex items-center gap-2 font-semibold text-slate-900"><Languages className="w-4 h-4" /> {t('profile.language')}</h2>
-                    <select className="input w-full sm:w-64" value={locale} onChange={(e) => setLocale(e.target.value as Locale)} aria-label={t('profile.language')}>
+                    <select className="select w-full sm:w-64" value={locale} onChange={(e) => setLocale(e.target.value as Locale)} aria-label={t('profile.language')}>
                         <option value="fr">Français</option>
                         <option value="en">English</option>
                     </select>

@@ -59,7 +59,7 @@ export default function TalentCompliance() {
             </Section>
 
             <Section title={t('talent.payroll_checks')}>
-                <select className="input mb-3" aria-label={t('talent.choose_run')} value={runId} onChange={(e) => setRunId(e.target.value)}><option value="">{t('talent.choose_run')}</option>{runs.map((r) => <option key={r.id} value={r.id}>{r.period} ({r.status})</option>)}</select>
+                <select className="select mb-3" aria-label={t('talent.choose_run')} value={runId} onChange={(e) => setRunId(e.target.value)}><option value="">{t('talent.choose_run')}</option>{runs.map((r) => <option key={r.id} value={r.id}>{r.period} ({r.status})</option>)}</select>
                 {review && (
                     <div className="text-sm">
                         <p className="mb-2">{review.required ? t('talent.review_required') : t('talent.review_advisory')}</p>
@@ -78,7 +78,7 @@ export default function TalentCompliance() {
 
             <Section title={t('talent.privacy')}>
                 <div className="mb-3 flex flex-wrap gap-2 text-sm">
-                    <select className="input" value={emp} onChange={(e) => setEmp(e.target.value)}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.number} {e.first_name} {e.last_name}</option>)}</select>
+                    <select className="select" aria-label={t('talent.employee')} value={emp} onChange={(e) => setEmp(e.target.value)}><option value="" />{emps.map((e) => <option key={e.id} value={e.id}>{e.number} {e.first_name} {e.last_name}</option>)}</select>
                     <a className={`btn-secondary ${emp ? '' : 'pointer-events-none opacity-50'}`} href={`/api/v1/hr/talent/privacy/employees/${emp}/export`} target="_blank" rel="noreferrer">JSON</a>
                     <a className={`btn-secondary ${emp ? '' : 'pointer-events-none opacity-50'}`} href={`/api/v1/hr/talent/privacy/employees/${emp}/export?format=xlsx`}>Excel</a>
                 </div>

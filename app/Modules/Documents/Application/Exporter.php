@@ -66,6 +66,8 @@ final class Exporter
         return match (true) {
             is_bool($v) => $v ? 1 : 0,
             is_array($v) => json_encode($v, JSON_UNESCAPED_UNICODE),
+            // Spreadsheet formula injection: a cell that starts with = + - @ or a tab/CR is neutralised (SEC1 audit).
+            is_string($v) && $v !== '' && ! is_numeric($v) && strpbrk($v[0], "=+-@\t\r") !== false => "'".$v,
             default => $v,
         };
     }

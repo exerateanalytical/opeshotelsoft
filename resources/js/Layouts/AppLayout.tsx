@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useEffect, useRef, useState } from 'react';
 import BottomNav from '@/Components/layout/BottomNav';
 import DesktopShell from '@/Components/layout/DesktopShell';
 import Breadcrumbs, { type Crumb } from '@/Components/ui/Breadcrumbs';
@@ -9,7 +9,7 @@ import Topbar from '@/Components/layout/Topbar';
 import { ToastRegion } from '@/Components/ui/Toast';
 import VoiceNotifier from '@/Components/voice/VoiceNotifier';
 import { useT } from '@/lib/i18n';
-import { useIsTablet } from '@/lib/useMediaQuery';
+import { useIsPhone, useIsTablet } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -25,6 +25,9 @@ interface Props {
 }
 
 export type PageWidth = 'narrow' | 'default' | 'wide' | 'full';
+
+/** The layout title: PageHeader hides its own copy of the same title on phones, where AppLayout shows it as the one h1 in the page body. */
+export const LayoutTitleContext = createContext<string | undefined>(undefined);
 
 /** Operational screens use the whole width; lists with a detail panel get a wider cap; profile-like pages stay narrow. */
 const FULL = ['/reservations/tape-chart', '/reservations/arrivals', '/pos', '/front-desk', '/housekeeping', '/maintenance', '/stock', '/billing/cashier', '/service-requests', '/edge', '/messaging'];
@@ -54,10 +57,14 @@ export default function AppLayout({ children, title, subtitle, actions, noPaddin
     const { url } = usePage();
     const [collapsed, setCollapsed] = useState(read);
     const tablet = useIsTablet();
+    const phone = useIsPhone();
     const first = useRef(true);
     const w = width ?? defaultWidth(url);
     // Full-width and edge-to-edge pages render directly in <main> (no wrapper, so h-full layouts keep working).
     const contained = !noPadding && w !== 'full';
+    // Phone: contained pages show the title as the h1 in the page body (24px) and the app bar repeats it as plain text (22px).
+    // Boards and edge-to-edge pages have no room for a body heading, so their app bar title stays the h1.
+    const bodyTitle = phone && contained && !!title;
 
     const toggle = () => setCollapsed((c) => {
         try { localStorage.setItem(KEY, c ? '0' : '1'); } catch { /* storage unavailable */ }
@@ -73,15 +80,16 @@ export default function AppLayout({ children, title, subtitle, actions, noPaddin
     }, [url]);
 
     return (
+        <LayoutTitleContext.Provider value={bodyTitle ? title : undefined}>
         <div className="flex h-dvh overflow-hidden bg-[var(--c-surface-page)]">
             <a href="#main" className="skip-link">{t('ui.skip')}</a>
             <Sidebar collapsed={collapsed || tablet} />
 
             <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-                <Topbar title={title} subtitle={subtitle} collapsed={collapsed} onToggle={toggle} actions={actions} />
+                <Topbar title={title} titleAsText={bodyTitle} subtitle={subtitle} collapsed={collapsed} onToggle={toggle} actions={actions} />
 
                 <OfflineBanner />
-                <main id="main" tabIndex={-1}
+                <main id="main" tabIndex={-1} data-width={w}
                     className={cn(
                         'flex-1 scroll-pane focus:outline-none',
                         !noPadding && 'p-4 md:p-6',
@@ -90,6 +98,7 @@ export default function AppLayout({ children, title, subtitle, actions, noPaddin
                     {contained ? (
                         <div className={cn('n1-page', `n1-${w}`)}>
                             {breadcrumbs !== false && <Breadcrumbs items={breadcrumbs} className="mb-3 hidden md:block" />}
+                            {bodyTitle && <h1 tabIndex={-1} data-page-title className="l1-page-title mb-3 break-words">{title}</h1>}
                             {children}
                         </div>
                     ) : (
@@ -105,5 +114,6 @@ export default function AppLayout({ children, title, subtitle, actions, noPaddin
             <VoiceNotifier />
             <ToastRegion />
         </div>
+        </LayoutTitleContext.Provider>
     );
 }

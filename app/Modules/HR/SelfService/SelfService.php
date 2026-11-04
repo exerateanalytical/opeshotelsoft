@@ -84,6 +84,8 @@ class SelfService
         if ($r->status !== 'pending') {
             throw new DomainException('This request is already decided.', 'invalid-state');
         }
+        // Four-eyes: nobody decides their own self-service request (bank, Mobile Money, certificates...).
+        app(\App\Modules\HR\Application\Lifecycle\LifecycleService::class)->assertSod(null, (int) $r->employee_id);
         DB::transaction(function () use ($r, $approve, $note) {
             if ($approve && isset(self::CHANGES[$r->kind])) {
                 $e = Employee::findOrFail($r->employee_id);

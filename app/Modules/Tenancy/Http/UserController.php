@@ -39,6 +39,8 @@ class UserController
             'password' => ['nullable', 'string', 'min:10'],
         ]);
 
+        $this->assertWithinActorScope($request->user(), $data);
+
         return DB::transaction(function () use ($data, $request, $bus) {
             $hotelIds = Hotel::whereIn('id', $data['hotel_ids'] ?? [])->pluck('id');
             $user = User::create([
@@ -69,6 +71,7 @@ class UserController
             'all_hotels' => ['sometimes', 'boolean'],
             'hotel_ids' => ['sometimes', 'array'],
         ]);
+        $this->assertWithinActorScope($request->user(), $data);
 
         return DB::transaction(function () use ($user, $data, $bus) {
             $user->update(collect($data)->only(['name', 'status', 'all_hotels'])->all());
@@ -79,7 +82,12 @@ class UserController
                 $user->hotels()->sync(Hotel::whereIn('id', $data['hotel_ids'])->pluck('id'));
             }
             if (($data['status'] ?? null) === 'suspended') {
+                // Close every door at once: API tokens, live web sessions and remember-me cookies (SEC1 audit).
                 $user->tokens()->update(['revoked' => true]);
+                $user->forceFill(['remember_token' => Str::random(60)])->save();
+                if (config('session.driver') === 'database') {
+                    DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+                }
             }
             $bus->record('identity.user.updated', ['user_id' => $user->id], 'user', $user->id);
 
@@ -90,5 +98,23 @@ class UserController
     public function roles()
     {
         return Role::where('guard_name', 'api')->with('permissions:id,name')->get();
+    }
+
+    /**
+     * A hotel-scoped administrator may only hand out what they hold themselves (SEC1 audit):
+     * no all_hotels grant, no hotels outside their own allow-list, no role they do not have.
+     */
+    private function assertWithinActorScope(User $actor, array $data): void
+    {
+        $allowed = $actor->allowedHotelIds();
+        if ($allowed !== null) {
+            abort_if(! empty($data['all_hotels']), 403, 'Only a group-wide administrator can grant access to every hotel.');
+            foreach ($data['hotel_ids'] ?? [] as $id) {
+                abort_unless(in_array((int) $id, $allowed, true), 403, 'You cannot grant access to a hotel outside your own scope.');
+            }
+            foreach ($data['roles'] ?? [] as $role) {
+                abort_unless($actor->hasRole($role), 403, 'You cannot assign a role you do not hold yourself.');
+            }
+        }
     }
 }

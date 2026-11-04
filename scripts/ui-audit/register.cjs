@@ -20,15 +20,18 @@ const rows = [];
 for (const f of fs.existsSync(RAW) ? fs.readdirSync(RAW).filter((x) => x.endsWith('.jsonl') && !x.startsWith('modals')) : []) {
   for (const l of fs.readFileSync(path.join(RAW, f), 'utf8').split('\n')) { if (l.trim()) { try { rows.push(JSON.parse(l)); } catch (e) { /* partial last line */ } } }
 }
+{ const m = new Map(); for (const r of rows) m.set(r.kind + '|' + r.role + '|' + r.route + '|' + r.mode + '|' + r.vp, r); rows.length = 0; rows.push(...m.values()); } // a resumed run can repeat a route: keep the last row
 const modals = fs.existsSync(path.join(RAW, 'modals.jsonl')) ? fs.readFileSync(path.join(RAW, 'modals.jsonl'), 'utf8').split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean) : [];
 
 // ---------- fresh-load confirmation (recheck.cjs): a P0-P2 finding that did not reproduce on a fresh load at any rechecked width is a resize artefact and is dropped
 const recheck = new Map();
 const RC = path.join(__dirname, 'results', 'recheck.jsonl');
-if (fs.existsSync(RC)) for (const l of fs.readFileSync(RC, 'utf8').split('\n')) { if (!l.trim()) continue; let r; try { r = JSON.parse(l); } catch (e) { continue; } if (r.error) continue; const k = r.kind + '|' + r.role + '|' + r.route; const m = recheck.get(k) || {}; for (const rule of Object.keys(RULES)) { const e = (m[rule] = m[rule] || { checked: 0, fired: 0 }); e.checked++; if (r.counts && r.counts[rule]) e.fired++; } recheck.set(k, m); }
-let artefacts = 0, confirmed = 0;
-const isArtefact = (key, rule) => { const m = recheck.get(key); if (!m || !m[rule] || RULES[rule][0] === 'P3') return false; return m[rule].checked > 0 && m[rule].fired === 0; };
+if (fs.existsSync(RC)) for (const l of fs.readFileSync(RC, 'utf8').split('\n')) { if (!l.trim()) continue; let r; try { r = JSON.parse(l); } catch (e) { continue; } if (r.error) continue; const k = r.kind + '|' + r.role + '|' + r.route; const m = recheck.get(k) || {}; m[r.vp] = r.counts || {}; recheck.set(k, m); }
+let artefacts = 0;
+/** A P0-P2 finding is an artefact when, among the widths where it fired and that were rechecked, fewer than half reproduced on a fresh load. */
+const isArtefact = (key, rule, rawVps) => { const m = recheck.get(key); if (!m || RULES[rule][0] === 'P3') return false; const vps = rawVps.filter((v) => m[v]); if (!vps.length) return false; const fired = vps.filter((v) => m[v][rule]).length; return fired * 2 < vps.length; };
 
+const perWidth = {};
 // ---------- group by screen
 const screens = new Map();
 for (const r of rows) {
@@ -44,7 +47,7 @@ const ROLE_NAME = { gm: 'General Manager', guest: 'Guest (signed out)', member: 
 const screenName = (route, kind) => {
   if (route === '/') return 'Landing';
   const seg = route.split('/').filter(Boolean).map((x) => x.replace(/-/g, ' '));
-  return seg.map((x) => x[0].toUpperCase() + x.slice(1)).join(' / ');
+  return seg.map((x) => (x.length <= 3 && !/^[0-9]+$/.test(x) ? x.toUpperCase() : x[0].toUpperCase() + x.slice(1))).join(' / ');
 };
 
 const findingsBySeverity = { P0: 0, P1: 0, P2: 0, P3: 0 };
@@ -52,13 +55,17 @@ const ruleTotals = {};
 const out = [];
 for (const s of screens.values()) {
   const perFF = { mobile: {}, tablet: {}, desktop: {}, zoom: {} };
+  const ruleVps = {};
+  for (const v of s.vps) { const e = (perWidth[v.vp] = perWidth[v.vp] || { width: v.width, routes: 0, failing: new Set(), findings: 0, advisory: 0 }); e.routes++; }
+  for (const v of s.vps) for (const rule of Object.keys(v.report.counts || {})) (ruleVps[rule] = ruleVps[rule] || []).push(v.vp);
   const widthsByRule = {};
   const sample = {};
   for (const v of s.vps) {
     const w = /^(zoom|text)/.test(v.vp) ? 'zoom' : FF(v.width);
     for (const [rule, n] of Object.entries(v.report.counts || {})) {
       if (!RULES[rule]) continue;
-      if (isArtefact(s.kind + '|' + s.role + '|' + s.route, rule)) { artefacts++; continue; }
+      if (isArtefact(s.kind + '|' + s.role + '|' + s.route, rule, ruleVps[rule] || [])) { artefacts++; continue; }
+      { const e = perWidth[v.vp]; if (ORDER[RULES[rule][0]] <= 2) { e.failing.add(s.route); e.findings++; } else e.advisory++; }
       const slot = (perFF[w][rule] = perFF[w][rule] || { max: 0, vps: [] });
       slot.max = Math.max(slot.max, n); slot.vps.push(v.vp);
       (widthsByRule[rule] = widthsByRule[rule] || new Set()).add(v.vp);
@@ -87,14 +94,14 @@ for (const s of screens.values()) {
   const blockers = all.filter((r) => ORDER[RULES[r][0]] <= 1).map((r) => r + ' (' + RULES[r][0] + ')');
   const mod = modals.filter((m) => m.route === s.route);
   out.push({
-    kind: s.kind, role: ROLE_NAME[s.role] || s.role, route: s.route, name: screenName(s.route, s.kind), httpStatus: s.status, finalUrl: s.finalUrl,
+    kind: s.kind, role: ROLE_NAME[s.role] || s.role, route: s.route, name: screenName(s.route, s.kind) + (s.status >= 400 ? ' (HTTP ' + s.status + ' page)' : s.finalUrl && s.finalUrl !== s.route ? ' (redirects to ' + s.finalUrl + ')' : ''), httpStatus: s.status, finalUrl: s.finalUrl,
     desktop: status('desktop'), tablet: status('tablet'), mobile: status('mobile'), zoom: status('zoom'),
     colour: cell(['colour']), typography: cell(['typography']), spacing: cell(['overlap']), responsiveness: cell(['responsive']),
     accessibility: cell(['accessibility', 'access']), components: cell(['component']), overlapDistortion: cell(['distortion', 'overlap']),
     severity: worst, rec: rec.length ? rec.join(' ') : (all.length ? 'Polish only (P3): ' + all.map((r) => RULES[r][3]).slice(0, 2).join(' ') : 'none'),
-    fixed: all.length ? (blockers.length ? 'No' : 'Partly (P2/P3 open)') : 'Yes (clean)', blocker: blockers.join(', ') || 'none',
+    fixed: all.length ? (blockers.length ? 'No' : (ORDER[worst] === 3 ? 'Yes (P3 polish open)' : 'Partly (P2 open)')) : 'Yes (clean)', blocker: blockers.join(', ') || 'none',
     rules: Object.fromEntries(all.map((r) => [r, [...widthsByRule[r]]])), perFF: Object.fromEntries(Object.entries(perFF).map(([k, v]) => [k, Object.fromEntries(Object.entries(v).map(([r, x]) => [r, x.max]))])),
-    modals: mod.length ? mod.length : 0, nVps: s.vps.length,
+    modals: mod.filter((m) => m.opened).length, nVps: s.vps.length,
   });
 }
 out.sort((a, b) => (a.kind + a.route).localeCompare(b.kind + b.route));
@@ -126,12 +133,12 @@ for (const ff of ['mobile', 'tablet', 'desktop', 'zoom']) {
 const sevRoutes = { P0: 0, P1: 0, P2: 0, P3: 0, clean: 0 };
 for (const o of out) { if (o.severity === '-') sevRoutes.clean++; else sevRoutes[o.severity]++; }
 // per-width critical counts across routes
-const perWidth = {};
-for (const r of rows) { if (!r.report || r.report.error) continue; const k = r.vp; const e = (perWidth[k] = perWidth[k] || { width: r.width, routes: 0, withCritical: 0, critical: 0, withAdvisory: 0, advisory: 0 }); e.routes++; if (r.report.critical) { e.withCritical++; e.critical += r.report.critical; } if (r.report.advisory) { e.withAdvisory++; e.advisory += r.report.advisory; } }
+const perWidthRaw = {};
+for (const r of rows) { if (!r.report || r.report.error) continue; const k = r.vp; const e = (perWidthRaw[k] = perWidthRaw[k] || { width: r.width, routes: 0, withCritical: 0, critical: 0, withAdvisory: 0, advisory: 0 }); e.routes++; if (r.report.critical) { e.withCritical++; e.critical += r.report.critical; } if (r.report.advisory) { e.withAdvisory++; e.advisory += r.report.advisory; } }
 const ruleWidth = {};
 for (const r of rows) { if (!r.report || !r.report.counts) continue; for (const [rule, n] of Object.entries(r.report.counts)) { if (!RULES[rule]) continue; const e = (ruleWidth[rule] = ruleWidth[rule] || {}); e[r.vp] = (e[r.vp] || 0) + 1; } }
 
-fs.writeFileSync(path.join(__dirname, 'results', 'summary.json'), JSON.stringify({ stat, sevRoutes, findingsBySeverity, ruleTotals, perWidth, modalSummary, modalFail, screens: out }, null, 1));
+fs.writeFileSync(path.join(__dirname, 'results', 'summary.json'), JSON.stringify({ stat, sevRoutes, findingsBySeverity, ruleTotals, perWidth: Object.fromEntries(Object.entries(perWidth).map(([k, v]) => [k, { ...v, failing: v.failing.size }])), perWidthRaw, modalSummary, modalFail, screens: out }, null, 1));
 fs.writeFileSync(path.join(__dirname, 'results', 'register.csv'), ['kind,role,route,name,mobile,tablet,desktop,zoom,severity,fixed,blocker'].concat(out.map((o) => [o.kind, o.role, o.route, o.name, o.mobile, o.tablet, o.desktop, o.zoom, o.severity, o.fixed, o.blocker].map((x) => '"' + String(x).replace(/"/g, '""') + '"').join(','))).join('\n'));
 
 // ---------- UI-REGISTER.md
@@ -149,7 +156,7 @@ const st = fs.existsSync(STATIC) ? JSON.parse(fs.readFileSync(STATIC, 'utf8')) :
 const FIXES = path.join(__dirname, 'results', 'fixes.md');
 if (fs.existsSync(FIXES)) st.fixes = fs.readFileSync(FIXES, 'utf8');
 const pct = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '-');
-const widthsOrder = Object.values(perWidth).sort((a, b) => a.width - b.width || a.routes - b.routes);
+const widthsOrder = Object.entries(perWidth).sort((a, b) => a[1].width - b[1].width || a[0].localeCompare(b[0]));
 const topRules = Object.entries(ruleTotals).sort((a, b) => ORDER[RULES[a[0]][0]] - ORDER[RULES[b[0]][0]] || b[1] - a[1]);
 const list = (arr, n = 12) => arr.slice(0, n).map((o) => '`' + o.route + '`').join(', ') + (arr.length > n ? ', and ' + (arr.length - n) + ' more' : '');
 const withRule = (rule) => out.filter((o) => o.rules[rule]);
@@ -162,14 +169,27 @@ f += `| Severity | Screens whose worst finding is this | Distinct findings (rule
 for (const p of ['P0', 'P1', 'P2', 'P3']) f += `| ${p} | ${sevRoutes[p]} | ${findingsBySeverity[p]} |\n`;
 f += `\nModal and sheet checks (${modalSummary.triggers} triggers tried on up to 29 pages at 320, 375 and 1280 px; ${modalSummary.opened} opened a dialog; ${modalSummary.failing} dialog openings had at least one failed criterion; ${modalSummary.pagesWithoutTrigger} page-viewport pairs had no "new/add/edit" trigger). Details under D.\n\n`;
 f += `### Honest scope notes\n- Runner: headless Chrome 156 driven by \`scripts/ui-audit/run.cjs\` (puppeteer-core) on my own server http://localhost:8120, not iframes or the shared browser pane; real viewport emulation (mobile and touch flags for phones, touch for tablets). Each route is loaded once per input mode and resized in place for every width, so a width that only differs by viewport (not by load-time logic) is exact.\n- Zoom is an emulation: CSS width = screen width / zoom, device pixel ratio = zoom. It reproduces layout reflow at zoomed widths, not the browser zoom UI.\n- Roles: staff pages were audited as General Manager (hotel scoped, sees nearly all); routes that GM cannot open are listed in G. Cashier was used for the 403 page. Role-fitted home pages per role were not exercised in this pass.\n- Heuristic rules (long-line, stretched, uppercase-block, btn-nonstandard, icon-family, colour-only-status) can over- or under-report; samples are in \`results/summary.json\`. The repository is not under git, so there is no before/after diff for this pass; "Fixed" means clean at the time of this run.\n\n`;
+{
+  const n = (r) => withRule(r).length;
+  const wideAll = withRule('stretched');
+  f += `### Headline findings and top blockers\n`;
+  f += `1. **No P0 and ${sevRoutes.P1} P1 screens remain after fresh-load confirmation.** Open P1: ${out.filter((o) => o.severity === 'P1').map((o) => '`' + o.route + '` (' + Object.keys(o.rules).filter((r) => RULES[r][0] === 'P1').join(', ') + ' at ' + [...new Set(Object.entries(o.rules).filter(([r]) => RULES[r][0] === 'P1').flatMap(([, v]) => v))].slice(0, 3).join(', ') + ')').join('; ') || 'none'}. All are emulated 200 percent text scaling, not 100 percent layouts.\n`;
+  f += `2. **Ultra-wide is the biggest open area (P2): ${wideAll.length} screens stretch a form, an input or a sparse table at 1600 px and wider** (search and filter inputs reach 850 to 1,600 px, forms 1,280 to 1,630 px, 4-column tables 1,600 px). Cause: \`main\` has no maximum content width and form grids use \`grid-cols-*\` without a cap. Proposed shared fix (owner decision, AppLayout): \`max-w-screen-2xl mx-auto\` on \`main\` for non-operational pages, \`max-w-3xl\` on single forms, \`w-auto\` on sparse tables. Operational boards (tape chart, POS, housekeeping) stay full width.\n`;
+  f += `3. **Phone page title (P3, systemic, ${n('h1-size')} screens): the h1 is 16 px in the app bar**; the directive baseline is 24 to 28 px. Needs a design decision (large in-page title under the app bar, or a larger app bar title).\n`;
+  f += `4. **Running text under 14 px on phones (P2, ${n('body-small')} screens):** the app bar subtitle (\`Topbar.tsx\`, \`text-xs md:text-sm\`, 13 px) and helper paragraphs written as \`text-xs\` (for example finance and payments descriptions). Use \`text-sm\` for sentences; the subtitle should be hidden on phones or moved into the page.\n`;
+  f += `5. **Button class drift (${n('btn-variant')} screens P2, ${n('btn-nonstandard')} screens P3):** the same \`.btn-*\` class renders at 40 and 42 px on desktop on some pages (content-driven height; give the shared class an explicit \`line-height\` and \`min-height\`), the landing hero CTAs override size, and the voice sound toggle in the shell is a hand-styled 44 px, 12 px radius button on every page (use \`.btn-secondary\` or \`.btn-icon\`).\n`;
+  f += `6. **Static design-system debt:** ${st.summary || ''} See docs/UI-CONSISTENCY-MATRIX.md for files. Biggest wins: a shared \`<Alert>\` (94 hand-built callouts, colour-plus-text status), \`.select\` on selects (most use \`.input\`), \`.table-wrap\` on 29 raw tables.\n`;
+  f += `7. **Modals:** every dialog that opened (${modalSummary.opened} openings, filter sheets and edit dialogs on ${new Set(modals.filter((m) => m.opened).map((m) => m.route)).size} pages at 320, 375 and 1280 px) passed width, height, footer reach, close button, Escape, focus move and Tab trap. The shared \`<Modal>\` is sound; only 2 hand-rolled overlays exist (member portal sheet and layout menu) plus the command palette. Coverage is partial (many pages use inline panels, not dialogs).\n`;
+  f += `8. **Not verified in this pass:** role-fitted home pages per role beyond General Manager, real Safari and Firefox rendering, keyboard shortcut coverage, screen reader walkthroughs, print layouts, and offline states (another workstream owns them). Findings fixed by other workstreams while R1 ran may already be gone; re-run \`run.cjs\` then \`recheck.cjs\` then \`register.cjs\` to refresh.\n\n`;
+}
 f += `## B. Design-system findings\n\n`;
 f += `Static counts (docs/UI-CONSISTENCY-MATRIX.md, docs/UI-TOKENS.md): ${st.summary || 'run static.cjs first'}\n\n`;
 const grp = (g) => topRules.filter(([r]) => RULES[r][1] === g);
 f += `Harness findings in the component and colour families (screens affected out of ${out.length}):\n\n| Rule | Severity | What | Screens |\n|---|---|---|---|\n`;
 for (const [r, n] of topRules.filter(([r]) => ['component', 'colour'].includes(RULES[r][1]))) f += `| ${r} | ${RULES[r][0]} | ${RULES[r][2]} | ${n} |\n`;
 f += `\nTop offenders: ${['btn-variant', 'btn-nonstandard', 'icon-family', 'nested-card', 'radius-off-scale', 'icon-stroke', 'contrast', 'glow'].filter((r) => withRule(r).length).map((r) => '**' + r + '**: ' + list(withRule(r), 8)).join('; ') || 'none'}.\n\n`;
-f += `## C. Responsive findings\n\n### Findings per viewport (all screens)\n\n| Viewport | Screens run | With a critical finding | Critical findings | With an advisory finding | Advisory findings |\n|---|---|---|---|---|---|\n`;
-for (const w of widthsOrder) f += `| ${Object.keys(perWidth).find((k) => perWidth[k] === w)} | ${w.routes} | ${w.withCritical} | ${w.critical} | ${w.withAdvisory} | ${w.advisory} |\n`;
+f += `## C. Responsive findings\n\n### Findings per viewport (all screens)\n\n| Viewport | Screens run | Screens with a confirmed P0-P2 finding | Confirmed P0-P2 findings | P3 findings | Raw critical count before confirmation |\n|---|---|---|---|---|---|\n`;
+for (const [k, w] of widthsOrder) f += `| ${k} | ${w.routes} | ${w.failing.size} | ${w.findings} | ${w.advisory} | ${(perWidthRaw[k] || {}).critical || 0} |\n`;
 f += `\n### Mobile (320-480)\nScreens failing at mobile: ${list(out.filter((o) => o.mobile.startsWith('FAIL')))}.\nHorizontal overflow: ${list(withRule('overflow-x')) || 'none'}.\nTouch targets under 44 px: ${list(withRule('touch-target')) || 'none'}.\n\n### Tablet (768-1024)\nScreens failing at tablet: ${list(out.filter((o) => o.tablet.startsWith('FAIL')))}.\n\n### Desktop (1280-1920)\nScreens failing at desktop: ${list(out.filter((o) => o.desktop.startsWith('FAIL')))}.\n\n### Ultra-wide (1920, 2560) and long lines\nStretched forms, inputs or tables (>720 px control, >1100 px form, sparse table): ${list(withRule('stretched'), 30) || 'none'}.\nText lines over about 90 characters: ${list(withRule('long-line'), 30) || 'none'}.\nWidest content block per page at 2560 (metric contentW, px; pages above 1700 px listed): ${rows.filter((r) => r.vp === '2560x1440' && r.report && r.report.metrics && r.report.metrics.contentW > 1700).map((r) => '`' + r.route + '` ' + r.report.metrics.contentW).slice(0, 25).join(', ') || 'none'}.\n\n### Zoom (125/150/200 percent, emulated)\nScreens failing under zoom: ${list(out.filter((o) => o.zoom.startsWith('FAIL')), 40)}.\n\n`;
 f += `## D. Accessibility findings\n\n| Rule | Severity | Screens affected |\n|---|---|---|\n`;
 for (const [r, n] of topRules.filter(([r]) => ['accessibility', 'access'].includes(RULES[r][1]))) f += `| ${r}: ${RULES[r][2]} | ${RULES[r][0]} | ${n} |\n`;

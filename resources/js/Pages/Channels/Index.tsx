@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import Alert from '@/Components/ui/Alert';
 
 interface Provider { code: string; name: string; kind: string; protocol: string; credential_fields: string[] }
 interface RoomMap { room_type_id: number; external_room_id: string; max_allotment: number | null }
@@ -60,7 +61,7 @@ function pretty(s: string | null): string {
 }
 
 function Banner({ error }: { error: string | null }) {
-    return error ? <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null;
+    return error ? <Alert variant="danger">{error}</Alert> : null;
 }
 
 function DryRunBadge() {
@@ -164,7 +165,7 @@ function ConnectionPanel({ provider, conn, onChanged, onClose }: { provider: Pro
                 <button className="btn-secondary" onClick={onClose} aria-label={t('channels.close')}><X className="h-4 w-4" /></button>
             </div>
             <Banner error={error} />
-            {notice && <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">{notice}</div>}
+            {notice && <Alert variant="success">{notice}</Alert>}
 
             <ConnectForm provider={provider} conn={conn} busy={busy} run={run} onSaved={(msg) => { setNotice(msg); onChanged(); }} />
 
@@ -255,12 +256,12 @@ function ConnectForm({ provider, conn, busy, run, onSaved }: {
                 <label className="label">{t('channels.display_name')}<input className="input mt-1 w-full" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} /></label>
                 <label className="label">{t('channels.property_code')}<input className="input mt-1 w-full" value={propertyCode} onChange={(e) => setPropertyCode(e.target.value)} maxLength={64} /></label>
                 <label className="label">{t('channels.environment')}
-                    <select className="input mt-1 w-full" value={environment} onChange={(e) => setEnvironment(e.target.value as Connection['environment'])}>
+                    <select className="select mt-1 w-full" value={environment} onChange={(e) => setEnvironment(e.target.value as Connection['environment'])}>
                         <option value="sandbox">{t('channels.env.sandbox')}</option><option value="production">{t('channels.env.production')}</option>
                     </select>
                 </label>
                 <label className="label">{t('res.status')}
-                    <select className="input mt-1 w-full" value={status} onChange={(e) => setStatus(e.target.value as Connection['status'])}>
+                    <select className="select mt-1 w-full" value={status} onChange={(e) => setStatus(e.target.value as Connection['status'])}>
                         {['draft', 'testing', 'active', 'suspended'].map((s) => <option key={s} value={s}>{t(`channels.status.${s}`)}</option>)}
                     </select>
                 </label>
@@ -338,7 +339,7 @@ function MappingEditor({ conn, onSaved }: { conn: Connection; onSaved: () => voi
                         {rooms.map((r, i) => (
                             <tr key={i}>
                                 <td className="py-1 pr-2">
-                                    <select className="input w-full min-w-[10rem]" value={r.room_type_id || ''} onChange={(e) => setRooms(rooms.map((x, j) => j === i ? { ...x, room_type_id: Number(e.target.value) } : x))} aria-label={t('channels.choose')}>
+                                    <select className="select w-full min-w-[10rem]" value={r.room_type_id || ''} onChange={(e) => setRooms(rooms.map((x, j) => j === i ? { ...x, room_type_id: Number(e.target.value) } : x))} aria-label={t('channels.choose')}>
                                         <option value="">{t('channels.choose')}</option>
                                         {types.map((rt) => <option key={rt.id} value={rt.id}>{rt.name} ({rt.code})</option>)}
                                     </select>
@@ -360,7 +361,7 @@ function MappingEditor({ conn, onSaved }: { conn: Connection; onSaved: () => voi
                         {rates.map((r, i) => (
                             <tr key={i}>
                                 <td className="py-1 pr-2">
-                                    <select className="input w-full min-w-[10rem]" value={r.rate_plan_id || ''} onChange={(e) => setRates(rates.map((x, j) => j === i ? { ...x, rate_plan_id: Number(e.target.value) } : x))} aria-label={t('channels.choose')}>
+                                    <select className="select w-full min-w-[10rem]" value={r.rate_plan_id || ''} onChange={(e) => setRates(rates.map((x, j) => j === i ? { ...x, rate_plan_id: Number(e.target.value) } : x))} aria-label={t('channels.choose')}>
                                         <option value="">{t('channels.choose')}</option>
                                         {plans.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                                     </select>

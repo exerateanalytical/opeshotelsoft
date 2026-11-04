@@ -28,7 +28,8 @@ class AuthenticatedSessionController extends Controller
             $guard->blocked($user, $request->ip());
             throw ValidationException::withMessages(['email' => __('This account is temporarily locked after repeated failed sign-ins.')])->status(423);
         }
-        if (! Auth::guard('web')->validate($credentials)) {
+        // Suspended accounts are refused exactly like a wrong password (same rule as ApiTokenIssuer; SEC1 audit).
+        if (! Auth::guard('web')->validate($credentials) || $user->status !== 'active') {
             $guard->failed($credentials['email'], $request->ip(), $user);
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
@@ -37,6 +38,7 @@ class AuthenticatedSessionController extends Controller
 
         // Enrolled users must pass the TOTP challenge before the session is authenticated.
         if ($twoFactor->enabled($user)) {
+            $request->session()->regenerate(); // a pre-login session id must not survive the password step (SEC1 audit)
             $request->session()->put(['2fa.user_id' => $user->id, '2fa.remember' => $request->boolean('remember')]);
 
             return redirect()->route('two-factor.challenge');

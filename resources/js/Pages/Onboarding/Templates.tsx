@@ -57,10 +57,10 @@ export default function Templates() {
             <Head title={t('onboarding.templates.title')} />
             <OnboardingTabs active="/onboarding/templates" />
             <div className="mb-3 flex flex-wrap gap-3">
-                <select className="input w-56" aria-label={t('ui2.onboarding.doc_kind')} value={kind} onChange={(e) => setKind(e.target.value)}>
+                <select className="select w-56" aria-label={t('ui2.onboarding.doc_kind')} value={kind} onChange={(e) => setKind(e.target.value)}>
                     {['invoice', 'quote', 'registration_card', 'confirmation', 'letter', 'hr_offer', 'hr_attestation', 'hr_salary_cert', 'hr_raise', 'hr_transfer', 'hr_warning', 'hr_suspension', 'hr_termination', 'hr_resignation'].map((k) => <option key={k} value={k}>{t(`onboarding.templates.kind.${k}`)}</option>)}
                 </select>
-                <select className="input w-32" aria-label={t('profile.language')} value={locale} onChange={(e) => setLocale(e.target.value as 'fr' | 'en')}>
+                <select className="select w-32" aria-label={t('profile.language')} value={locale} onChange={(e) => setLocale(e.target.value as 'fr' | 'en')}>
                     <option value="fr">Français</option>
                     <option value="en">English</option>
                 </select>

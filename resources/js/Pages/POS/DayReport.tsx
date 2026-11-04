@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { Outlet } from './shared';
 import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import Alert from '@/Components/ui/Alert';
 
 interface Report {
     date: string; checks: number; covers: number; gross: number; discounts: number; net: number; voids: number;
@@ -36,14 +37,14 @@ export default function DayReport({ outlets }: { outlets: Outlet[] }) {
         <div>
             <div className="flex flex-wrap gap-2 mb-4">
                 <input type="date" className="input" aria-label={t('fin.col.date')} value={date} onChange={(e) => setDate(e.target.value)} />
-                <select className="input w-full sm:w-48" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('pos.common.all_outlets')}>
+                <select className="select w-full sm:w-48" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('pos.common.all_outlets')}>
                     <option value="">{t('pos.common.all_outlets')}</option>
                     {outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </select>
                 <OpsPrintButton path={`pos-day-report?date=${date}${outlet ? `&outlet_id=${outlet}` : ''}`} label={t('documents4.day_report')} />
             </div>
             {r.loading && !d && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
-            {r.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{r.error.message}</div>}
+            {r.error && <Alert variant="danger" className="mb-4">{r.error.message}</Alert>}
             {d && (
                 <>
                     <p className="text-sm text-slate-500 mb-3">{t('pos.report.settled_for', { date: formatDate(d.date) })}</p>
