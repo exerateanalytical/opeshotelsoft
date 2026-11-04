@@ -399,7 +399,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, emb
                                     {t('billing.folios.close')}
                                 </button>
                             )}
-                            {can('payments.refund') && can('folios.adjust') && (
+                            {(can('payments.refund') || can('folios.adjust')) && (
                                 <button type="button" className="btn-secondary btn-lg" onClick={() => setRefund({ amount: '', reason: '', method: methods.data?.[0]?.code ?? 'CASH' })}>{t('ms1.refund.action')}</button>
                             )}
                             <button className="btn-primary btn-lg" disabled={busy === 'inv'} onClick={() => run('inv', `folios/${f.id}/invoice`, {}, t('billing.folios.invoice_issued'))}>

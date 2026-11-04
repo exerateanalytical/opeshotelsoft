@@ -93,7 +93,8 @@ class FolioController
 
     public function refund(Request $request, Folio $folio)
     {
-        abort_unless($request->user()->can('folios.adjust'), 403);
+        $user = $request->user();
+        abort_unless($user->can('folios.adjust') || $user->can('payments.refund'), 403);
         $data = $request->validate(['method' => ['required', 'string'], 'amount' => ['required', 'integer', 'min:1'], 'reason' => ['required', 'string']]);
 
         return response()->json($this->folios->refund($folio, $data['method'], $data['amount'], $data['reason']), 201);
