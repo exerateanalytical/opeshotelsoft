@@ -96,7 +96,11 @@ class PayrollWorkflowTest extends TestCase
         $this->getJson('/api/v1/hr/shifts?from='.now()->toDateString().'&to='.now()->toDateString())->assertOk()
             ->assertJsonPath('0.employee.full_name', 'Aïcha Bello')->assertJsonPath('0.employee.number', $e['number']);
 
+        // SEC2: nobody grants themselves an advance; a colleague with payroll rights does.
+        $this->postJson("/api/v1/hr/employees/{$e['id']}/advances", ['amount' => 100_000, 'monthly_deduction' => 25_000])->assertStatus(422);
+        $this->actAs($this->makeUser($this->group, 'payroll-officer', allHotels: true), $this->hotel);
         $this->postJson("/api/v1/hr/employees/{$e['id']}/advances", ['amount' => 100_000, 'monthly_deduction' => 25_000])->assertCreated();
+        $this->actAs($this->user, $this->hotel);
         $this->getJson("/api/v1/hr/employees/{$e['id']}/advances")->assertOk()->assertJsonPath('0.balance', 100_000);
 
         $run = $this->postJson('/api/v1/payroll/runs', ['period' => now()->format('Y-m')])->assertOk()->json();

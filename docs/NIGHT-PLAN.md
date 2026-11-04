@@ -27,9 +27,9 @@ Goal: wake up to a complete and functional platform. Owner instructions: proceed
 - [x] Security audit SEC1 done: 0 critical, 10 high all fixed with tests, 8 cheap medium/low fixed; artifacts in docs/security-audit/. SEC2 (opus, STARTED) implements the remaining safe medium/low fixes, writes status into FIXES-TODO.md
 - [x] Accounting hardening: A-C done (legacy entry needs attachment unless hotel setting; reopen is two-person; docs/ACCOUNTING-CONTROLS.md)
 - [x] DOC2 done (stay credits do not exist in the data model: not built). Document minor fixes (English words in French documents, empty facts line, transfer letter without position) and loyalty gaps (stay credits, hotel photos, number formats by language)
-- [ ] Housekeeping: scratch databases, temp files, docs index
-- [ ] Final full test run, fresh install check, build, tsc, browser smoke
-- [ ] docs/MORNING-REPORT.md written, final commit and push
+- [x] Housekeeping done
+- [x] Final run: 35 folders pass, build and tsc clean
+- [x] Morning report written
 
 ## If this session is interrupted
 Read this file, `git status`, the scratchpad result files t1_*.txt and rr_*.txt, then continue from the first unchecked item. Never start more than 4 agents at once.
@@ -50,3 +50,6 @@ Read this file, `git status`, the scratchpad result files t1_*.txt and rr_*.txt,
 - SEC1 changed: required-role 2FA enforced on API tokens (demo accounts exempt while DEMO_LOGINS on), suspended users cut off, refunds and payouts serialised, POS view is read-only, public booking guest takeover closed, default seeder skips demo accounts in production (ALLOW_DEMO_SEED=true to override).
 - BrandTest wordmark width expectation updated to 600 (P1 shrank the asset on purpose).
 - Final run: scratchpad/final.sh still running (results fin_<Folder>.txt); folders seen so far all green except Brand (fixed). SEC2 running.
+- WHOLE SUITE (scratchpad/final.sh, fresh DB opeshotelsoft_test_final): 35 folders, 755 tests, all pass (Brand fixed after its run, re-run passes 5/5).
+- Commit b15993a (checkpoint 2) is LOCAL ONLY: `git push` is blocked by a GitHub sign-in prompt from the Windows credential manager (git-credential-manager get waiting; needs the owner to sign in). Do NOT start more pushes (they pile up prompts). Owner: sign in when the prompt appears, or run `git push origin main` once signed in.
+- Remaining: SEC2 report, housekeeping (haiku), final verification (fresh install, build, tsc, browser smoke), docs/MORNING-REPORT.md, final local commit.
