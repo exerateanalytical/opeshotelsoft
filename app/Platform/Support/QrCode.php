@@ -130,6 +130,31 @@ final class QrCode
         return "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"$px\" height=\"$px\" viewBox=\"0 0 $n $n\" shape-rendering=\"crispEdges\"><rect width=\"$n\" height=\"$n\" fill=\"#fff\"/><path d=\"$path\" fill=\"#000\"/></svg>";
     }
 
+    /**
+     * PNG bytes of the code (GD). Used for PDFs: dompdf's SVG path reads the image back from a
+     * temp file and divides by its size, which crashed intermittently; a raster has no such path.
+     */
+    public static function png(string $text, int $scale = 4, int $quiet = 4): string
+    {
+        $m = self::matrix($text);
+        $n = count($m) + 2 * $quiet;
+        $img = imagecreate($n * $scale, $n * $scale);
+        $white = imagecolorallocate($img, 255, 255, 255);
+        $black = imagecolorallocate($img, 0, 0, 0);
+        imagefilledrectangle($img, 0, 0, $n * $scale - 1, $n * $scale - 1, $white);
+        foreach ($m as $y => $row) {
+            foreach ($row as $x => $dark) {
+                if ($dark) {
+                    imagefilledrectangle($img, ($x + $quiet) * $scale, ($y + $quiet) * $scale, ($x + $quiet + 1) * $scale - 1, ($y + $quiet + 1) * $scale - 1, $black);
+                }
+            }
+        }
+        ob_start();
+        imagepng($img);
+
+        return (string) ob_get_clean();
+    }
+
     private static function formatBits(callable $set, int $size, int $mask): void
     {
         $data = (0b01 << 3) | $mask; // EC level L

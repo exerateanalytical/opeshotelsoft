@@ -86,7 +86,7 @@ final class DocumentRenderer
                 $text = $url;
             }
             try {
-                $qr = 'data:image/svg+xml;base64,'.base64_encode(QrCode::svg($text, 4, 2));
+                $qr = 'data:image/png;base64,'.base64_encode(QrCode::png($text, 4, 2));
             } catch (\InvalidArgumentException) {
                 $qr = null; // very long host name: the printed code remains
             }

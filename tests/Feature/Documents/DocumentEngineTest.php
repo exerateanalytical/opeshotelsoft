@@ -68,7 +68,7 @@ class DocumentEngineTest extends TestCase
         $this->assertStringStartsWith('%PDF', $d->pdf);
         $this->assertMatchesRegularExpression('/^[0-9a-z]+-[0-9a-f]{10}$/', $rec->code);
         $this->assertSame(url('/verify/'.$rec->code), $d->engine['verify_url']);
-        $expected = 'data:image/svg+xml;base64,'.base64_encode(QrCode::svg(url('/verify/'.$rec->code).'?h='.substr($rec->content_hash, 0, 12), 4, 2));
+        $expected = 'data:image/png;base64,'.base64_encode(QrCode::png(url('/verify/'.$rec->code).'?h='.substr($rec->content_hash, 0, 12), 4, 2));
         $this->assertSame($expected, $d->engine['qr']);
         $this->assertSame($rec->code, IssuedDocuments::codeFor($rec));
     }
