@@ -83,6 +83,8 @@ class HandleInertiaRequests extends Middleware
             // Sidebar entries this user may see (App\Http\Navigation).
             'nav' => $user ? Navigation::for($user) : [],
             'locale' => app()->getLocale(),
+            // First-render device hint from the User-Agent; the client rule (useDevice) always overrides it.
+            'device' => \App\Platform\Support\DeviceHint::fromRequest($request),
             // ~270 kB: sent on the first full load and when the locale changes (the key carries the locale),
             // then kept by the Inertia client across visits (once prop; docs/PERFORMANCE.md).
             'translations' => Inertia::once(fn () => self::translations(app()->getLocale()))->as('translations.'.app()->getLocale()),

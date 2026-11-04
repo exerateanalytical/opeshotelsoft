@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LogOut } from 'lucide-react';
+import { ChevronDown, LogOut } from 'lucide-react';
+import { useState } from 'react';
 import BrandLogo from '@/Components/ui/BrandLogo';
 import { cn } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -19,6 +20,15 @@ export default function Sidebar({ collapsed = false }: { collapsed?: boolean }) 
     const nav = props.nav ?? [];
     const current = activePath(url, nav);
     const sections = groupNav(nav);
+    const storeKey = `nav.closed.${auth?.user?.id ?? 'anon'}`;
+    const [closed, setClosed] = useState<string[]>(() => {
+        try { return JSON.parse(localStorage.getItem(storeKey) ?? '[]') as string[]; } catch { return []; }
+    });
+    const toggle = (title: string) => setClosed((prev) => {
+        const next = prev.includes(title) ? prev.filter((x) => x !== title) : [...prev, title];
+        try { localStorage.setItem(storeKey, JSON.stringify(next)); } catch { /* storage blocked: state lasts the page */ }
+        return next;
+    });
 
     return (
         <aside
@@ -26,7 +36,8 @@ export default function Sidebar({ collapsed = false }: { collapsed?: boolean }) 
             className={cn(
                 'hidden md:flex flex-col h-dvh flex-shrink-0 transition-[width] duration-200',
                 'bg-[var(--c-chrome)] border-r border-[var(--c-chrome-raised)] text-[var(--c-on-chrome)]',
-                collapsed ? 'w-[72px]' : 'w-60',
+                // compact desktop density (900-1099px laptops at 125-150% scaling) keeps the labels on a narrower bar
+                collapsed ? 'w-[72px]' : 'w-60 [[data-density=compact]_&]:w-52',
             )}
         >
             <div className="flex items-center gap-3 px-4 py-4 border-b border-[var(--c-chrome-raised)] min-h-[60px]">
@@ -45,12 +56,22 @@ export default function Sidebar({ collapsed = false }: { collapsed?: boolean }) 
             </div>
 
             <nav aria-label={t('ui.nav.main')} className="flex-1 scroll-pane py-3 px-2 space-y-0.5">
-                {sections.map((section, si) => (
-                    <div key={section.title ?? si} className={cn(si > 0 && 'pt-3')}>
-                        {section.title && !collapsed && (
-                            <p className="px-3 pb-1 text-xs font-semibold text-[var(--c-on-chrome-muted)]">{t(section.title)}</p>
+                {sections.map((section, si) => {
+                    const title = section.title;
+                    const hasActive = section.items.some((i) => i.path === current);
+                    // The pinned top group, the icon rail and the active page's section are always open.
+                    const open = collapsed || !title || hasActive || !closed.includes(title);
+                    return (
+                    <div key={title ?? si} className={cn(si > 0 && 'pt-3')}>
+                        {title && !collapsed && (
+                            <button type="button" onClick={() => toggle(title)} aria-expanded={open}
+                                aria-label={t('nav.section.toggle', { section: t(title) })}
+                                className="flex w-full items-center gap-1 px-3 pb-1 text-left text-xs font-semibold text-[var(--c-on-chrome-muted)] hover:text-white">
+                                <span className="flex-1">{t(title)}</span>
+                                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', !open && '-rotate-90')} aria-hidden="true" />
+                            </button>
                         )}
-                        {section.items.map((item) => {
+                        {open && section.items.map((item) => {
                             const Icon = navIcon(item.icon);
                             const label = t(item.label);
                             const active = item.path === current;
@@ -63,7 +84,8 @@ export default function Sidebar({ collapsed = false }: { collapsed?: boolean }) 
                             );
                         })}
                     </div>
-                ))}
+                    );
+                })}
             </nav>
 
             <div className="border-t border-[var(--c-chrome-raised)] p-3">

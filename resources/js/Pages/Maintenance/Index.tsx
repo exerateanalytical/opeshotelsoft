@@ -3,7 +3,7 @@ import { EmptyFor } from '@/Components/ui/EmptyStates';
 import Field from '@/Components/ui/Field';
 import FilterBar from '@/Components/ui/FilterBar';
 import Modal from '@/Components/ui/Modal';
-import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useIsDesktop } from '@/lib/useDevice';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { Plus, Search, Loader2, Wrench, CalendarClock, Play, CheckCircle2, UserPlus, X, Trash2, Pause, Ban, Pencil } from 'lucide-react';
@@ -49,7 +49,7 @@ function Badge({ cls, text }: { cls?: string; text: string }) {
 
 export default function MaintenanceIndex() {
     const t = useT();
-    const wide = useMediaQuery('(min-width: 1024px)');
+    const wide = useIsDesktop();
     const tl = (s: string) => { const k = `maint.v.${s}`; const v = t(k); return v === k ? label(s) : v; };
     const [tab, setTab] = useState<'orders' | 'schedules'>('orders');
     const [status, setStatus] = useState('');

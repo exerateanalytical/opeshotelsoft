@@ -3,7 +3,7 @@ import { Volume2, VolumeX, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '@/lib/api';
-import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useIsDesktop } from '@/lib/useDevice';
 import { useLocale, useT } from '@/lib/i18n';
 import { chime, markHeard, setSoundOn, speak, unlock, unlockOnFirstGesture, useVoiceStatus, voiceStatus } from '@/lib/voice/audio';
 import { fetchFeed, inQuietHours, POLL_MS, stillRelevant, type FeedEvent, type VoiceSettings } from '@/lib/voice/engine';
@@ -27,7 +27,7 @@ export default function VoiceNotifier() {
     const allowed = props.auth?.user?.permissions?.includes('servicerequests.voice') ?? false;
     const hotelId = props.property?.id ?? null;
     const status = useVoiceStatus();
-    const phone = useMediaQuery('(max-width: 1023px)'); // phone and tablet: control lives in the app bar
+    const phone = !useIsDesktop(); // phone and tablet: control lives in the app bar
     const [slot, setSlot] = useState<HTMLElement | null>(null);
     useEffect(() => {
         setSlot(phone ? document.getElementById('voice-slot') : null);

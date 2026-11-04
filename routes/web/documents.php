@@ -8,6 +8,9 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 Route::middleware(['auth'])->group(function () {
     Route::get('/documents/scheduled-reports', fn () => Inertia::render('Documents/ScheduledReports'))
         ->middleware(PermissionMiddleware::class.':reports.view|reports.manage')->name('documents.scheduled-reports');
+    // MS1: issued-documents register; same permission as the documents/issued API.
+    Route::get('/documents/issued', fn () => Inertia::render('Documents/Issued'))
+        ->middleware(PermissionMiddleware::class.':documents.verify.log')->name('documents.issued');
 });
 
 // D-A: public verification page (QR target). No login, rate limited.

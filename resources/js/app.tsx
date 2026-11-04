@@ -4,6 +4,9 @@ import { createRoot } from 'react-dom/client';
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { Toaster } from 'react-hot-toast';
+import { installTableLabels } from './lib/tableLabels';
+
+installTableLabels();
 
 createInertiaApp({
     title: (title) => title ? `${title} — OPES Hôtels Soft` : 'OPES Hôtels Soft',

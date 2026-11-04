@@ -1,6 +1,6 @@
 import { SlidersHorizontal } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { useIsPhone } from '@/lib/useMediaQuery';
+import { useIsPhone } from '@/lib/useDevice';
 import { useT } from '@/lib/i18n';
 import Button from './Button';
 import { Sheet } from './Modal';

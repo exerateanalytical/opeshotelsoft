@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-/** Reactive CSS media query. Returns `fallback` on the server and before mount. */
+/**
+ * Reactive CSS media query for non-layout concerns (reduced motion, print, colour scheme).
+ * Layout decisions (phone, tablet, desktop) come from useDevice() only: see lib/useDevice.ts.
+ */
 export function useMediaQuery(query: string, fallback = false): boolean {
     const [matches, setMatches] = useState(() => (typeof window === 'undefined' ? fallback : window.matchMedia(query).matches));
     useEffect(() => {
@@ -13,7 +16,5 @@ export function useMediaQuery(query: string, fallback = false): boolean {
     return matches;
 }
 
-/** True under 768px: the phone layout (bottom tab bar, bottom sheets, card lists). */
-export const useIsPhone = () => useMediaQuery('(max-width: 767px)');
-/** True from 768px up to 1023px: the tablet icon rail. */
-export const useIsTablet = () => useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+/** Kept for existing imports: both now read the single device source of truth. */
+export { useIsPhone, useIsTablet } from './useDevice';

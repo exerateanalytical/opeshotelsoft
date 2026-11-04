@@ -1,10 +1,12 @@
 import { Head, router } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import QueryStatus from '@/Components/ui/QueryStatus';
 import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useT } from '@/lib/i18n';
 import Alert from '@/Components/ui/Alert';
+import { MyOnboardingPanel, MyShiftsPanel } from './MyShiftsPanel';
 
 interface Profile { name: string; number: string; phone: string | null; address: string | null; bank_name: string | null; bank_account: string | null; momo_number: string | null }
 interface Slip { id: number; net: number; gross: number; run: { period: string } }
@@ -14,7 +16,8 @@ interface Docs { documents: { id: number; title: string | null; original_name: s
 interface Contract { id: number; title: string; status: string }
 interface Req { id: number; kind: string; status: string; note: string | null; payload: Record<string, string> }
 
-const TABS = ['payslips', 'leave', 'schedule', 'documents', 'contract', 'requests'] as const;
+const TABS = ['payslips', 'leave', 'schedule', 'shifts', 'onboarding', 'documents', 'contract', 'requests'] as const;
+const TAB_LABEL: Partial<Record<(typeof TABS)[number], string>> = { shifts: 'ms1.me.tab.shifts', onboarding: 'ms1.me.tab.onboarding' };
 const KINDS = ['employment_certificate', 'salary_certificate', 'address_change', 'phone_change', 'bank_change', 'momo_change'];
 const money = (n: number) => new Intl.NumberFormat('fr-FR').format(n);
 const post = (p: string, b: unknown) => api(p, { method: 'POST', body: JSON.stringify(b) });
@@ -49,16 +52,14 @@ export default function MeIndex() {
     const fields: Record<string, string[]> = { address_change: ['address'], phone_change: ['phone'], bank_change: ['bank_name', 'bank_account'], momo_change: ['momo_number'], employment_certificate: ['purpose'], salary_certificate: ['purpose'] };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-10 text-slate-900">
+        // Employee self-service in the standard shell: tab bar on phones, sidebar on desktops (it used to be a phone-only screen).
+        <AppLayout title={t('talent.me.title')} subtitle={me ? `${me.name} - ${me.number}` : undefined}
+            actions={<button className="btn-secondary" onClick={() => router.visit('/dashboard')}>{t('talent.me.back')}</button>}>
             <Head title={t('talent.me.title')} />
-            <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-                <div><h1 className="text-lg font-semibold">{t('talent.me.title')}</h1>{me && <p className="text-sm text-slate-600">{me.name} - {me.number}</p>}</div>
-                <button className="btn-secondary" onClick={() => router.visit('/dashboard')}>{t('talent.me.back')}</button>
-            </header>
-            <nav aria-label={t('talent.me.title')} className="flex gap-2 overflow-x-auto px-4 py-3 text-sm">
-                {TABS.map((x) => <button key={x} onClick={() => setTab(x)} aria-current={tab === x ? 'page' : undefined} className={`min-h-11 whitespace-nowrap rounded-lg border px-4 py-2 ${tab === x ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white'}`}>{t(`talent.me.tab.${x}`)}</button>)}
+            <nav aria-label={t('talent.me.title')} className="flex gap-2 overflow-x-auto pb-3 text-sm lg:flex-wrap">
+                {TABS.map((x) => <button key={x} onClick={() => setTab(x)} aria-current={tab === x ? 'page' : undefined} className={`min-h-11 whitespace-nowrap rounded-lg border px-4 py-2 ${tab === x ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white'}`}>{t(TAB_LABEL[x] ?? `talent.me.tab.${x}`)}</button>)}
             </nav>
-            <main className="space-y-3 px-4 text-base">
+            <div className="space-y-3 text-base lg:max-w-4xl">
                 {err && <Alert variant="danger">{err}</Alert>}
                 {ok && <div role="status" className="rounded-lg border border-slate-200 bg-white p-3 text-sm">{ok}</div>}
 
@@ -89,6 +90,9 @@ export default function MeIndex() {
 
                 {tab === 'schedule' && shiftsQ.data && (<div className="card divide-y divide-slate-100">{shifts.map((s) => <p key={s.id} className="p-3">{s.date.slice(0, 10)} - {String(s.starts_at).slice(0, 5)} / {String(s.ends_at).slice(0, 5)}</p>)}{!shifts.length && <p className="p-3 text-slate-500">{t('talent.none')}</p>}</div>)}
 
+                {tab === 'shifts' && <MyShiftsPanel />}
+                {tab === 'onboarding' && <MyOnboardingPanel />}
+
                 {tab === 'documents' && docs && (<>
                     <div className="card divide-y divide-slate-100"><h2 className="p-3 font-semibold">{t('talent.me.documents')}</h2>
                         {docs.documents.map((d) => <p key={d.id} className="flex items-center justify-between p-3">{d.title || d.original_name}<a className="btn-secondary" href={`/api/v1/hr/me/documents/${d.id}/download`}>{t('talent.me.download')}</a></p>)}
@@ -116,7 +120,7 @@ export default function MeIndex() {
                     {me && <div className="card p-3 text-sm text-slate-700"><p>{t('talent.me.current')}</p><p>{me.phone} - {me.address}</p><p>{me.bank_name} {me.bank_account} {me.momo_number}</p></div>}
                 </>)}
                 </>)}
-            </main>
-        </div>
+            </div>
+        </AppLayout>
     );
 }

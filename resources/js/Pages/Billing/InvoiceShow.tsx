@@ -8,6 +8,7 @@ import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { openPdf } from '@/Pages/Onboarding/shared';
 import PrintPdfButton from '@/Components/PrintPdfButton';
+import { useCan } from '@/lib/useCan';
 
 interface InvoiceLine { business_date: string; description: string; quantity: number | string | null; amount: number; tax_amount: number; department?: string | null }
 interface Invoice {
@@ -82,6 +83,7 @@ const PRINT_CSS = `
 
 export default function InvoiceShow({ id }: { id: string }) {
     const t = useT();
+    const can = useCan();
     const property = usePage<{ property?: { id: number; name: string } | null }>().props.property;
     const inv = useApi<Invoice>(`invoices/${id}`);
     const hotel = useApi<Hotel>(property?.id ? `hotels/${property.id}` : null);
@@ -119,7 +121,7 @@ export default function InvoiceShow({ id }: { id: string }) {
             actions={
                 <div className="flex gap-2 no-print">
                     <Link href="/billing/invoices" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('billing.invoice.back')}</Link>
-                    {i && i.kind !== 'credit_note' && i.status !== 'cancelled' && (
+                    {i && i.kind !== 'credit_note' && i.status !== 'cancelled' && can('invoices.credit') && (
                         <button className="btn-secondary" onClick={async () => {
                             const reason = window.prompt(t('documents3.credit_reason'));
                             if (!reason) return;

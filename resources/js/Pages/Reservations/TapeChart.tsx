@@ -5,7 +5,7 @@ import Button from '@/Components/ui/Button';
 import EmptyState from '@/Components/ui/EmptyState';
 import Field from '@/Components/ui/Field';
 import Modal from '@/Components/ui/Modal';
-import { useIsPhone } from '@/lib/useMediaQuery';
+import { useIsPhone } from '@/lib/useDevice';
 import StatusBadge, { STATUS_ICON } from './StatusBadge';
 import { Fragment, useMemo, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';

@@ -1,6 +1,6 @@
 import { useId, type ReactNode } from 'react';
 import { ResponsiveContainer } from 'recharts';
-import { useIsPhone } from '@/lib/useMediaQuery';
+import { useIsPhone } from '@/lib/useDevice';
 import { useLocale, useT } from '@/lib/i18n';
 import { cn, formatCompact, formatCurrency, formatDayShort, formatNumber, formatPercent, type UiLocale } from '@/lib/utils';
 import EmptyState from './EmptyState';

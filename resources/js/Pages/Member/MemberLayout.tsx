@@ -55,7 +55,7 @@ export default function MemberLayout({ title, children }: { title: string; child
                         <button type="button" onClick={logout} className="lg:hidden min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600" aria-label={t('member.nav.logout')}><LogOut className="w-5 h-5" /></button>
                     </div>
                 </header>
-                <main className="p-4 max-w-3xl mx-auto space-y-4">{children}</main>
+                <main className="p-4 max-w-3xl mx-auto space-y-4 lg:p-6 lg:max-w-5xl">{children}</main>
             </div>
 
             <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-5 pb-[var(--safe-bottom)]" aria-label={t('member.brand')}>

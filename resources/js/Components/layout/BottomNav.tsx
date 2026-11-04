@@ -17,8 +17,7 @@ export default function BottomNav() {
     const nav = props.nav ?? [];
     const [open, setOpen] = useState(false);
     const current = activePath(url, nav);
-    const roles = ((props as { auth?: { user?: { roles?: string[] } | null } }).auth?.user?.roles) ?? [];
-    const tabs = pickTabs(nav, 4, roles);
+    const tabs = pickTabs(nav, 4);
     const inTabs = tabs.some((x) => x.path === current);
     const hotels = (props.hotels as HotelOption[] | undefined) ?? [];
     const property = props.property as unknown as HotelOption | null;

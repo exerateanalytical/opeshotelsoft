@@ -4,7 +4,7 @@ import {
     Hotel, User, Layers, Package, Network, UsersRound,
     FileText, Wallet, Receipt, ShieldCheck, Code2, Coins, History, Circle,
     ChartGantt, ListOrdered, Briefcase, Sun, BedDouble, Smartphone, Settings2, Mail, Inbox, GitFork, CalendarClock,
-    BellRing, MessageCircle, TrendingUp, SlidersHorizontal, Tag, ArrowUpCircle, Gauge, Building, ShieldAlert, QrCode, GitMerge, Banknote, PiggyBank, ClipboardCheck, ChefHat, ScanLine, CalendarRange, GraduationCap, FileSignature, ClipboardList, UserCircle, Rocket, Stamp, ServerCog,
+    BellRing, MessageCircle, TrendingUp, SlidersHorizontal, Tag, ArrowUpCircle, Gauge, Building, ShieldAlert, QrCode, GitMerge, Banknote, PiggyBank, ClipboardCheck, ChefHat, ScanLine, CalendarRange, GraduationCap, FileSignature, ClipboardList, UserCircle, Rocket, Stamp, ServerCog, Clock, Award,
 } from 'lucide-react';
 
 /** One nav entry, filtered server-side by the user's permissions (app/Http/Navigation.php). */
@@ -21,7 +21,7 @@ const ICONS: Record<string, React.ElementType> = {
     LayoutDashboard, CalendarDays, DoorOpen, Sparkles, CreditCard, ShoppingCart, BarChart3, Building2, Users, Wrench,
     Hotel, User, Layers, Package, Network, UsersRound, FileText, Wallet, Receipt, ShieldCheck, Code2, Coins, History,
     ChartGantt, ListOrdered, Briefcase, Sun, BedDouble, Smartphone, Settings2, Mail, Inbox, GitFork, CalendarClock,
-    BellRing, MessageCircle, TrendingUp, SlidersHorizontal, Tag, ArrowUpCircle, Gauge, Building, ShieldAlert, QrCode, GitMerge, Banknote, PiggyBank, ClipboardCheck, ChefHat, ScanLine, CalendarRange, GraduationCap, FileSignature, ClipboardList, UserCircle, Rocket, Stamp, ServerCog,
+    BellRing, MessageCircle, TrendingUp, SlidersHorizontal, Tag, ArrowUpCircle, Gauge, Building, ShieldAlert, QrCode, GitMerge, Banknote, PiggyBank, ClipboardCheck, ChefHat, ScanLine, CalendarRange, GraduationCap, FileSignature, ClipboardList, UserCircle, Rocket, Stamp, ServerCog, Clock, Award,
 };
 
 export const navIcon = (name: string): React.ElementType => ICONS[name] ?? Circle;
@@ -48,20 +48,10 @@ export function groupNav(nav: NavEntry[]) {
     return sections;
 }
 
-/** Destinations the phone tab bar prefers, in order. The first four the user may see are used, topped up from the menu order. */
-const TAB_PRIORITY = ['/dashboard', '/front-desk', '/reservations', '/housekeeping', '/pos', '/service-requests', '/stock', '/finance', '/billing/folios', '/hr', '/me', '/owner'];
-
-/** Floor roles land on the task home (/tasks) first; their own workplace page follows. */
-const FLOOR_ROLES = ['room-attendant', 'maintenance-technician', 'pos-cashier', 'storekeeper', 'fnb-manager', 'housekeeping-manager'];
-const FLOOR_TAB_PRIORITY = ['/tasks', '/housekeeping', '/maintenance', '/pos', '/stock', '/service-requests', '/me'];
-
-export function pickTabs(nav: NavEntry[], count = 4, roles: string[] = []): NavEntry[] {
-    const picked: NavEntry[] = [];
-    const floor = roles.some((r) => FLOOR_ROLES.includes(r));
-    for (const p of floor ? FLOOR_TAB_PRIORITY : TAB_PRIORITY) {
-        const hit = nav.find((n) => n.path === p);
-        if (hit && picked.length < count) picked.push(hit);
-    }
-    for (const n of nav) if (picked.length < count && !picked.includes(n)) picked.push(n);
-    return picked;
+/**
+ * Phone tab bar: the first `count` entries of the menu. The server already orders the menu by the role's need
+ * (app/Http/Navigation.php ROLE_PROFILES), so the tabs are the role's primary tasks and the rest live in More.
+ */
+export function pickTabs(nav: NavEntry[], count = 4): NavEntry[] {
+    return nav.slice(0, count);
 }

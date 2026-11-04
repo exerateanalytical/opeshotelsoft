@@ -7,6 +7,7 @@ import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, monday, addDays, msg } from './WorkforceTabs';
 import Alert from '@/Components/ui/Alert';
+import { useCan } from '@/lib/useCan';
 
 interface Shift { id: number; employee_id: number | null; date: string; starts_at: string; ends_at: string; role: string | null; employee?: { first_name: string; last_name: string } | null }
 interface Issue { rule: string; message: string }
@@ -14,6 +15,7 @@ interface Roster { id: number; status: string; week_start: string; warnings: Iss
 
 export default function WorkforceRoster() {
     const t = useT();
+    const can = useCan();
     const [week, setWeek] = useState(addDays(monday(), 7));
     const [roster, setRoster] = useState<Roster | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function WorkforceRoster() {
                 )}
                 <div className="card mb-4 overflow-x-auto p-4 text-sm">
                     <div className="mb-2 flex items-center justify-between"><h2 className="font-semibold">{roster.week_start.slice(0, 10)} - {t(`workforce.status.${roster.status}`)}</h2>
-                        {roster.status === 'draft' && <div className="flex flex-wrap items-center gap-3"><label className="flex items-center gap-1"><input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />{t('workforce.roster.acknowledge')}</label><button className="btn-primary" onClick={publish}>{t('workforce.roster.publish')}</button></div>}</div>
+                        {roster.status === 'draft' && can('workforce.publish') && <div className="flex flex-wrap items-center gap-3"><label className="flex items-center gap-1"><input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />{t('workforce.roster.acknowledge')}</label><button className="btn-primary" onClick={publish}>{t('workforce.roster.publish')}</button></div>}</div>
                     <div className="table-wrap"><table className="table-auto w-full"><thead><tr className="text-left text-slate-500">{days.map((d) => <th key={d} className="pr-3">{d.slice(5)}</th>)}</tr></thead>
                         <tbody><tr className="align-top">{days.map((d) => (
                             <td key={d} className="pr-3">{roster.shifts.filter((s) => s.date.slice(0, 10) === d).map((s) => (

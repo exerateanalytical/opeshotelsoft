@@ -2,11 +2,11 @@ import { X } from 'lucide-react';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { dialogOpen } from '@/lib/desktop';
 import { useT } from '@/lib/i18n';
-import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useDesktopAtLeast } from '@/lib/useDevice';
 import { cn } from '@/lib/utils';
 
-/** True from 1280px: list and detail sit side by side. Below that, pages keep full-page navigation. */
-export const useSplitView = () => useMediaQuery('(min-width: 1280px)');
+/** True on a desktop from 1280px: list and detail sit side by side. Below that, pages keep full-page navigation. */
+export const useSplitView = () => useDesktopAtLeast(1280);
 
 interface Props {
     /** The list (usually a DataTable). */

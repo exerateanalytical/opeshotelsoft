@@ -7,6 +7,7 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import Alert from '@/Components/ui/Alert';
+import { useCan } from '@/lib/useCan';
 
 interface GuestLite { id: number; first_name: string; last_name: string; email?: string | null; phone?: string | null }
 interface Member {
@@ -224,6 +225,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
     const [cardKind, setCardKind] = useState<'digital' | 'physical'>('physical');
     const [redeem, setRedeem] = useState({ folio_id: '', points: '' });
     const [adjust, setAdjust] = useState({ points: '', reason: '' });
+    const canLarge = useCan()('loyalty.adjust_large');
 
     async function run(key: string, path: string, body: object, ok: string) {
         setBusy(key);
@@ -302,6 +304,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
                     <input required maxLength={255} className="input flex-1" placeholder={t('loyalty.members.reason')} aria-label={t('loyalty.members.reason')} value={adjust.reason} onChange={(e) => setAdjust({ ...adjust, reason: e.target.value })} />
                     <button className="btn-secondary" disabled={busy === 'adjust' || adjust.points === '0'}>{t('loyalty.members.apply')}</button>
                 </div>
+                {!canLarge && <p className="text-xs text-slate-600">{t('ms1.loyalty.cap_hint')}</p>}
             </form>
 
             <section>

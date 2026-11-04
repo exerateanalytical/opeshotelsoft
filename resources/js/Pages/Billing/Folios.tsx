@@ -14,7 +14,9 @@ import Field from '@/Components/ui/Field';
 import FilterBar from '@/Components/ui/FilterBar';
 import Modal from '@/Components/ui/Modal';
 import Tabs from '@/Components/ui/Tabs';
-import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useSplitView } from '@/Components/ui/MasterDetail';
+import Alert from '@/Components/ui/Alert';
+import { useCan } from '@/lib/useCan';
 
 interface Line {
     id: number;
@@ -72,7 +74,7 @@ export default function Folios() {
             (!term || f.number.toLowerCase().includes(term) || (f.name ?? '').toLowerCase().includes(term)));
     }, [list.data, kind, status, company, q]);
 
-    const wide = useMediaQuery('(min-width: 1280px)');
+    const wide = useSplitView();
     const companyName = (id: number | null) => companies.data?.data.find((c) => c.id === id)?.name;
 
     return (
@@ -231,6 +233,10 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, emb
     const [tab, setTab] = useState<'charge' | 'payment' | 'transfer' | 'ledger'>('charge');
     const [busy, setBusy] = useState<string | null>(null);
     const [message, setMessage] = useState<{ ok: boolean; text: string; link?: string } | null>(null);
+    const [refund, setRefund] = useState<{ amount: string; reason: string; method: string } | null>(null);
+    const [refundErr, setRefundErr] = useState<string | null>(null);
+    const can = useCan();
+    const wide = useSplitView();
 
     async function run(key: string, path: string, body: object, ok = t('billing.folios.done')) {
         setBusy(key);
@@ -393,11 +399,51 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, emb
                                     {t('billing.folios.close')}
                                 </button>
                             )}
+                            {can('payments.refund') && can('folios.adjust') && (
+                                <button type="button" className="btn-secondary btn-lg" onClick={() => setRefund({ amount: '', reason: '', method: methods.data?.[0]?.code ?? 'CASH' })}>{t('ms1.refund.action')}</button>
+                            )}
                             <button className="btn-primary btn-lg" disabled={busy === 'inv'} onClick={() => run('inv', `folios/${f.id}/invoice`, {}, t('billing.folios.invoice_issued'))}>
                                 {busy === 'inv' && <Loader2 className="w-4 h-4 animate-spin" />} {t('billing.folios.issue_invoice')}
                             </button>
                         </div>
                     </div>
+                    {refund && (
+                        <Modal open title={t('ms1.refund.title', { number: f.number })} variant={wide ? 'dialog' : 'sheet'} onClose={() => setRefund(null)} formId="folio-refund"
+                            footer={<>
+                                <button type="button" className="btn-secondary" onClick={() => setRefund(null)}>{t('common.cancel')}</button>
+                                <button type="submit" form="folio-refund" className="btn-primary" disabled={busy === 'refund'}>{busy === 'refund' && <Loader2 className="w-4 h-4 animate-spin" />} {t('ms1.refund.submit')}</button>
+                            </>}>
+                            <form id="folio-refund" className="space-y-3" onSubmit={async (e) => {
+                                e.preventDefault();
+                                setRefundErr(null);
+                                setBusy('refund');
+                                try {
+                                    await api(`folios/${f.id}/refunds`, { method: 'POST', body: JSON.stringify({ amount: Number(refund.amount), reason: refund.reason, method: refund.method }) });
+                                    setRefund(null);
+                                    setMessage({ ok: true, text: t('ms1.refund.done') });
+                                    folio.reload();
+                                    onChange();
+                                } catch (err) {
+                                    setRefundErr(err instanceof ApiError ? err.message : String(err));
+                                } finally {
+                                    setBusy(null);
+                                }
+                            }}>
+                                {refundErr && <Alert variant="danger">{refundErr}</Alert>}
+                                <Field label={t('ms1.refund.amount')}>
+                                    <input className="input" type="number" inputMode="numeric" min={1} required value={refund.amount} onChange={(e) => setRefund({ ...refund, amount: e.target.value })} />
+                                </Field>
+                                <Field label={t('ms1.refund.method')}>
+                                    <select className="select" required value={refund.method} onChange={(e) => setRefund({ ...refund, method: e.target.value })}>
+                                        {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
+                                    </select>
+                                </Field>
+                                <Field label={t('ms1.refund.reason')}>
+                                    <textarea className="input" required maxLength={255} rows={3} value={refund.reason} onChange={(e) => setRefund({ ...refund, reason: e.target.value })} />
+                                </Field>
+                            </form>
+                        </Modal>
+                    )}
                 </>
             )}
         </div>

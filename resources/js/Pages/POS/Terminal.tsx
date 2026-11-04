@@ -7,8 +7,9 @@ import FloorPlan, { FloorTable } from './FloorPlan';
 import { Banner, Check, Code, errText, MenuItem, Msg, Paginated } from './shared';
 import { useT } from '@/lib/i18n';
 import { refreshPosQueueFromStorage, registerSyncRetry, reportSync } from '@/lib/syncStatus';
-import PrintPdfButton from '@/Components/PrintPdfButton';
+import PrintPdfButton from '@/Components/PrintPdfButton';
 import Alert from '@/Components/ui/Alert';
+import { useCan } from '@/lib/useCan';
 
 type Panel = null | 'discount' | 'split' | 'settle' | 'room' | 'void' | 'comp' | 'transfer' | { voidLine: number } | { compLine: number };
 
@@ -31,6 +32,7 @@ interface ResvRow { id: number; number: string; guest: { first_name: string; las
 
 export default function Terminal({ outletId }: { outletId: number }) {
     const t = useT();
+    const can = useCan();
     const checks = useApi<Paginated<Check>>(`pos/checks?outlet_id=${outletId}&status=open`);
     const menu = useApi<Paginated<MenuItem>>('pos/menu-items?filter[active]=1&per_page=500&sort=name');
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -320,10 +322,10 @@ export default function Terminal({ outletId }: { outletId: number }) {
                             {c.status === 'open' && pendingComps > 0 && (
                                 <Alert variant="warning" className="mt-3">
                                     <p className="mb-2">{t('pos.term.comps_pending', { count: pendingComps })}</p>
-                                    <div className="flex gap-2">
+                                    {can('pos.comp') && <div className="flex gap-2">
                                         <button className="btn-primary" disabled={busy === 'compd'} onClick={() => run('compd', `pos/checks/${c.id}/comp/decide`, { approve: true }, t('pos.term.comp_approved'))}>{t('pos.term.approve')}</button>
                                         <button className="btn-secondary" disabled={busy === 'compd'} onClick={() => run('compd', `pos/checks/${c.id}/comp/decide`, { approve: false }, t('pos.term.comp_rejected'))}>{t('pos.term.reject')}</button>
-                                    </div>
+                                    </div>}
                                 </Alert>
                             )}
                             {panel && c.status === 'open' && (

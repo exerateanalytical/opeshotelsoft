@@ -9,7 +9,7 @@ import Topbar from '@/Components/layout/Topbar';
 import { ToastRegion } from '@/Components/ui/Toast';
 import VoiceNotifier from '@/Components/voice/VoiceNotifier';
 import { useT } from '@/lib/i18n';
-import { useIsPhone, useIsTablet } from '@/lib/useMediaQuery';
+import { useDevice } from '@/lib/useDevice';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -50,14 +50,17 @@ const read = () => { try { return localStorage.getItem(KEY) === '1'; } catch { r
 /**
  * Staff app shell.
  * Phone (<768px): app bar on top, bottom tab bar, content padded clear of both, safe-area aware.
- * Tablet (768-1023px): icon rail. Desktop (1024px+): collapsible sidebar. Only the main pane scrolls.
+ * Tablet: icon rail. Desktop (mouse from 900px, touch from 1280px): collapsible sidebar. Only the main pane scrolls.
+ * The class comes from <html data-device> (lib/useDevice.ts); md:/lg: utilities follow the same attribute.
  */
 export default function AppLayout({ children, title, subtitle, actions, noPadding, width, breadcrumbs }: Props) {
     const t = useT();
     const { url } = usePage();
     const [collapsed, setCollapsed] = useState(read);
-    const tablet = useIsTablet();
-    const phone = useIsPhone();
+    // The one device decision (lib/useDevice.ts): phone = tab bar, tablet = icon rail, desktop = sidebar.
+    const device = useDevice();
+    const tablet = device === 'tablet';
+    const phone = device === 'phone';
     const first = useRef(true);
     const w = width ?? defaultWidth(url);
     // Full-width and edge-to-edge pages render directly in <main> (no wrapper, so h-full layouts keep working).

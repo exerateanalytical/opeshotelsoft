@@ -7,6 +7,7 @@ import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { WorkforceTabs, wpost, msg } from './WorkforceTabs';
 import Alert from '@/Components/ui/Alert';
+import LeaveBalancesPanel from './LeaveBalancesPanel';
 
 interface Row { leave_type_id: number; code: string; name: string; policy: { accrual_per_month: number; max_balance: number | null; carry_over_max: number; carry_over_expiry_months: number | null } | null }
 
@@ -33,6 +34,7 @@ export default function WorkforceLeave() {
                     <td><input type="number" className="input w-24" aria-label={`${r.name}: ${t('workforce.leave.cap')}`} defaultValue={val(r.policy?.max_balance)} onBlur={(e) => r.policy && save(r, { max_balance: e.target.value ? Number(e.target.value) : null })} /></td>
                     <td><input type="number" className="input w-24" aria-label={`${r.name}: ${t('workforce.leave.carry')}`} defaultValue={val(r.policy?.carry_over_max)} onBlur={(e) => e.target.value && save(r, { carry_over_max: Number(e.target.value) })} /></td>
                     <td><input type="number" className="input w-24" aria-label={`${r.name}: ${t('workforce.leave.expiry')}`} defaultValue={val(r.policy?.carry_over_expiry_months)} onBlur={(e) => r.policy && save(r, { carry_over_expiry_months: e.target.value ? Number(e.target.value) : null })} /></td></tr>))}</tbody></table></div>
+            <LeaveBalancesPanel />
             <div className="card flex flex-wrap items-end gap-3 p-4 text-sm">
                 <label>{t('workforce.leave.month')}<input type="month" className="input block" value={month} onChange={(e) => setMonth(e.target.value)} /></label>
                 <button className="btn-primary" onClick={() => act(() => wpost('workforce/leave/accrue', { month }))}>{t('workforce.leave.accrue')}</button>

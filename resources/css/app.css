@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Device classes: the one source of truth is <html data-device="phone|tablet|desktop"> set before first paint by the
+   inline script in app.blade.php (rules in resources/js/lib/useDevice.ts and docs/DEVICE-CERTIFICATION.md).
+   The layout breakpoints md: and lg: are redefined on it, so a mouse laptop at 900-1023 CSS px (125-150 % display
+   scaling) gets the desktop layout and a touch tablet in landscape keeps the tablet one. sm:, xl:, 2xl: stay width-based
+   (they size content inside a device layout, they never switch between phone, tablet and desktop UI). */
+@custom-variant md (&:where(html:not([data-device="phone"]) *));
+@custom-variant max-md (&:where(html[data-device="phone"] *));
+@custom-variant lg (&:where(html[data-device="desktop"] *));
+@custom-variant max-lg (&:where(html:not([data-device="desktop"]) *));
+@custom-variant phone (&:where(html[data-device="phone"] *));
+@custom-variant tablet (&:where(html[data-device="tablet"] *));
+@custom-variant desktop (&:where(html[data-device="desktop"] *));
+
 /* ==========================================================================
    OPES Hotels Soft design tokens. Flat UI: no glow of any kind.
    Contract: docs/PLAN-UI-AUDIT.md and docs/UI-STANDARD.md.
@@ -259,7 +272,7 @@
   .safe-x { padding-left: var(--safe-left); padding-right: var(--safe-right); }
   /* Lifts floating elements (voice chip, FABs) above the phone tab bar */
   .above-tabbar { bottom: calc(var(--bar-bottom-h) + var(--safe-bottom) + 12px); }
-  @media (min-width: 768px) { .above-tabbar { bottom: 16px; } }
+  html:not([data-device="phone"]) .above-tabbar { bottom: 16px; }
 
   /* Sidebar nav item (on navy) */
   .nav-item {
@@ -302,7 +315,7 @@
   .input:disabled, .select:disabled, .textarea:disabled { background: var(--c-surface-page); color: var(--c-text-muted); cursor: not-allowed; }
   .input[aria-invalid="true"], .select[aria-invalid="true"], .textarea[aria-invalid="true"] { border-color: var(--c-danger); border-width: 2px; }
   .select { appearance: auto; padding-right: 2rem; }
-  @media (pointer: coarse), (max-width: 1023px) {
+  @media (pointer: coarse) {
     /* 16px prevents iOS zoom-on-focus; 44px is the touch target */
     .input, .select, .textarea { min-height: 44px; font-size: 1rem; }
   }
@@ -311,7 +324,7 @@
   .field-error { margin-top: 0.25rem; font-size: 0.8125rem; line-height: 1.25rem; font-weight: 600; color: var(--c-danger); display: flex; gap: 0.25rem; align-items: flex-start; }
   input[type="checkbox"], input[type="radio"] { width: 1.125rem; height: 1.125rem; accent-color: var(--c-primary); flex-shrink: 0; }
   /* Touch: the drawn box keeps its size; an invisible 44px pseudo-element extends the hit area (WCAG 2.5.8) */
-  @media (pointer: coarse), (max-width: 1023px) {
+  @media (pointer: coarse) {
     input[type="checkbox"], input[type="radio"] { position: relative; }
     input[type="checkbox"]::after, input[type="radio"]::after {
       content: ""; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%);
@@ -319,14 +332,14 @@
   }
 
   /* Range sliders are 16px tall natively; give them a 44px touch row without changing the track */
-  @media (pointer: coarse), (max-width: 1023px) {
+  @media (pointer: coarse) {
     input[type="range"] { min-height: 44px; width: 100%; }
   }
 
   /* ---------- Buttons ---------- */
   /* Bare icon button or inline text link/badge button that needs a 44px hit area on touch widths */
   .hit-44 { display: inline-flex; align-items: center; justify-content: center; }
-  @media (pointer: coarse), (max-width: 1023px) {
+  @media (pointer: coarse) {
     .hit-44 { min-width: 44px; min-height: 44px; }
   }
   .btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-accent {
@@ -359,11 +372,11 @@
   }
   /* Button heights are tokens: sm 36, md 40, lg 48 on desktop; 44 minimum on touch. Vertical padding is tiny so a text-sm or text-base line-height can never change the height. */
   :root { --btn-h-sm: 36px; --btn-h-md: 40px; --btn-h-lg: 48px; }
-  @media (pointer: coarse), (max-width: 1023px) { :root { --btn-h-sm: 44px; --btn-h-md: 44px; --btn-h-lg: 48px; } }
+  @media (pointer: coarse) { :root { --btn-h-sm: 44px; --btn-h-md: 44px; --btn-h-lg: 48px; } }
   .btn-sm { min-height: var(--btn-h-sm); padding: 0.125rem 0.75rem; font-size: 0.8125rem; border-radius: 8px; }
   .btn-lg { min-height: var(--btn-h-lg); padding: 0.125rem 1.5rem; font-size: 1rem; border-radius: 12px; }
   .btn-icon { padding: 0; width: var(--btn-h-md); flex-shrink: 0; }
-  @media (pointer: coarse), (max-width: 1023px) {
+  @media (pointer: coarse) {
     .btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-accent { min-width: 44px; }
     .btn-icon { width: 44px; }
   }
@@ -410,7 +423,9 @@
 
   /* ---------- Tables ---------- */
   /* Wide tables scroll inside their own wrapper, never the page */
-  .table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  /* position: relative makes the wrap the containing block, so absolutely positioned bits inside cells (sr-only text,
+     resize handles) are clipped by its scroll box instead of widening the page on touch tablets */
+  .table-wrap { position: relative; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
   .table-wrap > table { min-width: 100%; }
   .table-wrap.sticky-first th:first-child, .table-wrap.sticky-first td:first-child {
     position: sticky; left: 0; z-index: 1; background: var(--c-surface); border-right: 1px solid var(--c-border);
@@ -426,15 +441,20 @@
   }
   .table-auto tbody tr:last-child td, .table-std tbody tr:last-child td { border-bottom: 0; }
   .table-auto tbody tr:hover td, .table-std tbody tr:hover td { background: var(--c-surface-subtle); }
-  /* Card-list pattern: add .table-cards and data-label="Column" on each td */
-  @media (max-width: 767px) {
-    .table-cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-    .table-cards, .table-cards tbody, .table-cards tr, .table-cards td { display: block; width: 100%; }
-    .table-cards tr { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; margin-bottom: 0.75rem; padding: 0.5rem 0; }
-    .table-cards td { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 1rem; border: 0; text-align: right; }
-    .table-cards td::before { content: attr(data-label); font-weight: 600; color: var(--c-text-muted); text-align: left; flex: 0 0 40%; }
-    .table-cards tbody tr:hover td { background: transparent; }
+  /* Card-list pattern on phones: .table-cards (DataTable) and every plain .table-auto table in the page body.
+     lib/tableLabels.ts copies each column header into data-label; opt a table out with data-keep-table
+     (grids that only make sense as a grid, such as a rate matrix). */
+  html[data-device="phone"] :is(.table-cards, main table.table-auto:not([data-keep-table])) {
+    & thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    &, & tbody, & tfoot, & tr, & td { display: block; width: 100%; min-width: 0; }
+    & tr { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; margin-bottom: 0.75rem; padding: 0.5rem 0; }
+    & td { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 1rem; border: 0; text-align: right; overflow-wrap: anywhere; }
+    & td::before { content: attr(data-label); font-weight: 600; color: var(--c-text-muted); text-align: left; flex: 0 0 40%; }
+    & td:not([data-label])::before, & td[data-label=""]::before { content: none; }
+    & td:not([data-label]), & td[data-label=""] { justify-content: flex-start; text-align: left; }
+    & tbody tr:hover td { background: transparent; }
   }
+  html[data-device="phone"] main .table-wrap:has(> table.table-auto:not([data-keep-table])) { overflow-x: visible; }
 
   /* ---------- Sheets and modals ---------- */
   .overlay { position: fixed; inset: 0; z-index: var(--z-modal); background: rgba(10, 24, 48, 0.55); display: flex; }
@@ -447,17 +467,20 @@
   .overlay.is-modal .sheet-panel {
     border-radius: 16px 16px 0 0; max-height: 92dvh; padding-bottom: var(--safe-bottom);
   }
-  @media (min-width: 768px) {
-    .overlay.is-modal { align-items: center; padding: 1.5rem; }
-    .overlay.is-modal .sheet-panel { border-radius: 16px; max-width: 32rem; max-height: 85dvh; padding-bottom: 0; }
-    .overlay.is-modal .sheet-panel.size-lg { max-width: 48rem; }
-    .overlay.is-modal .sheet-panel.size-xl { max-width: 64rem; }
+  html:not([data-device="phone"]) {
+    & .overlay.is-modal { align-items: center; padding: 1.5rem; }
+    & .overlay.is-modal .sheet-panel { border-radius: 16px; max-width: 32rem; max-height: 85dvh; padding-bottom: 0; }
+    & .overlay.is-modal .sheet-panel.size-lg { max-width: 48rem; }
+    & .overlay.is-modal .sheet-panel.size-xl { max-width: 64rem; }
   }
 
+  /* Sheet: a bottom sheet on phones and touch tablets; a centred dialog on desktops */
   .overlay.is-sheet { align-items: flex-end; justify-content: center; }
   .overlay.is-sheet .sheet-panel {
     border-radius: 16px 16px 0 0; max-height: 88dvh; max-width: 40rem; padding-bottom: var(--safe-bottom);
   }
+  html[data-device="desktop"] .overlay.is-sheet { align-items: center; padding: 1.5rem; }
+  html[data-device="desktop"] .overlay.is-sheet .sheet-panel { border-radius: 16px; max-height: 85dvh; padding-bottom: 0; }
 
   /* Phone bottom tab bar item (on navy) */
   .tab-bar-item {
@@ -536,7 +559,7 @@
   .n1-split { display: block; }
   .n1-detail { overflow: auto; }
 
-  @media (min-width: 1024px) {
+  html[data-device="desktop"] {
     .n1-table-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; padding: 0.375rem 0.75rem; border-bottom: 1px solid var(--c-border); }
     .n1-bulkbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; background: var(--c-primary); color: var(--c-on-primary); }
     .n1-bulkbar .btn-ghost { color: var(--c-on-primary); }
@@ -557,9 +580,9 @@
     .n1-row.is-active td { background: var(--color-slate-100); }
   }
   @media (min-width: 1280px) {
-    .n1-split.is-open { display: grid; grid-template-columns: minmax(0, 1fr) 26rem; gap: 1rem; align-items: start; }
-    .n1-split.is-open .n1-detail { position: sticky; top: 0; max-height: calc(100dvh - 9rem); }
-    .n1-split.is-open .n1-sticky-head { max-height: calc(100dvh - 19rem); }
+    html[data-device="desktop"] .n1-split.is-open { display: grid; grid-template-columns: minmax(0, 1fr) 26rem; gap: 1rem; align-items: start; }
+    html[data-device="desktop"] .n1-split.is-open .n1-detail { position: sticky; top: 0; max-height: calc(100dvh - 9rem); }
+    html[data-device="desktop"] .n1-split.is-open .n1-sticky-head { max-height: calc(100dvh - 19rem); }
   }
   @media (prefers-reduced-motion: reduce) {
     .n1-palette, .n1-menu, .n1-popover, .n1-detail { transition: none; animation: none; }
@@ -595,8 +618,8 @@
   --chart-tooltip-bg: #ffffff;
   --chart-tooltip-border: #94a3b8;
 }
-@media (min-width: 1024px) {
-  :root {
+/* Desktop type scale (device class, not width: a 1024 px touch tablet keeps the phone/tablet scale) */
+:root[data-device="desktop"] {
     --type-body: 1rem;
     --type-support: 0.875rem;
     --type-table: 0.875rem;
@@ -604,7 +627,6 @@
     --type-page: 1.75rem;       /* 28px */
     --type-page-body: 1.75rem;  /* 28px */
     --type-kpi: 2rem;           /* 32px */
-  }
 }
 
 @layer components {
@@ -645,7 +667,7 @@
 /* ---------- UX7a shared layout rules (unlayered on purpose: they must win over utility classes that were set page by page) ---------- */
 /* Helper text: 14px minimum for running text on phones; badges, chips and column headers keep 13px */
 .hint { font-size: 0.875rem; line-height: 1.375rem; color: var(--c-text-muted); }
-@media (max-width: 767px) {
+html[data-device="phone"] {
   p.text-xs, li.text-xs, dd.text-xs, :is(p, li, dd) .text-xs:not(.badge):not([class*="badge-"]):not(th), .field-hint, .l1-caption.l1-prose { font-size: 0.875rem; line-height: 1.375rem; }
   .page-header h1, .page-header h2 { overflow-wrap: anywhere; }
 }

@@ -27,9 +27,9 @@ export default function Owner() {
     return (
         <AppLayout title={t('insights.owner.title')} subtitle={t('insights.owner.subtitle')}>
             <Head title={t('insights.owner.title')} />
-            <div className="mx-auto max-w-xl space-y-3">
+            <div className="space-y-3 lg:space-y-4">
                 <div className="flex items-end gap-2">
-                    <label className="flex-1">
+                    <label className="flex-1 lg:flex-none lg:w-64">
                         <span className="label">{t('insights.owner.date')}</span>
                         <input type="date" className="input w-full" value={date || k?.date || ''} onChange={(e) => setDate(e.target.value)} />
                     </label>
@@ -39,12 +39,13 @@ export default function Owner() {
                 {q.loading && !k && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
                 {k && (
                     <>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
                             {tile(t('insights.owner.revenue'), fcfa(k.revenue), y && fcfa(y.revenue))}
                             {tile(t('insights.owner.occupancy'), `${k.occupancy} %`, y && `${y.occupancy} %`, t('insights.owner.rooms_sold', { occupied: k.occupied, rooms: k.rooms }))}
                             {tile(t('insights.owner.adr'), fcfa(k.adr), y && fcfa(y.adr))}
                             {tile(t('insights.owner.revpar'), fcfa(k.revpar), y && fcfa(y.revpar))}
                         </div>
+                        <div className="grid gap-3 lg:grid-cols-2 lg:gap-4 lg:items-start">
                         <div className="card p-3">
                             <h2 className="mb-2 font-semibold text-slate-900">{t('insights.owner.cash')}</h2>
                             {k.cash_by_method.length === 0 && <p className="text-sm text-slate-500">{t('insights.owner.no_cash')}</p>}
@@ -70,6 +71,7 @@ export default function Owner() {
                                     </li>
                                 ))}
                             </ul>
+                        </div>
                         </div>
                     </>
                 )}

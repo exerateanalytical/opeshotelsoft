@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Modal from '@/Components/ui/Modal';
 import { HELP_EVENT, dialogOpen, isTypingTarget, openPalette, shortcutsEnabled, useShortcutsEnabled } from '@/lib/desktop';
 import { useT } from '@/lib/i18n';
-import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useIsDesktop } from '@/lib/useDevice';
 import type { PageProps } from '@/types';
 import CommandPalette from './CommandPalette';
 import type { NavEntry } from './navModel';
@@ -28,7 +28,7 @@ const visible = (el: Element) => (el as HTMLElement).offsetParent !== null;
  * Single-key shortcuts never fire while typing, while a dialog is open, or when the user switched them off.
  */
 export default function DesktopShell() {
-    const desktop = useMediaQuery('(min-width: 1024px)');
+    const desktop = useIsDesktop();
     if (!desktop) return null;
     return <Shell />;
 }
