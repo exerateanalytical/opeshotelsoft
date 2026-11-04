@@ -104,7 +104,10 @@ class StockService
         $new = (float) $row->quantity + $delta;
         if ($new < -0.00001 && ! $allowNegative) {
             $item = StockItem::find($itemId);
-            throw new DomainException("Not enough {$item->name} in stock (on hand {$row->quantity} {$item->unit}).", 'insufficient-stock');
+            $store = Store::find($storeId);
+            $have = rtrim(rtrim(number_format((float) $row->quantity, 3, '.', ''), '0'), '.') ?: '0';
+            $want = rtrim(rtrim(number_format(-$delta, 3, '.', ''), '0'), '.') ?: '0';
+            throw new DomainException("Not enough {$item->name} in store \"{$store?->name}\" ({$store?->code}): needs {$want} {$item->unit}, on hand {$have} {$item->unit}. Receive stock into this store or transfer it from another store, then try again.", 'insufficient-stock');
         }
         DB::table('stock_balances')->where('id', $row->id)->update(['quantity' => $new]);
     }

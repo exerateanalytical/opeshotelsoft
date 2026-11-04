@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
         $seeders = [RolesAndPermissionsSeeder::class];
         if (! app()->isProduction() || filter_var(env('ALLOW_DEMO_SEED', false), FILTER_VALIDATE_BOOL)) {
             $seeders[] = DemoSeeder::class;
+            $seeders[] = DemoPosStockSeeder::class; // stocked outlet stores, floor plans, recipes: the POS can settle
         } else {
             logger()->warning('Production environment: DemoSeeder skipped (set ALLOW_DEMO_SEED=true to force).');
         }

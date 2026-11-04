@@ -125,6 +125,11 @@ class DemoBulkSeeder extends Seeder
 
             $this->structure($rooms, $factor);
             $this->stockAndMenu();
+            $posStock = new DemoPosStockSeeder;
+            if ($this->command) {
+                $posStock->setCommand($this->command);
+            }
+            $posStock->seedHotel($hotel, $this->actor, $this->approver);
             $staff = $this->staff(max(6, (int) round($rooms * 0.1)));
             $this->say("$code: $rooms rooms, $staff staff, stock and menu ready.");
 

@@ -2,7 +2,10 @@
 
 namespace App\Modules\Stock;
 
+use App\Modules\POS\Application\SettlementGuards;
+use App\Modules\POS\Domain\Check;
 use App\Modules\POS\Domain\ItemComponent;
+use App\Modules\Stock\Application\PosStockAvailability;
 use App\Modules\Stock\Application\StockService;
 use App\Modules\Stock\Control\Application\RecipeService;
 use App\Modules\Stock\Control\ControlModule;
@@ -16,6 +19,10 @@ class StockModule
 {
     public static function subscribe(EventBus $bus): void
     {
+        // Refuse to close a check whose bill of materials the outlet's store cannot cover (strict stock policy),
+        // inside the settle transaction: the deduction below runs after commit and could not undo the settlement.
+        SettlementGuards::register('stock.availability', fn (Check $check) => app(PosStockAvailability::class)->assertAvailable($check));
+
         // POS sales deduct their bill of materials from the outlet's store.
         $bus->subscribe('pos.check_settled', 'stock.pos_deduction', function (StoredEvent $e) {
             $p = $e->payload;

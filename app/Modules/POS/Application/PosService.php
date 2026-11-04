@@ -138,6 +138,9 @@ class PosService
     {
         $check->assertOpen();
         $line = $check->lines()->findOrFail($lineId);
+        if ($line->voided) {
+            throw new DomainException('This line is already voided.', 'line-voided');
+        }
         $line->update(['voided' => true, 'void_reason' => $reason, 'voided_by' => $this->ctx->actor()?->id]);
         $check->recalculate();
         $this->bus->record('pos.line_voided', ['check_id' => $check->id, 'line_id' => $line->id, 'amount' => $line->amount, 'reason' => $reason, 'fired' => (bool) $line->fired_at], 'pos_check', $check->id);
@@ -163,12 +166,17 @@ class PosService
         $check->assertOpen();
 
         return DB::transaction(function () use ($check, $lineIds) {
-            $new = $this->open($check->outlet_id, ['table_number' => $check->table_number]);
+            $new = $this->open($check->outlet_id, ['table_number' => $check->table_number, 'pos_table_id' => $check->pos_table_id, 'covers' => 1]);
             $moved = $check->lines()->whereIn('id', $lineIds)->update(['pos_check_id' => $new->id]);
             if ($moved === 0) {
                 throw new DomainException('No lines selected to split.');
             }
             $check->recalculate();
+            $fresh = $check->fresh();
+            if ($fresh->discount > $fresh->subtotal - $fresh->comp_total) {
+                $check->update(['discount' => 0, 'discount_reason' => null]); // the discount no longer fits what is left: re-apply it explicitly
+                $check->recalculate();
+            }
             $new->recalculate();
 
             return $new->load('lines');
@@ -201,6 +209,9 @@ class PosService
                     app(\App\Modules\Loyalty\Application\PosLoyalty::class)->redeemTender($check, (int) $p['amount'], $p['reference'] ?? null);
                 }
                 $tendered = $p['tendered'] ?? $p['amount'];
+                if ($tendered < $p['amount']) {
+                    throw new DomainException("Amount tendered ({$tendered}) for {$method->code} is less than the amount paid ({$p['amount']}). Correct the tendered amount or leave it empty.", 'tendered-short');
+                }
                 $check->payments()->create([
                     'hotel_id' => $check->hotel_id, 'method_code' => $method->code, 'amount' => $p['amount'],
                     'tendered' => $tendered, 'change_given' => max(0, $tendered - $p['amount']),
@@ -254,6 +265,8 @@ class PosService
         if ($settlement === 'payment' && $check->total === 0 && $check->comp_total > 0) {
             $settlement = 'comp'; // fully complimentary check
         }
+        SettlementGuards::run($check); // e.g. stock on hand in the outlet's store; throws before anything is closed
+
         $check->update(['status' => 'settled', 'settlement' => $settlement, 'settled_at' => now(), 'settled_by' => $this->ctx->actor()?->id]);
         [$revenue, $taxes] = $this->revenueAndTax($this->revenueByCode($check));
 

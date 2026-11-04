@@ -202,7 +202,8 @@ class PosController
             'by_settlement' => (clone $checks)->selectRaw('settlement, sum(total) as total')->groupBy('settlement')->pluck('total', 'settlement'),
             'payments' => DB::table('pos_payments')->whereIn('pos_check_id', (clone $checks)->select('id'))
                 ->selectRaw('method_code, sum(amount) as total')->groupBy('method_code')->pluck('total', 'method_code'),
-            'voids' => DB::table('pos_check_lines')->whereIn('pos_check_id', Check::whereDate('business_date', $data['date'])->select('id'))->where('voided', true)->count(),
+            'voids' => DB::table('pos_check_lines')->whereIn('pos_check_id', Check::whereDate('business_date', $data['date'])
+                ->when($data['outlet_id'] ?? null, fn ($q, $v) => $q->where('outlet_id', $v))->select('id'))->where('voided', true)->count(),
         ];
     }
 
