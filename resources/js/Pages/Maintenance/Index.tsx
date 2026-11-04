@@ -1,6 +1,12 @@
+import Tabs from '@/Components/ui/Tabs';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
+import Field from '@/Components/ui/Field';
+import FilterBar from '@/Components/ui/FilterBar';
+import Modal from '@/Components/ui/Modal';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
-import { Plus, Loader2, Wrench, CalendarClock, Play, CheckCircle2, UserPlus, X, Trash2, Pause, Ban, Pencil } from 'lucide-react';
+import { Plus, Search, Loader2, Wrench, CalendarClock, Play, CheckCircle2, UserPlus, X, Trash2, Pause, Ban, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
@@ -42,6 +48,7 @@ function Badge({ cls, text }: { cls?: string; text: string }) {
 
 export default function MaintenanceIndex() {
     const t = useT();
+    const wide = useMediaQuery('(min-width: 1024px)');
     const tl = (s: string) => { const k = `maint.v.${s}`; const v = t(k); return v === k ? label(s) : v; };
     const [tab, setTab] = useState<'orders' | 'schedules'>('orders');
     const [status, setStatus] = useState('');
@@ -112,14 +119,8 @@ export default function MaintenanceIndex() {
             {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
             {success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{success}</div>}
 
-            <div className="mb-4 flex gap-2 border-b border-slate-200">
-                {(['orders', 'schedules'] as const).map((k) => (
-                    <button key={k} onClick={() => setTab(k)}
-                        className={cn('px-3 py-2 text-sm font-medium -mb-px border-b-2', tab === k ? 'border-navy-800 text-emerald-700' : 'border-transparent text-slate-500')}>
-                        {k === 'orders' ? t('maint.tab.orders') : t('maint.tab.schedules')}
-                    </button>
-                ))}
-            </div>
+            <Tabs label={t('maint.title')} className="mb-4" value={tab} onChange={(k) => setTab(k as typeof tab)}
+                tabs={[{ key: 'orders', label: t('maint.tab.orders') }, { key: 'schedules', label: t('maint.tab.schedules') }]} />
 
             {tab === 'orders' && (
                 <>
@@ -127,23 +128,35 @@ export default function MaintenanceIndex() {
                         <CreateOrder rooms={roomList} assets={assetList} techs={techs} onClose={() => setShowCreate(false)}
                             onSubmit={(body) => run(() => api('maintenance/work-orders', { method: 'POST', body: JSON.stringify(body) }), t('maint.wo_created')).then((ok) => ok && setShowCreate(false))} />
                     )}
-                    <div className="mb-3 flex flex-wrap gap-2">
-                        <input className="input w-auto" aria-label={t('maint.search')} placeholder={t('maint.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-                        <select className="input w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label={t('hk.all_statuses')}>
-                            <option value="">{t('hk.all_statuses')}</option>
-                            {STATUSES.map((s) => <option key={s} value={s}>{tl(s)}</option>)}
-                        </select>
-                        <select className="input w-auto" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1); }} aria-label={t('maint.all_priorities')}>
-                            <option value="">{t('maint.all_priorities')}</option>
-                            {PRIORITIES.map((s) => <option key={s} value={s}>{tl(s)}</option>)}
-                        </select>
-                    </div>
+                    <FilterBar
+                        activeCount={[status, priority].filter(Boolean).length}
+                        onClear={() => { setStatus(''); setPriority(''); setPage(1); }}
+                        search={
+                            <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                                <input type="search" className="input pl-9" aria-label={t('maint.search')} placeholder={t('maint.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+                            </div>
+                        }
+                    >
+                        <Field label={t('guests.status')}>
+                            <select className="select sm:w-48" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+                                <option value="">{t('hk.all_statuses')}</option>
+                                {STATUSES.map((s) => <option key={s} value={s}>{tl(s)}</option>)}
+                            </select>
+                        </Field>
+                        <Field label={t('maint.priority')}>
+                            <select className="select sm:w-48" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1); }}>
+                                <option value="">{t('maint.all_priorities')}</option>
+                                {PRIORITIES.map((s) => <option key={s} value={s}>{tl(s)}</option>)}
+                            </select>
+                        </Field>
+                    </FilterBar>
                     <div className="grid gap-4 lg:grid-cols-3">
-                        <div className={cn('card overflow-x-auto', selected ? 'lg:col-span-2' : 'lg:col-span-3')}>
+                        <div className={cn('card overflow-hidden', selected && wide ? 'lg:col-span-2' : 'lg:col-span-3')}>
                             {orders.loading ? <Loader2 className="w-5 h-5 animate-spin m-6 text-slate-500" /> : orders.error ? (
-                                <p className="p-4 text-sm text-red-600">{orders.error.message}</p>
+                                <p className="p-4 text-sm text-red-700">{orders.error.message}</p>
                             ) : list.length === 0 ? (
-                                <div className="p-8 text-center text-slate-500 text-sm"><Wrench className="w-8 h-8 mx-auto mb-2" />{t('maint.no_wo')}</div>
+                                <EmptyFor kind="maintenance" />
                             ) : (
                                 <div className="table-wrap"><table className="table-auto">
                                     <thead><tr>
@@ -153,9 +166,9 @@ export default function MaintenanceIndex() {
                                     <tbody>
                                         {list.map((w) => (
                                             <tr key={w.id} onClick={() => setSelected(w.id)}
-                                                className={cn('border-t border-slate-100 cursor-pointer hover:bg-slate-50', selected === w.id && 'bg-emerald-50')}>
-                                                <td className="font-mono text-xs">{w.number}</td>
-                                                <td>{w.title}{w.room_out_of_order && <span className="ml-1 text-xs text-red-600">{t('maint.ooo')}</span>}</td>
+                                                className={cn('cursor-pointer hover:bg-slate-50', selected === w.id && 'bg-navy-50')}>
+                                                <td className="font-mono text-sm"><button type="button" className="min-h-9 text-navy-600 underline underline-offset-2" onClick={() => setSelected(w.id)}>{w.number}</button></td>
+                                                <td>{w.title}{w.room_out_of_order && <span className="ml-1 text-xs font-medium text-red-700">{t('maint.ooo')}</span>}</td>
                                                 <td>{w.room ? t('hk.room_no', { number: w.room.number }) : assetName(w.asset_id) || '—'}</td>
                                                 <td><Badge cls={PRIO_BADGE[w.priority]} text={w.priority} /></td>
                                                 <td><Badge cls={STATUS_BADGE[w.status]} text={w.status} /></td>
@@ -179,9 +192,15 @@ export default function MaintenanceIndex() {
                                 </div>
                             )}
                         </div>
-                        {selected && (
+                        {selected && wide && (
                             <Detail key={selected} id={selected} techs={techs} assetName={assetName} userName={userName}
                                 onClose={() => setSelected(null)} run={run} />
+                        )}
+                        {selected && !wide && (
+                            <Modal open size="lg" title={t('maint.title')} onClose={() => setSelected(null)}>
+                                <Detail key={selected} embedded id={selected} techs={techs} assetName={assetName} userName={userName}
+                                    onClose={() => setSelected(null)} run={run} />
+                            </Modal>
                         )}
                     </div>
                 </>
@@ -195,7 +214,7 @@ export default function MaintenanceIndex() {
                     )}
                     <div className="card overflow-x-auto">
                         {schedules.loading ? <Loader2 className="w-5 h-5 animate-spin m-6 text-slate-500" /> : schedules.error ? (
-                            <p className="p-4 text-sm text-red-600">{schedules.error.message}</p>
+                            <p className="p-4 text-sm text-red-700">{schedules.error.message}</p>
                         ) : (schedules.data ?? []).length === 0 ? (
                             <p className="p-8 text-center text-sm text-slate-500">{t('maint.no_schedules')}</p>
                         ) : (
@@ -225,7 +244,7 @@ export default function MaintenanceIndex() {
                                                     <label className="min-h-11 flex items-center gap-1"><input type="checkbox" checked={s.active}
                                                         onChange={(e) => run(() => api(`maintenance/schedules/${s.id}`, { method: 'PATCH', body: JSON.stringify({ active: e.target.checked }) }), e.target.checked ? t('maint.sched_activated') : t('maint.sched_paused'))} />{s.active ? t('guests.yes') : t('guests.no')}</label>
                                                 </td>
-                                                <td><button title={t('common.edit')} onClick={() => setEditing(s.id)}><Pencil className="w-4 h-4 text-slate-500" /></button></td>
+                                                <td><button type="button" title={t('common.edit')} aria-label={t('common.edit')} className="btn-ghost btn-icon" onClick={() => setEditing(s.id)}><Pencil className="w-4 h-4" aria-hidden="true" /></button></td>
                                             </tr>
                                         );
                                     })}
@@ -273,14 +292,14 @@ function CreateOrder({ rooms, assets, techs, onClose, onSubmit }: {
         setBusy(false);
     };
     return (
-        <form onSubmit={submit} className="card p-4 mb-4 space-y-3">
-            <div className="flex items-center justify-between"><h3 className="font-semibold">{t('maint.new_wo')}</h3><button type="button" onClick={onClose}><X className="w-4 h-4" /></button></div>
+        <Modal open size="lg" title={t('maint.new_wo')} onClose={onClose}>
+        <form onSubmit={submit} className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
                 <input className="input sm:col-span-2" aria-label={t('maint.f.title')} placeholder={t('maint.f.title')} required maxLength={150} value={f.title} onChange={(e) => set('title', e.target.value)} />
                 <textarea className="input sm:col-span-2" rows={2} aria-label={t('loyalty.members.description')} placeholder={t('loyalty.members.description')} value={f.description} onChange={(e) => set('description', e.target.value)} />
                 <div className="flex gap-3 text-sm items-center sm:col-span-2">
-                    <label><input type="radio" checked={f.target === 'room'} onChange={() => set('target', 'room')} /> {t('guests.show.room')}</label>
-                    <label><input type="radio" checked={f.target === 'asset'} onChange={() => set('target', 'asset')} /> {t('maint.asset')}</label>
+                    <label className="flex min-h-11 items-center gap-2"><input type="radio" checked={f.target === 'room'} onChange={() => set('target', 'room')} /> {t('guests.show.room')}</label>
+                    <label className="flex min-h-11 items-center gap-2"><input type="radio" checked={f.target === 'asset'} onChange={() => set('target', 'asset')} /> {t('maint.asset')}</label>
                 </div>
                 {f.target === 'room' ? (
                     <select className="input" value={f.room_id} onChange={(e) => set('room_id', e.target.value)} aria-label={t('maint.no_room')}>
@@ -315,10 +334,12 @@ function CreateOrder({ rooms, assets, techs, onClose, onSubmit }: {
                 <button className="btn-primary" disabled={busy}>{busy ? t('hk.saving') : t('maint.create')}</button>
             </div>
         </form>
+        </Modal>
     );
 }
 
-function Detail({ id, techs, assetName, userName, onClose, run }: {
+function Detail({ id, techs, assetName, userName, onClose, run, embedded }: {
+    embedded?: boolean;
     id: number; techs: Staff[] | null; assetName: (id: number | null) => string; userName: (id: number | null) => string; onClose: () => void;
     run: (fn: () => Promise<unknown>, ok: string) => Promise<boolean>;
 }) {
@@ -344,12 +365,12 @@ function Detail({ id, techs, assetName, userName, onClose, run }: {
     const closed = w && ['done', 'cancelled'].includes(w.status);
 
     return (
-        <div className="card p-4 space-y-3 text-sm">
-            <div className="flex items-start justify-between">
-                <div><p className="font-mono text-xs text-slate-500">{w?.number}</p><h3 className="font-semibold">{w?.title ?? t('common.loading')}</h3></div>
-                <button onClick={onClose}><X className="w-4 h-4" /></button>
+        <div className={cn('space-y-3 text-sm', !embedded && 'card p-4')}>
+            <div className="flex items-start justify-between gap-2">
+                <div><p className="font-mono text-sm text-slate-600">{w?.number}</p><h3 className="font-semibold">{w?.title ?? t('common.loading')}</h3></div>
+                {!embedded && <button type="button" className="btn-ghost btn-icon" aria-label={t('ui.modal.close')} onClick={onClose}><X className="w-4 h-4" aria-hidden="true" /></button>}
             </div>
-            {wo.error && <p className="text-red-600">{wo.error.message}</p>}
+            {wo.error && <p className="text-red-700">{wo.error.message}</p>}
             {w && (
                 <>
                     <div className="flex flex-wrap gap-1"><Badge cls={STATUS_BADGE[w.status]} text={w.status} /><Badge cls={PRIO_BADGE[w.priority]} text={w.priority} /><Badge cls="bg-slate-100 text-slate-600" text={w.category} />
@@ -437,11 +458,11 @@ function CreateSchedule({ assets, initial, onClose, onSubmit }: { assets: Asset[
         : { title: '', asset_id: '', category: 'general', every_days: '30', next_due: new Date().toISOString().slice(0, 10) });
     const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
     return (
-        <form className="card p-4 mb-4 space-y-3" onSubmit={(e) => {
+        <Modal open size="lg" title={initial ? t('maint.edit_pm') : t('maint.new_pm')} onClose={onClose}>
+        <form className="space-y-3" onSubmit={(e) => {
             e.preventDefault();
             onSubmit({ title: f.title, asset_id: f.asset_id ? Number(f.asset_id) : null, category: f.category, every_days: Number(f.every_days), next_due: f.next_due });
         }}>
-            <div className="flex items-center justify-between"><h3 className="font-semibold">{initial ? t('maint.edit_pm') : t('maint.new_pm')}</h3><button type="button" onClick={onClose}><X className="w-4 h-4" /></button></div>
             <div className="grid gap-3 sm:grid-cols-2">
                 <input className="input sm:col-span-2" required aria-label={t('maint.pm_title_ph')} placeholder={t('maint.pm_title_ph')} value={f.title} onChange={(e) => set('title', e.target.value)} />
                 <select className="input" value={f.asset_id} onChange={(e) => set('asset_id', e.target.value)} aria-label={t('maint.no_asset')}>
@@ -459,5 +480,6 @@ function CreateSchedule({ assets, initial, onClose, onSubmit }: { assets: Asset[
                 <button className="btn-primary">{initial ? t('common.save') : t('maint.create_schedule')}</button>
             </div>
         </form>
+        </Modal>
     );
 }

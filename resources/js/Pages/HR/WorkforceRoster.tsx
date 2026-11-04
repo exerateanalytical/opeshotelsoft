@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -31,11 +33,13 @@ export default function WorkforceRoster() {
             <div className="card mb-4 flex flex-wrap items-end gap-3 p-4 text-sm">
                 <label>{t('workforce.roster.week')}<input type="date" className="input block" value={week} onChange={(e) => setWeek(e.target.value)} /></label>
                 <button className="btn-primary" onClick={generate}>{t('workforce.roster.generate')}</button>
-                <select className="input" value="" onChange={(e) => e.target.value && open(Number(e.target.value))}>
+                <select className="input" aria-label={t('workforce.roster.open_existing')} value="" onChange={(e) => e.target.value && open(Number(e.target.value))}>
                     <option value="">{t('workforce.roster.open_existing')}</option>
                     {list.data?.map((r) => <option key={r.id} value={r.id}>{r.week_start.slice(0, 10)} - {t(`workforce.status.${r.status}`)}</option>)}
                 </select>
             </div>
+            <QueryStatus query={list} variant="list" rows={3} />
+            {!roster && list.data?.length === 0 && <div className="card"><EmptyFor kind="staff" action={<button type="button" className="btn-primary" onClick={generate}>{t('workforce.roster.generate')}</button>} /></div>}
             {roster && (<>
                 <div className="card mb-4 overflow-x-auto p-4 text-sm">
                     <h2 className="mb-2 font-semibold">{t('workforce.roster.forecast')}</h2>

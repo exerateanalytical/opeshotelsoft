@@ -15,10 +15,10 @@ final class DefaultTemplates
         return [
             'reservation.created' => ['transactional', [
                 'fr' => ['Confirmation de réservation {{number}}',
-                    "Bonjour {{guest_name}},\n\nNous confirmons votre réservation {{number}} à {{hotel_name}} du {{arrival}} au {{departure}}.\nMontant : {{total_amount}} {{currency}}.\n\nÀ bientôt,\n{{hotel_name}} {{hotel_phone}}",
+                    "Bonjour {{guest_name}},\n\nNous confirmons votre réservation {{number}} à {{hotel_name}} du {{arrival}} au {{departure}}.\nRéférence de réservation (à conserver) : {{reference}}\nMontant : {{total_amount}} {{currency}}.\n\nÀ bientôt,\n{{hotel_name}} {{hotel_phone}}",
                     '{{hotel_name}} : réservation {{number}} confirmée du {{arrival}} au {{departure}}.'],
                 'en' => ['Booking confirmation {{number}}',
-                    "Hello {{guest_name}},\n\nWe confirm your booking {{number}} at {{hotel_name}} from {{arrival}} to {{departure}}.\nAmount: {{total_amount}} {{currency}}.\n\nSee you soon,\n{{hotel_name}} {{hotel_phone}}",
+                    "Hello {{guest_name}},\n\nWe confirm your booking {{number}} at {{hotel_name}} from {{arrival}} to {{departure}}.\nBooking reference (keep it): {{reference}}\nAmount: {{total_amount}} {{currency}}.\n\nSee you soon,\n{{hotel_name}} {{hotel_phone}}",
                     '{{hotel_name}}: booking {{number}} confirmed from {{arrival}} to {{departure}}.'],
             ]],
             'reservation.cancelled' => ['transactional', [

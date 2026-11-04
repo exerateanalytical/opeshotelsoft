@@ -2,6 +2,7 @@
 
 namespace App\Modules\Reservations\Experience\Application;
 
+use App\Modules\FrontOffice\Application\NoShowFee;
 use App\Modules\GuestPortal\Application\GuestLinks;
 use App\Modules\Notifications\Application\Notifier;
 use App\Modules\Reservations\Application\ReservationService;
@@ -23,7 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class DepositAutomation
 {
-    public function __construct(private ReservationService $reservations, private Notifier $notifier, private GuestLinks $links, private TenantContext $ctx) {}
+    public function __construct(private ReservationService $reservations, private NoShowFee $noShowFee, private Notifier $notifier, private GuestLinks $links, private TenantContext $ctx) {}
 
     /** @return array{reminded:int, released:int, no_shows:int} */
     public function run(?Carbon $now = null): array
@@ -65,7 +66,7 @@ class DepositAutomation
             } elseif (! $r->deposit_reminded_at && $now->gte($deadline->copy()->subHours($s->deposit_reminder_hours))) {
                 $due = (int) $r->deposit_required - (int) $r->deposit_paid;
                 $this->notifier->notify('reservation.deposit_reminder', ['guest_id' => $r->payer_guest_id ?? $r->guest_id], [
-                    'number' => $r->number, 'amount_due' => number_format($due, 0, ',', ' '), 'currency' => $r->currency,
+                    'number' => $r->number, 'reference' => $r->public_code, 'amount_due' => number_format($due, 0, ',', ' '), 'currency' => $r->currency,
                     'deadline' => $deadline->copy()->timezone($hotel->timezone ?? 'Africa/Douala')->format('Y-m-d H:i'), 'pay_url' => $this->links->manage($r, 'fr', '#pay'),
                 ], ['type' => 'reservation', 'id' => $r->id]);
                 $r->forceFill(['deposit_reminded_at' => $now])->save();
@@ -77,6 +78,7 @@ class DepositAutomation
             foreach (Reservation::whereIn('status', ['tentative', 'confirmed'])->whereDate('arrival', '<', $hotel->business_date->toDateString())->get() as $r) {
                 try {
                     $this->reservations->markNoShow($r);
+                    $this->noShowFee->post($r);
                     $out['no_shows']++;
                 } catch (DomainException) {
                 }

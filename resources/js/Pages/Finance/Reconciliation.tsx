@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Banner, errMsg, Field, Loading, monthStart, today } from './shared';
 import { useT } from '@/lib/i18n';
 import PrintPdfButton from '@/Components/PrintPdfButton';
@@ -55,6 +56,7 @@ export default function Reconciliation() {
     return (
         <div className="space-y-4">
             <Banner error={error ?? banks.error?.message} success={ok} />
+            <QueryStatus query={banks} variant="table" />
             {bank && <div><PrintPdfButton path={`bank-reconciliation/${bank.id}`} /></div>}
             <div className="card grid grid-cols-1 gap-2 p-4 sm:flex sm:items-end">
                 <Field label={t('fin.recon.treasury_account')}>

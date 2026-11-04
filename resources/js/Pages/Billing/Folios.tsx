@@ -7,6 +7,14 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import PrintPdfButton from '@/Components/PrintPdfButton';
+import DataTable from '@/Components/ui/DataTable';
+import EmptyState from '@/Components/ui/EmptyState';
+import { toast } from '@/Components/ui/Toast';
+import Field from '@/Components/ui/Field';
+import FilterBar from '@/Components/ui/FilterBar';
+import Modal from '@/Components/ui/Modal';
+import Tabs from '@/Components/ui/Tabs';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 
 interface Line {
     id: number;
@@ -45,7 +53,8 @@ export default function Folios() {
     const [company, setCompany] = useState('');
     const [q, setQ] = useState('');
     const [selected, setSelected] = useState<number | null>(null);
-    const [opening, setOpening] = useState(false);
+    // /billing/folios?new=1 (command palette) opens the "open a folio" form.
+    const [opening, setOpening] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1');
     const [posted, setPosted] = useState(0);
 
     const params = new URLSearchParams();
@@ -63,65 +72,93 @@ export default function Folios() {
             (!term || f.number.toLowerCase().includes(term) || (f.name ?? '').toLowerCase().includes(term)));
     }, [list.data, kind, status, company, q]);
 
+    const wide = useMediaQuery('(min-width: 1280px)');
     const companyName = (id: number | null) => companies.data?.data.find((c) => c.id === id)?.name;
 
     return (
         <AppLayout
             title={t('billing.folios.title')}
             subtitle={t('billing.folios.subtitle')}
-            actions={<button className="btn-primary" onClick={() => setOpening(!opening)}><Plus className="w-4 h-4" /> {t('billing.folios.open_folio')}</button>}
+            actions={<button type="button" data-primary-action className="btn-primary" onClick={() => setOpening(!opening)}><Plus className="w-4 h-4" /> {t('billing.folios.open_folio')}</button>}
         >
             <Head title={t('billing.folios.title')} />
             <CashierBar onChange={() => setPosted((n) => n + 1)} refresh={posted} />
 
             {opening && <OpenFolioForm companies={companies.data?.data ?? []} onDone={(id) => { setOpening(false); setPosted((n) => n + 1); if (id) setSelected(id); }} />}
 
-            <div className="card px-4 py-3 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <label className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input className="input pl-9" aria-label={t('billing.folios.search')} placeholder={t('billing.folios.search')} value={q} onChange={(e) => setQ(e.target.value)} />
-                </label>
-                <select className="input" value={kind} onChange={(e) => setKind(e.target.value)} aria-label={t('billing.folios.all_kinds')}>
-                    <option value="">{t('billing.folios.all_kinds')}</option>
-                    {KINDS.map((k) => <option key={k} value={k}>{lbl('billing.kind', k)}</option>)}
-                </select>
-                <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('billing.folios.all_statuses')}>
-                    <option value="">{t('billing.folios.all_statuses')}</option>
-                    <option value="open">{t('billing.status.open')}</option>
-                    <option value="closed">{t('billing.status.closed')}</option>
-                </select>
-                <select className="input" value={company} onChange={(e) => setCompany(e.target.value)} aria-label={t('billing.folios.all_companies')}>
-                    <option value="">{t('billing.folios.all_companies')}</option>
-                    {companies.data?.data.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-            </div>
+            <FilterBar
+                activeCount={[kind, status, company].filter(Boolean).length}
+                onClear={() => { setKind(''); setStatus(''); setCompany(''); }}
+                search={
+                    <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                        <input type="search" className="input pl-9" aria-label={t('billing.folios.search')} placeholder={t('billing.folios.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                    </div>
+                }
+            >
+                <Field label={t('billing.folios.kind')}>
+                    <select className="select sm:w-44" value={kind} onChange={(e) => setKind(e.target.value)}>
+                        <option value="">{t('billing.folios.all_kinds')}</option>
+                        {KINDS.map((k) => <option key={k} value={k}>{lbl('billing.kind', k)}</option>)}
+                    </select>
+                </Field>
+                <Field label={t('billing.folios.status')}>
+                    <select className="select sm:w-44" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <option value="">{t('billing.folios.all_statuses')}</option>
+                        <option value="open">{t('billing.status.open')}</option>
+                        <option value="closed">{t('billing.status.closed')}</option>
+                    </select>
+                </Field>
+                <Field label={t('billing.folios.company')}>
+                    <select className="select sm:w-52" value={company} onChange={(e) => setCompany(e.target.value)}>
+                        <option value="">{t('billing.folios.all_companies')}</option>
+                        {companies.data?.data.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                </Field>
+            </FilterBar>
 
             {list.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{list.error.message}</div>}
 
-            <div className={cn('grid gap-6', selected && 'xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]')}>
-                <div className="card overflow-x-auto self-start">
-                    <table className="table-auto">
-                        <thead><tr><th>{t('billing.folios.number')}</th><th>{t('billing.folios.kind')}</th><th>{t('billing.folios.name')}</th><th>{t('billing.folios.status')}</th><th className="text-right">{t('billing.folios.balance')}</th></tr></thead>
-                        <tbody>
-                            {list.loading && !list.data && <tr><td colSpan={5} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
-                            {list.data && rows.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-slate-500 text-sm">{t('billing.folios.no_match')}</td></tr>}
-                            {rows.map((f) => (
-                                <tr key={f.id} onClick={() => setSelected(f.id)} className={cn('cursor-pointer hover:bg-slate-50', selected === f.id && 'bg-sky-50')}>
-                                    <td className="font-mono text-sm">{f.number}</td>
-                                    <td className="text-xs">{lbl('billing.kind', f.kind)}</td>
-                                    <td className="text-sm">{f.name}{f.company_id && companyName(f.company_id) && <span className="block text-xs text-slate-500">{companyName(f.company_id)}</span>}</td>
-                                    <td><span className={cn('text-xs px-2 py-0.5 rounded', f.status === 'open' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500')}>{lbl('billing.status', f.status)}</span></td>
-                                    <td className={cn('text-right text-sm', f.balance > 0 && 'text-red-600')}>{formatCurrency(f.balance)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                {selected && (
+            <div className={cn('grid gap-6', selected && wide && 'xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]')}>
+                <DataTable
+                    className="self-start"
+                    caption={t('billing.folios.title')}
+                    tableKey="folios"
+                    loading={list.loading && !list.data}
+                    error={list.error && !list.data ? list.error.message : undefined}
+                    rows={rows}
+                    rowKey={(f) => f.id}
+                    rowLabel={(f) => f.number}
+                    activeKey={selected}
+                    onRowClick={(f) => setSelected(f.id)}
+                    selectable
+                    bulkActions={({ rows: picked, clear }) => (
+                        <button type="button" className="btn-secondary btn-sm" onClick={() => {
+                            navigator.clipboard?.writeText(picked.map((f) => f.number).join('\n')).then(() => toast.success(t('desktop.copy.done', { count: picked.length }))).catch(() => toast.error(t('desktop.copy.failed')));
+                            clear();
+                        }}>{t('desktop.copy.numbers')}</button>
+                    )}
+                    rowActions={() => [{ key: 'open', label: t('desktop.view.detail'), onSelect: (f) => setSelected(f.id) }]}
+                    empty={<EmptyState title={t('billing.folios.no_match')} />}
+                    columns={[
+                        { key: 'number', header: t('billing.folios.number'), sortValue: (f) => f.number, cell: (f) => <button type="button" className="min-h-11 md:min-h-9 font-mono text-sm underline underline-offset-2 text-navy-600" aria-label={`${t('billing.folios.folio')} ${f.number}`} onClick={() => setSelected(f.id)}>{f.number}</button> },
+                        { key: 'kind', header: t('billing.folios.kind'), sortValue: (f) => f.kind, cell: (f) => lbl('billing.kind', f.kind) },
+                        { key: 'name', header: t('billing.folios.name'), sortValue: (f) => f.name ?? '', cell: (f) => <>{f.name}{f.company_id && companyName(f.company_id) && <span className="block text-xs text-slate-500">{companyName(f.company_id)}</span>}</> },
+                        { key: 'status', header: t('billing.folios.status'), sortValue: (f) => f.status, cell: (f) => <span className={cn('text-xs px-2 py-0.5 rounded border', f.status === 'open' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-slate-100 text-slate-700')}>{lbl('billing.status', f.status)}</span> },
+                        { key: 'balance', header: t('billing.folios.balance'), align: 'right', sortValue: (f) => f.balance, cell: (f) => <span className={cn(f.balance > 0 && 'text-red-700')}>{formatCurrency(f.balance)}</span> },
+                    ]}
+                />
+                {selected && wide && (
                     <FolioPanel key={selected} id={selected} refresh={posted} companies={companies.data?.data ?? []} openFolios={(list.data?.data ?? []).filter((f) => f.status === 'open' && f.id !== selected)}
                         onClose={() => setSelected(null)} onChange={() => setPosted((n) => n + 1)} />
                 )}
             </div>
+        {selected && !wide && (
+                <Modal open title={t('billing.folios.folio')} size="xl" onClose={() => setSelected(null)}>
+                    <FolioPanel key={selected} embedded id={selected} refresh={posted} companies={companies.data?.data ?? []} openFolios={(list.data?.data ?? []).filter((f) => f.status === 'open' && f.id !== selected)}
+                        onClose={() => setSelected(null)} onChange={() => setPosted((n) => n + 1)} />
+                </Modal>
+            )}
         </AppLayout>
     );
 }
@@ -134,7 +171,7 @@ function OpenFolioForm({ companies, onDone }: { companies: Company[]; onDone: (i
     const [error, setError] = useState<string | null>(null);
 
     return (
-        <form className="card px-5 py-4 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end" onSubmit={async (e) => {
+        <form className="card px-4 py-4 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end" onSubmit={async (e) => {
             e.preventDefault();
             setBusy(true);
             setError(null);
@@ -178,8 +215,8 @@ function OpenFolioForm({ companies, onDone }: { companies: Company[]; onDone: (i
     );
 }
 
-function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
-    id: number; refresh: number; companies: Company[]; openFolios: Folio[]; onClose: () => void; onChange: () => void;
+function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange, embedded }: {
+    embedded?: boolean; id: number; refresh: number; companies: Company[]; openFolios: Folio[]; onClose: () => void; onChange: () => void;
 }) {
     const t = useT();
     const lbl = (p: string, v: string) => (t(`${p}.${v}`) === `${p}.${v}` ? v.replace('_', ' ') : t(`${p}.${v}`));
@@ -216,16 +253,16 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
     const open = f?.status === 'open';
 
     return (
-        <div className="card overflow-hidden self-start">
-            <div className="flex items-center gap-2 flex-wrap px-5 py-4 border-b border-slate-100">
+        <div className={cn(!embedded && 'card overflow-hidden self-start')}>
+            <div className="flex items-center gap-2 flex-wrap px-4 py-4 border-b border-slate-200">
                 <h3 className="font-semibold text-slate-800">{f ? `${f.number} · ${f.name}` : t('billing.folios.folio')}</h3>
                 {f && <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">{lbl('billing.kind', f.kind)} · {lbl('billing.status', f.status)}</span>}
-                {f?.reservation_id && <Link href={`/reservations/${f.reservation_id}`} className="text-xs text-sky-700 hover:underline">{t('billing.folios.reservation')}</Link>}
+                {f?.reservation_id && <Link href={`/reservations/${f.reservation_id}`} className="inline-flex min-h-11 items-center text-sm text-navy-600 underline">{t('billing.folios.reservation')}</Link>}
                 {f && <PrintPdfButton path={`proforma/${f.id}`} label={t('documents3.print_proforma')} />}
                 {f?.guest_id && <PrintPdfButton path={`guest-statement/${f.guest_id}`} label={t('documents3.print_statement')} />}
                 <span className="ml-auto text-sm text-slate-500">{t('billing.folios.balance')}</span>
-                {f && <span className={cn('text-lg font-semibold', f.balance > 0 ? 'text-red-600' : 'text-emerald-600')}>{formatCurrency(f.balance)}</span>}
-                <button className="text-slate-500 hover:text-slate-700" title={t('billing.folios.close_panel')} onClick={onClose}><X className="w-4 h-4" /></button>
+                {f && <span className={cn('text-lg font-semibold', f.balance > 0 ? 'text-red-700' : 'text-emerald-700')}>{formatCurrency(f.balance)}</span>}
+                {!embedded && <button type="button" className="btn-ghost btn-icon" aria-label={t('billing.folios.close_panel')} onClick={onClose}><X className="w-4 h-4" aria-hidden="true" /></button>}
             </div>
 
             {(message || folio.error) && (
@@ -237,25 +274,25 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
 
             {!f ? <Loader2 className="w-6 h-6 mx-auto my-12 animate-spin text-slate-500" /> : (
                 <>
-                    <div className="overflow-x-auto">
+                    <div className="table-wrap">
                         <table className="table-auto">
                             <thead><tr><th>{t('billing.folios.date')}</th><th>{t('billing.folios.code')}</th><th>{t('billing.folios.description')}</th><th className="text-right">{t('billing.folios.tax')}</th><th className="text-right">{t('billing.folios.amount')}</th><th></th></tr></thead>
                             <tbody>
                                 {(f.lines ?? []).length === 0 && <tr><td colSpan={6} className="text-center py-8 text-slate-500 text-sm">{t('billing.folios.no_postings')}</td></tr>}
                                 {(f.lines ?? []).map((l) => (
-                                    <tr key={l.id} className={cn(l.reversed && 'opacity-50 line-through')}>
+                                    <tr key={l.id} className={cn(l.reversed && 'text-slate-600 line-through')}>
                                         <td className="text-sm whitespace-nowrap">{formatDate(l.business_date)}</td>
                                         <td className="font-mono text-xs">{l.code}</td>
                                         <td className="text-sm">{l.description}</td>
                                         <td className="text-right text-sm text-slate-500">{l.tax_amount ? formatCurrency(l.tax_amount) : ''}</td>
                                         <td className={cn('text-right text-sm', l.amount < 0 && 'text-emerald-700')}>{formatCurrency(l.amount)}</td>
                                         <td className="text-right whitespace-nowrap">
-                                            {l.type === 'payment' && <PrintPdfButton path={`payment-receipt/${l.id}`} label={t('documents3.print_receipt')} className="text-slate-500 hover:text-sky-700 inline-flex items-center gap-1 text-xs mr-2" />}
-                                            {l.type === 'refund' && <PrintPdfButton path={`refund-voucher/${l.id}`} label={t('documents3.print_receipt')} className="text-slate-500 hover:text-sky-700 inline-flex items-center gap-1 text-xs mr-2" />}
-                                            {l.type === 'reversal' && <PrintPdfButton path={`void-slip/${l.id}`} label={t('documents3.print_receipt')} className="text-slate-500 hover:text-sky-700 inline-flex items-center gap-1 text-xs mr-2" />}
+                                            {l.type === 'payment' && <PrintPdfButton path={`payment-receipt/${l.id}`} label={t('documents3.print_receipt')} className="btn-ghost btn-sm mr-1" />}
+                                            {l.type === 'refund' && <PrintPdfButton path={`refund-voucher/${l.id}`} label={t('documents3.print_receipt')} className="btn-ghost btn-sm mr-1" />}
+                                            {l.type === 'reversal' && <PrintPdfButton path={`void-slip/${l.id}`} label={t('documents3.print_receipt')} className="btn-ghost btn-sm mr-1" />}
                                             {open && !l.reversed && l.type !== 'reversal' && (
-                                                <button title={t('billing.folios.reverse')} className="text-slate-500 hover:text-red-600" onClick={() => setReversing({ id: l.id, reason: '' })}>
-                                                    <Undo2 className="w-4 h-4" />
+                                                <button type="button" title={t('billing.folios.reverse')} aria-label={t('billing.folios.reverse')} className="btn-ghost btn-icon text-slate-700" onClick={() => setReversing({ id: l.id, reason: '' })}>
+                                                    <Undo2 className="w-4 h-4" aria-hidden="true" />
                                                 </button>
                                             )}
                                         </td>
@@ -276,17 +313,11 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                         </form>
                     )}
 
-                    <div className="border-t border-slate-100 px-5 py-4 space-y-3">
+                    <div className="border-t border-slate-200 px-4 py-4 space-y-3">
                         {open && (
                             <>
-                                <div className="flex gap-1 flex-wrap">
-                                    {(['charge', 'payment', 'transfer', 'ledger'] as const).map((tb) => (
-                                        <button key={tb} type="button" onClick={() => setTab(tb)}
-                                            className={cn('text-xs px-3 py-1.5 rounded', tab === tb ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600')}>
-                                            {t(`billing.folios.tab.${tb}`)}
-                                        </button>
-                                    ))}
-                                </div>
+                                <Tabs label={t('billing.folios.folio')} value={tab} onChange={(k) => setTab(k as typeof tab)}
+                                    tabs={(['charge', 'payment', 'transfer', 'ledger'] as const).map((tb) => ({ key: tb, label: t(`billing.folios.tab.${tb}`) }))} />
 
                                 {tab === 'charge' && (
                                     <form className="space-y-3" onSubmit={async (e) => {
@@ -300,7 +331,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                         </select>
                                         <input className="input" type="number" min={1} required aria-label={t('billing.folios.amount_tax')} placeholder={t('billing.folios.amount_tax')} value={charge.amount} onChange={(e) => setCharge({ ...charge, amount: e.target.value })} />
                                         <input className="input" aria-label={t('billing.folios.description_optional')} placeholder={t('billing.folios.description_optional')} value={charge.description} onChange={(e) => setCharge({ ...charge, description: e.target.value })} />
-                                        <button className="btn-secondary w-full justify-center" disabled={busy === 'charge'}>{t('billing.folios.post_charge')}</button>
+                                        <button className="btn-secondary btn-lg w-full justify-center" disabled={busy === 'charge'}>{t('billing.folios.post_charge')}</button>
                                     </form>
                                 )}
 
@@ -313,12 +344,12 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                         <select className="input" value={payment.method} onChange={(e) => setPayment({ ...payment, method: e.target.value })}>
                                             {methods.data?.filter((m) => m.code !== 'CL').map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
                                         </select>
-                                        <div className="flex gap-2">
-                                            <input className="input" type="number" min={1} required aria-label={t('billing.folios.amount_fcfa')} placeholder={t('billing.folios.amount_fcfa')} value={payment.amount} onChange={(e) => setPayment({ ...payment, amount: e.target.value })} />
-                                            {f.balance > 0 && <button type="button" className="btn-secondary text-xs whitespace-nowrap" onClick={() => setPayment({ ...payment, amount: String(f.balance) })}>{t('billing.folios.full_balance')}</button>}
+                                        <div className="flex flex-wrap gap-2">
+                                            <input className="input min-w-0 flex-1" inputMode="numeric" type="number" min={1} required aria-label={t('billing.folios.amount_fcfa')} placeholder={t('billing.folios.amount_fcfa')} value={payment.amount} onChange={(e) => setPayment({ ...payment, amount: e.target.value })} />
+                                            {f.balance > 0 && <button type="button" className="btn-secondary btn-sm whitespace-nowrap" onClick={() => setPayment({ ...payment, amount: String(f.balance) })}>{t('billing.folios.full_balance')}</button>}
                                         </div>
                                         <input className="input" aria-label={t('billing.folios.reference')} placeholder={t('billing.folios.reference')} value={payment.reference} onChange={(e) => setPayment({ ...payment, reference: e.target.value })} />
-                                        <button className="btn-primary w-full justify-center" disabled={busy === 'pay'}>{t('billing.folios.record_payment')}</button>
+                                        <button className="btn-primary btn-lg w-full justify-center" disabled={busy === 'pay'}>{t('billing.folios.record_payment')}</button>
                                     </form>
                                 )}
 
@@ -334,8 +365,8 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                         </select>
                                         <input className="input" type="number" min={1} required aria-label={t('billing.folios.amount_fcfa')} placeholder={t('billing.folios.amount_fcfa')} value={transfer.amount} onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })} />
                                         <input className="input" aria-label={t('billing.folios.description_optional')} placeholder={t('billing.folios.description_optional')} value={transfer.description} onChange={(e) => setTransfer({ ...transfer, description: e.target.value })} />
-                                        <button className="btn-secondary w-full justify-center" disabled={busy === 'xfer'}>{t('billing.folios.transfer')}</button>
-                                        <p className="text-xs text-slate-500">{t('billing.folios.transfer_hint')}</p>
+                                        <button className="btn-secondary btn-lg w-full justify-center" disabled={busy === 'xfer'}>{t('billing.folios.transfer')}</button>
+                                        <p className="text-sm text-slate-600">{t('billing.folios.transfer_hint')}</p>
                                     </form>
                                 )}
 
@@ -349,7 +380,7 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
                                             <option value="" disabled>{t('billing.folios.company')}</option>
                                             {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
-                                        <button className="btn-secondary w-full justify-center" disabled={busy === 'cl'}>{t('billing.folios.move_ledger')}</button>
+                                        <button className="btn-secondary btn-lg w-full justify-center" disabled={busy === 'cl'}>{t('billing.folios.move_ledger')}</button>
                                     </form>
                                 )}
                             </>
@@ -357,12 +388,12 @@ function FolioPanel({ id, refresh, companies, openFolios, onClose, onChange }: {
 
                         <div className="flex gap-2 flex-wrap pt-2">
                             {open && (
-                                <button className="btn-secondary" disabled={busy === 'close'}
+                                <button className="btn-secondary btn-lg" disabled={busy === 'close'}
                                     onClick={() => confirm(t('billing.folios.close_confirm')) && run('close', `folios/${f.id}/close`, {}, t('billing.folios.closed'))}>
                                     {t('billing.folios.close')}
                                 </button>
                             )}
-                            <button className="btn-primary" disabled={busy === 'inv'} onClick={() => run('inv', `folios/${f.id}/invoice`, {}, t('billing.folios.invoice_issued'))}>
+                            <button className="btn-primary btn-lg" disabled={busy === 'inv'} onClick={() => run('inv', `folios/${f.id}/invoice`, {}, t('billing.folios.invoice_issued'))}>
                                 {busy === 'inv' && <Loader2 className="w-4 h-4 animate-spin" />} {t('billing.folios.issue_invoice')}
                             </button>
                         </div>

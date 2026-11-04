@@ -1,7 +1,8 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
-import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { useApi } from '@/lib/api';
 import DayReport from './DayReport';
 import MenuTab from './MenuTab';
@@ -37,8 +38,8 @@ export default function Page() {
                     <button key={k} onClick={() => setTab(k)} className={`shrink-0 whitespace-nowrap ${tab === k ? 'btn-primary' : 'btn-secondary'}`}>{label}</button>
                 ))}
             </div>
-            {outlets.error && <div className="mb-4 rounded-lg px-4 py-2 text-sm bg-red-50 text-red-700 border border-red-200">{outlets.error.message}</div>}
-            {tab === 'terminal' && (outletId ? <Terminal key={outletId} outletId={outletId} /> : outlets.loading ? <Loader2 className="w-5 h-5 animate-spin text-slate-500" /> : <p className="text-sm text-amber-600">{t('pos.index.no_outlet')}</p>)}
+            <QueryStatus query={outlets} variant="cards" rows={3} />
+            {tab === 'terminal' && (outletId ? <Terminal key={outletId} outletId={outletId} /> : outlets.data && <div className="card"><EmptyState title={t('states3.empty.outlets.title')} description={t('pos.index.no_outlet')} action={<a href="/properties" className="btn-primary">{t('states3.empty.outlets.action')}</a>} /></div>)}
             {tab === 'menu' && <MenuTab outlets={posOutlets} />}
             {tab === 'report' && <DayReport outlets={posOutlets} />}
             {tab === 'setup' && outletId && <Setup outlets={posOutlets} outletId={outletId} />}

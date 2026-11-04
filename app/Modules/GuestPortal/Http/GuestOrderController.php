@@ -32,7 +32,7 @@ class GuestOrderController
                 'outlet' => $outlet?->name,
                 'menu' => $this->orders->menu($outlet, $lang),
                 'orders' => GuestOrder::where('reservation_id', $r->id)->latest('id')->limit(10)->get(['id', 'total', 'status', 'created_at']),
-                'submit_url' => URL::temporarySignedRoute('guest.order.place', $until, ['reservation' => $r->id]),
+                'submit_url' => URL::temporarySignedRoute('guest.order.place', $until, ['reservation' => $r->id, 'hotel' => $r->hotel_id]),
             ]);
         });
     }
@@ -51,6 +51,10 @@ class GuestOrderController
 
     private function reservation(int $id): Reservation
     {
-        return $this->ctx->withoutScope(fn () => Reservation::with('room')->findOrFail($id));
+        $r = $this->ctx->withoutScope(fn () => Reservation::with('room')->findOrFail($id));
+        // The signed link carries the hotel too: refuse a link whose hotel does not own the reservation (legacy links without it stay valid).
+        abort_if(request()->query('hotel') !== null && (int) request()->query('hotel') !== (int) $r->hotel_id, 403);
+
+        return $r;
     }
 }

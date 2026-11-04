@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { activeHotelId, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 
@@ -28,12 +30,16 @@ export default function RoomingImport() {
         const fd = new FormData();
         fd.append('file', file); fd.append('commit', commit ? '1' : '0'); fd.append('skip_invalid', skip ? '1' : '0');
         const hotel = activeHotelId();
-        const res = await fetch(`/api/v1/experience/blocks/${block}/rooming-import`, {
-            method: 'POST', credentials: 'same-origin', body: fd,
-            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': xsrf(), 'Idempotency-Key': crypto.randomUUID(), ...(hotel ? { 'X-Hotel-Id': hotel } : {}) },
-        });
-        const body = await res.json().catch(() => ({}));
-        if (res.ok) setOut(body); else setError(body.detail ?? body.message ?? res.statusText);
+        try {
+            const res = await fetch(`/api/v1/experience/blocks/${block}/rooming-import`, {
+                method: 'POST', credentials: 'same-origin', body: fd,
+                headers: { Accept: 'application/json', 'X-XSRF-TOKEN': xsrf(), 'Idempotency-Key': crypto.randomUUID(), ...(hotel ? { 'X-Hotel-Id': hotel } : {}) },
+            });
+            const body = await res.json().catch(() => ({}));
+            if (res.ok) setOut(body); else setError(body.detail ?? body.message ?? res.statusText);
+        } catch {
+            setError(t('states3.import_network'));
+        }
         setBusy(false);
     };
 
@@ -43,6 +49,8 @@ export default function RoomingImport() {
             <div className="space-y-4">
                 <p className="text-sm text-slate-600">{t('experience.rooming.hint')} <a className="underline" href="/api/v1/experience/rooming/template" download>{t('experience.rooming.template')}</a></p>
                 {error && <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+                <QueryStatus query={blocks} variant="form" rows={2} />
+                {blocks.data?.data.length === 0 && <div className="card"><EmptyState title={t('states3.empty.blocks.title')} description={t('states3.empty.blocks.text')} action={<a href="/groups" className="btn-primary">{t('states3.empty.blocks.action')}</a>} /></div>}
                 <div className="card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div><label className="label" htmlFor="blk">{t('experience.rooming.block')}</label>
                         <select id="blk" className="input" value={block} onChange={(e) => setBlock(e.target.value)}>

@@ -1,4 +1,8 @@
-﻿import AppLayout from '@/Layouts/AppLayout';
+﻿import Tabs from '@/Components/ui/Tabs';
+import FilterBar from '@/Components/ui/FilterBar';
+import Modal from '@/Components/ui/Modal';
+import DataTable from '@/Components/ui/DataTable';
+import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { BedDouble, ClipboardList, Loader2, PackageSearch, RefreshCw, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -87,9 +91,9 @@ function RoomBoard({ setMsg }: { setMsg: (m: Msg) => void }) {
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
-                <button className={cn('px-3 py-1 rounded-full border text-xs', !filter ? 'bg-slate-800 text-white' : 'bg-white')} onClick={() => setFilter('')}>{t('hk.all_count', { count: board.data?.length ?? 0 })}</button>
+                <button type="button" aria-pressed={!filter} className={cn('min-h-11 rounded-full border px-4 text-sm font-medium', !filter ? 'border-navy-800 bg-navy-800 text-white' : 'border-slate-300 bg-white text-slate-800')} onClick={() => setFilter('')}>{t('hk.all_count', { count: board.data?.length ?? 0 })}</button>
                 {STATUSES.map((s) => (
-                    <button key={s} className={cn('px-3 py-1 rounded-full border text-xs capitalize', STATUS_STYLE[s], filter === s && 'outline-2 outline-slate-700')} onClick={() => setFilter(filter === s ? '' : s)}>
+                    <button key={s} type="button" aria-pressed={filter === s} className={cn('min-h-11 rounded-full border px-4 text-sm font-medium capitalize', STATUS_STYLE[s], filter === s && 'outline-2 outline-slate-900')} onClick={() => setFilter(filter === s ? '' : s)}>
                         {tl(s)} ({counts[s] ?? 0})
                     </button>
                 ))}
@@ -169,97 +173,122 @@ function Tasks({ setMsg }: { setMsg: (m: Msg) => void }) {
 
     return (
         <div className="space-y-4">
-            <div className="card p-4 flex flex-wrap gap-2 items-end">
-                <div><div className="text-xs text-slate-500">{t('hk.date_hint')}</div><input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-                <input className="input w-32" aria-label={t('hk.room_ph')} placeholder={t('hk.room_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
-                <select className="input w-40" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label={t('hk.all_statuses')}>
-                    <option value="">{t('hk.all_statuses')}</option>
-                    {Object.keys(TASK_STYLE).map((s) => <option key={s} value={s}>{tl(s)}</option>)}
-                </select>
-                <label className="min-h-11 text-sm flex items-center gap-1"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> {t('hk.mine_only')}</label>
-                <label className="min-h-11 text-sm flex items-center gap-1"><input type="checkbox" checked={allStaff} onChange={(e) => setAllStaff(e.target.checked)} /> {t('hk.any_staff')}</label>
-                <button className="btn-primary flex items-center gap-1 ml-auto" disabled={busy !== null}
-                    onClick={() => api<{ created: number }>('housekeeping/tasks/generate', { method: 'POST', body: JSON.stringify(date ? { date } : {}) })
-                        .then((r) => { setMsg({ ok: true, text: t('hk.tasks_created', { count: r.created }) }); reload(); })
-                        .catch((e) => setMsg({ ok: false, text: e instanceof ApiError ? e.message : String(e) }))}>
-                    <Sparkles className="w-4 h-4" /> {t('hk.generate')}
-                </button>
-            </div>
+            <button type="button" data-primary-action className="btn-primary btn-lg w-full sm:w-auto" disabled={busy !== null}
+                onClick={() => api<{ created: number }>('housekeeping/tasks/generate', { method: 'POST', body: JSON.stringify(date ? { date } : {}) })
+                    .then((r) => { setMsg({ ok: true, text: t('hk.tasks_created', { count: r.created }) }); reload(); })
+                    .catch((e) => setMsg({ ok: false, text: e instanceof ApiError ? e.message : String(e) }))}>
+                <Sparkles className="w-4 h-4" aria-hidden="true" /> {t('hk.generate')}
+            </button>
+            <FilterBar
+                activeCount={[date, q, statusFilter].filter(Boolean).length + (mine ? 1 : 0) + (allStaff ? 1 : 0)}
+                onClear={() => { setDate(''); setQ(''); setStatusFilter(''); setMine(false); setAllStaff(false); }}
+                search={<input type="search" className="input min-w-0 flex-1 sm:w-40 sm:flex-none" aria-label={t('hk.room_ph')} placeholder={t('hk.room_ph')} value={q} onChange={(e) => setQ(e.target.value)} />}
+            >
+                <label className="label">{t('hk.date_hint')}<input type="date" className="input sm:w-44" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+                <label className="label">{t('guests.status')}
+                    <select className="select sm:w-44" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                        <option value="">{t('hk.all_statuses')}</option>
+                        {Object.keys(TASK_STYLE).map((s) => <option key={s} value={s}>{tl(s)}</option>)}
+                    </select>
+                </label>
+                <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> {t('hk.mine_only')}</label>
+                <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={allStaff} onChange={(e) => setAllStaff(e.target.checked)} /> {t('hk.any_staff')}</label>
+            </FilterBar>
 
-            {finishing && (
-                <div className="card p-4 space-y-3">
-                    <div className="font-semibold">{t('hk.finish_room', { number: finishing.room?.number ?? '' })}</div>
+            <Modal open={!!finishing} onClose={() => setFinishing(null)} title={finishing ? t('hk.finish_room', { number: finishing.room?.number ?? '' }) : ''}>
+                {finishing && (
+                <div className="space-y-3">
                     <div className="grid sm:grid-cols-2 gap-1">
                         {checklist.map((c, i) => (
-                            <label key={i} className="text-sm flex items-center gap-2">
+                            <label key={i} className="flex min-h-11 items-center gap-2 text-sm">
                                 <input type="checkbox" checked={c.done} onChange={(e) => setChecklist(checklist.map((x, j) => (j === i ? { ...x, done: e.target.checked } : x)))} /> {c.item}
                             </label>
                         ))}
                     </div>
                     <textarea className="input w-full" rows={2} aria-label={t('guests.field.notes')} placeholder={t('guests.field.notes')} value={notes} onChange={(e) => setNotes(e.target.value)} />
-                    <div className="flex gap-2">
+                    <div className="btn-row">
                         <button className="btn-primary" disabled={busy !== null}
                             onClick={() => run('finish', `housekeeping/tasks/${finishing.id}/finish`, { checklist, notes: notes || null }, t('hk.room_cleaned', { number: finishing.room?.number ?? '' }), () => { setFinishing(null); reload(); })}>{t('hk.mark_done')}</button>
                         <button className="btn-secondary" onClick={() => setFinishing(null)}>{t('common.cancel')}</button>
                     </div>
                 </div>
-            )}
+                )}
+            </Modal>
 
-            {inspecting && (
-                <div className="card p-4 space-y-3">
-                    <div className="font-semibold">{t('hk.inspect_room', { number: inspecting.room?.number ?? '' })}</div>
+            <Modal open={!!inspecting} onClose={() => setInspecting(null)} title={inspecting ? t('hk.inspect_room', { number: inspecting.room?.number ?? '' }) : ''}>
+                {inspecting && (
+                <div className="space-y-3">
                     <textarea className="input w-full" rows={2} aria-label={t('hk.insp_notes')} placeholder={t('hk.insp_notes')} value={inspNotes} onChange={(e) => setInspNotes(e.target.value)} />
-                    <div className="flex gap-2">
+                    <div className="btn-row">
                         <button className="btn-primary" disabled={busy !== null} onClick={() => run('insp', `housekeeping/tasks/${inspecting.id}/inspect`, { passed: true, notes: inspNotes || null }, t('hk.insp_passed'), () => { setInspecting(null); reload(); })}>{t('hk.pass')}</button>
                         <button className="btn-secondary text-red-700" disabled={busy !== null} onClick={() => run('insp', `housekeeping/tasks/${inspecting.id}/inspect`, { passed: false, notes: inspNotes || null }, t('hk.insp_failed'), () => { setInspecting(null); reload(); })}>{t('hk.fail')}</button>
                         <button className="btn-secondary" onClick={() => setInspecting(null)}>{t('common.cancel')}</button>
                     </div>
                 </div>
-            )}
+                )}
+            </Modal>
 
             {tasks.error && <Banner msg={{ ok: false, text: tasks.error.message }} />}
-            <div className="card overflow-x-auto">
-                <table className="table-auto">
-                    <thead><tr className="text-left"><th>{t('guests.show.room')}</th><th>{t('guests.companies.kind')}</th><th>{t('hk.prio')}</th><th>{t('guests.status')}</th><th>{t('hk.assigned')}</th><th>{t('hk.times')}</th><th>{t('hk.actions')}</th></tr></thead>
-                    <tbody>
-                        {tasks.loading && <tr><td colSpan={7}><Loader2 className="w-4 h-4 animate-spin" /></td></tr>}
-                        {rows.map((x) => (
-                            <tr key={x.id} className="border-t">
-                                <td className="font-semibold">{x.room?.number} <span className="text-xs text-slate-500">{x.room?.floor != null && t('hk.floor_short', { floor: x.room.floor })}</span></td>
-                                <td className="capitalize">{tl(x.kind)}</td>
-                                <td>{x.priority}</td>
-                                <td><span className={cn('px-2 py-0.5 rounded text-xs capitalize', TASK_STYLE[x.status])}>{tl(x.status)}</span></td>
-                                <td>
-                                    <div className="flex gap-1 items-center">
-                                        <select className="input text-xs w-32" disabled={!users.data} value={assignId[x.id] ?? x.assigned_to ?? ''} onChange={(e) => setAssignId({ ...assignId, [x.id]: e.target.value })}>
+            <DataTable
+                caption={t('hk.title')}
+                tableKey="hk-tasks"
+                loading={tasks.loading && !tasks.data}
+                rows={rows}
+                rowKey={(x) => x.id}
+                rowLabel={(x) => x.room?.number ?? `#${x.id}`}
+                selectable
+                bulkActions={({ rows: picked, clear }) => {
+                    const pending = picked.filter((x) => x.status === 'pending' || x.status === 'failed');
+                    return (
+                        <button type="button" className="btn-secondary btn-sm" disabled={busy !== null || pending.length === 0}
+                            onClick={async () => {
+                                for (const x of pending) await run(`s${x.id}`, `housekeeping/tasks/${x.id}/start`, {}, t('hk.started', { number: x.room?.number ?? '' }), () => undefined);
+                                setMsg({ ok: true, text: t('desktop.hk.started_many', { count: pending.length }) });
+                                clear();
+                                reload();
+                            }}>{t('desktop.hk.start_selected')} ({pending.length})</button>
+                    );
+                }}
+                rowActions={(x) => [
+                    { key: 'start', label: t('hk.start'), hidden: !(x.status === 'pending' || x.status === 'failed'), onSelect: (r) => run(`s${r.id}`, `housekeeping/tasks/${r.id}/start`, {}, t('hk.started', { number: r.room?.number ?? '' }), reload) },
+                    { key: 'finish', label: t('hk.finish'), hidden: x.status !== 'in_progress', onSelect: (r) => { setFinishing(r); setChecklist(r.checklist ?? []); setNotes(r.notes ?? ''); } },
+                    { key: 'inspect', label: t('hk.inspect'), hidden: x.status !== 'done', onSelect: (r) => { setInspecting(r); setInspNotes(''); } },
+                ]}
+                empty={<p className="text-slate-500 py-4 text-center">{t('hk.no_tasks')}</p>}
+                columns={[
+                    { key: 'room', header: t('guests.show.room'), sortValue: (x) => x.room?.number ?? '', className: 'font-semibold', cell: (x) => <>{x.room?.number} <span className="text-xs font-normal text-slate-500">{x.room?.floor != null && t('hk.floor_short', { floor: x.room.floor })}</span></> },
+                    { key: 'kind', header: t('guests.companies.kind'), sortValue: (x) => x.kind, className: 'capitalize', cell: (x) => tl(x.kind) },
+                    { key: 'prio', header: t('hk.prio'), sortValue: (x) => x.priority, cell: (x) => x.priority },
+                    { key: 'status', header: t('guests.status'), sortValue: (x) => x.status, cell: (x) => <span className={cn('px-2 py-0.5 rounded border border-current text-xs font-medium capitalize', TASK_STYLE[x.status])}>{tl(x.status)}</span> },
+                    { key: 'assigned', header: t('hk.assigned'), cell: (x) => (
+                                    <div className="flex flex-wrap items-center justify-end gap-2">
+                                        <select className="select w-40" aria-label={t('hk.assigned')} disabled={!users.data} value={assignId[x.id] ?? x.assigned_to ?? ''} onChange={(e) => setAssignId({ ...assignId, [x.id]: e.target.value })}>
                                             <option value="">{users.loading ? t('common.loading') : t('hk.unassigned')}</option>
                                             {x.assigned_to != null && !users.data?.some((u) => u.id === x.assigned_to) && <option value={x.assigned_to}>{userName(x.assigned_to)}</option>}
                                             {users.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                                         </select>
                                         {assignId[x.id] && String(assignId[x.id]) !== String(x.assigned_to ?? '') && (
-                                            <button className="btn-secondary text-xs" disabled={busy !== null}
+                                            <button type="button" className="btn-secondary btn-sm" disabled={busy !== null}
                                                 onClick={() => run(`a${x.id}`, `housekeeping/tasks/${x.id}/assign`, { user_id: Number(assignId[x.id]) }, t('hk.assigned_to', { name: userName(Number(assignId[x.id])) }), () => { setAssignId({ ...assignId, [x.id]: '' }); reload(); })}>{t('hk.assign')}</button>
                                         )}
                                     </div>
-                                </td>
-                                <td className="text-xs text-slate-500">{x.started_at && <>▶ {formatDateTime(x.started_at)}<br /></>}{x.finished_at && <>✓ {formatDateTime(x.finished_at)}</>}</td>
-                                <td className="whitespace-nowrap space-x-1">
-                                    {(x.status === 'pending' || x.status === 'failed') && (
-                                        <button className="btn-primary text-xs" disabled={busy !== null} onClick={() => run(`s${x.id}`, `housekeeping/tasks/${x.id}/start`, {}, t('hk.started', { number: x.room?.number ?? '' }), reload)}>{t('hk.start')}</button>
-                                    )}
-                                    {x.status === 'in_progress' && (
-                                        <button className="btn-primary text-xs" onClick={() => { setFinishing(x); setChecklist(x.checklist ?? []); setNotes(x.notes ?? ''); }}>{t('hk.finish')}</button>
-                                    )}
-                                    {x.status === 'done' && (
-                                        <button className="btn-primary text-xs" onClick={() => { setInspecting(x); setInspNotes(''); }}>{t('hk.inspect')}</button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                        {!tasks.loading && rows.length === 0 && <tr><td colSpan={7} className="text-slate-500 py-4 text-center">{t('hk.no_tasks')}</td></tr>}
-                    </tbody>
-                </table>
-            </div>
+                    ) },
+                    { key: 'times', header: t('hk.times'), className: 'text-sm', cell: (x) => <span className="text-slate-600">{x.started_at && <>▶ {formatDateTime(x.started_at)}<br /></>}{x.finished_at && <>✓ {formatDateTime(x.finished_at)}</>}</span> },
+                    { key: 'actions', header: t('hk.actions'), required: true, className: 'whitespace-nowrap', cell: (x) => (
+                        <>
+                            {(x.status === 'pending' || x.status === 'failed') && (
+                                <button className="btn-primary" disabled={busy !== null} onClick={() => run(`s${x.id}`, `housekeeping/tasks/${x.id}/start`, {}, t('hk.started', { number: x.room?.number ?? '' }), reload)}>{t('hk.start')}</button>
+                            )}
+                            {x.status === 'in_progress' && (
+                                <button className="btn-primary" onClick={() => { setFinishing(x); setChecklist(x.checklist ?? []); setNotes(x.notes ?? ''); }}>{t('hk.finish')}</button>
+                            )}
+                            {x.status === 'done' && (
+                                <button className="btn-primary" onClick={() => { setInspecting(x); setInspNotes(''); }}>{t('hk.inspect')}</button>
+                            )}
+                        </>
+                    ) },
+                ]}
+            />
         </div>
     );
 }
@@ -302,7 +331,7 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
                     <option value="">{t('hk.lf.no_room')}</option>
                     {rooms.data?.map((r) => <option key={r.id} value={r.id}>{r.number}</option>)}
                 </select>
-                <input type="date" className="input" title={t('hk.lf.found_on_hint')} max={today} value={form.found_on} onChange={(e) => setForm({ ...form, found_on: e.target.value })} />
+                <input type="date" className="input" aria-label={t('hk.lf.found_on_hint')} title={t('hk.lf.found_on_hint')} max={today} value={form.found_on} onChange={(e) => setForm({ ...form, found_on: e.target.value })} />
                 <button className="btn-primary sm:col-span-5 sm:w-40" disabled={busy !== null}>{t('hk.lf.log')}</button>
             </form>
 
@@ -311,8 +340,8 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
                 <select className="input w-40" value={show} onChange={(e) => filter(() => setShow(e.target.value))} aria-label={t('common.all')}>
                     <option value="">{t('common.all')}</option><option value="stored">{t('hk.lf.stored')}</option><option value="returned">{t('hk.lf.returned')}</option><option value="disposed">{t('hk.lf.disposed')}</option>
                 </select>
-                <input type="date" className="input" title={t('hk.lf.from')} value={from} onChange={(e) => filter(() => setFrom(e.target.value))} />
-                <input type="date" className="input" title={t('hk.lf.to')} value={to} onChange={(e) => filter(() => setTo(e.target.value))} />
+                <input type="date" className="input" aria-label={t('hk.lf.from')} title={t('hk.lf.from')} value={from} onChange={(e) => filter(() => setFrom(e.target.value))} />
+                <input type="date" className="input" aria-label={t('hk.lf.to')} title={t('hk.lf.to')} value={to} onChange={(e) => filter(() => setTo(e.target.value))} />
             </div>
             {list.error && <Banner msg={{ ok: false, text: list.error.message }} />}
             <div className="card overflow-x-auto">
@@ -333,24 +362,24 @@ function LostFound({ setMsg }: { setMsg: (m: Msg) => void }) {
                                 <td className="whitespace-nowrap">
                                     <span className="inline-flex gap-1 mr-1 align-middle"><OpsPrintButton path={`lost-found-handin/${i.id}`} label={t('documents4.lost_in')} />{i.status === 'returned' && <OpsPrintButton path={`lost-found-return/${i.id}`} label={t('documents4.lost_out')} />}</span>
                                     {i.status === 'stored' && disposing === i.id && (
-                                        <span className="flex gap-1">
-                                            <input className="input text-xs w-36" aria-label={t('hk.lf.disposal_reason')} placeholder={t('hk.lf.disposal_reason')} maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)} />
-                                            <button className="btn-primary text-xs" disabled={!reason || busy !== null}
+                                        <span className="flex flex-wrap gap-2">
+                                            <input className="input w-40" aria-label={t('hk.lf.disposal_reason')} placeholder={t('hk.lf.disposal_reason')} maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)} />
+                                            <button className="btn-primary" disabled={!reason || busy !== null}
                                                 onClick={() => run('disp', `housekeeping/lost-found/${i.id}/dispose`, { reason }, t('hk.lf.item_disposed'), () => { setDisposing(null); list.reload(); })}>OK</button>
-                                            <button className="btn-secondary text-xs" onClick={() => setDisposing(null)}>×</button>
+                                            <button className="btn-secondary btn-sm" aria-label={t('common.cancel')} onClick={() => setDisposing(null)}>×</button>
                                         </span>
                                     )}
                                     {i.status === 'stored' && disposing !== i.id && (returning === i.id ? (
-                                        <span className="flex gap-1">
-                                            <input className="input text-xs w-36" aria-label={t('hk.lf.returned_to_ph')} placeholder={t('hk.lf.returned_to_ph')} value={returnedTo} onChange={(e) => setReturnedTo(e.target.value)} />
-                                            <button className="btn-primary text-xs" disabled={!returnedTo || busy !== null}
+                                        <span className="flex flex-wrap gap-2">
+                                            <input className="input w-40" aria-label={t('hk.lf.returned_to_ph')} placeholder={t('hk.lf.returned_to_ph')} value={returnedTo} onChange={(e) => setReturnedTo(e.target.value)} />
+                                            <button className="btn-primary" disabled={!returnedTo || busy !== null}
                                                 onClick={() => run('ret', `housekeeping/lost-found/${i.id}/return`, { returned_to: returnedTo }, t('hk.lf.marked_returned'), () => { setReturning(null); list.reload(); })}>OK</button>
-                                            <button className="btn-secondary text-xs" onClick={() => setReturning(null)}>×</button>
+                                            <button className="btn-secondary btn-sm" aria-label={t('common.cancel')} onClick={() => setReturning(null)}>×</button>
                                         </span>
                                     ) : (
-                                        <span className="flex gap-1">
-                                            <button className="btn-secondary text-xs" onClick={() => { setReturning(i.id); setReturnedTo(''); }}>{t('hk.lf.mark_returned')}</button>
-                                            <button className="btn-secondary text-xs" onClick={() => { setDisposing(i.id); setReason(''); setReturning(null); }}>{t('hk.lf.dispose')}</button>
+                                        <span className="flex flex-wrap gap-2">
+                                            <button className="btn-secondary btn-sm" onClick={() => { setReturning(i.id); setReturnedTo(''); }}>{t('hk.lf.mark_returned')}</button>
+                                            <button className="btn-secondary btn-sm" onClick={() => { setDisposing(i.id); setReason(''); setReturning(null); }}>{t('hk.lf.dispose')}</button>
                                         </span>
                                     ))}
                                 </td>
@@ -384,16 +413,10 @@ export default function Housekeeping() {
     const [key, setKey] = useState(0);
     return (
         <AppLayout title={t('hk.title')} subtitle={t('hk.subtitle')}
-            actions={<button className="btn-secondary flex items-center gap-1" onClick={() => setKey((k) => k + 1)}><RefreshCw className="w-4 h-4" /> {t('hk.refresh')}</button>}>
+            actions={<button type="button" className="btn-secondary" onClick={() => setKey((k) => k + 1)}><RefreshCw className="w-4 h-4" /> {t('hk.refresh')}</button>}>
             <Head title={t('hk.title')} />
-            <div className="flex gap-1 mb-4 overflow-x-auto">
-                {TABS.map((tb) => (
-                    <button key={tb.key} onClick={() => { setTab(tb.key); setMsg(null); }}
-                        className={cn('flex items-center gap-1 px-3 py-2 rounded-lg text-sm whitespace-nowrap', tab === tb.key ? 'bg-navy-800 text-white' : 'bg-white border text-slate-600')}>
-                        <tb.icon className="w-4 h-4" /> {t(tb.label)}
-                    </button>
-                ))}
-            </div>
+            <Tabs label={t('hk.title')} className="mb-4" value={tab} onChange={(k) => { setTab(k as typeof tab); setMsg(null); }}
+                tabs={TABS.map((tb) => ({ key: tb.key, label: t(tb.label), icon: tb.icon }))} />
             <Banner msg={msg} />
             <div key={key}>
                 {tab === 'board' && <RoomBoard setMsg={setMsg} />}

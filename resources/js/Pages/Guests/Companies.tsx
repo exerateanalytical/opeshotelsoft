@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
+import SharedField from '@/Components/ui/Field';
+import FilterBar from '@/Components/ui/FilterBar';
+import Modal from '@/Components/ui/Modal';
 
 export interface Company {
     id: number;
@@ -98,27 +101,38 @@ export default function CompaniesTab() {
             {ok && <div className="rounded-lg bg-emerald-50 text-emerald-700 px-4 py-2 text-sm">{ok}</div>}
             {error && <div className="rounded-lg bg-red-50 text-red-700 px-4 py-2 text-sm">{error}</div>}
 
-            <div className="card p-4 flex flex-wrap gap-3 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input className="input pl-9 w-full" aria-label={t('guests.companies.search')} placeholder={t('guests.companies.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-                </div>
-                <select className="input" value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }} aria-label={t('guests.companies.all_kinds')}>
-                    <option value="">{t('guests.companies.all_kinds')}</option>
-                    {KINDS.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
-                </select>
-                <label className="min-h-11 flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex justify-end">
+                <button type="button" className="btn-primary btn-lg w-full sm:w-auto" onClick={() => open('new')}><Plus className="w-4 h-4" aria-hidden="true" /> {t('guests.companies.new')}</button>
+            </div>
+            <FilterBar
+                activeCount={(kind ? 1 : 0) + (ledgerOnly ? 1 : 0)}
+                onClear={() => { setKind(''); setLedgerOnly(false); setPage(1); }}
+                search={
+                    <div className="relative min-w-0 flex-1 sm:w-80 sm:flex-none">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                        <input type="search" className="input pl-9" aria-label={t('guests.companies.search')} placeholder={t('guests.companies.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+                    </div>
+                }
+            >
+                <Field label={t('guests.companies.kind')}>
+                    <select className="select sm:w-48" value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }}>
+                        <option value="">{t('guests.companies.all_kinds')}</option>
+                        {KINDS.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
+                    </select>
+                </Field>
+                <label className="flex min-h-11 items-center gap-2 text-sm text-slate-700">
                     <input type="checkbox" checked={ledgerOnly} onChange={(e) => { setLedgerOnly(e.target.checked); setPage(1); }} /> {t('guests.companies.ledger_only')}
                 </label>
-                <button className="btn-primary flex items-center gap-1" onClick={() => open('new')}><Plus className="w-4 h-4" /> {t('guests.companies.new')}</button>
-            </div>
+            </FilterBar>
 
-            {editing && (
-                <form onSubmit={save} className="card p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('guests.companies.new') : t('guests.companies.edit_title', { name: editing.name })}</h3>
-                        <button type="button" onClick={() => setEditing(null)}><X className="w-4 h-4 text-slate-500" /></button>
-                    </div>
+            <Modal open={!!editing} size="xl" onClose={() => setEditing(null)}
+                title={editing === 'new' ? t('guests.companies.new') : editing ? t('guests.companies.edit_title', { name: editing.name }) : ''}
+                footer={<>
+                    <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>{t('common.cancel')}</button>
+                    <button type="submit" form="company-form" className="btn-primary" disabled={saving}>{saving && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />} {t('common.save')}</button>
+                </>}>
+                {editing && (
+                <form id="company-form" onSubmit={save} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <Field label={t('guests.companies.name_required')}><input className="input w-full" required value={form.name} onChange={(e) => set('name', e.target.value)} /></Field>
                         <Field label={t('guests.companies.kind')}>
@@ -140,16 +154,13 @@ export default function CompaniesTab() {
                             <label className="min-h-11 flex items-center gap-2"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> {t('guests.status.active')}</label>
                         </div>
                     </div>
-                    <div className="flex gap-2 justify-end">
-                        <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>{t('common.cancel')}</button>
-                        <button className="btn-primary flex items-center gap-1" disabled={saving}>{saving && <Loader2 className="w-4 h-4 animate-spin" />} {t('common.save')}</button>
-                    </div>
                 </form>
-            )}
+                )}
+            </Modal>
 
-            <div className="card overflow-x-auto">
+            <div className="card overflow-hidden">
                 {list.error && <div className="bg-red-50 text-red-700 px-4 py-2 text-sm">{list.error.message}</div>}
-                <table className="table-auto">
+                <div className="table-wrap"><table className="table-auto">
                     <thead>
                         <tr>
                             <th className="px-4 py-2">{t('guests.companies.name')}</th><th className="px-4 py-2">{t('guests.companies.kind')}</th><th className="px-4 py-2">{t('guests.companies.contact')}</th>
@@ -165,15 +176,15 @@ export default function CompaniesTab() {
                                 <td className="px-4 py-2 font-medium text-slate-800"><Link href={`/guests/companies/${c.id}`} className="text-navy-600 underline-offset-2 hover:underline">{c.name}</Link><div className="text-xs text-slate-500">{c.tax_id}</div></td>
                                 <td className="px-4 py-2">{(() => { const l = KINDS.find(([v]) => v === c.kind)?.[1]; return l ? t(l) : c.kind; })()}</td>
                                 <td className="px-4 py-2">{c.contact_name}<div className="text-xs text-slate-500">{c.email ?? c.phone}</div></td>
-                                <td className="px-4 py-2">{c.city_ledger ? <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs">{t('guests.yes')}</span> : <span className="text-slate-500">{t('guests.no')}</span>}</td>
+                                <td className="px-4 py-2">{c.city_ledger ? <span className="px-2 py-0.5 rounded border border-emerald-300 bg-emerald-50 text-emerald-800 text-xs">{t('guests.yes')}</span> : <span className="text-slate-500">{t('guests.no')}</span>}</td>
                                 <td className="px-4 py-2 text-right">{formatCurrency(c.credit_limit ?? 0)}</td>
                                 <td className="px-4 py-2">{t('guests.companies.days_short', { count: c.payment_terms_days ?? 0 })}</td>
-                                <td className="px-4 py-2">{c.active ? t('guests.status.active') : <span className="text-amber-700">{t('guests.status.inactive')}</span>}</td>
-                                <td className="px-4 py-2 text-right"><button className="btn-secondary flex items-center gap-1" onClick={() => open(c)}><Pencil className="w-3 h-3" /> {t('common.edit')}</button></td>
+                                <td className="px-4 py-2">{c.active ? t('guests.status.active') : <span className="text-amber-800">{t('guests.status.inactive')}</span>}</td>
+                                <td className="px-4 py-2 text-right"><button type="button" className="btn-secondary btn-sm" onClick={() => open(c)}><Pencil className="w-4 h-4" aria-hidden="true" /> {t('common.edit')}</button></td>
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                </table></div>
                 {list.data && list.data.last_page > 1 && (
                     <div className="flex justify-between items-center px-4 py-2 text-sm text-slate-500">
                         <span>{t('guests.companies.count', { count: list.data.total })}</span>
@@ -189,11 +200,6 @@ export default function CompaniesTab() {
     );
 }
 
-export function Field({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-        <label className="label">
-            <span className="text-xs font-medium text-slate-500">{label}</span>
-            <div className="mt-1">{children}</div>
-        </label>
-    );
+export function Field({ label, children, className }: { label: string; children: React.ReactElement<Record<string, unknown>>; className?: string }) {
+    return <SharedField label={label} className={className}>{children}</SharedField>;
 }

@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -36,6 +38,7 @@ export default function PeopleDiscipline() {
     return (
         <AppLayout title={t('people.discipline.title')} subtitle={t('people.discipline.subtitle')}>
             <Head title={t('people.discipline.title')} />
+            <QueryStatus query={list} variant="table" />
             <PeopleTabs active="/people/discipline" />
             {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
             <form onSubmit={save} className="card mb-4 grid gap-3 p-4 text-sm sm:grid-cols-3">
@@ -63,6 +66,7 @@ export default function PeopleDiscipline() {
                 <table className="w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-2">{t('people.date')}</th><th>{t('people.employee')}</th><th>{t('people.discipline.kind')}</th><th>{t('people.discipline.reason')}</th><th>{t('people.status')}</th><th /></tr></thead>
                     <tbody>
+                        {list.data?.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="staff" /></td></tr>}
                         {list.data?.map((s) => (
                             <tr key={s.id} className="border-t border-slate-100">
                                 <td className="p-2">{formatDate(s.incident_date)}</td><td>{s.employee?.name}</td>

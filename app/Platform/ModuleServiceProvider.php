@@ -32,18 +32,23 @@ class ModuleServiceProvider extends ServiceProvider
         RateLimiter::for('public-read', fn (Request $r) => Limit::perMinute(300)->by($r->ip()));
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(1200)->by($r->user()?->id ?: $r->ip()));
 
+        // With `php artisan route:cache` the compiled routes replace whatever is registered here,
+        // so skip including the 26 module route files on every request (docs/PERFORMANCE.md).
+        $loadRoutes = ! $this->app->routesAreCached();
+        $console = $this->app->runningInConsole();
+
         foreach ($this->modules() as $name => $path) {
-            if (is_dir("$path/Database/Migrations")) {
+            if ($console && is_dir("$path/Database/Migrations")) {
                 $this->loadMigrationsFrom("$path/Database/Migrations");
             }
 
-            if (is_file("$path/routes.php")) {
+            if ($loadRoutes && is_file("$path/routes.php")) {
                 Route::prefix('api/v1')
                     ->middleware(['api', 'auth:api', 'tenant', 'idempotent'])
                     ->group("$path/routes.php");
             }
 
-            if (is_file("$path/public-routes.php")) {
+            if ($loadRoutes && is_file("$path/public-routes.php")) {
                 Route::prefix('api/v1')->middleware(['api', 'idempotent'])->group("$path/public-routes.php");
             }
 

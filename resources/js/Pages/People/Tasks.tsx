@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor, NoResults } from '@/Components/ui/EmptyStates';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -74,7 +76,12 @@ export default function PeopleTasks() {
             <div className="mb-3 flex gap-2 text-sm">
                 {(['all', 'mine', 'overdue'] as const).map((v) => <button key={v} className={view === v ? 'btn-primary' : 'btn-secondary'} onClick={() => setView(v)}>{t(`people.tasks.view_${v}`)}</button>)}
             </div>
-            {list.error && <p className="text-sm text-slate-500">{t('people.no_access')}</p>}
+            <QueryStatus query={list} variant="list" />
+            {list.data && listOf(list.data).length === 0 && (
+                <div className="card">{view === 'all'
+                    ? <EmptyFor kind="tasks" action={<button type="button" className="btn-primary" onClick={() => setForm({ ...EMPTY })}>{t('people.tasks.new')}</button>} />
+                    : <NoResults onReset={() => setView('all')} />}</div>
+            )}
             <div className="space-y-3">
                 {listOf(list.data).map((x) => (
                     <div key={x.id} className="card p-4 text-sm">

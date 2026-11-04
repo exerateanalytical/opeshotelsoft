@@ -2,6 +2,8 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Download } from 'lucide-react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -35,7 +37,7 @@ export default function PayoutShow({ id }: { id: number }) {
         <AppLayout title={`${t('payments2.payouts.title')} ${r?.period ?? ''}`}
             actions={<Link href="/payments/payouts" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('payments2.common.back')}</Link>}>
             <Head title={t('payments2.payouts.title')} />
-            {!r ? <div className="card p-6">{t('payments2.common.loading')}</div> : (
+            {!r ? <QueryStatus query={run} variant="detail" /> : (
                 <>
                     <div className="card p-4 mb-4 flex flex-wrap items-center gap-3">
                         <span>{t('payments2.payouts.total')}: <b>{formatCurrency(r.total)}</b></span>
@@ -77,6 +79,7 @@ export default function PayoutShow({ id }: { id: number }) {
                                 ))}
                             </tbody>
                         </table>
+                        {r.items.length === 0 && <EmptyState title={t('states3.empty.payout_items.title')} description={t('states3.empty.payout_items.text')} />}
                     </div>
                 </>
             )}

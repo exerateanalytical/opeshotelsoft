@@ -4,8 +4,8 @@
     $e = $engine ?? \App\Modules\Documents\Application\DocumentRenderer::bareEngine($hotel ?? null, $lang ?? 'fr');
     $size = $e['size'];
     $compact = in_array($size, ['80mm', 'id1'], true);
-    $margins = match ($size) { '80mm' => '4mm 3mm 24mm 3mm', 'id1' => '0', default => '18mm 15mm 32mm 15mm' };
-    $footBottom = match ($size) { '80mm' => '-21mm', 'id1' => '1.5mm', default => '-28mm' };
+    $margins = match ($size) { '80mm' => '4mm 3mm 32mm 3mm', 'id1' => '0', default => '18mm 15mm 36mm 15mm' };
+    $footBottom = match ($size) { '80mm' => '-29mm', 'id1' => '1.5mm', default => '-32mm' };
     $lh = $e['lh'];
     $wm = $e['watermark'];
 @endphp
@@ -26,7 +26,8 @@
     table.grid { width: 100%; border-collapse: collapse; }
     table.grid th { text-align: left; font-size: 8pt; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #9ca3af; padding: 1.5mm 1.5mm; }
     table.grid td { border-bottom: 1px solid #e5e7eb; padding: 1.5mm 1.5mm; }
-    .r { text-align: right; }
+    .r, table.grid th.r, table.grid td.r { text-align: right; }
+    table.grid th.r, table.grid td.r { white-space: nowrap; }
     .tot td { font-weight: bold; border-top: 1px solid #9ca3af; border-bottom: none; }
     .box { border: 1px solid #d1d5db; padding: 3mm; }
     .kv td { padding: 0.8mm 2mm 0.8mm 0; }
@@ -38,20 +39,20 @@
 <body>
 @if($wm)
     @php
-        $wmCss = 'color: rgba(75,85,99,'.($wm['opacity'] / 100).'); font-weight: bold; white-space: nowrap;';
+        $wmCss = 'color: rgba(75,85,99,'.(min($wm['opacity'], 35) / 100).'); font-weight: bold; white-space: nowrap;';
         $wmItem = fn ($size) => $wm['mode'] === 'image'
-            ? '<img src="'.$wm['image'].'" style="opacity:'.($wm['opacity'] / 100).'; max-width:'.$size.'mm; max-height:'.$size.'mm" alt="">'
-            : '<span style="'.$wmCss.' font-size:'.($size * 0.9).'pt">'.e($wm['text']).'</span>';
+            ? '<img src="'.$wm['image'].'" style="opacity:'.(min($wm['opacity'], 35) / 100).'; max-width:'.$size.'mm; max-height:'.$size.'mm" alt="">'
+            : '<span style="'.$wmCss.' font-size:'.max(7, min($size * 0.9, round($size * 2.2 / max(4, mb_strlen($wm['text'])) * 3.1, 1))).'pt">'.e($wm['text']).'</span>';
         $pw = $size === 'a4-landscape' ? 297 : ($size === '80mm' ? 80 : ($size === 'id1' ? 86 : 210));
         $ph = $size === 'a4-landscape' ? 210 : ($size === '80mm' ? 200 : ($size === 'id1' ? 54 : 297));
     @endphp
     <div class="engine-wm" data-watermark="{{ $wm['position'] }}">
     @if($wm['position'] === 'tile')
         <table style="width:100%; height:100%; border-collapse:collapse">
-        @for($r = 0; $r < ($compact ? 3 : 5); $r++)<tr>@for($c = 0; $c < ($compact ? 1 : 3); $c++)<td style="text-align:center; vertical-align:middle">{!! $wmItem($compact ? 20 : 34) !!}</td>@endfor</tr>@endfor
+        @for($r = 0; $r < ($compact ? 3 : 5); $r++)<tr>@for($c = 0; $c < ($compact ? 1 : 3); $c++)<td style="text-align:center; vertical-align:middle; height:{{ round($ph / ($compact ? 3 : 5) - 2, 1) }}mm">{!! $wmItem($compact ? 16 : 26) !!}</td>@endfor</tr>@endfor
         </table>
     @else
-        <div style="position:absolute; top:{{ $ph * 0.42 }}mm; left:0; right:0; text-align:center; @if($wm['position'] === 'diagonal') transform: rotate(-35deg); @endif">{!! $wmItem($compact ? 40 : 110) !!}</div>
+        <div style="position:absolute; top:{{ $ph * 0.42 }}mm; left:0; right:0; text-align:center; @if($wm['position'] === 'diagonal') transform: rotate(-35deg); @endif">{!! $wmItem($compact ? 34 : ($size === 'a4-landscape' ? 100 : 100)) !!}</div>
     @endif
     </div>
 @endif
@@ -71,10 +72,12 @@
 @endif
 </div>
 
-<div class="engine-foot" data-engine="foot">
+<div class="engine-foot" data-engine="foot" @if($e['design'] === 'executive' && ! $compact) style="padding-left:18mm" @endif>
 @if($size === 'id1')
-    @if($e['qr'])<img src="{{ $e['qr'] }}" style="width:9mm; height:9mm; margin-left:2mm" alt="">@endif
-    <span>{{ $e['number'] }}@if($e['copy'] > 0) · {{ $tt('Duplicata', 'Copy') }} {{ $e['copy'] }}@endif</span>
+    <table style="width:100%; border-collapse:collapse"><tr>
+        <td style="vertical-align:bottom; padding-left:3mm; font-size:6pt; color:#6b7280">{{ $e['number'] }}@if($e['copy'] > 0) · <strong style="color:#b91c1c">{{ $tt('Duplicata', 'Copy') }} {{ $e['copy'] }}</strong>@endif<br>{{ $tt('Émis le', 'Issued') }} {{ $e['stamp_local'] }}</td>
+        <td style="width:19mm; text-align:right; padding-right:3mm; vertical-align:bottom">@if($e['qr'])<img src="{{ $e['qr'] }}" style="width:15mm; height:15mm" alt="">@endif</td>
+    </tr></table>
 @else
     @unless($compact)
         @include('documents::partials.letterhead', ['lh' => $lh, 'lt' => $tt, 'part' => 'foot', 'docTitle' => $e['title']])
@@ -87,7 +90,7 @@
             @php($brandMark = is_file(public_path('brand/emblem-64.png')) ? 'data:image/png;base64,'.base64_encode(file_get_contents(public_path('brand/emblem-64.png'))) : null)
             <span style="font-size:6pt; color:#9ca3af">@if($brandMark)<img src="{{ $brandMark }}" style="width:2.6mm; height:2.6mm; vertical-align:middle; margin-right:1mm" alt="">@endif{{ $tt('Propulsé par', 'Powered by') }} OPES Hôtels Soft</span>
         </td>
-        @if($e['qr'])<td style="width:{{ $compact ? 18 : 17 }}mm; text-align:right; vertical-align:middle"><img src="{{ $e['qr'] }}" style="width:{{ $compact ? 17 : 16 }}mm; height:{{ $compact ? 17 : 16 }}mm" alt=""></td>@endif
+        @if($e['qr'])<td style="width:{{ $compact ? 22 : 22 }}mm; text-align:right; vertical-align:middle"><img src="{{ $e['qr'] }}" style="width:20mm; height:20mm; background:#ffffff" alt=""></td>@endif
     </tr></table>
 @endif
 </div>

@@ -2,6 +2,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, Loader2, Printer } from 'lucide-react';
 import { useState } from 'react';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -138,13 +139,13 @@ export default function InvoiceShow({ id }: { id: string }) {
             <Head title={i?.number ?? t('billing.invoice.title')} />
             <style>{PRINT_CSS}</style>
 
-            {(message || inv.error) && (
+            {(message || (i && inv.error)) && (
                 <div className={cn('no-print mb-4 rounded-lg text-sm px-4 py-3', message?.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>
                     {message?.text ?? inv.error?.message}
                 </div>
             )}
 
-            {!i ? (!inv.error && <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-500" />) : (
+            {!i ? <QueryStatus query={inv} variant="detail" /> : (
                 <div className="grid xl:grid-cols-[1fr_320px] gap-6 items-start">
                     <div id="invoice-print" className="card bg-white text-slate-900 px-6 sm:px-10 py-8 mx-auto w-full max-w-[210mm] overflow-x-auto">
                         <div className="flex flex-col sm:flex-row sm:justify-between gap-6 border-b border-slate-200 pb-6">
@@ -167,7 +168,7 @@ export default function InvoiceShow({ id }: { id: string }) {
                         </div>
 
                         <div className="py-5">
-                            <div className="text-xs uppercase tracking-wide text-slate-500">Facturé à</div>
+                            <div className="text-sm font-medium text-slate-500">Facturé à</div>
                             <div className="font-semibold">{i.bill_to_name}</div>
                             {i.bill_to_address && <div className="text-sm text-slate-600 whitespace-pre-line">{i.bill_to_address}</div>}
                             {i.bill_to_tax_id && <div className="text-sm text-slate-600">NIU : {i.bill_to_tax_id}</div>}
@@ -195,6 +196,7 @@ export default function InvoiceShow({ id }: { id: string }) {
                                         <td className="py-1.5 text-right whitespace-nowrap">{formatCurrency(l.amount)}</td>
                                     </tr>
                                 ))}
+                                {i.lines.length === 0 && <tr><td colSpan={6} className="py-6 text-center text-slate-500">{t('states3.empty.invoice_lines.text')}</td></tr>}
                             </tbody>
                         </table></div>
 
@@ -238,7 +240,7 @@ export default function InvoiceShow({ id }: { id: string }) {
                                     <div className="flex gap-2">
                                         <input className="input" type="number" min={1} max={due} required aria-label={t('billing.folios.amount_fcfa')} placeholder={t('billing.folios.amount_fcfa')} value={pay.amount}
                                             onChange={(e) => setPay({ ...pay, amount: e.target.value })} />
-                                        <button type="button" className="btn-secondary text-xs whitespace-nowrap" onClick={() => setPay({ ...pay, amount: String(due) })}>{t('billing.invoice.full')}</button>
+                                        <button type="button" className="btn-secondary btn-sm whitespace-nowrap" onClick={() => setPay({ ...pay, amount: String(due) })}>{t('billing.invoice.full')}</button>
                                     </div>
                                     <input className="input" aria-label={t('billing.invoice.reference')} placeholder={t('billing.invoice.reference')} value={pay.reference} onChange={(e) => setPay({ ...pay, reference: e.target.value })} />
                                     <button className="btn-primary w-full justify-center" disabled={busy}>{busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('billing.invoice.record_payment')}</button>

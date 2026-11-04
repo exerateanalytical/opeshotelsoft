@@ -2,6 +2,8 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Loader2, Plus, Search, Trash2, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ErrorState from '@/Components/ui/ErrorState';
+import LoadingState from '@/Components/ui/LoadingState';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -101,13 +103,13 @@ export default function GroupShow({ id }: { id: string }) {
         >
             <Head title={b?.code ?? t('groups.show.block')} />
 
-            {(message || block.error) && (
+            {message && (
                 <div className={cn('mb-4 rounded-lg text-sm px-4 py-3', message?.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>
-                    {message?.text ?? block.error?.message}
+                    {message.text}
                 </div>
             )}
 
-            {!b ? (!block.error && <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-500" />) : (
+            {!b ? (block.error ? <div className="card"><ErrorState error={block.error} onRetry={block.reload} /></div> : <LoadingState variant="detail" />) : (
                 <div className="grid lg:grid-cols-2 gap-6">
                     <div className="space-y-6">
                         <div className="card overflow-x-auto">
@@ -150,7 +152,7 @@ export default function GroupShow({ id }: { id: string }) {
                                     {pickups.data && rowsOf(pickups.data).length === 0 && <tr><td colSpan={5} className="text-center py-8 text-slate-500 text-sm">{t('groups.show.none_yet')}</td></tr>}
                                     {rowsOf(pickups.data).map((r) => (
                                         <tr key={r.id}>
-                                            <td><Link href={`/reservations/${r.id}`} className="font-mono text-sm text-sky-700 hover:underline">{r.number}</Link></td>
+                                            <td><Link href={`/reservations/${r.id}`} className="font-mono text-sm text-navy-600 underline underline-offset-2">{r.number}</Link></td>
                                             <td className="text-sm">{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '—'}</td>
                                             <td className="text-sm">{r.room ? r.room.number : r.room_type?.name}</td>
                                             <td className="text-sm whitespace-nowrap">{formatDate(r.arrival)} → {formatDate(r.departure)}</td>
@@ -185,7 +187,7 @@ export default function GroupShow({ id }: { id: string }) {
 
                             {!b.rate_plan_id && (
                                 <label className="label">{t('groups.show.rate_plan_none')}
-                                    <select className="input mt-1" value={ratePlan} onChange={(e) => setRatePlan(e.target.value)} aria-label={t('groups.show.rate_plan_ph')}>
+                                    <select className="input mt-1" value={ratePlan} onChange={(e) => setRatePlan(e.target.value)}>
                                         <option value="" disabled>{t('groups.show.rate_plan_ph')}</option>
                                         {rowsOf(ratePlans.data).map((r) => <option key={r.id} value={r.id}>{r.code ? `${r.code} · ` : ''}{r.name}</option>)}
                                     </select>

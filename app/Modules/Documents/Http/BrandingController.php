@@ -180,7 +180,7 @@ class BrandingController
             $lh['design'] = $design;
         }
 
-        return $lh;
+        return Letterhead::derive($lh);
     }
 
     private function group(): Group

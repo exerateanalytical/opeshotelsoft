@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Banner, errMsg, Page } from './Crud';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useLocale, useT } from '@/lib/i18n';
 
 interface RatePlan { id: number; code: string; name: string }
@@ -83,7 +85,10 @@ export default function RatesGrid() {
 
     return (
         <div>
-            <Banner error={error ?? plans.error?.message ?? rates.error?.message ?? inv.error?.message} success={success} />
+            <Banner error={error} success={success} />
+            <QueryStatus query={plans} variant="list" rows={1} />
+            <QueryStatus query={inv} variant="table" rows={4} />
+            <QueryStatus query={rates} variant="list" rows={1} />
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <select className="input w-full sm:w-auto" aria-label={t('prop.rates.pick_plan')} value={planId} onChange={(e) => setPlanId(e.target.value)}>
                     {!plans.data?.data.length && <option value="">{t('prop.rates.no_plans')}</option>}
@@ -92,8 +97,8 @@ export default function RatesGrid() {
                 <button className="btn-secondary btn-icon" onClick={() => setFrom(addDays(from, -14))} aria-label={t('common.previous')}><ChevronLeft className="h-4 w-4" /></button>
                 <input type="date" className="input w-full sm:w-40" aria-label={t('fin.col.date')} value={from} onChange={(e) => e.target.value && setFrom(e.target.value)} />
                 <button className="btn-secondary btn-icon" onClick={() => setFrom(addDays(from, 14))} aria-label={t('common.next')}><ChevronRight className="h-4 w-4" /></button>
-                {(rates.loading || inv.loading) && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
             </div>
+            {plans.data && plans.data.data.length === 0 && <div className="card mb-4"><EmptyFor kind="rooms" action={<a href="/property" className="btn-secondary">{t('prop.rates.no_plans')}</a>} /></div>}
 
             <div className="card mb-5 overflow-x-auto">
                 <table className="table-auto w-full text-xs">

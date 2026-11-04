@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
 import { ApiError } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 
@@ -35,6 +36,12 @@ export function Field({ label, children }: { label: string; children: ReactNode 
             <div className="mt-1">{children}</div>
         </label>
     );
+}
+
+/** Empty panel for a finance list: texts come from states3.empty.<k>.title and .text, optional next action. */
+export function FinEmptyState({ k, action }: { k: string; action?: ReactNode }) {
+    const t = useT();
+    return <EmptyState title={t(`states3.empty.${k}.title`)} description={t(`states3.empty.${k}.text`)} action={action} />;
 }
 
 export function Loading({ on }: { on: boolean }) {

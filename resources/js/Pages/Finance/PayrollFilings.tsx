@@ -3,7 +3,8 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { Banner, errMsg, Field, Loading } from './shared';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { Banner, errMsg, Field, FinEmptyState } from './shared';
 import { M, Table, Td, Th } from './coreShared';
 import { AbNav, Gate, downloadFile } from './ab3Shared';
 
@@ -38,7 +39,7 @@ export default function PayrollFilings() {
                     <button className="btn-primary" disabled={!build.data} onClick={() => dl('xlsx')}>Excel</button>
                     <button className="btn-secondary" disabled={!build.data} onClick={() => dl('csv')}>CSV</button>
                 </div>
-                <Loading on={build.loading} />
+                <QueryStatus query={build} variant="table" />
                 {build.data && (
                     <>
                         <p className="mb-2 text-sm text-slate-600">{build.data.form}</p>
@@ -63,6 +64,7 @@ export default function PayrollFilings() {
                             )}</Td></tr>
                     ))}
                 </Table>
+                {hist.data?.length === 0 && <FinEmptyState k="filings" />}
             </div>
         </AppLayout>
     );

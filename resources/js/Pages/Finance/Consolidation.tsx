@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
-import { Banner, errMsg, Field, Loading, today } from './shared';
+import { Banner, errMsg, Field, FinEmptyState, Loading, today } from './shared';
 import { CoreNav, M, Table, Td, Th, yearStart } from './coreShared';
 
 interface Amt { account: string; name: string; amount: number }
@@ -70,7 +70,7 @@ export default function Consolidation() {
                             <Field label={t('acc2.cons.average_rate')}><input type="number" step="any" className="input w-32" value={average} onChange={(e) => setAverage(e.target.value)} /></Field>
                         </>
                     )}
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-1">
                         {(['is', 'bs', 'tb'] as View[]).map((v) => (
                             <button key={v} onClick={() => setView(v)} className={cn(view === v ? 'btn-primary' : 'btn-secondary')}>{t(`acc2.cons.view.${v}`)}</button>
                         ))}
@@ -145,6 +145,7 @@ export default function Consolidation() {
                             <Td r>{x.status === 'posted' ? <button className="btn-secondary" onClick={() => reverse(x.id)}>{t('acc2.ic.reverse')}</button> : <span className="text-xs text-slate-500">{t('acc2.status.reversed')}</span>}</Td></tr>
                     ))}
                 </Table>
+                {ics.data?.length === 0 && <FinEmptyState k="intercompany" />}
             </div>
         </AppLayout>
     );

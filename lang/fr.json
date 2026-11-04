@@ -73,6 +73,7 @@
     "auth.password": "Mot de passe",
     "auth.show_password": "Afficher le mot de passe",
     "auth.remember": "Se souvenir de moi",
+    "auth.forgot.text": "Les mots de passe du personnel sont réinitialisés par l'administrateur de votre hôtel ou du groupe. Demandez-lui de définir un nouveau mot de passe pour votre compte. Les clients et membres fidélité peuvent le réinitialiser depuis l'onglet Membre de la page de connexion.",
     "auth.forgot": "Mot de passe oublié ?",
     "auth.submit": "Se connecter",
     "auth.demo.title": "Comptes de démonstration",

@@ -1,3 +1,5 @@
+import Field from '@/Components/ui/Field';
+import FilterBar from '@/Components/ui/FilterBar';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
@@ -57,7 +59,7 @@ export default function GroupsIndex() {
                             const picked = b.allocations.reduce((a, x) => a + (x.picked_up ?? 0), 0);
                             return (
                                 <tr key={b.id}>
-                                    <td><Link href={`/groups/${b.id}`} className="font-mono text-sm text-sky-700 hover:underline">{b.code}</Link></td>
+                                    <td><Link href={`/groups/${b.id}`} className="font-mono text-sm text-navy-600 underline underline-offset-2">{b.code}</Link></td>
                                     <td className="text-sm">{b.name}</td>
                                     <td className="text-sm">{companyName(b.company_id) ?? '—'}</td>
                                     <td className="text-sm whitespace-nowrap">{formatDate(b.arrival)} → {formatDate(b.departure)}</td>
@@ -112,10 +114,10 @@ function CreateBlock({ companies, onDone }: { companies: Named[]; onDone: () => 
                 <label className="label">{t('res.departure')}<input className="input mt-1" type="date" required min={form.arrival || undefined} value={form.departure} onChange={set('departure')} /></label>
                 <label className="label">{t('groups.cutoff_date')}<input className="input mt-1" type="date" max={form.arrival || undefined} value={form.cutoff_date} onChange={set('cutoff_date')} /></label>
                 <label className="label">{t('res.status')}
-                    <select className="input mt-1" value={form.status} onChange={set('status')} aria-label={t('groups.status.tentative')}><option value="tentative">{t('groups.status.tentative')}</option><option value="definite">{t('groups.status.definite')}</option></select>
+                    <select className="input mt-1" value={form.status} onChange={set('status')}><option value="tentative">{t('groups.status.tentative')}</option><option value="definite">{t('groups.status.definite')}</option></select>
                 </label>
                 <label className="label lg:col-span-2">{t('res.rate_plan')}
-                    <select className="input mt-1" value={form.rate_plan_id} onChange={set('rate_plan_id')} aria-label={t('groups.create.rate_later')}>
+                    <select className="input mt-1" value={form.rate_plan_id} onChange={set('rate_plan_id')}>
                         <option value="">{t('groups.create.rate_later')}</option>
                         {rowsOf(ratePlans.data).map((r) => <option key={r.id} value={r.id}>{r.code ? `${r.code} · ` : ''}{r.name}</option>)}
                     </select>
@@ -144,7 +146,7 @@ function CreateBlock({ companies, onDone }: { companies: Named[]; onDone: () => 
                         </div>
                     ))}
                 </div>
-                <button type="button" className="btn-secondary text-xs mt-2" onClick={() => setAllocs([...allocs, { room_type_id: '', rooms: '', rate: '' }])}><Plus className="w-3 h-3" /> {t('groups.create.add_type')}</button>
+                <button type="button" className="btn-secondary btn-sm mt-2" onClick={() => setAllocs([...allocs, { room_type_id: '', rooms: '', rate: '' }])}><Plus className="w-3 h-3" /> {t('groups.create.add_type')}</button>
             </div>
 
             <textarea className="input" rows={2} aria-label={t('groups.create.notes')} placeholder={t('groups.create.notes')} value={form.notes} onChange={set('notes')} />

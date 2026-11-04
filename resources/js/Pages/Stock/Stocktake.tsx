@@ -1,4 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import EmptyState from '@/Components/ui/EmptyState';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -34,6 +37,8 @@ export default function Stocktake() {
     return (
         <AppLayout title={t('stock3.take.title')} subtitle={t('stock3.take.subtitle')}>
             <Head title={t('stock3.take.title')} />
+            <QueryStatus query={list} variant="table" />
+            <StockTabs current="stocktake" />
             {msg && <p className="mb-3 text-sm text-red-700">{msg}</p>}
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
                 <select className="input w-full sm:w-48" value={store} onChange={(e) => setStore(e.target.value)} aria-label={t('stock3.take.store')}>
@@ -43,6 +48,7 @@ export default function Stocktake() {
                 <button type="button" className="btn-primary" disabled={!store} onClick={() => run(async () => { await api('stock-ops/stocktakes', { method: 'POST', body: JSON.stringify({ store_id: Number(store) }) }); })}>{t('stock3.take.start')}</button>
                 {(list.data ?? []).map((s) => <button key={s.id} type="button" className={sel?.id === s.id ? 'btn-primary' : 'btn-secondary'} onClick={() => pick(s)}>{s.number} · {t(`stock3.take.status.${s.status}`)}</button>)}
             </div>
+            {list.data?.length === 0 && <div className="card mb-4"><EmptyState title={t('states3.empty.stocktakes.title')} description={t('states3.empty.stocktakes.text')} /></div>}
             {sel && (
                 <div className="mb-3 flex flex-wrap gap-2">
                     <OpsPrintButton path={`stocktake-sheet/${sel.id}?blind=1`} label={t('documents4.blind_sheet')} />

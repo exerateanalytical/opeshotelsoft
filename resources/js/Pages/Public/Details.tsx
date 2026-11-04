@@ -5,7 +5,7 @@ import PublicLayout, { Notice, publicApi, url, type PublicProps } from './Public
 import { nightCount, type Offer } from './Search';
 import { storedMember } from './SearchForm';
 
-export interface BookingResult { confirmation: string; status: string; total: number; currency: string; deposit_required: number; manage_token: string }
+export interface BookingResult { confirmation: string; reference?: string; hotel_code?: string; status: string; total: number; currency: string; deposit_required: number; manage_token: string }
 
 function storedOffer(): { hotel: string; offer: Offer } | null {
     try { return JSON.parse(sessionStorage.getItem('opes_offer') ?? 'null'); } catch { return null; }
@@ -34,8 +34,8 @@ export default function Details(p: PublicProps) {
                 adults: Number(q.adults ?? 1), children: Number(q.children ?? 0), guest: { ...guest, country: guest.country || null },
                 special_requests: special_requests || null, member_number: storedMember().member || null, accept_terms: terms, consent_marketing: marketing,
             });
-            try { sessionStorage.setItem(`opes_booking_${r.confirmation}`, JSON.stringify({ ...r, last_name: g.last_name })); } catch { /* storage unavailable */ }
-            router.visit(url(p, '/confirmation', { c: r.confirmation }));
+            try { sessionStorage.setItem(`opes_booking_${r.reference ?? r.confirmation}`, JSON.stringify({ ...r, last_name: g.last_name })); } catch { /* storage unavailable */ }
+            router.visit(url(p, '/confirmation', { c: r.reference ?? r.confirmation }));
         } catch (err) {
             setError((err as Error).message);
             setBusy(false);

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Badge, Banner, Department, Employee, errMsg, Field, Paged, Position } from './shared';
 import { useLocale, useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import QueryStatus from '@/Components/ui/QueryStatus';
 
 function useMsg() {
     const [ok, setOk] = useState<string | null>(null);
@@ -37,7 +38,9 @@ export function OrgTab() {
 
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? depts.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={depts} variant="table" rows={3} />
+            {positions.error && !depts.error && <QueryStatus query={positions} variant="table" rows={3} />}
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <div className="card">
                     <h3 className="mb-3 font-semibold">{t('hr.org.departments')}</h3>
@@ -131,7 +134,8 @@ export function ShiftsTab() {
 
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? shifts.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={shifts} variant="table" rows={3} />
             <div className="card mb-5 flex flex-wrap items-center gap-3">
                 <span className="text-sm font-medium text-slate-700">{t('hr.shift.my_attendance')}</span>
                 {linked && status.data && (status.data.clocked_in
@@ -227,7 +231,8 @@ export function LeaveTab() {
 
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? list.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={list} variant="table" rows={3} />
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <select className="input w-44" value={status} onChange={(e) => setStatus(e.target.value)}>
                     <option value="">{t('common.all')}</option>{['pending', 'approved', 'rejected', 'cancelled'].map((s) => <option key={s} value={s}>{t(`hr.status.${s}`)}</option>)}

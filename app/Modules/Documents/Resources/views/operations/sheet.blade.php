@@ -34,7 +34,7 @@
 @foreach($sheet['blocks'] ?? [] as $b)
     @if(($b['type'] ?? '') === 'kv')
         @if(!empty($b['title']))<h2>{{ $pick($b['title']) }}</h2>@endif
-        <table class="kv">
+        <table class="kv" style="{{ collect($b['rows'])->contains(fn ($x) => ($x[3] ?? '') === 'money') ? 'width:125mm' : '' }}">
         @foreach($b['rows'] as $row)
             <tr><td class="k">{{ $pick([$row[0], $row[1]]) }}</td><td class="{{ ($row[3] ?? '') === 'money' ? 'r' : '' }}">{{ $fmt($row[2], $row[3] ?? 'text') }}</td></tr>
         @endforeach

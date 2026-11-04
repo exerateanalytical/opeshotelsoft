@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { Copy, Plus, X } from 'lucide-react';
 import { useState } from 'react';
@@ -45,6 +46,7 @@ export default function PaymentLinks() {
         <AppLayout title={t('payments2.links.title')} subtitle={t('payments2.links.subtitle')}
             actions={<button className="btn-primary" onClick={() => setOpen(!open)}><Plus className="w-4 h-4" /> {t('payments2.links.new')}</button>}>
             <Head title={t('payments2.links.title')} />
+            <QueryStatus query={list} variant="table" />
             {open && (
                 <div className="card p-4 mb-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

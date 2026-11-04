@@ -1,8 +1,11 @@
 import Field from '@/Components/ui/Field';
 import FilterBar from '@/Components/ui/FilterBar';
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
-import { Loader2, Search } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Search } from 'lucide-react';
+import DataTable from '@/Components/ui/DataTable';
+import { EmptyFor, NoResults } from '@/Components/ui/EmptyStates';
+import { toast } from '@/Components/ui/Toast';
 import { useMemo, useState } from 'react';
 import { useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
@@ -26,7 +29,7 @@ interface Company { id: number; name: string }
 const STATUSES = ['issued', 'partially_paid', 'paid', 'cancelled'];
 
 const statusClass = (s: string) =>
-    s === 'paid' ? 'bg-emerald-50 text-emerald-700' : s === 'partially_paid' ? 'bg-amber-50 text-amber-700' : s === 'cancelled' ? 'bg-slate-100 text-slate-500' : 'bg-sky-50 text-sky-700';
+    s === 'paid' ? 'bg-emerald-50 text-emerald-700' : s === 'partially_paid' ? 'bg-amber-50 text-amber-700' : s === 'cancelled' ? 'bg-slate-100 text-slate-500' : 'bg-sky-50 text-navy-600';
 
 export default function Invoices() {
     const t = useT();
@@ -90,29 +93,42 @@ export default function Invoices() {
 
             {invoices.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{invoices.error.message}</div>}
 
-            <div className="card overflow-x-auto">
-                <table className="table-auto">
-                    <thead><tr><th>{t('billing.invoices.number')}</th><th>{t('billing.invoices.bill_to')}</th><th>{t('billing.invoices.issued')}</th><th>{t('billing.invoices.due')}</th><th className="text-right">{t('billing.invoices.total')}</th><th className="text-right">{t('billing.invoices.outstanding')}</th><th>{t('billing.invoices.status')}</th></tr></thead>
-                    <tbody>
-                        {invoices.loading && !invoices.data && <tr><td colSpan={7} className="py-10"><Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" /></td></tr>}
-                        {invoices.data && rows.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-slate-500 text-sm">{t('billing.invoices.no_match')}</td></tr>}
-                        {rows.map((i) => (
-                            <tr key={i.id}>
-                                <td><Link href={`/billing/invoices/${i.id}`} className="font-mono text-sm text-navy-600 underline underline-offset-2 inline-flex min-h-11 items-center">{i.number}</Link></td>
-                                <td className="text-sm">{i.bill_to_name}{i.company_id && <span className="ml-2 text-xs text-slate-500">{t('billing.invoices.city_ledger')}</span>}</td>
-                                <td className="text-sm">{formatDate(i.issue_date)}</td>
-                                <td className="text-sm">{i.due_date ? formatDate(i.due_date) : '—'}</td>
-                                <td className="text-right text-sm">{formatCurrency(i.total)}</td>
-                                <td className={cn('text-right text-sm', i.total - i.paid > 0 && 'text-red-600')}>{formatCurrency(i.total - i.paid)}</td>
-                                <td><span className={cn('text-xs px-2 py-0.5 rounded', statusClass(i.status))}>{stLabel(i.status)}</span></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    {rows.length > 0 && (
-                        <tfoot><tr className="font-semibold"><td colSpan={4} className="text-sm">{t('billing.invoices.count', { count: rows.length })}</td><td className="text-right text-sm">{formatCurrency(totals.total)}</td><td className="text-right text-sm">{formatCurrency(totals.due)}</td><td /></tr></tfoot>
-                    )}
-                </table>
-            </div>
+            <DataTable
+                caption={t('billing.invoices.title')}
+                tableKey="invoices"
+                loading={invoices.loading && !invoices.data}
+                error={invoices.error && !invoices.data ? invoices.error.message : undefined}
+                rows={rows}
+                rowKey={(i) => i.id}
+                rowLabel={(i) => i.number}
+                onRowClick={(i) => router.visit(`/billing/invoices/${i.id}`)}
+                selectable
+                bulkActions={({ rows: picked, clear }) => (
+                    <button type="button" className="btn-secondary btn-sm" onClick={() => {
+                        navigator.clipboard?.writeText(picked.map((i) => i.number).join('\n')).then(() => toast.success(t('desktop.copy.done', { count: picked.length }))).catch(() => toast.error(t('desktop.copy.failed')));
+                        clear();
+                    }}>{t('desktop.copy.numbers')}</button>
+                )}
+                rowActions={() => [{ key: 'open', label: t('desktop.detail.open_page'), onSelect: (i) => router.visit(`/billing/invoices/${i.id}`) }]}
+                empty={(status || company || q.trim() || from || to)
+                    ? <NoResults onReset={() => { setStatus(''); setCompany(''); setQ(''); setFrom(''); setTo(''); }} />
+                    : <EmptyFor kind="invoices" />}
+                columns={[
+                    { key: 'number', header: t('billing.invoices.number'), sortValue: (i) => i.number, cell: (i) => <Link href={`/billing/invoices/${i.id}`} className="font-mono text-sm text-navy-600 underline underline-offset-2 inline-flex min-h-11 items-center">{i.number}</Link> },
+                    { key: 'bill_to', header: t('billing.invoices.bill_to'), sortValue: (i) => i.bill_to_name, cell: (i) => <>{i.bill_to_name}{i.company_id && <span className="ml-2 text-xs text-slate-500">{t('billing.invoices.city_ledger')}</span>}</> },
+                    { key: 'issued', header: t('billing.invoices.issued'), sortValue: (i) => i.issue_date, cell: (i) => formatDate(i.issue_date) },
+                    { key: 'due', header: t('billing.invoices.due'), sortValue: (i) => i.due_date, cell: (i) => (i.due_date ? formatDate(i.due_date) : '—') },
+                    { key: 'total', header: t('billing.invoices.total'), align: 'right', sortValue: (i) => i.total, cell: (i) => formatCurrency(i.total) },
+                    { key: 'outstanding', header: t('billing.invoices.outstanding'), align: 'right', sortValue: (i) => i.total - i.paid, cell: (i) => <span className={cn(i.total - i.paid > 0 && 'text-red-600')}>{formatCurrency(i.total - i.paid)}</span> },
+                    { key: 'status', header: t('billing.invoices.status'), sortValue: (i) => i.status, cell: (i) => <span className={cn('text-xs px-2 py-0.5 rounded', statusClass(i.status))}>{stLabel(i.status)}</span> },
+                ]}
+            />
+            {rows.length > 0 && (
+                <p className="mt-2 flex flex-wrap justify-between gap-2 px-1 text-sm font-semibold text-slate-700">
+                    <span>{t('billing.invoices.count', { count: rows.length })}</span>
+                    <span>{t('billing.invoices.total')}: {formatCurrency(totals.total)} · {t('billing.invoices.outstanding')}: {formatCurrency(totals.due)}</span>
+                </p>
+            )}
         </AppLayout>
     );
 }

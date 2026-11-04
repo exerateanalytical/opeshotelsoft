@@ -39,6 +39,15 @@ class ControlController
         return Hotel::findOrFail($this->ctx->requireHotelId())->business_date->toDateString();
     }
 
+    /** The latest date a valuation may be asked for: the hotel's calendar date, or its business date if that is later. The business date lags until the night audit runs. */
+    private function latestValuationDate(): string
+    {
+        $hotel = Hotel::findOrFail($this->ctx->requireHotelId());
+        $calendar = now($hotel->timezone ?: 'Africa/Douala')->toDateString();
+
+        return max($hotel->business_date->toDateString(), $calendar);
+    }
+
     // ---- Recipes ----------------------------------------------------------------------------------
 
     public function recipes(Request $r)
@@ -324,7 +333,7 @@ class ControlController
         if (isset($d['store_id'])) {
             Store::findOrFail($d['store_id']);
         }
-        if (($d['date'] ?? $this->today()) > $this->today()) {
+        if (($d['date'] ?? $this->today()) > $this->latestValuationDate()) {
             throw new DomainException('The valuation date cannot be in the future.', 'date-invalid');
         }
 

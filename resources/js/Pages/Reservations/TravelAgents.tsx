@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head, Link } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import { Fragment, useState } from 'react';
@@ -42,6 +43,7 @@ export default function TravelAgents() {
     return (
         <AppLayout title={t('res.agents.title')}>
             <Head title={t('res.agents.title')} />
+            <QueryStatus query={agents} variant="table" />
             <div className="mx-auto max-w-5xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <Link href="/reservations" className="btn-secondary">{t('res.title')}</Link>

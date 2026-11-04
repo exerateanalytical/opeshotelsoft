@@ -15,7 +15,8 @@ Route::get('guests/{guest}/history', [P::class, 'history']);
 Route::get('guests/{guest}/folios', [P::class, 'folios']);
 Route::get('guests/{guest}/loyalty', [P::class, 'loyalty']);
 Route::post('guests/{guest}/privacy-requests', [P::class, 'requestPrivacy']);
-Route::apiResource('guests', GuestController::class)->except('destroy');
+// index/show names would clash with the staff pages guests.index / guests.show (routes/web.php), which blocks route:cache.
+Route::apiResource('guests', GuestController::class)->except('destroy')->names(['index' => 'api.guests.index', 'show' => 'api.guests.show']);
 Route::get('companies/{company}/overview', [P::class, 'company']);
 Route::post('companies/{company}/contacts', [P::class, 'storeContact']);
 Route::patch('companies/{company}/contacts/{contact}', [P::class, 'updateContact']);

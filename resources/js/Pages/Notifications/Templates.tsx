@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Loader2 } from 'lucide-react';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useEffect, useMemo, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -89,8 +90,8 @@ export default function NotificationTemplates() {
             actions={<Link href="/notifications/outbox" className="btn-secondary">{t('notif.outbox')}</Link>}
         >
             <Head title={t('notif.templates_title')} />
-            {data.loading && !data.data && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
-            {data.error && <p className="text-sm text-red-700">{data.error.message}</p>}
+            <QueryStatus query={data} variant="cards" rows={3} />
+            {data.data && data.data.events.length === 0 && <div className="card"><EmptyFor kind="messages" /></div>}
 
             {data.data && (
                 <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
@@ -109,7 +110,7 @@ export default function NotificationTemplates() {
                                     <button
                                         type="button"
                                         onClick={() => setSelected(tpl)}
-                                        className={`flex w-full items-center justify-between py-2 text-left text-sm ${selected?.id === tpl.id ? 'font-semibold text-slate-900' : 'text-slate-700'}`}
+                                        className={`flex min-h-11 w-full items-center justify-between py-2 text-left text-sm ${selected?.id === tpl.id ? 'font-semibold text-slate-900' : 'text-slate-700'}`}
                                     >
                                         <span className="capitalize">{tpl.channel} · {tpl.locale.toUpperCase()}</span>
                                         <span className={tpl.active ? 'badge-green' : 'badge-slate'}>{tpl.active ? t('notif.active') : t('notif.off')}</span>

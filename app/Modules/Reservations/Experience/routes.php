@@ -16,6 +16,7 @@ Route::prefix('experience')->group(function () {
         Route::get('settings', [E::class, 'settings']);
         Route::get('services', [E::class, 'services']);
         Route::get('reviews', [E::class, 'reviews']);
+        Route::get('fee-rules', [E::class, 'feeRules']);
     });
     Route::middleware('can:experience.manage')->group(function () {
         Route::post('tape/move', [T::class, 'move']);
@@ -33,5 +34,7 @@ Route::prefix('experience')->group(function () {
         Route::put('settings', [E::class, 'saveSettings']);
         Route::post('services', [E::class, 'saveService']);
         Route::patch('services/{service}', [E::class, 'saveService']);
+        Route::post('fee-rules', [E::class, 'saveFeeRule']);
+        Route::patch('fee-rules/{rule}', [E::class, 'saveFeeRule']);
     });
 });

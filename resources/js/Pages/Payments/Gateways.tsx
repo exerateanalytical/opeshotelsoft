@@ -2,6 +2,8 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { Intent, PROVIDERS } from './shared';
 import { useT } from '@/lib/i18n';
@@ -26,8 +28,8 @@ export default function PaymentGateways() {
         <AppLayout title={t('payments.gateways.title')} subtitle={t('payments.gateways.subtitle')}
             actions={<Link href="/payments" className="btn-secondary"><ArrowLeft className="w-4 h-4" /> {t('payments.gateways.back')}</Link>}>
             <Head title={t('payments.gateways.title')} />
-            {list.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{list.error.message}</div>}
-            {list.loading && !list.data && <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-500" />}
+            <QueryStatus query={list} variant="cards" rows={3} />
+            {list.data?.length === 0 && <div className="card"><EmptyState title={t('states3.empty.gateways.title')} description={t('states3.empty.gateways.text')} action={<Link href="/payments" className="btn-secondary">{t('payments.gateways.back')}</Link>} /></div>}
             <div className="grid gap-6 lg:grid-cols-3">
                 {list.data?.map((g) => <GatewayCard key={g.provider} gateway={g} onSaved={() => list.reload()} />)}
             </div>

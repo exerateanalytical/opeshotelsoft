@@ -1,7 +1,15 @@
-﻿import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
-import { Ban, CalendarDays, Copy, Download, Loader2, Pencil, Plus, Search, Star, Users, Building2, X } from 'lucide-react';
-import { useState } from 'react';
+﻿import Tabs from '@/Components/ui/Tabs';
+import FilterBar from '@/Components/ui/FilterBar';
+import Modal from '@/Components/ui/Modal';
+import AppLayout from '@/Layouts/AppLayout';
+import { Head, Link, router } from '@inertiajs/react';
+import { Ban, CalendarDays, Copy, Download, ExternalLink, Loader2, Pencil, Plus, Search, Star, Users, Building2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import DataTable from '@/Components/ui/DataTable';
+import EmptyState from '@/Components/ui/EmptyState';
+import MasterDetail, { useSplitView } from '@/Components/ui/MasterDetail';
+import { toast } from '@/Components/ui/Toast';
+import { useQueryParam } from '@/lib/desktop';
 import { activeHotelId, api, ApiError, useApi } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import CompaniesTab, { Field } from './Companies';
@@ -84,17 +92,10 @@ export default function GuestsIndex() {
         <AppLayout
             title={t('guests.title')}
             subtitle={t('guests.subtitle')}
-            actions={
-                <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
-                    {([['guests', 'guests.tab.guests', Users], ['companies', 'guests.tab.companies', Building2]] as const).map(([k, l, Icon]) => (
-                        <button key={k} onClick={() => setTab(k)} className={cn('px-3 py-1 rounded-md flex items-center gap-1', tab === k ? 'bg-white border border-slate-300 text-emerald-700' : 'text-slate-600')}>
-                            <Icon className="w-4 h-4" /> {t(l)}
-                        </button>
-                    ))}
-                </div>
-            }
         >
             <Head title={t('guests.title')} />
+            <Tabs label={t('guests.title')} className="mb-4" value={tab} onChange={(k) => setTab(k as typeof tab)}
+                tabs={[{ key: 'guests', label: t('guests.tab.guests'), icon: Users }, { key: 'companies', label: t('guests.tab.companies'), icon: Building2 }]} />
             {tab === 'guests' ? <GuestsTab /> : <CompaniesTab />}
         </AppLayout>
     );
@@ -121,6 +122,28 @@ function GuestsTab() {
     const dups = useApi<Guest[]>(dupFor ? `guests/${dupFor.id}/duplicates` : null, [dupFor?.id]);
 
     const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+    const split = useSplitView();
+    const [selId, setSelId] = useQueryParam('selected');
+    const current = list.data?.data.find((g) => String(g.id) === selId) ?? null;
+    const idLabel = (g: Guest) => { const l = ID_TYPES.find(([v]) => v === g.id_type)?.[1]; return l ? t(l) : g.id_type; };
+    const flags = (g: Guest) => (g.vip || g.blacklisted) ? (
+        <>
+            {g.vip && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-800 text-xs"><Star className="w-3 h-3" aria-hidden="true" /> VIP</span>}
+            {g.blacklisted && <span title={g.blacklist_reason ?? ''} className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-red-300 bg-red-50 text-red-800 text-xs"><Ban className="w-3 h-3" aria-hidden="true" /> {t('guests.blacklisted')}</span>}
+        </>
+    ) : null;
+
+    // /guests?new=1 (command palette) opens the create form once.
+    useEffect(() => {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get('new') === '1') {
+            p.delete('new');
+            window.history.replaceState(window.history.state, '', window.location.pathname + (p.toString() ? `?${p}` : ''));
+            open('new');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     function open(g: Guest | 'new') {
         setEditing(g);
@@ -201,25 +224,36 @@ function GuestsTab() {
             {ok && <div className="rounded-lg bg-emerald-50 text-emerald-700 px-4 py-2 text-sm">{ok}</div>}
             {error && <div className="rounded-lg bg-red-50 text-red-700 px-4 py-2 text-sm">{error}</div>}
 
-            <div className="card p-4 flex flex-wrap gap-3 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input className="input pl-9 w-full" aria-label={t('guests.search')} placeholder={t('guests.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-                </div>
-                <select className="input" value={flag} onChange={(e) => { setFlag(e.target.value); setPage(1); }} aria-label={t('guests.filter.all')}>
-                    <option value="">{t('guests.filter.all')}</option>
-                    <option value="vip">{t('guests.filter.vip')}</option>
-                    <option value="blacklisted">{t('guests.filter.blacklisted')}</option>
-                </select>
-                <button className="btn-primary flex items-center gap-1" onClick={() => open('new')}><Plus className="w-4 h-4" /> {t('guests.new')}</button>
+            <div className="flex justify-end">
+                <button type="button" data-primary-action className="btn-primary btn-lg w-full sm:w-auto" onClick={() => open('new')}><Plus className="w-4 h-4" aria-hidden="true" /> {t('guests.new')}</button>
             </div>
-
-            {editing && (
-                <form onSubmit={save} className="card p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('guests.new') : t('guests.companies.edit_title', { name: fullName(editing) })}</h3>
-                        <button type="button" onClick={() => setEditing(null)}><X className="w-4 h-4 text-slate-500" /></button>
+            <FilterBar
+                activeCount={flag ? 1 : 0}
+                onClear={() => { setFlag(''); setPage(1); }}
+                search={
+                    <div className="relative min-w-0 flex-1 sm:w-80 sm:flex-none">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                        <input type="search" className="input pl-9" aria-label={t('guests.search')} placeholder={t('guests.search')} value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
                     </div>
+                }
+            >
+                <Field label={t('guests.col.flags')}>
+                    <select className="select sm:w-48" value={flag} onChange={(e) => { setFlag(e.target.value); setPage(1); }}>
+                        <option value="">{t('guests.filter.all')}</option>
+                        <option value="vip">{t('guests.filter.vip')}</option>
+                        <option value="blacklisted">{t('guests.filter.blacklisted')}</option>
+                    </select>
+                </Field>
+            </FilterBar>
+
+            <Modal open={!!editing} size="xl" onClose={() => setEditing(null)}
+                title={editing === 'new' ? t('guests.new') : editing ? t('guests.companies.edit_title', { name: fullName(editing) }) : ''}
+                footer={<>
+                    <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>{t('common.cancel')}</button>
+                    <button type="submit" form="guest-form" className="btn-primary" disabled={saving}>{saving && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />} {t('common.save')}</button>
+                </>}>
+                {editing && (
+                <form id="guest-form" onSubmit={save} className="space-y-4">
                     <Section title={t('guests.section.identity')}>
                         <Field label={t('guests.field.title')}><input className="input w-full" aria-label={t('guests.field.title_ph')} placeholder={t('guests.field.title_ph')} value={form.title} onChange={(e) => set('title', e.target.value)} /></Field>
                         <Field label={t('guests.field.first_name_req')}><input className="input w-full" required value={form.first_name} onChange={(e) => set('first_name', e.target.value)} /></Field>
@@ -233,7 +267,7 @@ function GuestsTab() {
                         <Field label={t('guests.field.nationality_iso')}><input className="input w-full" maxLength={2} aria-label="CM" placeholder="CM" value={form.nationality} onChange={(e) => set('nationality', e.target.value)} /></Field>
                         <Field label={t('guests.field.profession')}><input className="input w-full" value={form.profession} onChange={(e) => set('profession', e.target.value)} /></Field>
                         <Field label={t('guests.field.language')}>
-                            <select className="input w-full" value={form.language} onChange={(e) => set('language', e.target.value)} aria-label="Français">
+                            <select className="input w-full" value={form.language} onChange={(e) => set('language', e.target.value)}>
                                 <option value="fr">Français</option><option value="en">English</option>
                             </select>
                         </Field>
@@ -276,20 +310,17 @@ function GuestsTab() {
                         )}
                         <Field label={t('guests.field.notes')}><textarea className="input w-full" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
                     </Section>
-                    <div className="flex gap-2 justify-end">
-                        <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>{t('common.cancel')}</button>
-                        <button className="btn-primary flex items-center gap-1" disabled={saving}>{saving && <Loader2 className="w-4 h-4 animate-spin" />} {t('common.save')}</button>
-                    </div>
                 </form>
-            )}
+                )}
+            </Modal>
 
             {dupFor && (
-                <div className="card p-4 space-y-3 border border-amber-200">
+                <div className="card p-4 space-y-3 border border-amber-300">
                     <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-slate-800">{t('guests.dup.title', { name: fullName(dupFor) })}</h3>
-                        <button onClick={() => setDupFor(null)}><X className="w-4 h-4 text-slate-500" /></button>
+                        <button type="button" className="btn-ghost btn-icon" aria-label={t('ui.modal.close')} onClick={() => setDupFor(null)}><X className="w-4 h-4" aria-hidden="true" /></button>
                     </div>
-                    <p className="text-xs text-slate-500">{t('guests.dup.hint', { name: fullName(dupFor) })}</p>
+                    <p className="text-sm text-slate-600">{t('guests.dup.hint', { name: fullName(dupFor) })}</p>
                     {dups.loading && <div className="text-sm text-slate-500">{t('guests.dup.searching')}</div>}
                     {dups.error && <div className="bg-red-50 text-red-700 px-3 py-2 text-sm rounded">{dups.error.message}</div>}
                     {dups.data?.length === 0 && <div className="text-sm text-emerald-700">{t('guests.dup.none')}</div>}
@@ -304,7 +335,7 @@ function GuestsTab() {
                                             <td className="px-3 py-1">{g.email}<div className="text-xs text-slate-500">{g.phone}</div></td>
                                             <td className="px-3 py-1">{g.id_number}</td>
                                             <td className="px-3 py-1 text-right">
-                                                <button className="btn-secondary flex items-center gap-1" disabled={busy === g.id} onClick={() => merge(dupFor, g)}>
+                                                <button type="button" className="btn-secondary btn-sm" disabled={busy === g.id} onClick={() => merge(dupFor, g)}>
                                                     {busy === g.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Copy className="w-3 h-3" />} {t('guests.dup.merge')}
                                                 </button>
                                             </td>
@@ -317,47 +348,76 @@ function GuestsTab() {
                 </div>
             )}
 
-            <div className="card overflow-x-auto">
-                {list.error && <div className="bg-red-50 text-red-700 px-4 py-2 text-sm">{list.error.message}</div>}
-                <table className="table-auto">
-                    <thead>
-                        <tr>
-                            <th className="px-4 py-2">{t('guests.col.guest')}</th><th className="px-4 py-2">{t('guests.companies.contact')}</th><th className="px-4 py-2">{t('guests.col.id_doc')}</th>
-                            <th className="px-4 py-2">{t('guests.col.nationality')}</th><th className="px-4 py-2">{t('guests.col.flags')}</th><th className="px-4 py-2"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {list.loading && !list.data && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">{t('common.loading')}</td></tr>}
-                        {list.data?.data.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">{t('guests.empty')}</td></tr>}
-                        {list.data?.data.map((g) => (
-                            <tr key={g.id} className={cn('border-t border-slate-100', g.blacklisted && 'bg-red-50/40')}>
-                                <td className="px-4 py-2 font-medium text-slate-800"><Link href={`/guests/${g.id}`} className="text-navy-600 underline-offset-2 hover:underline">{fullName(g)}</Link>{g.company && <div className="text-xs font-normal text-slate-500">{g.company.name}</div>}</td>
-                                <td className="px-4 py-2">{g.email}<div className="text-xs text-slate-500">{g.phone}</div></td>
-                                <td className="px-4 py-2">
-                                    {g.id_number ? (
-                                        <>
-                                            {(() => { const l = ID_TYPES.find(([v]) => v === g.id_type)?.[1]; return l ? t(l) : g.id_type; })()} {g.id_number}
-                                            {g.id_expiry && <div className={cn('text-xs', Date.parse(g.id_expiry) < Date.now() ? 'text-red-600' : 'text-slate-500')}>{t('guests.expires', { date: formatDate(g.id_expiry) })}</div>}
-                                        </>
-                                    ) : <span className="text-amber-700 text-xs">{t('guests.missing')}</span>}
-                                </td>
-                                <td className="px-4 py-2">{g.nationality}</td>
-                                <td className="px-4 py-2 space-x-1 whitespace-nowrap">
-                                    {g.vip && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-xs"><Star className="w-3 h-3" /> VIP</span>}
-                                    {g.blacklisted && <span title={g.blacklist_reason ?? ''} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-50 text-red-700 text-xs"><Ban className="w-3 h-3" /> {t('guests.blacklisted')}</span>}
-                                </td>
-                                <td className="px-4 py-2">
-                                    <div className="flex gap-1 justify-end flex-wrap">
-                                        <Link href={`/reservations?q=${encodeURIComponent(g.last_name)}`} className="btn-secondary flex items-center gap-1"><CalendarDays className="w-3 h-3" /> {t('guests.stays')}</Link>
-                                        <button className="btn-secondary flex items-center gap-1" onClick={() => open(g)}><Pencil className="w-3 h-3" /> {t('common.edit')}</button>
-                                        <button className="btn-secondary flex items-center gap-1" onClick={() => { setEditing(null); setDupFor(g); }}><Copy className="w-3 h-3" /> {t('guests.duplicates')}</button>
-                                        <button className="btn-secondary flex items-center gap-1" disabled={busy === g.id} onClick={() => exportData(g)}><Download className="w-3 h-3" /> {t('guests.export')}</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <MasterDetail
+                open={!!current}
+                title={current ? fullName(current) : ''}
+                onClose={() => setSelId(null)}
+                detail={current && (
+                    <div className="space-y-4">
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                            <dt className="text-slate-500">{t('guests.field.email')}</dt><dd className="break-all">{current.email ?? '-'}</dd>
+                            <dt className="text-slate-500">{t('guests.field.phone')}</dt><dd>{current.phone ?? '-'}</dd>
+                            <dt className="text-slate-500">{t('desktop.guest.id_doc')}</dt><dd>{current.id_number ? `${idLabel(current)} ${current.id_number}` : t('guests.missing')}</dd>
+                            <dt className="text-slate-500">{t('guests.col.nationality')}</dt><dd>{current.nationality ?? '-'}</dd>
+                            <dt className="text-slate-500">{t('guests.company')}</dt><dd>{current.company?.name ?? '-'}</dd>
+                            <dt className="text-slate-500">{t('guests.col.flags')}</dt>
+                            <dd className="space-x-1">{flags(current) ?? '-'}</dd>
+                        </dl>
+                        <div className="btn-row">
+                            <button type="button" className="btn-primary btn-sm" onClick={() => open(current)}><Pencil className="w-4 h-4" aria-hidden="true" /> {t('common.edit')}</button>
+                            <Link href={`/reservations?q=${encodeURIComponent(current.last_name)}`} className="btn-secondary btn-sm"><CalendarDays className="w-4 h-4" aria-hidden="true" /> {t('guests.stays')}</Link>
+                            <Link href={`/guests/${current.id}`} className="btn-secondary btn-sm"><ExternalLink className="w-4 h-4" aria-hidden="true" /> {t('desktop.detail.open_page')}</Link>
+                        </div>
+                        <p className="text-sm text-slate-500">{t('desktop.detail.hint')}</p>
+                    </div>
+                )}
+            >
+            <div className="space-y-3">
+                <DataTable
+                    caption={t('guests.title')}
+                    tableKey="guests"
+                    loading={list.loading && !list.data}
+                    error={list.error && !list.data ? list.error.message : undefined}
+                    rows={list.data?.data ?? []}
+                    rowKey={(g) => g.id}
+                    rowLabel={fullName}
+                    activeKey={current?.id ?? null}
+                    onRowClick={(g) => (split ? setSelId(String(g.id)) : router.visit(`/guests/${g.id}`))}
+                    selectable
+                    bulkActions={({ rows, clear }) => (
+                        <button type="button" className="btn-secondary btn-sm" onClick={() => {
+                            const mails = rows.map((g) => g.email).filter(Boolean) as string[];
+                            navigator.clipboard?.writeText(mails.join('; ')).then(() => toast.success(t('desktop.copy.done', { count: mails.length }))).catch(() => toast.error(t('desktop.copy.failed')));
+                            clear();
+                        }}><Copy className="w-4 h-4" aria-hidden="true" /> {t('desktop.copy.emails')}</button>
+                    )}
+                    rowActions={(g) => [
+                        { key: 'open', label: t('desktop.detail.open_page'), icon: ExternalLink, onSelect: (x) => router.visit(`/guests/${x.id}`) },
+                        { key: 'edit', label: t('common.edit'), icon: Pencil, onSelect: (x) => open(x) },
+                        { key: 'stays', label: t('guests.stays'), icon: CalendarDays, onSelect: (x) => router.visit(`/reservations?q=${encodeURIComponent(x.last_name)}`) },
+                        { key: 'dups', label: t('guests.duplicates'), icon: Copy, onSelect: (x) => { setEditing(null); setDupFor(x); } },
+                        { key: 'export', label: t('guests.export'), icon: Download, disabled: busy === g.id, onSelect: (x) => exportData(x) },
+                    ]}
+                    empty={<EmptyState icon={Users} title={t('guests.empty')} />}
+                    columns={[
+                        { key: 'guest', header: t('guests.col.guest'), sortValue: (g) => `${g.last_name} ${g.first_name}`, cell: (g) => (<><Link href={`/guests/${g.id}`} className="inline-flex min-h-11 items-center font-medium text-navy-600 underline underline-offset-2">{fullName(g)}</Link>{g.company && <div className="text-xs font-normal text-slate-500">{g.company.name}</div>}</>) },
+                        { key: 'contact', header: t('guests.companies.contact'), sortValue: (g) => g.email ?? g.phone ?? '', cell: (g) => <>{g.email}<div className="text-xs text-slate-500">{g.phone}</div></> },
+                        { key: 'id', header: t('guests.col.id_doc'), cell: (g) => g.id_number ? (
+                            <>
+                                {idLabel(g)} {g.id_number}
+                                {g.id_expiry && <div className={cn('text-xs', Date.parse(g.id_expiry) < Date.now() ? 'text-red-700' : 'text-slate-600')}>{t('guests.expires', { date: formatDate(g.id_expiry) })}</div>}
+                            </>
+                        ) : <span className="text-amber-800 text-sm">{t('guests.missing')}</span> },
+                        { key: 'nat', header: t('guests.col.nationality'), sortValue: (g) => g.nationality ?? '', cell: (g) => g.nationality },
+                        { key: 'flags', header: t('guests.col.flags'), cell: (g) => <span className="space-x-1 whitespace-nowrap">{flags(g)}</span> },
+                        { key: 'act', header: '', hideLabel: true, align: 'right', required: true, cell: (g) => (
+                            <div className="flex flex-wrap justify-end gap-1">
+                                <Link href={`/reservations?q=${encodeURIComponent(g.last_name)}`} className="btn-secondary btn-sm"><CalendarDays className="w-4 h-4" aria-hidden="true" /> {t('guests.stays')}</Link>
+                                <button type="button" className="btn-secondary btn-sm" onClick={() => open(g)}><Pencil className="w-4 h-4" aria-hidden="true" /> {t('common.edit')}</button>
+                            </div>
+                        ) },
+                    ]}
+                />
                 {list.data && list.data.last_page > 1 && (
                     <div className="flex justify-between items-center px-4 py-2 text-sm text-slate-500">
                         <span>{t('guests.count', { count: list.data.total })}</span>
@@ -369,6 +429,7 @@ function GuestsTab() {
                     </div>
                 )}
             </div>
+            </MasterDetail>
         </div>
     );
 }

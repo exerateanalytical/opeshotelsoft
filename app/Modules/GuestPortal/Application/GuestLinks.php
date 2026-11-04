@@ -16,7 +16,7 @@ class GuestLinks
     {
         $slug = Group::withoutGlobalScopes()->find($r->group_id)?->slug;
 
-        return url("/book/$slug/manage").'?'.http_build_query(['c' => $r->number, 'lang' => $lang]).$anchor;
+        return url("/book/$slug/manage").'?'.http_build_query(['c' => $r->public_code ?: $r->number, 'lang' => $lang]).$anchor;
     }
 
     public function checkin(Reservation $r, string $lang = 'fr'): string
@@ -29,7 +29,7 @@ class GuestLinks
     {
         $until = Carbon::parse($r->departure)->addDay()->endOfDay();
 
-        return URL::temporarySignedRoute('guest.order', $until, ['reservation' => $r->id, 'lang' => $lang]);
+        return URL::temporarySignedRoute('guest.order', $until, ['reservation' => $r->id, 'hotel' => $r->hotel_id, 'lang' => $lang]);
     }
 
     /**
@@ -57,9 +57,9 @@ class GuestLinks
         return config('notifications.whatsapp.review_url') ?: $this->manage($r, $lang, '#review');
     }
 
-    /** Same stateless token as the public Booking API's manage token. */
+    /** Same stateless token as the public Booking API's manage token; bound to group, hotel and reservation id. */
     public static function manageToken(Reservation $r): string
     {
-        return hash_hmac('sha256', $r->id.'|'.$r->number.'|'.$r->guest_id, (string) config('app.key'));
+        return hash_hmac('sha256', 'v2|'.$r->group_id.'|'.$r->hotel_id.'|'.$r->id.'|'.$r->number.'|'.$r->guest_id, (string) config('app.key'));
     }
 }

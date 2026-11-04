@@ -2,6 +2,8 @@
 
 namespace App\Modules\GuestPortal\Http;
 
+use App\Modules\GuestPortal\Application\GuestLinks;
+use App\Modules\GuestPortal\Application\PublicBookingResolver;
 use App\Modules\GuestPortal\Domain\OnlineCheckin;
 use App\Modules\Guests\Domain\Guest;
 use App\Modules\Loyalty\Domain\Membership;
@@ -135,7 +137,7 @@ class BookingEngineController
         });
 
         return response()->json([
-            'confirmation' => $reservation->number, 'booking_ref' => $reservation->booking_ref, 'status' => $reservation->status,
+            'confirmation' => $reservation->number, 'reference' => $reservation->public_code, 'hotel_code' => $hotel->code, 'booking_ref' => $reservation->booking_ref, 'status' => $reservation->status,
             'total' => $reservation->total_amount, 'currency' => $reservation->currency, 'deposit_required' => $reservation->deposit_required,
             'manage_token' => $this->token($reservation),
             'upsell_offers' => $reservation->getAttribute('upsell_offers') ?? [],
@@ -146,14 +148,14 @@ class BookingEngineController
     public function lookup(Request $request, string $group)
     {
         $this->group($group);
-        $data = $request->validate(['confirmation' => ['required', 'string'], 'last_name' => ['required', 'string']]);
-        $r = $this->findBooking($data['confirmation'], $data['last_name']);
+        $data = $request->validate(['confirmation' => ['required', 'string'], 'last_name' => ['required', 'string'], 'hotel' => ['nullable', 'string', 'max:20']]);
+        $r = $this->findBooking($data['confirmation'], $data['last_name'], $data['hotel'] ?? null);
 
         $plan = $this->ctx->withoutScope(fn () => RatePlan::find($r->rate_plan_id));
         $membership = Membership::with('tier')->where('guest_id', $r->guest_id)->where('status', 'active')->first();
         $checkin = OnlineCheckin::where('reservation_id', $r->id)->first();
 
-        return $r->only(['number', 'status', 'arrival', 'departure', 'adults', 'children', 'total_amount', 'currency', 'special_requests', 'deposit_required', 'deposit_paid'])
+        return $r->only(['number', 'public_code', 'status', 'arrival', 'departure', 'adults', 'children', 'total_amount', 'currency', 'special_requests', 'deposit_required', 'deposit_paid'])
             + [
                 'hotel' => Hotel::withoutGlobalScopes()->find($r->hotel_id)?->only(['code', 'name', 'phone', 'check_in_time']),
                 'room_type' => $r->roomType?->name, 'manage_token' => $this->token($r),
@@ -170,11 +172,11 @@ class BookingEngineController
     {
         $this->group($group);
         $data = $request->validate([
-            'confirmation' => ['required', 'string'], 'token' => ['required', 'string'],
+            'confirmation' => ['required', 'string'], 'token' => ['required', 'string'], 'hotel' => ['nullable', 'string', 'max:20'],
             'id_type' => ['required', 'in:passport,national_id,residence_permit,driving_licence'], 'id_number' => ['required', 'string', 'max:60'],
             'nationality' => ['nullable', 'string', 'size:2'], 'eta' => ['required', 'date_format:H:i'], 'notes' => ['nullable', 'string', 'max:500'],
         ]);
-        $r = $this->tokenBooking($data['confirmation'], $data['token']);
+        $r = $this->tokenBooking($data['confirmation'], $data['token'], $data['hotel'] ?? null);
         if (! in_array($r->status, ['tentative', 'confirmed'], true)) {
             throw new DomainException('Online check-in is only open for upcoming bookings.', 'checkin-closed');
         }
@@ -187,20 +189,17 @@ class BookingEngineController
         return response()->json(['status' => 'received', 'submitted_at' => $checkin->submitted_at], 201);
     }
 
-    private function tokenBooking(string $number, string $token): Reservation
+    private function tokenBooking(string $ref, string $token, ?string $hotel = null): Reservation
     {
-        $r = $this->ctx->withoutScope(fn () => Reservation::where('number', $number)->where('group_id', $this->ctx->groupId())->firstOrFail());
-        abort_unless(hash_equals($this->token($r), $token), 403);
-
-        return $r;
+        // Booking reference or number; the token is bound to group + hotel + reservation id, so the right booking is the one it opens.
+        return app(PublicBookingResolver::class)->resolve($this->ctx->groupId(), $ref, $hotel, null, $token);
     }
 
     public function cancel(Request $request, string $group, ReservationService $reservations)
     {
         $this->group($group);
-        $data = $request->validate(['confirmation' => ['required', 'string'], 'token' => ['required', 'string']]);
-        $r = $this->ctx->withoutScope(fn () => Reservation::where('number', $data['confirmation'])->where('group_id', $this->ctx->groupId())->firstOrFail());
-        abort_unless(hash_equals($this->token($r), $data['token']), 403);
+        $data = $request->validate(['confirmation' => ['required', 'string'], 'token' => ['required', 'string'], 'hotel' => ['nullable', 'string', 'max:20']]);
+        $r = $this->tokenBooking($data['confirmation'], $data['token'], $data['hotel'] ?? null);
         $hotel = Hotel::withoutGlobalScopes()->findOrFail($r->hotel_id);
         $fee = $this->asHotel($hotel, fn () => $reservations->cancel($r, 'Cancelled by guest online')->cancellation_fee);
 
@@ -236,12 +235,11 @@ class BookingEngineController
         return $m && strcasecmp($m->guest->last_name, $lastName) === 0 ? $m : null;
     }
 
-    private function findBooking(string $number, string $lastName): Reservation
+    private function findBooking(string $ref, string $lastName, ?string $hotel = null): Reservation
     {
-        $r = $this->ctx->withoutScope(fn () => Reservation::with('guest', 'roomType')->where('number', $number)->where('group_id', $this->ctx->groupId())->first());
-        if (! $r || strcasecmp($r->guest->last_name, $lastName) !== 0) {
-            abort(404, 'Booking not found.');
-        }
+        // Booking reference (unique per group) or confirmation number (per hotel): several matches are refused with a 422, never guessed.
+        $r = app(PublicBookingResolver::class)->resolve($this->ctx->groupId(), $ref, $hotel, $lastName);
+        $r->load('roomType');
 
         return $r;
     }
@@ -249,6 +247,6 @@ class BookingEngineController
     /** Stateless manage-booking token. */
     private function token(Reservation $r): string
     {
-        return hash_hmac('sha256', $r->id.'|'.$r->number.'|'.$r->guest_id, (string) config('app.key'));
+        return GuestLinks::manageToken($r);
     }
 }

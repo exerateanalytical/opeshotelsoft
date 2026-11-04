@@ -15,6 +15,7 @@ export default function Confirmation(p: PublicProps) {
                 <p className="text-sm text-slate-500">{d.confirmationNo}</p>
                 <p className="font-mono text-3xl font-semibold tracking-wider text-brand-800">{c}</p>
                 <p className="text-base">{d.keepNumber}</p>
+                {b?.reference && <p className="text-sm text-slate-500">{b.hotel_code} {b.confirmation}</p>}
                 {b && (
                     <dl className="grid grid-cols-2 gap-2 text-base">
                         <dt className="text-slate-500">{d.status}</dt><dd>{d.statuses[b.status] ?? b.status}</dd>

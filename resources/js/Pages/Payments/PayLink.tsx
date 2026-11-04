@@ -31,7 +31,7 @@ export default function PayLink({ code, sig, lang }: { code: string; sig: string
     const [intent, setIntent] = useState<IntentInfo | null>(null);
     const [error, setError] = useState('');
     const call = (path: string, init?: RequestInit) => fetch(base + path, { ...init, headers: { Accept: 'application/json', 'Content-Type': 'application/json' } })
-        .then(async (r) => { const b = await r.json().catch(() => ({})); if (!r.ok) throw new Error(b.detail ?? b.message ?? r.statusText); return b; });
+        .then(async (r) => { const b = await r.json().catch(() => ({})); if (!r.ok) throw new Error(b.detail || b.message || r.statusText || String(r.status)); return b; });
 
     useEffect(() => { call('').then((l) => { setLink(l); setAmount(String(l.balance)); }).catch((e) => setError(e.message)); }, []);
     useEffect(() => {

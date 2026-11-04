@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
@@ -46,8 +47,7 @@ export default function EdgeStatus() {
         <AppLayout title={t('edge.title')} subtitle={t('edge.subtitle')}>
             <Head title={t('edge.title')} />
             {message && <p className={`mb-3 text-sm ${message.ok ? 'text-emerald-700' : 'text-red-700'}`}>{message.text}</p>}
-            {status.error && <p className="text-sm text-red-700">{status.error.message}</p>}
-            {status.loading && !s && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
+            <QueryStatus query={status} variant="detail" />
 
             {s?.mode === 'edge' && s.edge && (
                 <div className="card p-4 mb-4">

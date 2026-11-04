@@ -69,8 +69,7 @@ class PublicUpsellController
         $slug = request()->route('group');
         $g = Group::where('slug', $slug)->where('status', 'active')->firstOrFail();
         $this->ctx->set($g->id, null, null);
-        $r = $this->ctx->withoutScope(fn () => Reservation::where('number', $data['confirmation'])->where('group_id', $g->id)->firstOrFail());
-        abort_unless(hash_equals(hash_hmac('sha256', $r->id.'|'.$r->number.'|'.$r->guest_id, (string) config('app.key')), $data['token']), 403);
+        $r = app(\App\Modules\GuestPortal\Application\PublicBookingResolver::class)->resolve($g->id, $data['confirmation'], request()->input('hotel'), null, $data['token']);
 
         $hotel = Hotel::withoutGlobalScopes()->findOrFail($r->hotel_id);
         $saved = [$this->ctx->groupId(), $this->ctx->hotelId(), $this->ctx->allowedHotelIds(), $this->ctx->actor()];

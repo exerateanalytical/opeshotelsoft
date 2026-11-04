@@ -3,7 +3,8 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { Banner, errMsg, Field, Loading, today } from './shared';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { Banner, errMsg, Field, FinEmptyState, Loading, today } from './shared';
 import { CoreNav, M, Table, Td, Th, yearStart } from './coreShared';
 
 const KINDS = ['department', 'outlet', 'project', 'cost_centre'] as const;
@@ -33,6 +34,7 @@ export default function Dimensions() {
             <Head title={t('acc2.dim.title')} />
             <CoreNav active="/finance/dimensions" />
             <Banner error={error ?? dims.error?.message} success={ok} />
+            <QueryStatus query={dims} variant="table" />
 
             <div className="card mb-4 p-4">
                 <div className="mb-3 flex flex-wrap items-end gap-2">
@@ -63,6 +65,7 @@ export default function Dimensions() {
                     <Table head={<><Th>{t('acc2.dim.kind')}</Th><Th>{t('acc2.dim.code')}</Th><Th>{t('fin.col.name')}</Th></>}>
                         {dims.data?.dimensions.map((x) => <tr key={x.id}><Td>{t(`acc2.dim.kind.${x.kind}`)}</Td><Td mono>{x.code}</Td><Td>{x.name}</Td></tr>)}
                     </Table>
+                    {dims.data?.dimensions.length === 0 && <FinEmptyState k="dimensions" />}
                 </div>
                 <div className="card p-4">
                     <h3 className="mb-1 font-semibold">{t('acc2.dim.defaults')}</h3>

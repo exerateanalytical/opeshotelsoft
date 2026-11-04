@@ -12,7 +12,7 @@ export function WorkforceTabs({ active }: { active: string }) {
     return (
         <div className="mb-4 flex flex-wrap gap-2 text-sm">
             {TABS.map(([href, key]) => (
-                <Link key={href} href={href} className={`rounded-lg border px-3 py-1.5 ${active === href ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'}`}>{t(key)}</Link>
+                <Link key={href} href={href} className={`inline-flex min-h-11 items-center rounded-lg border px-3 py-1.5 ${active === href ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'}`}>{t(key)}</Link>
             ))}
         </div>
     );

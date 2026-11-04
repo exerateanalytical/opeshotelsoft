@@ -51,9 +51,14 @@ export function groupNav(nav: NavEntry[]) {
 /** Destinations the phone tab bar prefers, in order. The first four the user may see are used, topped up from the menu order. */
 const TAB_PRIORITY = ['/dashboard', '/front-desk', '/reservations', '/housekeeping', '/pos', '/service-requests', '/stock', '/finance', '/billing/folios', '/hr', '/me', '/owner'];
 
-export function pickTabs(nav: NavEntry[], count = 4): NavEntry[] {
+/** Floor roles land on the task home (/tasks) first; their own workplace page follows. */
+const FLOOR_ROLES = ['room-attendant', 'maintenance-technician', 'pos-cashier', 'storekeeper', 'fnb-manager', 'housekeeping-manager'];
+const FLOOR_TAB_PRIORITY = ['/tasks', '/housekeeping', '/maintenance', '/pos', '/stock', '/service-requests', '/me'];
+
+export function pickTabs(nav: NavEntry[], count = 4, roles: string[] = []): NavEntry[] {
     const picked: NavEntry[] = [];
-    for (const p of TAB_PRIORITY) {
+    const floor = roles.some((r) => FLOOR_ROLES.includes(r));
+    for (const p of floor ? FLOOR_TAB_PRIORITY : TAB_PRIORITY) {
         const hit = nav.find((n) => n.path === p);
         if (hit && picked.length < count) picked.push(hit);
     }

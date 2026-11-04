@@ -5,7 +5,7 @@
 <h1>{{ $t('Relevé de folio', 'Folio statement') }} {{ $folio['number'] ?? $folio['id'] }}</h1>
 <table class="kv">
     <tr><td class="k">{{ $t('Titulaire', 'Account') }}</td><td>{{ $folio['name'] ?? '' }}</td></tr>
-    <tr><td class="k">{{ $t('Statut', 'Status') }}</td><td>{{ $folio['status'] ?? '' }}</td></tr>
+    <tr><td class="k">{{ $t('Statut', 'Status') }}</td><td>{{ ['open' => $t('Ouvert', 'Open'), 'closed' => $t('Clôturé', 'Closed'), 'settled' => $t('Soldé', 'Settled'), 'void' => $t('Annulé', 'Void')][$folio['status'] ?? ''] ?? ($folio['status'] ?? '') }}</td></tr>
     <tr><td class="k">{{ $t('Devise', 'Currency') }}</td><td>{{ $folio['currency'] ?? 'XAF' }}</td></tr>
 </table>
 <h2>{{ $t('Mouvements', 'Transactions') }}</h2>

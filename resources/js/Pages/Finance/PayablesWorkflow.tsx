@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -35,12 +36,13 @@ export default function PayablesWorkflow() {
     return (
         <AppLayout title={t('acc3.pay.title')} subtitle={t('acc3.pay.subtitle')}>
             <Head title={t('acc3.pay.title')} />
+            <QueryStatus query={chains} variant="table" />
             <AbNav active="/finance/payables-workflow" />
             <Banner error={error} success={ok} />
 
             <div className="card mb-4 p-4">
                 <h3 className="mb-3 font-semibold">{t('acc3.pay.inbox')}</h3>
-                <Loading on={inbox.loading} />
+                <QueryStatus query={inbox} variant="table" />
                 <input className="input mb-2 w-full sm:w-96" placeholder={t('acc3.pay.note')} aria-label={t('acc3.pay.note')} value={note} onChange={(e) => setNote(e.target.value)} />
                 <Table head={<><Th>{t('acc3.pay.supplier')}</Th><Th>{t('acc3.pay.reference')}</Th><Th r>{t('acc3.amount')}</Th><Th>{t('acc3.pay.step')}</Th><Th /></>}>
                     {inbox.data?.map((a) => (

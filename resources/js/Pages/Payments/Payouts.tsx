@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
@@ -26,6 +27,7 @@ export default function Payouts() {
     return (
         <AppLayout title={t('payments2.payouts.title')} subtitle={t('payments2.payouts.subtitle')}>
             <Head title={t('payments2.payouts.title')} />
+            <QueryStatus query={data} variant="table" />
             {error && <div className="card p-3 mb-4 text-red-600">{error}</div>}
             <div className="card p-4 mb-4">
                 <div className="label">{t('payments2.payouts.payable')}</div>

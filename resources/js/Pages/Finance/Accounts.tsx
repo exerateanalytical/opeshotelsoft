@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import { NoResults } from '@/Components/ui/EmptyStates';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { Account, Banner, errMsg, Field, Loading } from './shared';
+import { Account, Banner, errMsg, Field } from './shared';
 
 const TYPES = ['asset', 'liability', 'equity', 'income', 'expense', 'off_balance'];
 const blank = { code: '', name: '', type: 'expense', postable: true, reconcilable: false, active: true };
@@ -65,7 +68,7 @@ export default function Accounts() {
                 </form>
             )}
             <div className="card overflow-x-auto">
-                <Loading on={list.loading} />
+                <QueryStatus query={list} variant="table" />
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-2">{t('fin.col.code')}</th><th className="p-2">{t('fin.col.name')}</th><th className="p-2">{t('fin.col.class')}</th><th className="p-2">{t('fin.col.type')}</th><th className="p-2">{t('fin.accounts.flags')}</th><th /></tr></thead>
                     <tbody>
@@ -83,6 +86,9 @@ export default function Accounts() {
                         ))}
                     </tbody>
                 </table>
+                {list.data && rows.length === 0 && (q || cls
+                    ? <NoResults onReset={() => { setQ(''); setCls(''); }} />
+                    : <EmptyState title={t('states3.empty.accounts.title')} description={t('states3.empty.accounts.text')} action={<button type="button" className="btn-primary" onClick={() => setForm({ ...blank })}>{t('fin.accounts.new')}</button>} />)}
             </div>
         </div>
     );

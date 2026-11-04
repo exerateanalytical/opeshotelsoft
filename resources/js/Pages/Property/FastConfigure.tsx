@@ -3,6 +3,8 @@ import { Head } from '@inertiajs/react';
 import { ChevronDown, Download, Plus, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Button from '@/Components/ui/Button';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -185,6 +187,7 @@ export default function FastConfigure() {
     return (
         <AppLayout title={t('fastconfig.title')} subtitle={t('fastconfig.subtitle')}>
             <Head title={t('fastconfig.title')} />
+            <QueryStatus query={catalog} variant="list" rows={2} />
 
             <div className="card mb-4 p-4">
                 <p className="label">{t('fastconfig.presets')}</p>
@@ -275,7 +278,7 @@ export default function FastConfigure() {
                     </Acc>
 
                     <Acc id="types" title={t('fastconfig.step.types')} summary={t('fastconfig.types.summary', { count: cfg.types.length })} open={!!open.types} onToggle={() => toggle('types')}>
-                        {cfg.types.length === 0 && <p className="mb-3 text-sm text-slate-600">{t('fastconfig.types.empty')}</p>}
+                        {cfg.types.length === 0 && <EmptyFor kind="rooms" action={<Button variant="secondary" icon={Plus} onClick={() => setCfg((c) => ({ ...c, types: [...c.types, newType(c.types.length + 1)] }))}>{t('fastconfig.types.add')}</Button>} />}
                         <div className="space-y-4">
                             {cfg.types.map((ty, i) => {
                                 const beds = ty.beds.reduce((a, b) => a + b.count, 0);
@@ -444,7 +447,7 @@ export default function FastConfigure() {
             </div>
 
             {/* action bar: sticky on phones, inline on desktop */}
-            <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-300 bg-white p-3 lg:static lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0">
+            <div className="fixed inset-x-0 bottom-[calc(var(--bar-bottom-h)+var(--safe-bottom))] z-20 md:bottom-0 md:left-[72px] border-t border-slate-300 bg-white p-3 lg:static lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0">
                 <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-end gap-2">
                     <p className="mr-auto text-sm text-slate-700" aria-live="polite">{tot ? t('fastconfig.bar', { rooms: tot.rooms, revenue: formatCurrency(tot.revenue_100) }) : ''}</p>
                     <Button variant="secondary" disabled={!canApply} loading={busy === 'dry'} onClick={() => run(true)}>{t('fastconfig.dry_run')}</Button>

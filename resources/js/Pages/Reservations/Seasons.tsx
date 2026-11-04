@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -61,9 +62,10 @@ export default function Seasons() {
     return (
         <AppLayout title={t('res.seasons.title')}>
             <Head title={t('res.seasons.short')} />
+            <QueryStatus query={plans} variant="table" />
             <div className="mx-auto max-w-4xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <select className="input" value={planId ?? ''} onChange={(e) => (setPlanId(+e.target.value), setForm(blank))}>
+                    <select className="select sm:w-72" aria-label={t('res.rate_plan')} value={planId ?? ''} onChange={(e) => (setPlanId(+e.target.value), setForm(blank))}>
                         {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.code} · {p.name}</option>)}
                     </select>
                 </div>
@@ -75,13 +77,13 @@ export default function Seasons() {
                         <label className="label">{t('res.seasons.from')}<input className="input w-full" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></label>
                         <label className="label">{t('res.seasons.to')}<input className="input w-full" type="date" min={form.start_date} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></label>
                         <label className="label">{t('res.room_type')}
-                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })} aria-label={t('res.seasons.all_types')}>
+                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
                                 <option value="">{t('res.seasons.all_types')}</option>
                                 {types.data?.data.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                             </select>
                         </label>
                         <label className="label">{t('res.seasons.price_rule')}
-                            <select className="input w-full" value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value as 'percent' | 'rate' })} aria-label={t('res.seasons.mode_percent')}>
+                            <select className="input w-full" value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value as 'percent' | 'rate' })}>
                                 <option value="percent">{t('res.seasons.mode_percent')}</option>
                                 <option value="rate">{t('res.seasons.mode_rate')}</option>
                             </select>

@@ -1,9 +1,10 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { Banner, errMsg, Field, Loading, today } from './shared';
+import { Banner, errMsg, Field, FinEmptyState, today } from './shared';
 import { M, Table, Td, Th } from './coreShared';
 import { AbNav, Gate, downloadFile } from './ab3Shared';
 
@@ -37,6 +38,7 @@ export default function TaxVat() {
     return (
         <AppLayout title={t('acc3.tax.title')} subtitle={t('acc3.tax.subtitle')}>
             <Head title={t('acc3.tax.title')} />
+            <QueryStatus query={prof} variant="form" />
             <AbNav active="/finance/tax" />
             <Gate>{t('acc3.tax.gate')}</Gate>
             <Banner error={error} success={ok} />
@@ -59,7 +61,7 @@ export default function TaxVat() {
                     <Field label={t('acc3.to')}><input type="date" className="input" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} /></Field>
                     <button className="btn-primary" onClick={() => run(() => api('accounting3/tax/vat-returns', { method: 'POST', body: JSON.stringify(range) }), t('acc3.tax.prepared'))}>{t('acc3.tax.prepare')}</button>
                 </div>
-                <Loading on={returns.loading} />
+                <QueryStatus query={returns} variant="table" />
                 <Table head={<><Th>{t('acc3.pay.period')}</Th><Th>v</Th><Th>{t('acc3.status')}</Th><Th r>{t('acc3.tax.collected')}</Th><Th r>{t('acc3.tax.deductible')}</Th><Th r>{t('acc3.tax.due')}</Th><Th r>{t('acc3.tax.credit')}</Th><Th /></>}>
                     {returns.data?.map((r) => (
                         <tr key={r.id}>
@@ -78,6 +80,7 @@ export default function TaxVat() {
                         </tr>
                     ))}
                 </Table>
+                {returns.data?.length === 0 && <FinEmptyState k="vat_returns" />}
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
@@ -86,6 +89,7 @@ export default function TaxVat() {
                     <Table head={<><Th>{t('acc3.tax.cert')}</Th><Th>{t('acc3.pay.supplier')}</Th><Th r>{t('acc3.tax.base')}</Th><Th r>{t('acc3.amount')}</Th><Th>{t('acc3.status')}</Th></>}>
                         {certs.data?.map((c) => <tr key={c.id}><Td mono>{c.number}</Td><Td>{c.supplier_name}</Td><Td r>{M(c.base)}</Td><Td r b>{M(c.amount)}</Td><Td>{t(`acc3.tax.cert.${c.status}`)}</Td></tr>)}
                     </Table>
+                    {certs.data?.length === 0 && <FinEmptyState k="wht" />}
                     {issued.length > 0 && (
                         <div className="mt-3 flex flex-wrap items-end gap-2">
                             <Field label={t('acc3.tax.pay_from')}><input className="input w-28" value={remit.account} onChange={(e) => setRemit({ ...remit, account: e.target.value })} /></Field>

@@ -1,6 +1,7 @@
 import Avatar from '@/Components/ui/Avatar';
 import OpsPrintButton from '@/Components/OpsPrintButton';
 import Skeleton from '@/Components/ui/Skeleton';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import Tabs from '@/Components/ui/Tabs';
 import AppLayout from '@/Layouts/AppLayout';
 import { useApi } from '@/lib/api';
@@ -84,6 +85,7 @@ export default function EmployeeProfile({ employeeId }: { employeeId: number }) 
                         )}
                     </div>
 
+                    {sections.length === 0 && <div className="card mt-4"><EmptyFor kind="staff" /></div>}
                     <Tabs className="mt-4" label={t('profile.sections')} value={tab} onChange={pick} tabs={sections.map((k) => ({ key: k, label: t(`profile.tab.${k}`) }))} />
 
                     {sections.map((k) => visited.includes(k) && (

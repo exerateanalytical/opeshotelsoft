@@ -2,6 +2,8 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { Loader2, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -164,12 +166,10 @@ export default function ScheduledReports() {
             )}
 
             <div className="card overflow-x-auto">
-                {list.loading && !list.data ? (
-                    <p className="text-sm text-slate-500">{t('common.loading')}</p>
-                ) : list.error ? (
-                    <p className="text-sm text-red-600">{list.error.message}</p>
-                ) : !list.data?.length ? (
-                    <p className="text-sm text-slate-500">{t('docs.sched.empty')}</p>
+                {!list.data ? (
+                    <QueryStatus query={list} variant="table" />
+                ) : !list.data.length ? (
+                    <EmptyState title={t('docs.sched.empty')} description={t('states3.empty.schedules_docs.text')} action={<button type="button" className="btn-primary" onClick={() => setForm({ ...EMPTY })}>{t('docs.sched.new')}</button>} />
                 ) : (
                     <table className="table-auto w-full text-sm">
                         <thead>

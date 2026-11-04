@@ -40,7 +40,7 @@ export default function PaymentShow({ id }: { id: string }) {
                             <Item label={t('payments.method')}>{t(PROVIDERS[i.provider])}{i.driver === 'dry_run' && <span className="badge-slate ml-2">{t('payments.dry_run')}</span>}</Item>
                             <Item label={t('payments.show.channel')}>{i.channel}</Item>
                             <Item label={t('payments.show.folio')}>{i.folio ? `${i.folio.number} - ${i.folio.name}` : '-'}</Item>
-                            <Item label={t('payments.show.reservation')}>{i.reservation ? <Link className="text-sky-700" href={`/reservations/${i.reservation.id}`}>{i.reservation.number}</Link> : '-'}</Item>
+                            <Item label={t('payments.show.reservation')}>{i.reservation ? <Link className="text-navy-600" href={`/reservations/${i.reservation.id}`}>{i.reservation.number}</Link> : '-'}</Item>
                             <Item label={t('payments.payer')}>{i.payer_phone ?? i.payer_email ?? '-'}</Item>
                             <Item label={t('payments.show.provider_ref')}><span className="font-mono break-all">{i.provider_reference ?? '-'}</span></Item>
                             <Item label={t('payments.show.created')}>{formatDateTime(i.created_at)}</Item>

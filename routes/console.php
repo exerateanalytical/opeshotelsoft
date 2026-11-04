@@ -98,3 +98,11 @@ Schedule::command('servicerequests:escalate')->everyMinute()->withoutOverlapping
 Schedule::command('talent:scan-certificates')->dailyAt('06:00')->withoutOverlapping()->onOneServer();
 Schedule::command('talent:purge-applicants')->dailyAt('03:30')->withoutOverlapping()->onOneServer();
 Schedule::command('experience:automate')->hourly()->withoutOverlapping()->onOneServer();
+
+// J1: services that were only reachable through API endpoints, now scheduled per hotel.
+Schedule::command('workforce:scan-clock-out')->everyThirtyMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('workforce:leave-expire')->dailyAt('04:10')->withoutOverlapping()->onOneServer();
+Schedule::command('workforce:leave-accrue')->monthlyOn(1, '04:20')->withoutOverlapping()->onOneServer();
+Schedule::command('workforce:leave-year-end')->yearlyOn(1, 1, '04:30')->withoutOverlapping()->onOneServer();
+Schedule::command('revenue:upsell-pre-arrival')->dailyAt('08:00')->withoutOverlapping()->onOneServer();
+Schedule::command('revenue:release-allotments')->dailyAt('04:40')->withoutOverlapping()->onOneServer();

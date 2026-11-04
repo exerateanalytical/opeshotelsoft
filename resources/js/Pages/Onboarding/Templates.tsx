@@ -1,5 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -55,10 +57,10 @@ export default function Templates() {
             <Head title={t('onboarding.templates.title')} />
             <OnboardingTabs active="/onboarding/templates" />
             <div className="mb-3 flex flex-wrap gap-3">
-                <select className="input w-56" value={kind} onChange={(e) => setKind(e.target.value)}>
+                <select className="input w-56" aria-label={t('ui2.onboarding.doc_kind')} value={kind} onChange={(e) => setKind(e.target.value)}>
                     {['invoice', 'quote', 'registration_card', 'confirmation', 'letter', 'hr_offer', 'hr_attestation', 'hr_salary_cert', 'hr_raise', 'hr_transfer', 'hr_warning', 'hr_suspension', 'hr_termination', 'hr_resignation'].map((k) => <option key={k} value={k}>{t(`onboarding.templates.kind.${k}`)}</option>)}
                 </select>
-                <select className="input w-32" value={locale} onChange={(e) => setLocale(e.target.value as 'fr' | 'en')}>
+                <select className="input w-32" aria-label={t('profile.language')} value={locale} onChange={(e) => setLocale(e.target.value as 'fr' | 'en')}>
                     <option value="fr">Français</option>
                     <option value="en">English</option>
                 </select>
@@ -66,6 +68,8 @@ export default function Templates() {
             </div>
             {kind === 'invoice' && <p className="mb-3 text-sm text-slate-500">{t('onboarding.templates.invoice_fr')}</p>}
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
+            <QueryStatus query={list} variant="form" />
+            {list.data && !current && <div className="card mb-3"><EmptyFor kind="generic" /></div>}
             <div className="grid gap-4 lg:grid-cols-2">
                 <div className="card p-4 space-y-3">
                     <label className="block">
@@ -79,7 +83,7 @@ export default function Templates() {
                     <p className="text-xs text-slate-500">{t('onboarding.templates.syntax')}</p>
                     <div className="flex flex-wrap gap-1">
                         {(current?.placeholders ?? []).map((p) => (
-                            <button key={p} type="button" className="rounded border border-slate-300 px-1.5 py-0.5 text-xs text-slate-700 hover:bg-slate-50" onClick={() => insert(p)}>{p}</button>
+                            <button key={p} type="button" className="inline-flex min-h-11 items-center rounded border border-slate-300 px-3 py-0.5 text-xs text-slate-700 hover:bg-slate-50" onClick={() => insert(p)}>{p}</button>
                         ))}
                     </div>
                     <div className="flex flex-wrap gap-2">

@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Ban, Loader2, Printer, RefreshCw, Unlock } from 'lucide-react';
+import { Ban, Printer, RefreshCw, Unlock } from 'lucide-react';
+import ApiState from '@/Components/ui/ApiState';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
@@ -53,8 +55,7 @@ export default function LoyaltyCard({ cardId }: { cardId: number }) {
             actions={c && <button className="btn-secondary inline-flex items-center gap-2" onClick={() => openPdf(`loyalty/cards/${cardId}/pdf`).catch((e) => setError(errorText(e)))}><Printer className="w-4 h-4" /> {t('loyalty.cards.print')}</button>}>
             <Head title={t('loyalty.cards.title')} />
             {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
-            {card.loading && !c && <Loader2 className="w-5 h-5 animate-spin text-slate-500" />}
-            {card.error && <div className="text-sm text-red-600">{card.error.message}</div>}
+            <ApiState query={card} variant="detail" empty={<EmptyFor kind="loyalty" action={<Link href="/loyalty" className="btn-secondary">{t('loyalty.title')}</Link>} />} isEmpty={(d) => !d}>{() => null}</ApiState>
             {c && (
                 <div className="grid gap-6 lg:grid-cols-2">
                     <div className="card p-0 overflow-hidden max-w-md">
@@ -81,7 +82,7 @@ export default function LoyaltyCard({ cardId }: { cardId: number }) {
                         {c.replaced_by_card_id && <Link className="text-blue-700 hover:underline" href={`/loyalty/cards/${c.replaced_by_card_id}`}>{t('loyalty.cards.see_new')}</Link>}
                         {!c.replaced_by_card_id && c.status !== 'replaced' && (
                             <div className="space-y-2 pt-2 border-t">
-                                <input className="input w-full" placeholder={t('loyalty.cards.reason')} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={255} />
+                                <input className="input w-full" placeholder={t('loyalty.cards.reason')} aria-label={t('loyalty.cards.reason')} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={255} />
                                 <div className="flex flex-wrap gap-2">
                                     {c.status === 'active' && <button className="btn-secondary inline-flex items-center gap-1" disabled={busy || !reason} onClick={() => act('block')}><Ban className="w-4 h-4" /> {t('loyalty.cards.block')}</button>}
                                     {c.status === 'blocked' && <button className="btn-secondary inline-flex items-center gap-1" disabled={busy} onClick={() => act('unblock')}><Unlock className="w-4 h-4" /> {t('loyalty.cards.unblock')}</button>}
@@ -89,7 +90,7 @@ export default function LoyaltyCard({ cardId }: { cardId: number }) {
                                 </div>
                             </div>
                         )}
-                        <Link className="block text-blue-700 hover:underline" href={`/loyalty/members/${c.member.id}/statement`}>{t('loyalty.stmt.open')}</Link>
+                        <Link className="flex min-h-11 items-center text-blue-700 hover:underline" href={`/loyalty/members/${c.member.id}/statement`}>{t('loyalty.stmt.open')}</Link>
                     </div>
                 </div>
             )}

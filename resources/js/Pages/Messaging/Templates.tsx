@@ -2,6 +2,8 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useMt } from './strings';
 
 interface Tpl { id: number; journey: string; name: string; locale: string; category: string; body: string; meta_status: string; meta_template_id: string | null; rejected_reason: string | null }
@@ -31,7 +33,9 @@ export default function MessagingTemplates() {
             {reg.data?.dry_run && <p className="mb-2 text-sm text-slate-600">{t('messaging.dry_run')}</p>}
             {reg.data && !reg.data.journey_enabled && <p className="mb-2 text-sm text-slate-600">{t('messaging.journey_disabled')}</p>}
             {error && <p className="mb-2 text-sm text-red-700">{error}</p>}
-            <div className="card overflow-x-auto">
+            <QueryStatus query={reg} variant="table" />
+            {reg.data && reg.data.templates.length === 0 && <div className="card"><EmptyFor kind="messages" /></div>}
+            {reg.data && reg.data.templates.length > 0 && <div className="card overflow-x-auto">
                 <table className="table-auto">
                     <thead><tr><th>{t('messaging.journey')}</th><th>{t('messaging.name')}</th><th>{t('messaging.locale')}</th><th>{t('messaging.body')}</th><th>{t('messaging.meta_status')}</th><th /></tr></thead>
                     <tbody>
@@ -42,9 +46,9 @@ export default function MessagingTemplates() {
                                     <td>{t(`messaging.journey.${x.journey}`)}</td>
                                     <td className="font-mono text-sm">{x.name}</td>
                                     <td>{x.locale.toUpperCase()}</td>
-                                    <td><textarea className="input min-w-[280px]" rows={3} value={e.body ?? x.body} onChange={(ev) => set(x.id, { body: ev.target.value })} /></td>
+                                    <td><textarea className="textarea min-w-[280px]" rows={3} aria-label={`${x.name} ${t('messaging.body')}`} value={e.body ?? x.body} onChange={(ev) => set(x.id, { body: ev.target.value })} /></td>
                                     <td>
-                                        <select className="input" value={e.meta_status ?? x.meta_status} onChange={(ev) => set(x.id, { meta_status: ev.target.value })}>
+                                        <select className="select" aria-label={`${x.name} ${t('messaging.meta_status')}`} value={e.meta_status ?? x.meta_status} onChange={(ev) => set(x.id, { meta_status: ev.target.value })}>
                                             {STATUSES.map((s) => <option key={s} value={s}>{t(`messaging.status.${s}`)}</option>)}
                                         </select>
                                         {x.rejected_reason && <div className="text-xs text-red-700">{x.rejected_reason}</div>}
@@ -55,7 +59,7 @@ export default function MessagingTemplates() {
                         })}
                     </tbody>
                 </table>
-            </div>
+            </div>}
         </AppLayout>
     );
 }

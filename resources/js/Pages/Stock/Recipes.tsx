@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -50,6 +52,8 @@ export default function Recipes() {
     return (
         <AppLayout title={t('stock2.recipes.title')} subtitle={t('stock2.recipes.subtitle')}>
             <Head title={t('stock2.recipes.title')} />
+            <QueryStatus query={list} variant="table" />
+            <StockTabs current="recipes" />
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
             <div className="card mb-4 overflow-x-auto p-3">
                 <table className="w-full table-auto text-sm">

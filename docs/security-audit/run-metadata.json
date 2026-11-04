@@ -1,0 +1,15 @@
+{
+  "run_id": "run-1",
+  "repo": "opeshotelsoft",
+  "target": "C:/laragon/www/opeshotelsoft",
+  "source_ref": "no git repository at target (not under version control at audit time); worktree state as of 2026-11-04, concurrent agents editing UI files",
+  "profile": "standard",
+  "scope_paths": ["app", "routes", "config", "bootstrap", "database/seeders", "resources/views", "resources/js", "public", "docker", "deploy", "Dockerfile", "docker-compose.yml", "composer.lock", "package-lock.json"],
+  "budget": null,
+  "execution_policy": "sandboxed-source-and-local-only",
+  "companion_files": ["WEB-PROTOCOL-AND-AUTH.md", "DATA-ISOLATION-AND-LIFECYCLE.md", "CLIENT-SIDE.md", "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md", "SUPPLY-CHAIN-AND-RELEASE.md", "CLOUD-AND-DEPLOYMENT.md"],
+  "prior_runs": [],
+  "shared_file_owners": {"all": "sec1-parent"},
+  "run_status": "in_progress",
+  "notes": "Output directory inside target at owner's explicit request (docs/security-audit/). Local checks run only against scratch DB opeshotelsoft_test_sec1."
+}

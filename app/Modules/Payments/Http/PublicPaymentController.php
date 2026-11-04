@@ -72,16 +72,14 @@ class PublicPaymentController
     private function reservation(string $slug, string $confirmation, string $token): Reservation
     {
         $g = Group::where('slug', $slug)->where('status', 'active')->firstOrFail();
-        $r = $this->ctx->withoutScope(fn () => Reservation::with('guest')->where('number', $confirmation)->where('group_id', $g->id)->first());
-        abort_unless($r && hash_equals(self::manageToken($r), $token), $r ? 403 : 404);
-
-        return $r;
+        // $confirmation is the booking reference (preferred) or a confirmation number; the token disambiguates and binds to hotel + id.
+        return app(\App\Modules\GuestPortal\Application\PublicBookingResolver::class)->resolve($g->id, $confirmation, request()->input('hotel', request()->query('hotel')), null, $token);
     }
 
     /** Same stateless manage-booking token the GuestPortal booking API issues. */
     public static function manageToken(Reservation $r): string
     {
-        return hash_hmac('sha256', $r->id.'|'.$r->number.'|'.$r->guest_id, (string) config('app.key'));
+        return \App\Modules\GuestPortal\Application\GuestLinks::manageToken($r);
     }
 
     private function asHotel(int $hotelId, callable $fn): mixed

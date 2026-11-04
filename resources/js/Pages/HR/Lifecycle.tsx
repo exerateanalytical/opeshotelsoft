@@ -8,6 +8,8 @@ import { useState } from 'react';
 import SignaturePad from './SignaturePad';
 import { Badge, Banner, Department, Employee, errMsg, Field, Paged, Position } from './shared';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
+import QueryStatus from '@/Components/ui/QueryStatus';
 
 type Emp = Pick<Employee, 'id' | 'number' | 'first_name' | 'last_name'>;
 interface EDoc { id: number; number: string; kind: string; title: string; status: string; created_at: string; employee?: Emp; employee_signed_at: string | null; pdf_sha256: string | null }
@@ -18,6 +20,10 @@ interface Transfer { id: number; employee_id: number; from_hotel_id: number; to_
 
 const money = (n: number) => new Intl.NumberFormat('fr-FR').format(n);
 const name = (e?: Emp) => (e ? `${e.number} · ${e.first_name} ${e.last_name}` : '');
+// Deep links from the employee profile: ?employee=ID&tab=contracts|raises|bonuses|transfers (also the native tab keys).
+const LINK = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+const LINK_EMP = /^\d+$/.test(LINK.get('employee') ?? '') ? (LINK.get('employee') as string) : '';
+const LINK_TABS: Record<string, string> = { contracts: 'contracts', raises: 'changes', changes: 'changes', bonuses: 'pay', pay: 'pay', transfers: 'transfers' };
 const thisMonth = new Date().toISOString().slice(0, 7);
 const todayIso = new Date().toISOString().slice(0, 10);
 
@@ -31,8 +37,8 @@ function EmployeePicker({ value, onChange }: { value: string; onChange: (v: stri
     const t = useT();
     const list = useApi<Paged<Employee>>('hr/employees?status=active');
     return (
-        <select className="input w-full" required value={value} onChange={(e) => onChange(e.target.value)}>
-            <option value="">{t('hr2.common.choose_employee')}</option>
+        <select className="input w-full" required value={value} disabled={list.loading && !list.data} aria-busy={list.loading && !list.data} onChange={(e) => onChange(e.target.value)}>
+            <option value="">{list.loading && !list.data ? t('states.loading') : list.error ? t('states.err.unknown.title') : t('hr2.common.choose_employee')}</option>
             {list.data?.data.map((e) => <option key={e.id} value={e.id}>{name(e)}</option>)}
         </select>
     );
@@ -42,7 +48,7 @@ function ContractsTab() {
     const t = useT();
     const m = useMsg();
     const docs = useApi<Paged<EDoc>>('hr/econtracts');
-    const [emp, setEmp] = useState('');
+    const [emp, setEmp] = useState(LINK_EMP);
     const [kind, setKind] = useState('');
     const [locale, setLocale] = useState('fr');
     const [link, setLink] = useState<string | null>(null);
@@ -66,7 +72,8 @@ function ContractsTab() {
 
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? docs.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={docs} variant="table" rows={3} />
             {link && <div className="mb-4 break-all rounded-lg border bg-slate-50 p-3 text-sm">{t('hr2.contracts.link')}: <span className="font-mono">{link}</span></div>}
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <form onSubmit={generate} className="card space-y-2">
@@ -87,6 +94,7 @@ function ContractsTab() {
                     <table className="w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.number')}</th><th>{t('hr2.common.employee')}</th><th>{t('hr2.contracts.kind')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
+                            {docs.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
                             {docs.data?.data.map((d) => (
                                 <tr key={d.id} className="border-t">
                                     <td className="py-2">{d.number}</td><td>{name(d.employee)}</td><td>{t(`hr2.kind.${d.kind}`)}</td><td><Badge s={d.status} /></td>
@@ -121,7 +129,7 @@ function ChangesTab() {
     const m = useMsg();
     const list = useApi<Paged<Change>>('hr/compensation-changes');
     const positions = useApi<Position[]>('hr/positions');
-    const [f, setF] = useState({ employee: '', type: 'raise', to_salary: '', to_position_id: '', effective_date: todayIso, reason: '' });
+    const [f, setF] = useState({ employee: LINK_EMP, type: 'raise', to_salary: '', to_position_id: '', effective_date: todayIso, reason: '' });
     const [hist, setHist] = useState<{ effective_date: string; base_salary: number; source: string }[] | null>(null);
 
     async function submit(e: React.FormEvent) {
@@ -138,7 +146,8 @@ function ChangesTab() {
 
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? list.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={list} variant="table" rows={3} />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <form onSubmit={submit} className="card space-y-2">
                     <h3 className="font-semibold">{t('hr2.changes.new')}</h3>
@@ -163,6 +172,7 @@ function ChangesTab() {
                     <table className="w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.employee')}</th><th>{t('hr2.changes.type')}</th><th className="text-right">{t('hr2.changes.salary')}</th><th>{t('hr2.common.effective_date')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
+                            {list.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
                             {list.data?.data.map((c) => (
                                 <tr key={c.id} className="border-t">
                                     <td className="py-2">{name(c.employee)}</td><td>{t(`hr2.changes.${c.type}`)}</td>
@@ -189,7 +199,7 @@ function PayTab() {
     const els = useApi<Paged<Element>>(`hr/pay-elements?period=${period}`, [period]);
     const pools = useApi<Paged<Pool>>('hr/service-charge-pools');
     const emps = useApi<Paged<Employee>>('hr/employees?status=active');
-    const [f, setF] = useState({ employee: '', code: '', name: '', kind: 'one_off', amount: '', taxable: true, cnps: true, end_period: '' });
+    const [f, setF] = useState({ employee: LINK_EMP, code: '', name: '', kind: 'one_off', amount: '', taxable: true, cnps: true, end_period: '' });
     const [pool, setPool] = useState({ amount: '', method: 'points', weights: {} as Record<number, string> });
 
     async function add(e: React.FormEvent) {
@@ -211,7 +221,8 @@ function PayTab() {
 
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? els.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={els} variant="table" rows={3} />
             <div className="mb-4 flex flex-wrap items-center gap-2"><span className="text-sm">{t('hr2.common.period')}</span><input type="month" className="input" value={period} onChange={(e) => setPeriod(e.target.value)} /></div>
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <form onSubmit={add} className="card space-y-2">
@@ -234,6 +245,7 @@ function PayTab() {
                     <table className="w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.employee')}</th><th>{t('hr2.pay.label')}</th><th>{t('hr2.pay.kind')}</th><th className="text-right">{t('hr2.pay.amount')}</th><th>{t('hr2.pay.flags')}</th><th></th></tr></thead>
                         <tbody>
+                            {els.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
                             {els.data?.data.map((x) => (
                                 <tr key={x.id} className="border-t">
                                     <td className="py-2">{name(x.employee)}</td><td>{x.code} · {x.name}</td><td>{t(`hr2.pay.${x.kind}`)}</td><td className="text-right">{money(x.amount)}</td>
@@ -266,6 +278,7 @@ function PayTab() {
                     <table className="w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.period')}</th><th className="text-right">{t('hr2.pool.amount')}</th><th>{t('hr2.pool.method')}</th><th>{t('hr2.pool.shares')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
+                            {pools.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
                             {pools.data?.data.map((p) => (
                                 <tr key={p.id} className="border-t align-top">
                                     <td className="py-2">{p.period}</td><td className="text-right">{money(p.amount)}</td><td>{t(`hr2.pool.${p.method}`)}</td>
@@ -286,7 +299,7 @@ function TransfersTab() {
     const m = useMsg();
     const hotels = usePage<{ hotels?: { id: number; name: string }[]; property?: { id: number } | null }>().props;
     const list = useApi<Paged<Transfer>>('hr/transfers');
-    const [f, setF] = useState({ employee: '', to_hotel_id: '', to_department_id: '', to_position_id: '', new_base_salary: '', effective_date: todayIso, reason: '' });
+    const [f, setF] = useState({ employee: LINK_EMP, to_hotel_id: '', to_department_id: '', to_position_id: '', new_base_salary: '', effective_date: todayIso, reason: '' });
     const [target, setTarget] = useState<{ depts: Department[]; positions: Position[] }>({ depts: [], positions: [] });
     const hotelName = (id: number) => hotels.hotels?.find((h) => h.id === id)?.name ?? `#${id}`;
 
@@ -312,7 +325,8 @@ function TransfersTab() {
 
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? list.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={list} variant="table" rows={3} />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <form onSubmit={submit} className="card space-y-2">
                     <h3 className="font-semibold">{t('hr2.transfers.new')}</h3>
@@ -338,6 +352,7 @@ function TransfersTab() {
                     <table className="w-full text-sm">
                         <thead><tr className="text-left text-xs text-slate-500"><th>{t('hr2.common.number')}</th><th>{t('hr2.transfers.route')}</th><th>{t('hr2.common.effective_date')}</th><th>{t('hr2.transfers.leave')}</th><th>{t('hr2.common.status')}</th><th></th></tr></thead>
                         <tbody>
+                            {list.data?.data.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="generic" /></td></tr>}
                             {list.data?.data.map((x) => (
                                 <tr key={x.id} className="border-t">
                                     <td className="py-2">{x.from_number}{x.to_number ? ` → ${x.to_number}` : ''}</td>
@@ -360,14 +375,14 @@ const TABS = ['contracts', 'changes', 'pay', 'transfers'] as const;
 
 export default function Lifecycle() {
     const t = useT();
-    const [tab, setTab] = useState<(typeof TABS)[number]>('contracts');
+    const [tab, setTab] = useState<(typeof TABS)[number]>(() => (LINK_TABS[LINK.get('tab') ?? ''] ?? 'contracts') as (typeof TABS)[number]);
     return (
         <AppLayout title={t('hr2.title')} subtitle={t('hr2.subtitle')}>
             <Head title={t('hr2.title')} />
             <div className="mb-5 flex gap-1 overflow-x-auto border-b">
                 {TABS.map((k) => (
                     <button key={k} onClick={() => setTab(k)}
-                        className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${tab === k ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>{t(`hr2.tabs.${k}`)}</button>
+                        className={`min-h-11 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${tab === k ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>{t(`hr2.tabs.${k}`)}</button>
                 ))}
             </div>
             {tab === 'contracts' && <ContractsTab />}

@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -20,6 +21,7 @@ export default function WorkforceTime() {
     return (
         <AppLayout title={t('workforce.time.title')} subtitle={t('workforce.time.subtitle')}>
             <Head title={t('workforce.time.title')} />
+            <QueryStatus query={list} variant="table" />
             <WorkforceTabs active="/hr/workforce/time" />
             {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
             <div className="card mb-4 p-4 text-sm"><div className="mb-2 flex justify-between"><h2 className="font-semibold">{t('workforce.time.anomalies')}</h2>

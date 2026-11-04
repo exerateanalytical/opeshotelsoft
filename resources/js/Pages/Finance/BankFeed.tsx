@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -33,6 +34,7 @@ export default function BankFeed() {
     return (
         <AppLayout title={t('acc3.feed.title')} subtitle={t('acc3.feed.subtitle')}>
             <Head title={t('acc3.feed.title')} />
+            <QueryStatus query={banks} variant="table" />
             <AbNav active="/finance/bank-feed" />
             <Banner error={error} success={ok} />
 

@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Domain\Hotel;
 use App\Platform\Tenancy\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -74,7 +75,9 @@ class HandleInertiaRequests extends Middleware
             // Sidebar entries this user may see (App\Http\Navigation).
             'nav' => $user ? Navigation::for($user) : [],
             'locale' => app()->getLocale(),
-            'translations' => self::translations(app()->getLocale()),
+            // ~270 kB: sent on the first full load and when the locale changes (the key carries the locale),
+            // then kept by the Inertia client across visits (once prop; docs/PERFORMANCE.md).
+            'translations' => Inertia::once(fn () => self::translations(app()->getLocale()))->as('translations.'.app()->getLocale()),
             // Active hotel and network come from the signed-in user's scope (no hard-coded property).
             'property' => $user ? $this->activeHotel($request, $user) : null,
             'hotels' => $user ? $this->hotels($user) : [],
@@ -127,9 +130,12 @@ class HandleInertiaRequests extends Middleware
         return $mfa->required($user) && ! $mfa->enabled($user);
     }
 
+    /** @var array<int, array> hotels per user id, memoised for the request (share() asks twice). */
+    private array $hotelsFor = [];
+
     private function hotels($user): array
     {
-        return app(TenantContext::class)->withoutScope(fn () => Hotel::query()
+        return $this->hotelsFor[$user->id] ??= app(TenantContext::class)->withoutScope(fn () => Hotel::query()
             ->where('group_id', $user->group_id)
             ->when(! $user->all_hotels, fn ($q) => $q->whereIn('id', $user->allowedHotelIds() ?? []))
             ->orderBy('name')->get(['id', 'code', 'name', 'city', 'country', 'currency', 'timezone', 'stars'])->toArray());

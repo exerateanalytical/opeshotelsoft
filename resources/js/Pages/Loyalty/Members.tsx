@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head, Link } from '@inertiajs/react';
 import { CreditCard, Loader2, Plus, ScanLine, Search, Settings, X } from 'lucide-react';
 import { useState } from 'react';
@@ -83,7 +84,7 @@ export default function LoyaltyMembers() {
 
             <form onSubmit={lookup} className="card p-4 mb-4 flex flex-col sm:flex-row gap-2 sm:items-center">
                 <ScanLine className="w-5 h-5 text-slate-500 hidden sm:block" />
-                <input className="input flex-1" placeholder={t('loyalty.members.scan_ph')} value={card} onChange={(e) => setCard(e.target.value)} maxLength={64} />
+                <input className="input flex-1" placeholder={t('loyalty.members.scan_ph')} aria-label={t('loyalty.members.scan_ph')} value={card} onChange={(e) => setCard(e.target.value)} maxLength={64} />
                 <button className="btn-secondary inline-flex items-center gap-2" disabled={looking}>{looking && <Loader2 className="w-4 h-4 animate-spin" />} {t('loyalty.members.lookup')}</button>
             </form>
             {found && (
@@ -105,9 +106,9 @@ export default function LoyaltyMembers() {
                     <form className="flex flex-col sm:flex-row gap-2 mb-3" onSubmit={(e) => { e.preventDefault(); setPage(1); setSearch(q); }}>
                         <div className="relative flex-1">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                            <input className="input w-full pl-9" placeholder={t('loyalty.members.search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
+                            <input className="input w-full pl-9" placeholder={t('loyalty.members.search_ph')} aria-label={t('loyalty.members.search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
                         </div>
-                        <select className="input" value={tier} onChange={(e) => { setTier(e.target.value); setPage(1); }}>
+                        <select className="input" aria-label={t('ui2.loyalty.filter_tier')} value={tier} onChange={(e) => { setTier(e.target.value); setPage(1); }}>
                             <option value="">{t('loyalty.members.all_tiers')}</option>
                             <option value="SILVER">Silver</option>
                             <option value="GOLD">Gold</option>
@@ -126,7 +127,7 @@ export default function LoyaltyMembers() {
                             </thead>
                             <tbody>
                                 {list.loading && !list.data && <tr><td colSpan={6} className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-slate-500" /></td></tr>}
-                                {list.data?.data.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-slate-500">{t('loyalty.members.empty')}</td></tr>}
+                                {list.data?.data.length === 0 && <tr><td colSpan={6}><EmptyFor kind="loyalty" /></td></tr>}
                                 {list.data?.data.map((m) => (
                                     <tr key={m.id} onClick={() => setSelected(m.id)} className={`border-t cursor-pointer hover:bg-slate-50 ${selected === m.id ? 'bg-emerald-50' : ''}`}>
                                         <td className="py-2 pr-3 font-mono">{m.number}</td>
@@ -185,7 +186,7 @@ function EnrolPanel({ onClose, onDone, onError }: { onClose: () => void; onDone:
                 <button onClick={onClose} className="text-slate-500 hover:text-slate-600"><X className="w-4 h-4" /></button>
             </div>
             <form className="flex gap-2 mb-2" onSubmit={(e) => { e.preventDefault(); setTerm(q); }}>
-                <input className="input flex-1" placeholder={t('loyalty.members.guest_search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
+                <input className="input flex-1" placeholder={t('loyalty.members.guest_search_ph')} aria-label={t('loyalty.members.guest_search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
                 <button className="btn-secondary">{t('loyalty.members.search')}</button>
             </form>
             {guests.loading && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
@@ -201,7 +202,7 @@ function EnrolPanel({ onClose, onDone, onError }: { onClose: () => void; onDone:
             {guest && (
                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center mt-3">
                     <span className="text-sm flex-1">{t('loyalty.members.selected')} <b>{guest.first_name} {guest.last_name}</b></span>
-                    <select className="input" value={kind} onChange={(e) => setKind(e.target.value as 'digital' | 'physical')}>
+                    <select className="input" aria-label={t('ui2.loyalty.card_kind')} value={kind} onChange={(e) => setKind(e.target.value as 'digital' | 'physical')}>
                         <option value="digital">{t('loyalty.members.card_digital')}</option><option value="physical">{t('loyalty.members.card_physical')}</option>
                     </select>
                     <button className="btn-primary inline-flex items-center gap-2" disabled={busy} onClick={enrol}>{busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('loyalty.members.enrol')}</button>
@@ -267,7 +268,7 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
                     {d.cards.length === 0 && <li className="py-1 text-slate-500">{t('loyalty.members.no_cards')}</li>}
                 </ul>
                 <div className="flex gap-2">
-                    <select className="input flex-1" value={cardKind} onChange={(e) => setCardKind(e.target.value as 'digital' | 'physical')}>
+                    <select className="input flex-1" aria-label={t('ui2.loyalty.card_kind')} value={cardKind} onChange={(e) => setCardKind(e.target.value as 'digital' | 'physical')}>
                         <option value="physical">{t('loyalty.members.physical')}</option><option value="digital">{t('loyalty.members.digital')}</option>
                     </select>
                     <button className="btn-secondary" disabled={busy === 'card'} onClick={() => run('card', 'cards', { kind: cardKind }, t('loyalty.members.card_issued'))}>{t('loyalty.members.issue_card')}</button>
@@ -280,11 +281,11 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
             }}>
                 <h3 className="text-sm font-semibold">{t('loyalty.members.redeem_title')}</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <select className="input flex-1" required value={redeem.folio_id} onChange={(e) => setRedeem({ ...redeem, folio_id: e.target.value })}>
+                    <select className="input flex-1" required aria-label={t('loyalty.members.open_folio')} value={redeem.folio_id} onChange={(e) => setRedeem({ ...redeem, folio_id: e.target.value })}>
                         <option value="">{t('loyalty.members.open_folio')}</option>
                         {guestFolios.map((f) => <option key={f.id} value={f.id}>{f.number} · {f.name} · {formatCurrency(f.balance)}</option>)}
                     </select>
-                    <input type="number" min={1} max={d.points_balance} required className="input sm:w-28" placeholder={t('loyalty.members.points')} value={redeem.points} onChange={(e) => setRedeem({ ...redeem, points: e.target.value })} />
+                    <input type="number" min={1} max={d.points_balance} required className="input sm:w-28" placeholder={t('loyalty.members.points')} aria-label={t('loyalty.members.points')} value={redeem.points} onChange={(e) => setRedeem({ ...redeem, points: e.target.value })} />
                     <button className="btn-primary" disabled={busy === 'redeem'}>{t('loyalty.members.redeem')}</button>
                 </div>
                 {folios.error && <p className="text-xs text-amber-700">{t('loyalty.members.folios_unavailable', { error: folios.error.message })}</p>}
@@ -296,8 +297,8 @@ function MemberPanel({ id, onClose, onDone, onError }: { id: number; onClose: ()
             }}>
                 <h3 className="text-sm font-semibold">{t('loyalty.members.adjust_title')}</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <input type="number" required className="input sm:w-28" placeholder={t('loyalty.members.adjust_ph')} value={adjust.points} onChange={(e) => setAdjust({ ...adjust, points: e.target.value })} />
-                    <input required maxLength={255} className="input flex-1" placeholder={t('loyalty.members.reason')} value={adjust.reason} onChange={(e) => setAdjust({ ...adjust, reason: e.target.value })} />
+                    <input type="number" required className="input sm:w-28" placeholder={t('loyalty.members.adjust_ph')} aria-label={t('loyalty.members.adjust_ph')} value={adjust.points} onChange={(e) => setAdjust({ ...adjust, points: e.target.value })} />
+                    <input required maxLength={255} className="input flex-1" placeholder={t('loyalty.members.reason')} aria-label={t('loyalty.members.reason')} value={adjust.reason} onChange={(e) => setAdjust({ ...adjust, reason: e.target.value })} />
                     <button className="btn-secondary" disabled={busy === 'adjust' || adjust.points === '0'}>{t('loyalty.members.apply')}</button>
                 </div>
             </form>

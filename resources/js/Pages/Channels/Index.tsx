@@ -255,7 +255,7 @@ function ConnectForm({ provider, conn, busy, run, onSaved }: {
                 <label className="label">{t('channels.display_name')}<input className="input mt-1 w-full" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} /></label>
                 <label className="label">{t('channels.property_code')}<input className="input mt-1 w-full" value={propertyCode} onChange={(e) => setPropertyCode(e.target.value)} maxLength={64} /></label>
                 <label className="label">{t('channels.environment')}
-                    <select className="input mt-1 w-full" value={environment} onChange={(e) => setEnvironment(e.target.value as Connection['environment'])} aria-label={t('channels.env.sandbox')}>
+                    <select className="input mt-1 w-full" value={environment} onChange={(e) => setEnvironment(e.target.value as Connection['environment'])}>
                         <option value="sandbox">{t('channels.env.sandbox')}</option><option value="production">{t('channels.env.production')}</option>
                     </select>
                 </label>

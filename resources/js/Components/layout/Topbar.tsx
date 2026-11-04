@@ -1,11 +1,13 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { Bell, Search, ChevronDown, PanelLeftClose, PanelLeftOpen, Check, LogOut, UserCircle, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import SyncIndicator from '@/Components/layout/SyncIndicator';
 import BrandLogo from '@/Components/ui/BrandLogo';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import type { PageProps } from '@/types';
 import { setLocale, useLocale, useT } from '@/lib/i18n';
+import { openPalette } from '@/lib/desktop';
 
 interface Props {
     title?: string;
@@ -42,16 +44,9 @@ function GlobalSearch({ full = false, onDone }: { full?: boolean; onDone?: () =>
     const input = useRef<HTMLInputElement>(null);
     useOutside(box, () => setOpen(false));
 
+    // Ctrl/Cmd+K is owned by the command palette (DesktopShell) from 1024px; this box is the phone and tablet search.
     useEffect(() => {
-        if (full) { input.current?.focus(); return; }
-        const k = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-                e.preventDefault();
-                input.current?.focus();
-            }
-        };
-        window.addEventListener('keydown', k);
-        return () => window.removeEventListener('keydown', k);
+        if (full) input.current?.focus();
     }, [full]);
 
     useEffect(() => {
@@ -114,7 +109,7 @@ function GlobalSearch({ full = false, onDone }: { full?: boolean; onDone?: () =>
                 <div className={cn('absolute mt-1 bg-white border border-slate-300 rounded-lg z-[40] text-sm overflow-hidden', full ? 'left-0 right-0' : 'right-0 w-80 max-w-[90vw]')}>
                     {error && <p className="px-3 py-2 text-red-700 bg-red-50">{error}</p>}
                     {loading && <p className="px-3 py-2 text-slate-600">{t('shell.search.searching')}</p>}
-                    <p className="px-3 pt-2 pb-1 text-xs uppercase font-semibold text-slate-600">{t('shell.search.reservations')}</p>
+                    <p className="px-3 pt-2 pb-1 text-xs font-semibold text-slate-600">{t('shell.search.reservations')}</p>
                     {res.length === 0 && !loading && <p className="px-3 py-1 text-slate-600 text-xs">{t('shell.search.no_matches')}</p>}
                     {res.map((r) => (
                         <button key={r.id} onClick={() => go(`/reservations/${r.id}`)} className="w-full text-left px-3 py-2 hover:bg-slate-50 flex justify-between gap-2">
@@ -123,7 +118,7 @@ function GlobalSearch({ full = false, onDone }: { full?: boolean; onDone?: () =>
                         </button>
                     ))}
                     <button onClick={() => go(`/reservations?q=${encodeURIComponent(term)}`)} className="w-full text-left px-3 py-2 text-xs text-blue-800 underline">{t('shell.search.all_reservations')}</button>
-                    <p className="px-3 pt-2 pb-1 text-xs uppercase font-semibold text-slate-600 border-t border-slate-100">{t('shell.search.guests')}</p>
+                    <p className="px-3 pt-2 pb-1 text-xs font-semibold text-slate-600 border-t border-slate-100">{t('shell.search.guests')}</p>
                     {guests.length === 0 && !loading && <p className="px-3 py-1 text-slate-600 text-xs">{t('shell.search.no_matches')}</p>}
                     {guests.map((g) => (
                         <button key={g.id} onClick={() => go(`/guests?q=${encodeURIComponent(`${g.first_name ?? ''} ${g.last_name ?? ''}`.trim())}`)} className="w-full text-left px-3 py-2 hover:bg-slate-50">
@@ -226,16 +221,27 @@ export default function Topbar({ title, subtitle, collapsed, onToggle, actions }
                     {collapsed ? <PanelLeftOpen className="w-5 h-5" aria-hidden="true" /> : <PanelLeftClose className="w-5 h-5" aria-hidden="true" />}
                 </button>
 
-                <div className="flex-1 min-w-[7rem]">
-                    {title && <h1 id="page-title" tabIndex={-1} data-page-title className="text-base md:text-xl font-semibold text-slate-900 truncate leading-tight">{title}</h1>}
+                <div className="flex-1 min-w-[2.5rem] md:min-w-[7rem]">
+                    {title && <h1 id="page-title" tabIndex={-1} data-page-title className="text-[1.375rem] md:text-[1.5rem] lg:text-[1.75rem] font-semibold text-slate-900 truncate leading-tight">{title}</h1>}
                     {subtitle && <p className="text-xs md:text-sm text-slate-600 truncate">{subtitle}</p>}
                 </div>
 
-                <GlobalSearch />
+                <button type="button" onClick={openPalette} data-palette-button
+                    className="hidden lg:flex flex-shrink-0 items-center gap-2 bg-white border border-[var(--c-border-control)] rounded-lg px-3 min-h-[40px] w-48 xl:w-64 text-sm text-slate-600 hover:border-[var(--c-primary)]"
+                    aria-label={t('desktop.palette.open')} aria-keyshortcuts="Control+K Meta+K">
+                    <Search className="w-4 h-4 text-slate-600 flex-shrink-0" aria-hidden="true" />
+                    <span className="flex-1 text-left truncate">{t('desktop.palette.button')}</span>
+                    <span className="text-xs text-slate-700 bg-slate-200 px-1.5 py-0.5 rounded" aria-hidden="true">Ctrl K</span>
+                </button>
 
-                {actions && <div className="hidden 2xl:flex flex-shrink-0 items-center gap-2">{actions}</div>}
+                {actions && <div data-page-actions className="hidden 2xl:flex flex-shrink-0 items-center gap-2">{actions}</div>}
 
-                <button type="button" className="xl:hidden flex-shrink-0 btn-ghost btn-icon" onClick={() => setPhoneSearch(!phoneSearch)} aria-expanded={phoneSearch} aria-label={t('shell.search.label')}>
+                <SyncIndicator />
+
+                {/* Phone and tablet slot for the voice-alert sound control (see VoiceNotifier): keeps it away from page actions */}
+                <span id="voice-slot" className="lg:hidden flex-shrink-0 empty:hidden" />
+
+                <button type="button" className="lg:hidden flex-shrink-0 btn-ghost btn-icon" onClick={() => setPhoneSearch(!phoneSearch)} aria-expanded={phoneSearch} aria-label={t('shell.search.label')}>
                     {phoneSearch ? <X className="w-5 h-5" aria-hidden="true" /> : <Search className="w-5 h-5" aria-hidden="true" />}
                 </button>
 
@@ -248,11 +254,11 @@ export default function Topbar({ title, subtitle, collapsed, onToggle, actions }
                 <UserMenu />
             </div>
             {phoneSearch && (
-                <div className="xl:hidden px-3 md:px-5 pb-3">
+                <div className="lg:hidden px-3 md:px-5 pb-3">
                     <GlobalSearch full onDone={() => setPhoneSearch(false)} />
                 </div>
             )}
-            {actions && <div className="2xl:hidden flex flex-wrap items-center gap-2 px-3 md:px-5 pb-3">{actions}</div>}
+            {actions && <div data-page-actions className="2xl:hidden flex flex-wrap items-center gap-2 px-3 md:px-5 pb-3">{actions}</div>}
         </header>
     );
 }

@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
@@ -82,6 +83,7 @@ export default function Board() {
                 {canManage && <button type="button" className="btn-primary" onClick={() => setOpen(!open)}>{t('servicerequests.new')}</button>}
             </>}>
             <Head title={t('servicerequests.title')} />
+            <QueryStatus query={active} variant="cards" />
             <div className="mb-3 flex flex-wrap gap-2">
                 <select className="input" value={dept} onChange={(e) => setDept(e.target.value)} aria-label={t('servicerequests.filter.department')}>
                     <option value="">{t('servicerequests.filter.all')}</option>

@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useLocale, useT } from '@/lib/i18n';
 import { chime, setSoundOn, speak, unlock, useVoiceStatus, voices } from '@/lib/voice/audio';
@@ -63,6 +65,8 @@ export default function Settings() {
         <AppLayout title={t('servicerequests.settings')} subtitle={t('servicerequests.voice.subtitle')}>
             <Head title={t('servicerequests.settings')} />
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
+            <QueryStatus query={mine} variant="form" />
+            <QueryStatus query={hotel} variant="form" />
             {canVoice && s && (
                 <section className="card mb-6 grid max-w-2xl gap-4 p-4 text-sm">
                     <h2 className="font-semibold">{t('servicerequests.voice.section_mine')}</h2>
@@ -77,6 +81,7 @@ export default function Settings() {
                     <label className="flex items-center gap-2"><input type="checkbox" checked={s.enabled} onChange={(e) => set('enabled', e.target.checked)} />{t('servicerequests.voice.enabled')}</label>
                     <fieldset>
                         <legend className="mb-1 font-medium">{t('servicerequests.voice.departments')}</legend>
+                        {mine.data?.departments.length === 0 && <EmptyState title={t('states3.empty.sr_departments.title')} description={t('states3.empty.sr_departments.text')} />}
                         <div className="flex flex-wrap gap-3">
                             {mine.data?.departments.map((d) => (
                                 <label key={d} className="flex items-center gap-1">

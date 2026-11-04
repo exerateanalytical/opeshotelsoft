@@ -59,7 +59,7 @@ export default function Owner() {
                         <div className="card p-3">
                             <div className="mb-2 flex items-center justify-between">
                                 <h2 className="font-semibold text-slate-900">{t('insights.owner.top_alerts')} ({k.open_alerts})</h2>
-                                <Link href="/insights/alerts" className="text-sm text-blue-700">{t('insights.owner.all_alerts')}</Link>
+                                <Link href="/insights/alerts" className="hit-44 text-sm text-blue-700">{t('insights.owner.all_alerts')}</Link>
                             </div>
                             {k.top_alerts.length === 0 && <p className="text-sm text-slate-500">{t('insights.owner.no_alerts')}</p>}
                             <ul className="space-y-2">

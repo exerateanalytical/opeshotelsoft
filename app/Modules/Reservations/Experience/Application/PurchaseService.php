@@ -6,6 +6,7 @@ use App\Modules\FrontOffice\Application\CheckoutFees;
 use App\Modules\FrontOffice\Application\FolioService;
 use App\Modules\Reservations\Domain\Reservation;
 use App\Modules\Reservations\Experience\Domain\ExperienceService;
+use App\Modules\Reservations\Experience\Domain\ExperienceSetting;
 use App\Modules\Reservations\Experience\Domain\ReservationPurchase;
 use App\Platform\Domain\DomainException;
 use Illuminate\Support\Facades\DB;
@@ -92,6 +93,10 @@ class PurchaseService
 
     private function assertBuyable(Reservation $r, string $kind): void
     {
+        $s = ExperienceSetting::forCurrentHotel();
+        if (! ($kind === 'early_checkin' ? $s->early_checkin_enabled : $s->late_checkout_enabled)) {
+            throw new DomainException('This request is not offered by the hotel.', 'not-offered', 422);
+        }
         if ($kind === 'early_checkin') {
             $r->assertStatus('tentative', 'confirmed');
         } else {

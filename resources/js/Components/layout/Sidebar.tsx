@@ -48,7 +48,7 @@ export default function Sidebar({ collapsed = false }: { collapsed?: boolean }) 
                 {sections.map((section, si) => (
                     <div key={section.title ?? si} className={cn(si > 0 && 'pt-3')}>
                         {section.title && !collapsed && (
-                            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-[var(--c-on-chrome-muted)]">{t(section.title)}</p>
+                            <p className="px-3 pb-1 text-xs font-semibold text-[var(--c-on-chrome-muted)]">{t(section.title)}</p>
                         )}
                         {section.items.map((item) => {
                             const Icon = navIcon(item.icon);

@@ -1,4 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyAction, EmptyFor } from '@/Components/ui/EmptyStates';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -50,15 +53,18 @@ export default function Batches() {
     return (
         <AppLayout title={t('stock2.batches.title')} subtitle={t('stock2.batches.subtitle')}
             actions={canWriteOff ? (
-                <select className="input" aria-label={t('stock2.batches.write_off')} value={reason} onChange={(e) => setReason(e.target.value)}>
+                <select className="input" aria-label={t('stock4.aria.write_off_reason')} value={reason} onChange={(e) => setReason(e.target.value)}>
                     {REASONS.map((r) => <option key={r} value={r}>{t(`stock2.reason.${r}`)}</option>)}
                 </select>
             ) : undefined}>
             <Head title={t('stock2.batches.title')} />
+            <QueryStatus query={expiry} variant="table" />
+            <QueryStatus query={lots} variant="table" />
+            <StockTabs current="batches" />
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
             {table(expiry.data?.expired ?? [], t('stock2.batches.expired'), 'text-red-700')}
             {table(expiry.data?.expiring ?? [], t('stock2.batches.expiring'), 'text-amber-700')}
-            {table(lots.data ?? [], t('stock2.batches.all'), '')}
+            {lots.data?.length === 0 ? <div className="card"><EmptyFor kind="stock" action={<EmptyAction kind="stock" href="/stock" />} /></div> : table(lots.data ?? [], t('stock2.batches.all'), '')}
         </AppLayout>
     );
 }

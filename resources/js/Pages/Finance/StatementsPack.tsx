@@ -4,7 +4,8 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { Banner, errMsg, Field, Loading, today } from './shared';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { Banner, errMsg, Field, FinEmptyState, today } from './shared';
 import { M, Table, Td, Th, yearStart } from './coreShared';
 import { AbNav, Gate, downloadFile } from './ab3Shared';
 
@@ -55,7 +56,7 @@ export default function StatementsPack() {
                     <button key={k} onClick={() => setTab(k)} className={cn('tab', tab === k && 'active')}>{t(`acc3.st.tab.${k}`)}</button>
                 ))}
             </div>
-            <Loading on={pack.loading} />
+            <QueryStatus query={pack} variant="table" />
 
             {p && tab === 'bilan' && (
                 <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
@@ -109,6 +110,7 @@ export default function StatementsPack() {
                             </Td></tr>
                     ))}
                 </Table>
+                {saved.data?.length === 0 && <FinEmptyState k="packs" />}
             </div>
         </AppLayout>
     );

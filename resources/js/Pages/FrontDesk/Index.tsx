@@ -1,4 +1,5 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head, Link } from '@inertiajs/react';
 import CashierBar from '@/Components/CashierBar';
 import { DoorOpen, DoorClosed, BedDouble, Loader2, Moon } from 'lucide-react';
@@ -20,8 +21,8 @@ function RoomPicker({ reservation, onPicked }: { reservation: Reservation; onPic
     const t = useT();
     const rooms = useApi<{ data: Room[] }>(`rooms?filter[room_type_id]=${reservation.room_type_id}&filter[occupied]=0&filter[active]=1&per_page=200`);
     return (
-        <select className="select w-44" aria-label={t('fo.desk.assign_room')} defaultValue="" onChange={(e) => e.target.value && onPicked(Number(e.target.value))}>
-            <option value="" disabled>{rooms.loading ? t('common.loading') : t('fo.desk.assign_room')}</option>
+        <select className="select w-44" aria-label={t('fo.desk.assign_room')} defaultValue="" onChange={(e) => e.target.value && onPicked(Number(e.target.value))} disabled={!!rooms.error || rooms.data?.data.length === 0}>
+            <option value="" disabled>{rooms.loading ? t('common.loading') : rooms.error ? t('states3.rooms_error') : rooms.data?.data.length === 0 ? t('states3.rooms_none') : t('fo.desk.assign_room')}</option>
             {rooms.data?.data.map((rm) => (
                 <option key={rm.id} value={rm.id}>{rm.number} · {hkLabel(t, rm.hk_status)}</option>
             ))}
@@ -136,6 +137,7 @@ export default function FrontDesk() {
             }
         >
             <Head title={t('fo.desk.title')} />
+            <QueryStatus query={board} variant="cards" />
             <CashierBar />
 
             {(message || board.error) && (

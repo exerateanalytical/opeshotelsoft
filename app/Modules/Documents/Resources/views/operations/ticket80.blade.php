@@ -7,7 +7,7 @@
     <div style="text-align:center; font-size:13pt; font-weight:bold; text-transform:uppercase">{{ $tk['station'] }}</div>
     <div style="text-align:center">{{ $check['outlet'] }}</div>
     <table style="width:100%; margin-top:1.5mm; font-size:11pt; font-weight:bold"><tr>
-        <td>{{ $t('Table', 'Table') }} {{ $check['table'] ?? '-' }}</td><td style="text-align:right">{{ $t('Couverts', 'Covers') }} {{ $check['covers'] }}</td>
+        <td>@if(!empty($check['table'])){{ $t('Table', 'Table') }} {{ $check['table'] }}@else{{ $t('Sans table', 'No table') }}@endif</td><td style="text-align:right">{{ $t('Couverts', 'Covers') }} {{ $check['covers'] }}</td>
     </tr></table>
     <table style="width:100%"><tr><td>#{{ $check['number'] }}</td><td style="text-align:right">{{ \Illuminate\Support\Carbon::parse($tk['fired_at'])->format('d/m H:i') }}</td></tr></table>
     @if($server)<div>{{ $t('Serveur', 'Server') }} : {{ $server }}</div>@endif

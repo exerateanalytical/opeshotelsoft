@@ -1,4 +1,5 @@
 import { api, useApi } from '@/lib/api';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import { AlertTriangle, BadgeCheck, Calculator, Download, FileText, Loader2, X } from 'lucide-react';
 import { Fragment, useState } from 'react';
@@ -60,7 +61,8 @@ function Runs() {
 
     return (
         <div>
-            <Banner ok={ok} err={err ?? runs.error?.message} />
+            <Banner ok={ok} err={err} />
+            <QueryStatus query={runs} variant="table" rows={3} />
             <form onSubmit={compute} className="card mb-5 flex flex-wrap items-end gap-3">
                 <Field label={t('hr.pay.period')}><input type="month" className="input" required value={period} onChange={(e) => setPeriod(e.target.value)} /></Field>
                 <button className="btn-primary" disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />} {t('hr.pay.compute')}</button>
@@ -176,7 +178,7 @@ function SlipView({ slip, onClose }: { slip: Payslip; onClose: () => void }) {
                     <thead><tr className="text-left text-slate-500"><th>{t('hr.common.code')}</th><th>{t('hr.pay.label')}</th><th>{t('hr.pay.basis')}</th><th>{t('hr.pay.rate')}</th><th className="text-right">{t('hr.common.amount')}</th></tr></thead>
                     {sections.map((sec) => (
                         <tbody key={sec}>
-                            <tr><td colSpan={5} className="pt-3 text-xs font-semibold uppercase text-slate-500">{t(`hr.pay.section.${sec}`) === `hr.pay.section.${sec}` ? sec.replace('_', ' ') : t(`hr.pay.section.${sec}`)}</td></tr>
+                            <tr><td colSpan={5} className="pt-3 text-sm font-semibold text-slate-600">{t(`hr.pay.section.${sec}`) === `hr.pay.section.${sec}` ? sec.replace('_', ' ') : t(`hr.pay.section.${sec}`)}</td></tr>
                             {slip.lines.filter((l) => l.section === sec).map((l, i) => (
                                 <tr key={i} className="border-t"><td className="font-mono text-xs">{l.code}</td><td>{l.label}</td><td>{l.basis != null ? formatCurrency(l.basis) : ''}</td><td>{l.rate != null ? `${+(l.rate * 100).toFixed(3)}%` : ''}</td><td className="text-right">{formatCurrency(l.amount)}</td></tr>
                             ))}
@@ -232,7 +234,8 @@ function Packs() {
 
     return (
         <div>
-            <Banner ok={ok} err={err ?? packs.error?.message} />
+            <Banner ok={ok} err={err} />
+            <QueryStatus query={packs} variant="list" rows={3} />
             <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
                 <div>

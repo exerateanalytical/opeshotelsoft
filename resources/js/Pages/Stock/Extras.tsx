@@ -4,6 +4,8 @@ import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import OpsPrintButton from '@/Components/OpsPrintButton';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
+import QueryStatus from '@/Components/ui/QueryStatus';
 
 /* Purchasing and payables extras: requisitions, price lists, returns, wastage, payment runs, AP ageing. */
 
@@ -50,15 +52,16 @@ function Badge({ s }: { s: string }) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
     return <label className="label block">{label}<div className="mt-1">{children}</div></label>;
 }
-function Table({ head, children, empty }: { head: string[]; children: ReactNode; empty?: boolean }) {
+function Table({ head, children, empty, query }: { head: string[]; children: ReactNode; empty?: boolean; query?: { data: unknown; error: unknown; loading: boolean; reload: () => void } }) {
     const t = useT();
     return (
         <div className="overflow-x-auto">
+            {query && <QueryStatus query={query} variant="table" rows={3} />}
             <table className="table-auto w-full text-sm">
                 <thead><tr className="text-left text-xs uppercase text-slate-500">{head.map((h) => <th key={h} className="px-2 py-2">{h}</th>)}</tr></thead>
                 <tbody className="divide-y divide-slate-100">{children}</tbody>
             </table>
-            {empty && <p className="py-6 text-center text-sm text-slate-500">{t('stock.common.nothing')}</p>}
+            {empty && !query?.error && <EmptyFor kind="stock" />}
         </div>
     );
 }
@@ -124,13 +127,14 @@ export function Requisitions({ items, stores, suppliers, notify }: ExtrasProps) 
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-end gap-2">
                     <Field label={t('stock.common.status')}>
-                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock.common.all')}>
+                        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock4.aria.status')}>
                             <option value="">{t('stock.common.all')}</option>{['draft', 'submitted', 'approved', 'rejected', 'converted'].map((s) => <option key={s} value={s}>{t(`stock.status.${s}`)}</option>)}
                         </select>
                     </Field>
                     <button className="btn-primary" disabled={!selected.length} onClick={convert}>{t('stock.req.convert', { count: selected.length || '' })}</button>
                 </div>
-                <Table head={['', t('stock.common.number'), t('stock.req.department'), t('stock.common.store'), t('stock.common.lines'), t('stock.common.status'), '']} empty={!list.loading && !list.data?.data.length}>
+                <QueryStatus query={list} variant="table" rows={3} />
+                <Table head={['', t('stock.common.number'), t('stock.req.department'), t('stock.common.store'), t('stock.common.lines'), t('stock.common.status'), '']} empty={!list.loading && !list.error && !list.data?.data.length}>
                     {(list.data?.data ?? []).map((r) => (
                         <tr key={r.id}>
                             <td className="px-2 py-1">{r.status === 'approved' && <input type="checkbox" className="h-5 w-5 shrink-0" aria-label={t('stock.common.select_n', { name: r.number })} checked={selected.includes(r.id)} onChange={(e) => setSelected(e.target.checked ? [...selected, r.id] : selected.filter((x) => x !== r.id))} />}</td>
@@ -183,7 +187,7 @@ export function PriceLists({ items, suppliers, notify }: ExtrasProps) {
             </div>
             <div className="card p-4">
                 <div className="mb-3 max-w-xs"><Field label={t('stock.common.supplier')}><Select value={supplierId} onChange={setSupplierId} list={suppliers} placeholder={t('stock.common.all_suppliers')} /></Field></div>
-                <Table head={[t('stock.common.item'), t('stock.common.supplier'), t('stock.common.price'), t('stock.price.min_qty_short'), t('stock.price.valid'), '', '']} empty={!list.loading && !list.data?.data.length}>
+                <Table head={[t('stock.common.item'), t('stock.common.supplier'), t('stock.common.price'), t('stock.price.min_qty_short'), t('stock.price.valid'), '', '']} query={list} empty={!list.loading && !list.data?.data.length}>
                     {(list.data?.data ?? []).map((p) => (
                         <tr key={p.id}>
                             <td className="px-2 py-1">{nameOf(items, p.stock_item_id)}</td><td className="px-2 py-1">{nameOf(suppliers, p.supplier_id)}</td>
@@ -233,7 +237,7 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
                 <h3 className="font-semibold">{t('stock.ret.title')}</h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                     <Field label={t('stock.ret.grn')}>
-                        <select className="input w-full" value={grnId} onChange={(e) => { setGrnId(e.target.value); setQty({}); }} aria-label={t('stock.common.select')}>
+                        <select className="input w-full" value={grnId} onChange={(e) => { setGrnId(e.target.value); setQty({}); }} aria-label={t('stock4.aria.grn')}>
                             <option value="">{t('stock.common.select')}</option>
                             {(grns.data?.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.number} — {nameOf(suppliers, g.supplier_id)} — {formatDate(g.date)}</option>)}
                         </select>
@@ -255,7 +259,7 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
             </div>
             <div className="card p-4">
                 <h3 className="mb-2 font-semibold">{t('stock.ret.list_title')}</h3>
-                <Table head={[t('stock.common.number'), t('stock.common.date'), t('stock.common.supplier'), t('stock.common.lines'), t('stock.ret.credit'), t('stock.ret.applied'), t('stock.common.status'), '']} empty={!returns.loading && !returns.data?.data.length}>
+                <Table head={[t('stock.common.number'), t('stock.common.date'), t('stock.common.supplier'), t('stock.common.lines'), t('stock.ret.credit'), t('stock.ret.applied'), t('stock.common.status'), '']} query={returns} empty={!returns.loading && !returns.data?.data.length}>
                     {(returns.data?.data ?? []).map((r) => (
                         <tr key={r.id}>
                             <td className="px-2 py-1 font-medium">{r.number} <OpsPrintButton path={`supplier-return/${r.id}`} label={t('documents4.supplier_return')} /></td><td className="px-2 py-1">{formatDate(r.date)}</td><td className="px-2 py-1">{nameOf(suppliers, r.supplier_id)}</td>
@@ -275,7 +279,7 @@ export function Returns({ items, suppliers, notify }: ExtrasProps) {
                             </select>
                         </Field>
                         <button className="btn-primary" disabled={!invoiceId} onClick={apply}>{t('stock.ret.apply')}</button>
-                        <button className="btn-secondary" onClick={() => setApplying(null)}>{t('stock.common.close')}</button>
+                        <button className="btn-secondary" onClick={() => setApplying(null)}>{t('stock4.common.close')}</button>
                     </div>
                 )}
             </div>
@@ -348,7 +352,7 @@ export function PaymentRun({ suppliers, notify }: ExtrasProps) {
                     </Field>
                     <Field label={t('stock.common.reference')}><input className="input w-full" value={reference} onChange={(e) => setReference(e.target.value)} /></Field>
                 </div>
-                <Table head={['', t('stock.common.supplier'), t('stock.pay.invoice'), t('stock.common.date'), t('stock.pay.due_date'), t('stock.common.total'), t('stock.pay.paid_col'), t('stock.pay.due')]} empty={!due.loading && !rows.length}>
+                <Table head={['', t('stock.common.supplier'), t('stock.pay.invoice'), t('stock.common.date'), t('stock.pay.due_date'), t('stock.common.total'), t('stock.pay.paid_col'), t('stock.pay.due')]} query={due} empty={!due.loading && !rows.length}>
                     {rows.map((i) => (
                         <tr key={i.id}>
                             <td className="px-2 py-1"><input type="checkbox" className="h-5 w-5 shrink-0" aria-label={t('stock.common.select_n', { name: i.reference })} checked={selected.includes(i.id)} onChange={(e) => setSelected(e.target.checked ? [...selected, i.id] : selected.filter((x) => x !== i.id))} /></td>
@@ -366,7 +370,7 @@ export function PaymentRun({ suppliers, notify }: ExtrasProps) {
             </div>
             <div className="card p-4">
                 <h3 className="mb-2 font-semibold">{t('stock.pay.past_runs')}</h3>
-                <Table head={[t('stock.common.number'), t('stock.common.date'), t('stock.pay.account'), t('stock.pay.payments'), t('stock.common.total')]} empty={!runs.loading && !runs.data?.data.length}>
+                <Table head={[t('stock.common.number'), t('stock.common.date'), t('stock.pay.account'), t('stock.pay.payments'), t('stock.common.total')]} query={runs} empty={!runs.loading && !runs.data?.data.length}>
                     {(runs.data?.data ?? []).map((r) => (
                         <tr key={r.id}><td className="px-2 py-1 font-medium">{r.number}</td><td className="px-2 py-1">{formatDate(r.date)}</td><td className="px-2 py-1">{r.account}</td><td className="px-2 py-1">{r.payments_count}</td><td className="px-2 py-1">{formatCurrency(r.total)}</td></tr>
                     ))}
@@ -386,7 +390,7 @@ export function Ageing() {
         <div className="card space-y-3 p-4">
             <div className="max-w-xs"><Field label={t('stock.age.as_of')}><input className="input w-full" type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} /></Field></div>
             {r.error && <p className="text-sm text-red-700">{r.error.message}</p>}
-            <Table head={[t('stock.common.supplier'), ...cols.map((c) => c[1])]} empty={!r.loading && !r.data?.rows.length}>
+            <Table head={[t('stock.common.supplier'), ...cols.map((c) => c[1])]} query={r} empty={!r.loading && !r.data?.rows.length}>
                 {(r.data?.rows ?? []).map((x) => (
                     <tr key={x.supplier_id}><td className="px-2 py-1">{x.supplier}</td>{cols.map(([k]) => <td key={k} className="px-2 py-1 text-right">{formatCurrency(x[k])}</td>)}</tr>
                 ))}

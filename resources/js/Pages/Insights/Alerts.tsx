@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
@@ -43,11 +44,12 @@ export default function Alerts() {
         <AppLayout title={t('insights.alerts.title')} subtitle={t('insights.alerts.subtitle')}
             actions={canManage ? <button type="button" className="btn-secondary" onClick={() => act({} as AlertRow, 'scan')}>{t('insights.alerts.scan')}</button> : undefined}>
             <Head title={t('insights.alerts.title')} />
+            <QueryStatus query={list} variant="list" />
             <div className="mb-3 flex flex-wrap gap-2">
-                <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="input" aria-label={t('ui2.insights.filter_status')} value={status} onChange={(e) => setStatus(e.target.value)}>
                     {['active', 'open', 'acknowledged', 'resolved'].map((s) => <option key={s} value={s}>{t(`insights.alerts.status.${s}`)}</option>)}
                 </select>
-                <select className="input" value={rule} onChange={(e) => setRule(e.target.value)}>
+                <select className="input" aria-label={t('ui2.insights.filter_rule')} value={rule} onChange={(e) => setRule(e.target.value)}>
                     <option value="">{t('insights.alerts.all_rules')}</option>
                     {RULES.map((r) => <option key={r} value={r}>{t(`insights.rule.${r}`)}</option>)}
                 </select>
@@ -74,7 +76,7 @@ export default function Alerts() {
                         {a.resolution_note && <div className="mt-1 text-xs text-slate-500">{t('insights.alerts.status.resolved')}: {a.resolution_note}</div>}
                         {canManage && a.status !== 'resolved' && (
                             <div className="mt-2 flex flex-wrap gap-2">
-                                <input className="input flex-1" placeholder={t('insights.alerts.note')} value={notes[a.id] ?? ''}
+                                <input className="input flex-1" placeholder={t('insights.alerts.note')} aria-label={t('insights.alerts.note')} value={notes[a.id] ?? ''}
                                     onChange={(e) => setNotes({ ...notes, [a.id]: e.target.value })} />
                                 {a.status === 'open' && <button type="button" className="btn-secondary" onClick={() => act(a, 'acknowledge')}>{t('insights.alerts.acknowledge')}</button>}
                                 <button type="button" className="btn-primary" onClick={() => act(a, 'resolve')}>{t('insights.alerts.resolve')}</button>

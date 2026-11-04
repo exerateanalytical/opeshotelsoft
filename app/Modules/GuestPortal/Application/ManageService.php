@@ -43,9 +43,9 @@ class ManageService
             'modify' => $this->modifyRule($r),
             'cancel' => $upcoming ? ['allowed' => true, 'fee' => $this->reservations->cancellationFee($r), 'currency' => $r->currency] : ['allowed' => false, 'fee' => 0, 'currency' => $r->currency],
             'services' => $r->status === 'cancelled' || in_array($r->status, ['checked_out', 'no_show'], true) ? [] : $this->purchases->services(),
-            'early_checkin' => $upcoming ? collect(CheckoutFeeRule::where('kind', 'early_checkin')->where('active', true)->orderBy('after_hour')->pluck('after_hour'))
+            'early_checkin' => $upcoming && ExperienceSetting::forCurrentHotel()->early_checkin_enabled ? collect(CheckoutFeeRule::where('kind', 'early_checkin')->where('active', true)->orderBy('after_hour')->pluck('after_hour'))
                 ->map(fn ($h) => ['hour' => (int) $h, 'fee' => $quoteFee('early_checkin', (int) $h)])->filter(fn ($o) => $o['fee'])->values()->all() : [],
-            'late_checkout' => in_array($r->status, ['tentative', 'confirmed', 'checked_in'], true) ? collect(CheckoutFeeRule::where('kind', 'late')->where('active', true)->orderBy('after_hour')->pluck('after_hour'))
+            'late_checkout' => ExperienceSetting::forCurrentHotel()->late_checkout_enabled && in_array($r->status, ['tentative', 'confirmed', 'checked_in'], true) ? collect(CheckoutFeeRule::where('kind', 'late')->where('active', true)->orderBy('after_hour')->pluck('after_hour'))
                 ->map(fn ($h) => ['hour' => (int) $h, 'fee' => $quoteFee('late_checkout', (int) $h)])->filter(fn ($o) => $o['fee'])->values()->all() : [],
             'purchases' => ReservationPurchase::where('reservation_id', $r->id)->orderBy('id')->get(['id', 'kind', 'label', 'quantity', 'amount', 'status', 'requested_time'])->all(),
             'balance' => $balance, 'check_in_time' => substr((string) $hotel->check_in_time, 0, 5), 'check_out_time' => substr((string) $hotel->check_out_time, 0, 5),

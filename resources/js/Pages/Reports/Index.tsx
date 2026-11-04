@@ -2,10 +2,11 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { BarChart3, Building2, CalendarDays, Download, RefreshCw, Radio, ShieldCheck, TrendingUp, Wallet, BedDouble } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { cn, formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { cn, formatCurrency, formatDate, formatDateTime, formatNumber, formatPercent } from '@/lib/utils';
 import { activeHotelId, api, ApiError, useApi } from '@/lib/api';
-import { useT } from '@/lib/i18n';
+import { useLocale, useT } from '@/lib/i18n';
+import ChartFrame, { axisFormatter, dayTick, makeTooltip, seriesColor, seriesDash, useAxisProps, type ChartSeries } from '@/Components/ui/ChartFrame';
 import OpsPrintButton from '@/Components/OpsPrintButton';
 
 interface Kpis {
@@ -55,13 +56,67 @@ function Loading() { const t = useT(); return <div className="py-10 text-center 
 function Kpi({ label, value, icon: Icon, hint }: { label: string; value: string; icon: typeof Wallet; hint?: string }) {
     return (
         <div className="card min-w-0 p-4">
-            <div className="flex items-center justify-between gap-2 text-sm font-medium text-slate-600">{label}<Icon className="h-4 w-4 text-navy-700" /></div>
-            <div className="mt-2 break-words text-xl font-semibold text-slate-800 tabular-nums sm:text-2xl">{value}</div>
-            {hint && <div className="mt-1 text-sm text-slate-600">{hint}</div>}
+            <div className="l1-kpi-label flex items-center justify-between gap-2">{label}<Icon className="h-4 w-4 text-navy-700" aria-hidden="true" /></div>
+            <div className="l1-kpi mt-2">{value}</div>
+            {hint && <div className="l1-support mt-1">{hint}</div>}
         </div>
     );
 }
-const short = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n));
+
+/** Revenue (currency, left axis) and occupancy (percent, right axis) over dates or categories. */
+function RevOccChart<Row extends Record<string, unknown>>({ title, description, data, xKey, xLabel, revKey, occKey, revLabel, occLabel, bars, dates = true }: {
+    title: string; description?: string; data: Row[]; xKey: keyof Row & string; xLabel: string; revKey: string; occKey: string; revLabel: string; occLabel: string; bars?: boolean; dates?: boolean;
+}) {
+    const locale = useLocale();
+    const ax = useAxisProps();
+    const series: ChartSeries[] = [{ key: occKey, label: occLabel, format: 'percent' }, { key: revKey, label: revLabel, format: 'currency' }];
+    const fx = dates ? dayTick(locale) : (v: string) => v;
+    const Tip = makeTooltip(series, dates ? (l) => formatDate(l, locale) : fx, locale);
+    return (
+        <ChartFrame title={title} description={description} data={data} series={series} xKey={xKey} xLabel={xLabel} xFormat={dates ? (l) => formatDate(l, locale) : undefined}>
+            {bars ? (
+                <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid {...ax.grid} />
+                    <XAxis dataKey={xKey as string} {...ax.x} tickFormatter={fx} />
+                    <YAxis yAxisId="o" {...ax.y} tickFormatter={axisFormatter('percent', locale)} />
+                    <YAxis yAxisId="r" orientation="right" {...ax.y} tickFormatter={axisFormatter('currency', locale)} />
+                    <Tooltip content={<Tip />} cursor={{ fill: 'var(--c-surface-subtle)' }} />
+                    <Bar yAxisId="o" dataKey={occKey} name={occLabel} fill={seriesColor(0)} isAnimationActive={false} />
+                    <Bar yAxisId="r" dataKey={revKey} name={revLabel} fill={seriesColor(1)} isAnimationActive={false} />
+                </BarChart>
+            ) : (
+                <LineChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid {...ax.grid} />
+                    <XAxis dataKey={xKey as string} {...ax.x} tickFormatter={fx} />
+                    <YAxis yAxisId="o" {...ax.y} tickFormatter={axisFormatter('percent', locale)} />
+                    <YAxis yAxisId="r" orientation="right" {...ax.y} tickFormatter={axisFormatter('currency', locale)} />
+                    <Tooltip content={<Tip />} />
+                    <Line yAxisId="o" type="monotone" dataKey={occKey} name={occLabel} stroke={seriesColor(0)} strokeWidth={2.5} strokeDasharray={seriesDash(0)} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                    <Line yAxisId="r" type="monotone" dataKey={revKey} name={revLabel} stroke={seriesColor(1)} strokeWidth={2.5} strokeDasharray={seriesDash(1)} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                </LineChart>
+            )}
+        </ChartFrame>
+    );
+}
+
+function ChannelChart({ rows }: { rows: { channel: string; revenue: number }[] }) {
+    const t = useT();
+    const locale = useLocale();
+    const ax = useAxisProps();
+    const series: ChartSeries[] = [{ key: 'revenue', label: t('reports.revenue'), format: 'currency' }];
+    const Tip = makeTooltip(series, (l) => l, locale);
+    return (
+        <ChartFrame title={t('reports.tab.channels')} data={rows} series={series} xKey="channel" xLabel={t('reports.channel')}>
+            <BarChart data={rows} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid {...ax.grid} />
+                <XAxis dataKey="channel" {...ax.x} />
+                <YAxis {...ax.y} tickFormatter={axisFormatter('currency', locale)} />
+                <Tooltip content={<Tip />} cursor={{ fill: 'var(--c-surface-subtle)' }} />
+                <Bar dataKey="revenue" name={t('reports.revenue')} fill={seriesColor(0)} isAnimationActive={false} />
+            </BarChart>
+        </ChartFrame>
+    );
+}
 
 function Daily() {
     const t = useT();
@@ -74,13 +129,13 @@ function Daily() {
         <div className="space-y-4">
             <p className="text-sm text-slate-500">{t('reports.business_date')} <b>{formatDate(k.business_date)}</b></p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
-                <Kpi label={t('reports.occupancy')} value={`${k.occupancy_percent}%`} icon={BedDouble} hint={t('reports.rooms_hint', { sold: k.rooms_sold, available: k.rooms_available, ooo: k.out_of_order })} />
+                <Kpi label={t('reports.occupancy')} value={formatPercent(k.occupancy_percent)} icon={BedDouble} hint={t('reports.rooms_hint', { sold: k.rooms_sold, available: k.rooms_available, ooo: k.out_of_order })} />
                 <Kpi label={t('reports.adr')} value={formatCurrency(k.adr)} icon={TrendingUp} />
                 <Kpi label={t('reports.revpar')} value={formatCurrency(k.revpar)} icon={TrendingUp} />
                 <Kpi label={t('reports.total_revenue')} value={formatCurrency(k.total_revenue)} icon={Wallet} hint={t('reports.rooms_revenue_hint', { amount: formatCurrency(k.room_revenue) })} />
             </div>
             <div className="card overflow-x-auto p-4">
-                <table className="table-auto w-full text-sm">
+                <table className="table-auto w-full max-w-3xl text-sm">
                     <tbody>
                         {[
                             [t('reports.rooms_total'), k.rooms_total], [t('reports.arrivals'), k.arrivals], [t('reports.departures'), k.departures], [t('reports.dirty_rooms'), k.dirty_rooms],
@@ -90,22 +145,11 @@ function Daily() {
                 </table>
             </div>
             <div className="card p-4">
-                <h3 className="mb-3 text-sm font-semibold text-slate-700">{t('reports.last_30')}</h3>
-                {data.last_30_days.length === 0 ? <p className="text-sm text-slate-500">{t('reports.no_closed_days')}</p> : (
-                    <div className="h-64">
-                        <ResponsiveContainer>
-                            <AreaChart data={data.last_30_days}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="date" tick={{ fontSize: 13 }} />
-                                <YAxis yAxisId="r" tickFormatter={short} tick={{ fontSize: 13 }} />
-                                <YAxis yAxisId="o" orientation="right" unit="%" tick={{ fontSize: 13 }} />
-                                <Tooltip formatter={(v, n) => (n === t('reports.occupancy') ? `${v}%` : formatCurrency(Number(v)))} />
-                                <Legend formatter={(v) => <span className="text-slate-700">{v}</span>} />
-                                <Area yAxisId="r" dataKey="room_revenue" name={t('reports.room_revenue')} stroke="#1a3a6b" fill="#e8edf5" />
-                                <Area yAxisId="o" dataKey="occupancy_percent" name={t('reports.occupancy')} stroke="#b45309" fill="none" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
+                {data.last_30_days.length === 0 ? (
+                    <><h3 className="l1-section-title mb-2">{t('reports.last_30')}</h3><p className="l1-support">{t('reports.no_closed_days')}</p></>
+                ) : (
+                    <RevOccChart title={t('reports.last_30')} data={data.last_30_days as unknown as Record<string, unknown>[]} xKey="date" xLabel={t('reports.date')}
+                        revKey="room_revenue" occKey="occupancy_percent" revLabel={t('reports.room_revenue')} occLabel={t('reports.occupancy')} />
                 )}
             </div>
         </div>
@@ -130,21 +174,11 @@ function Forecast() {
                 <>
                     <div className="grid grid-cols-2 gap-3">
                         <Kpi label={t('reports.revenue_otb')} value={formatCurrency(rev)} icon={Wallet} />
-                        <Kpi label={t('reports.avg_occupancy')} value={`${avgOcc}%`} icon={BedDouble} />
+                        <Kpi label={t('reports.avg_occupancy')} value={formatPercent(Number(avgOcc), { decimals: 1 })} icon={BedDouble} />
                     </div>
-                    <div className="card h-72 p-4">
-                        <ResponsiveContainer>
-                            <AreaChart data={data}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="date" tick={{ fontSize: 13 }} />
-                                <YAxis yAxisId="o" unit="%" tick={{ fontSize: 13 }} />
-                                <YAxis yAxisId="r" orientation="right" tickFormatter={short} tick={{ fontSize: 13 }} />
-                                <Tooltip formatter={(v, n) => (n === t('reports.occupancy') ? `${v}%` : formatCurrency(Number(v)))} />
-                                <Legend formatter={(v) => <span className="text-slate-700">{v}</span>} />
-                                <Area yAxisId="o" dataKey="occupancy_percent" name={t('reports.occupancy')} stroke="#1a3a6b" fill="#e8edf5" />
-                                <Area yAxisId="r" dataKey="room_revenue" name={t('reports.room_revenue')} stroke="#b45309" fill="none" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    <div className="card p-4">
+                        <RevOccChart title={t('reports.tab.forecast')} data={data as unknown as Record<string, unknown>[]} xKey="date" xLabel={t('reports.date')}
+                            revKey="room_revenue" occKey="occupancy_percent" revLabel={t('reports.room_revenue')} occLabel={t('reports.occupancy')} />
                     </div>
                 </>
             )}
@@ -161,40 +195,30 @@ function Group() {
     const chart = data.hotels.map((h) => ({ name: h.hotel.code || h.hotel.name, occupancy: h.occupancy_percent ?? 0, revpar: h.revpar ?? 0 }));
     return (
         <div className="space-y-4">
-            <div className="card h-64 p-4">
-                <ResponsiveContainer>
-                    <BarChart data={chart}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="name" tick={{ fontSize: 13 }} />
-                        <YAxis yAxisId="o" unit="%" tick={{ fontSize: 13 }} />
-                        <YAxis yAxisId="r" orientation="right" tickFormatter={short} tick={{ fontSize: 13 }} />
-                        <Tooltip formatter={(v, n) => (n === t('reports.occupancy') ? `${v}%` : formatCurrency(Number(v)))} />
-                        <Legend formatter={(v) => <span className="text-slate-700">{v}</span>} />
-                        <Bar yAxisId="o" dataKey="occupancy" name={t('reports.occupancy')} fill="#1a3a6b" />
-                        <Bar yAxisId="r" dataKey="revpar" name={t('reports.revpar')} fill="#b45309" />
-                    </BarChart>
-                </ResponsiveContainer>
+            <div className="card p-4">
+                <RevOccChart bars dates={false} title={t('reports.tab.group')} data={chart} xKey="name" xLabel={t('reports.hotel')}
+                    revKey="revpar" occKey="occupancy" revLabel={t('reports.revpar')} occLabel={t('reports.occupancy')} />
             </div>
             <div className="card overflow-x-auto">
                 <table className="table-auto w-full text-sm">
-                    <thead><tr className="text-left text-slate-500"><th className="p-2">{t('reports.hotel')}</th><th>{t('reports.date')}</th><th>{t('reports.occ')}</th><th>{t('reports.sold')}</th><th>{t('reports.adr')}</th><th>{t('reports.revpar')}</th><th>{t('reports.room_rev')}</th><th>{t('reports.total_rev')}</th><th>{t('reports.arr_dep')}</th></tr></thead>
+                    <thead><tr className="text-left text-slate-500"><th className="p-2">{t('reports.hotel')}</th><th>{t('reports.date')}</th><th className="text-right">{t('reports.occ')}</th><th className="text-right">{t('reports.sold')}</th><th className="text-right">{t('reports.adr')}</th><th className="text-right">{t('reports.revpar')}</th><th className="text-right">{t('reports.room_rev')}</th><th className="text-right">{t('reports.total_rev')}</th><th className="text-right">{t('reports.arr_dep')}</th></tr></thead>
                     <tbody>
                         {data.hotels.map((h) => (
                             <tr key={h.hotel.id} className="border-t">
                                 <td className="p-2 font-medium">{h.hotel.name}<div className="text-xs text-slate-500">{h.hotel.city}</div></td>
                                 <td>{h.business_date ? formatDate(h.business_date) : '—'}</td>
-                                <td>{h.occupancy_percent}%</td><td>{h.rooms_sold}/{h.rooms_available}</td>
-                                <td>{formatCurrency(h.adr ?? 0)}</td><td>{formatCurrency(h.revpar ?? 0)}</td>
-                                <td>{formatCurrency(h.room_revenue ?? 0)}</td><td>{formatCurrency(h.total_revenue ?? 0)}</td>
-                                <td>{h.arrivals}/{h.departures}</td>
+                                <td className="num">{formatPercent(h.occupancy_percent ?? 0)}</td><td className="num">{h.rooms_sold}/{h.rooms_available}</td>
+                                <td className="num">{formatCurrency(h.adr ?? 0)}</td><td className="num">{formatCurrency(h.revpar ?? 0)}</td>
+                                <td className="num">{formatCurrency(h.room_revenue ?? 0)}</td><td className="num">{formatCurrency(h.total_revenue ?? 0)}</td>
+                                <td className="num">{h.arrivals}/{h.departures}</td>
                             </tr>
                         ))}
                         <tr className="border-t bg-slate-50 font-semibold">
                             <td className="p-2">{t('reports.network_total')}</td><td />
-                            <td>{data.total.occupancy_percent}%</td><td>{data.total.rooms_sold}/{data.total.rooms_available}</td>
-                            <td>{formatCurrency(data.total.adr)}</td><td>{formatCurrency(data.total.revpar)}</td>
-                            <td>{formatCurrency(data.total.room_revenue)}</td><td>{formatCurrency(data.total.total_revenue)}</td>
-                            <td>{data.total.arrivals}/{data.total.departures}</td>
+                            <td className="num">{formatPercent(data.total.occupancy_percent)}</td><td className="num">{data.total.rooms_sold}/{data.total.rooms_available}</td>
+                            <td className="num">{formatCurrency(data.total.adr)}</td><td className="num">{formatCurrency(data.total.revpar)}</td>
+                            <td className="num">{formatCurrency(data.total.room_revenue)}</td><td className="num">{formatCurrency(data.total.total_revenue)}</td>
+                            <td className="num">{data.total.arrivals}/{data.total.departures}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -227,26 +251,18 @@ function Channels() {
             <Banner error={error?.message} />
             {loading && !data ? <Loading /> : rows.length === 0 ? <p className="text-sm text-slate-500">{t('reports.no_production')}</p> : (
                 <>
-                    <div className="card h-64 p-4">
-                        <ResponsiveContainer>
-                            <BarChart data={rows}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="channel" tick={{ fontSize: 13 }} />
-                                <YAxis tickFormatter={short} tick={{ fontSize: 13 }} />
-                                <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                                <Bar dataKey="revenue" name={t('reports.revenue')} fill="#1a3a6b" />
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div className="card p-4">
+                        <ChannelChart rows={rows} />
                     </div>
                     <div className="card overflow-x-auto">
                         <table className="table-auto w-full text-sm">
-                            <thead><tr className="text-left text-slate-500"><th className="p-2">{t('reports.channel')}</th><th>{t('reports.bookings')}</th><th>{t('reports.room_nights')}</th><th>{t('reports.revenue')}</th><th>{t('reports.adr')}</th><th>{t('reports.share')}</th></tr></thead>
+                            <thead><tr className="text-left text-slate-500"><th className="p-2">{t('reports.channel')}</th><th className="text-right">{t('reports.bookings')}</th><th className="text-right">{t('reports.room_nights')}</th><th className="text-right">{t('reports.revenue')}</th><th className="text-right">{t('reports.adr')}</th><th className="text-right">{t('reports.share')}</th></tr></thead>
                             <tbody>
                                 {rows.map((r) => (
                                     <tr key={r.channel} className="border-t">
-                                        <td className="p-2 font-medium capitalize">{r.channel.replace(/_/g, ' ')}</td><td>{r.bookings}</td><td>{r.room_nights}</td>
-                                        <td>{formatCurrency(r.revenue)}</td><td>{formatCurrency(r.room_nights ? Math.round(r.revenue / r.room_nights) : 0)}</td>
-                                        <td>{total ? ((r.revenue / total) * 100).toFixed(1) : 0}%</td>
+                                        <td className="p-2 font-medium capitalize">{r.channel.replace(/_/g, ' ')}</td><td className="num">{formatNumber(r.bookings)}</td><td className="num">{formatNumber(r.room_nights)}</td>
+                                        <td className="num">{formatCurrency(r.revenue)}</td><td className="num">{formatCurrency(r.room_nights ? Math.round(r.revenue / r.room_nights) : 0)}</td>
+                                        <td className="num">{formatPercent(total ? (r.revenue / total) * 100 : 0, { decimals: 1 })}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -285,7 +301,7 @@ function BusinessDays() {
         {range}
         <div className="card overflow-x-auto">
             <table className="table-auto w-full text-sm">
-                <thead><tr className="text-left text-slate-500"><th className="p-2">{t('reports.date')}</th><th>{t('reports.status')}</th><th>{t('reports.closed_at')}</th><th>{t('reports.occ')}</th><th>{t('reports.adr')}</th><th>{t('reports.revpar')}</th><th>{t('reports.room_rev')}</th><th>{t('reports.total_rev')}</th></tr></thead>
+                <thead><tr className="text-left text-slate-500"><th className="p-2">{t('reports.date')}</th><th>{t('reports.status')}</th><th>{t('reports.closed_at')}</th><th className="text-right">{t('reports.occ')}</th><th className="text-right">{t('reports.adr')}</th><th className="text-right">{t('reports.revpar')}</th><th className="text-right">{t('reports.room_rev')}</th><th className="text-right">{t('reports.total_rev')}</th></tr></thead>
                 <tbody>
                     {(data?.data ?? []).map((d) => {
                         const s = parse(d.summary);
@@ -294,11 +310,11 @@ function BusinessDays() {
                                 <td className="p-2">{formatDate(d.date)}</td>
                                 <td><span className={d.status === 'closed' ? 'badge-slate' : 'badge-green'}>{d.status}</span></td>
                                 <td>{d.closed_at ? formatDateTime(d.closed_at) : '—'}</td>
-                                <td>{s.occupancy_percent != null ? `${s.occupancy_percent}%` : '—'}</td>
-                                <td>{s.adr != null ? formatCurrency(num(s.adr)) : '—'}</td>
-                                <td>{s.revpar != null ? formatCurrency(num(s.revpar)) : '—'}</td>
-                                <td>{s.room_revenue != null ? formatCurrency(num(s.room_revenue)) : '—'}</td>
-                                <td>{s.total_revenue != null ? formatCurrency(num(s.total_revenue)) : '—'}</td>
+                                <td className="num">{s.occupancy_percent != null ? formatPercent(num(s.occupancy_percent)) : '—'}</td>
+                                <td className="num">{s.adr != null ? formatCurrency(num(s.adr)) : '—'}</td>
+                                <td className="num">{s.revpar != null ? formatCurrency(num(s.revpar)) : '—'}</td>
+                                <td className="num">{s.room_revenue != null ? formatCurrency(num(s.room_revenue)) : '—'}</td>
+                                <td className="num">{s.total_revenue != null ? formatCurrency(num(s.total_revenue)) : '—'}</td>
                             </tr>
                         );
                     })}

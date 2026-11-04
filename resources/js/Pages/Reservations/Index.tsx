@@ -1,9 +1,12 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
-import { Plus, Search, CalendarDays, Loader2, Star } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Plus, Search, CalendarDays, Loader2, Star, ExternalLink, LogIn, LogOut, XCircle, Copy } from 'lucide-react';
 import Button from '@/Components/ui/Button';
-import DataTable from '@/Components/ui/DataTable';
-import EmptyState from '@/Components/ui/EmptyState';
+import DataTable, { type RowAction } from '@/Components/ui/DataTable';
+import MasterDetail, { useSplitView } from '@/Components/ui/MasterDetail';
+import { toast } from '@/Components/ui/Toast';
+import { useQueryParam } from '@/lib/desktop';
+import { EmptyAction, EmptyFor, NoResults } from '@/Components/ui/EmptyStates';
 import Field from '@/Components/ui/Field';
 import FilterBar from '@/Components/ui/FilterBar';
 import Modal from '@/Components/ui/Modal';
@@ -52,6 +55,22 @@ export default function ReservationsIndex() {
     const list = useApi<Page<Reservation>>(`reservations?${params}`);
 
     const [cancelling, setCancelling] = useState<{ id: number; reason: string } | null>(null);
+    const split = useSplitView();
+    const [selId, setSelId] = useQueryParam('selected');
+    const current = list.data?.data.find((r) => String(r.id) === selId) ?? null;
+    const guestName = (r: Reservation) => (r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '-');
+    const open = (r: Reservation) => (split ? setSelId(String(r.id)) : router.visit(`/reservations/${r.id}`));
+    const rowActions = (r: Reservation): RowAction<Reservation>[] => [
+        { key: 'open', label: t('desktop.detail.open_page'), icon: ExternalLink, onSelect: (x) => router.visit(`/reservations/${x.id}`) },
+        { key: 'in', label: t('res.do_check_in'), icon: LogIn, hidden: !['confirmed', 'tentative'].includes(r.status), onSelect: (x) => act(x, 'check-in') },
+        { key: 'out', label: t('res.do_check_out'), icon: LogOut, hidden: r.status !== 'checked_in', onSelect: (x) => act(x, 'check-out') },
+        { key: 'cancel', label: t('res.do_cancel'), icon: XCircle, danger: true, hidden: !['confirmed', 'tentative'].includes(r.status), onSelect: (x) => setCancelling({ id: x.id, reason: '' }) },
+    ];
+    const copyNumbers = (rs: Reservation[]) => {
+        navigator.clipboard?.writeText(rs.map((r) => r.number).join('\n'))
+            .then(() => toast.success(t('desktop.copy.done', { count: rs.length })))
+            .catch(() => toast.error(t('desktop.copy.failed')));
+    };
 
     async function act(r: Reservation, action: 'check-in' | 'check-out' | 'cancel', reason?: string) {
         const body = action === 'cancel' ? { reason } : {};
@@ -73,9 +92,14 @@ export default function ReservationsIndex() {
         <AppLayout
             title={t('res.title')}
             subtitle={t('res.index.subtitle')}
-            actions={<div className="flex flex-wrap gap-2"><Link href="/reservations/tape-chart" className="btn-secondary">{t('res.tape.short')}</Link><Link href="/reservations/waitlist" className="btn-secondary">{t('res.waitlist.title')}</Link><Link href="/reservations/create" className="btn-primary"><Plus className="w-4 h-4" /> {t('res.create.title')}</Link></div>}
+            actions={<div className="btn-row"><Link href="/reservations/tape-chart" className="btn-secondary hidden sm:inline-flex">{t('res.tape.short')}</Link><Link href="/reservations/waitlist" className="btn-secondary hidden sm:inline-flex">{t('res.waitlist.title')}</Link><Link href="/reservations/create" data-primary-action className="btn-primary btn-lg w-full sm:w-auto"><Plus className="w-4 h-4" aria-hidden="true" /> {t('res.create.title')}</Link></div>}
         >
             <Head title={t('res.title')} />
+
+            <div className="mb-3 grid grid-cols-2 gap-2 sm:hidden">
+                <Link href="/reservations/tape-chart" className="btn-secondary">{t('res.tape.short')}</Link>
+                <Link href="/reservations/waitlist" className="btn-secondary">{t('res.waitlist.title')}</Link>
+            </div>
 
             <FilterBar
                 activeCount={(status ? 1 : 0) + (from ? 1 : 0)}
@@ -101,34 +125,69 @@ export default function ReservationsIndex() {
             <div role="group" aria-label={t('res.status')} className="mb-4 hidden gap-2 overflow-x-auto pb-1 sm:flex">
                 {STATUSES.map(([key, label]) => (
                     <button key={key} type="button" aria-pressed={status === key} onClick={() => (setStatus(key), setPage(1))}
-                        className={cn('min-h-9 whitespace-nowrap rounded-lg border px-4 text-sm font-medium',
+                        className={cn('min-h-11 whitespace-nowrap rounded-lg border px-4 text-sm font-medium',
                             status === key ? 'border-navy-800 bg-navy-800 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-navy-800')}>
                         {t(label)}
                     </button>
                 ))}
             </div>
 
-            {(message || list.error) && (
+            {(message || (list.error && list.data)) && (
                 <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{message ?? list.error?.message}</div>
             )}
 
+            <MasterDetail
+                open={!!current}
+                title={current ? `${current.number} · ${guestName(current)}` : ''}
+                onClose={() => setSelId(null)}
+                detail={current && (
+                    <div className="space-y-4">
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                            <dt className="text-slate-500">{t('res.status')}</dt><dd><StatusBadge status={current.status} label={t(`res.status.${current.status}`)} /></dd>
+                            <dt className="text-slate-500">{t('res.guest')}</dt><dd>{guestName(current)}{current.guest?.vip && <Star className="ml-1 inline h-4 w-4 text-amber-600" aria-label="VIP" />}</dd>
+                            <dt className="text-slate-500">{t('res.room')}</dt><dd>{current.room?.number ?? current.room_type?.code ?? '-'}</dd>
+                            <dt className="text-slate-500">{t('res.check_in')}</dt><dd>{formatDate(current.arrival)}</dd>
+                            <dt className="text-slate-500">{t('res.check_out')}</dt><dd>{formatDate(current.departure)} <span className="text-slate-500">({t('desktop.res.nights', { count: nights(current.arrival, current.departure) })})</span></dd>
+                            <dt className="text-slate-500">{t('res.source')}</dt><dd>{t(`res.channel.${current.channel}`) === `res.channel.${current.channel}` ? current.channel : t(`res.channel.${current.channel}`)}</dd>
+                            <dt className="text-slate-500">{t('desktop.res.total')}</dt><dd className="font-semibold tabular-nums">{formatCurrency(current.total_amount)}</dd>
+                        </dl>
+                        <div className="btn-row">
+                            {['confirmed', 'tentative'].includes(current.status) && <Button size="sm" variant="primary" onClick={() => act(current, 'check-in')}>{t('res.do_check_in')}</Button>}
+                            {current.status === 'checked_in' && <Button size="sm" variant="primary" onClick={() => act(current, 'check-out')}>{t('res.do_check_out')}</Button>}
+                            {['confirmed', 'tentative'].includes(current.status) && <Button size="sm" variant="secondary" onClick={() => setCancelling({ id: current.id, reason: '' })}>{t('res.do_cancel')}</Button>}
+                            <Link href={`/reservations/${current.id}`} className="btn-secondary btn-sm"><ExternalLink className="h-4 w-4" aria-hidden="true" /> {t('desktop.detail.open_page')}</Link>
+                        </div>
+                        <p className="text-sm text-slate-500">{t('desktop.detail.hint')}</p>
+                    </div>
+                )}
+            >
             <DataTable
                 caption={t('res.title')}
+                tableKey="reservations"
                 loading={list.loading && !list.data}
+                error={list.error && !list.data ? list.error.message : undefined}
                 rows={list.data?.data ?? []}
                 rowKey={(r) => r.id}
-                empty={<EmptyState icon={CalendarDays} title={t('res.index.empty')} />}
+                rowLabel={(r) => r.number}
+                activeKey={current?.id ?? null}
+                onRowClick={open}
+                selectable
+                bulkActions={({ rows, clear }) => <Button size="sm" variant="secondary" icon={Copy} onClick={() => { copyNumbers(rows); clear(); }}>{t('desktop.copy.numbers')}</Button>}
+                rowActions={rowActions}
+                empty={(status || q.trim() || from)
+                    ? <NoResults onReset={() => { setStatus(''); setQ(''); setFrom(''); setPage(1); }} />
+                    : <EmptyFor kind="reservations" action={<EmptyAction kind="reservations" href="/reservations/create" />} />}
                 columns={[
-                    { key: 'number', header: t('res.confirmation'), cell: (r) => <Link href={`/reservations/${r.id}`} className="font-mono text-navy-600 underline underline-offset-2">{r.number}</Link> },
-                    { key: 'guest', header: t('res.guest'), cell: (r) => <>{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '-'}{r.guest?.vip && <Star className="ml-1 inline h-4 w-4 text-amber-600" aria-label="VIP" />}</> },
+                    { key: 'number', header: t('res.confirmation'), sortValue: (r) => r.number, cell: (r) => <Link href={`/reservations/${r.id}`} className="inline-flex min-h-11 items-center font-mono text-navy-600 underline underline-offset-2">{r.number}</Link> },
+                    { key: 'guest', header: t('res.guest'), sortValue: (r) => guestName(r), cell: (r) => <>{r.guest ? `${r.guest.first_name} ${r.guest.last_name}` : '-'}{r.guest?.vip && <Star className="ml-1 inline h-4 w-4 text-amber-600" aria-label="VIP" />}</> },
                     { key: 'room', header: t('res.room'), cell: (r) => r.room?.number ?? <span className="text-slate-500">{r.room_type?.code}</span> },
-                    { key: 'in', header: t('res.check_in'), cell: (r) => formatDate(r.arrival) },
-                    { key: 'out', header: t('res.check_out'), cell: (r) => formatDate(r.departure) },
-                    { key: 'n', header: t('res.nights'), align: 'right', cell: (r) => nights(r.arrival, r.departure) },
-                    { key: 'amt', header: t('res.amount'), align: 'right', cell: (r) => <span className="tabular-nums">{formatCurrency(r.total_amount)}</span> },
-                    { key: 'status', header: t('res.status'), cell: (r) => <StatusBadge status={r.status} label={t(`res.status.${r.status}`)} /> },
+                    { key: 'in', header: t('res.check_in'), sortValue: (r) => r.arrival, cell: (r) => formatDate(r.arrival) },
+                    { key: 'out', header: t('res.check_out'), sortValue: (r) => r.departure, cell: (r) => formatDate(r.departure) },
+                    { key: 'n', header: t('res.nights'), align: 'right', defaultHidden: false, cell: (r) => nights(r.arrival, r.departure) },
+                    { key: 'amt', header: t('res.amount'), align: 'right', sortValue: (r) => r.total_amount, cell: (r) => <span className="tabular-nums">{formatCurrency(r.total_amount)}</span> },
+                    { key: 'status', header: t('res.status'), sortValue: (r) => r.status, cell: (r) => <StatusBadge status={r.status} label={t(`res.status.${r.status}`)} /> },
                     { key: 'src', header: t('res.source'), cell: (r) => <span className="text-slate-600">{t(`res.channel.${r.channel}`) === `res.channel.${r.channel}` ? r.channel : t(`res.channel.${r.channel}`)}</span> },
-                    { key: 'act', header: '', hideLabel: true, align: 'right', cell: (r) => busy === r.id ? <Loader2 className="inline h-4 w-4 animate-spin" aria-label="..." /> : (
+                    { key: 'act', header: '', hideLabel: true, align: 'right', required: true, cell: (r) => busy === r.id ? <Loader2 className="inline h-4 w-4 animate-spin" aria-label="..." /> : (
                         <span className="btn-row justify-end">
                             {['confirmed', 'tentative'].includes(r.status) && (
                                 <>
@@ -141,6 +200,7 @@ export default function ReservationsIndex() {
                     ) },
                 ]}
             />
+            </MasterDetail>
 
             <Modal open={!!cancelling} onClose={() => setCancelling(null)} title={t('res.do_cancel')}
                 footer={<>

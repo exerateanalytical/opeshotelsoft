@@ -1,4 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyAction, EmptyFor } from '@/Components/ui/EmptyStates';
+import { LastUpdated } from '@/Components/ui/ApiState';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -13,13 +17,16 @@ export default function Valuation() {
     const t = useT();
     const [date, setDate] = useState(today());
     const [store, setStore] = useState('');
+    const report = useApi<Report>(`stock-control/valuation?date=${date}${store ? `&store_id=${store}` : ''}`, [date, store]);
     const stores = useApi<Paged<Ref> | Ref[]>('stock/stores?per_page=100');
     const storeList = Array.isArray(stores.data) ? stores.data : stores.data?.data ?? [];
-    const report = useApi<Report>(`stock-control/valuation?date=${date}${store ? `&store_id=${store}` : ''}`, [date, store]);
 
     return (
         <AppLayout title={t('stock2.valuation.title')} subtitle={t('stock2.valuation.subtitle')}>
             <Head title={t('stock2.valuation.title')} />
+            <QueryStatus query={report} variant="table" />
+            <LastUpdated at={report.updatedAt} />
+            <StockTabs current="valuation" />
             <div className="mb-3 flex flex-wrap gap-2">
                 <input className="input" aria-label={t('stock.common.date')} type="date" max={today()} value={date} onChange={(e) => setDate(e.target.value)} />
                 <select className="input" value={store} onChange={(e) => setStore(e.target.value)} aria-label={t('stock2.valuation.all_stores')}>
@@ -28,7 +35,6 @@ export default function Valuation() {
                 </select>
                 <OpsPrintButton path={`stock-valuation?as_of=${date}${store ? `&store_id=${store}` : ''}`} label={t('documents4.valuation')} />
             </div>
-            {report.error && <p className="mb-3 text-sm text-red-700">{report.error.message}</p>}
             {report.data && (
                 <>
                     <div className="mb-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3 [&>*]:min-w-0">
@@ -50,7 +56,7 @@ export default function Valuation() {
                                 ))}
                             </tbody>
                         </table>
-                        {report.data.rows.length === 0 && <p className="py-4 text-center text-sm text-slate-500">{t('stock2.common.nothing')}</p>}
+                        {report.data.rows.length === 0 && <EmptyFor kind="stock" action={<EmptyAction kind="stock" href="/stock" />} />}
                     </div>
                 </>
             )}

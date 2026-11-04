@@ -1,4 +1,5 @@
 import { api, useApi } from '@/lib/api';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { formatDate } from '@/lib/utils';
 import { Calculator, Check, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
@@ -45,7 +46,8 @@ export function OvertimeTab() {
     const r = rules.data?.rules;
     return (
         <div>
-            <Banner ok={m.ok} err={m.err ?? entries.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={entries} variant="table" rows={3} />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <form onSubmit={compute} className="card">
                     <h3 className="mb-3 font-semibold">{t('hr.ot.compute_title')}</h3>
@@ -123,7 +125,8 @@ function HolidaysCard() {
                 <h3 className="font-semibold">{t('hr.ot.public_holidays')}</h3>
                 <input type="number" className="input w-28" value={year} onChange={(e) => setYear(Number(e.target.value) || today.getFullYear())} />
             </div>
-            <Banner ok={m.ok} err={m.err ?? list.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={list} variant="list" rows={3} />
             <p className="mb-3 text-sm text-slate-500">{t('hr.ot.holidays_hint')}</p>
             <form onSubmit={add} className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-[10rem_1fr_auto]">
                 <input type="date" className="input" required value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />

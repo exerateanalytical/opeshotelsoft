@@ -55,7 +55,7 @@ export default function ReservationCreate() {
     const opts = { hotelId };
     const [agents, setAgents] = useState<Agent[]>([]);
     const [agentId, setAgentId] = useState<number | null>(null);
-    const [walkIn, setWalkIn] = useState(false);
+    const [walkIn, setWalkIn] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('walk_in') === '1');
     const [arrival, setArrival] = useState(addDays(0));
     const [departure, setDeparture] = useState(addDays(1));
     const [nights, setNights] = useState(1);
@@ -259,7 +259,7 @@ export default function ReservationCreate() {
                         <h2 className="text-base font-semibold">{t('res.room')}</h2>
                         {vacant.length === 0 ? <p className="text-sm text-slate-600">{t('res.create.no_vacant')}</p> : (
                             <Field label={t('res.create.choose_room')}>
-                                <select className="select" value={roomId ?? ''} onChange={(e) => setRoomId(e.target.value ? +e.target.value : null)} aria-label={t('res.create.choose_room')}>
+                                <select className="select" value={roomId ?? ''} onChange={(e) => setRoomId(e.target.value ? +e.target.value : null)}>
                                     <option value="">{t('res.create.choose_room')}</option>
                                     {vacant.map((r) => <option key={r.id} value={r.id}>{r.number}{r.hk_status ? ` (${r.hk_status})` : ''}</option>)}
                                 </select>
@@ -353,7 +353,7 @@ export default function ReservationCreate() {
                             )}
                         </div>
                         <Field label={t('res.travel_agent')}>
-                            <select className="select" value={agentId ?? ''} onChange={(e) => setAgentId(e.target.value ? +e.target.value : null)} aria-label={t('common.none')}>
+                            <select className="select" value={agentId ?? ''} onChange={(e) => setAgentId(e.target.value ? +e.target.value : null)}>
                                 <option value="">{t('common.none')}</option>
                                 {agents.map((a) => <option key={a.id} value={a.id}>{a.name}{a.iata_number ? ` (IATA ${a.iata_number})` : ''} · {Number(a.commission_percent)}%</option>)}
                             </select>

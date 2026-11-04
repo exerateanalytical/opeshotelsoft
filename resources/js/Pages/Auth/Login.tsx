@@ -38,9 +38,9 @@ export default function Login({ demoAccounts = [], memberDemoAccounts = [], tab:
                             <p className="text-slate-400 text-sm mt-3">{t('auth.tagline')}</p>
                         </div>
 
-                        <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+                        <p className="text-4xl font-bold text-white leading-tight mb-4">
                             {t('auth.hero')}
-                        </h1>
+                        </p>
                         <p className="text-slate-400 text-base leading-relaxed">
                             {t('auth.hero_text')}
                         </p>
@@ -48,7 +48,7 @@ export default function Login({ demoAccounts = [], memberDemoAccounts = [], tab:
 
                     {/* Hotel names */}
                     <div className="relative">
-                        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">{t('auth.trusted_by')}</p>
+                        <p className="text-slate-300 text-sm font-semibold mb-4">{t('auth.trusted_by')}</p>
                         <div className="flex flex-col gap-2">
                             {['Krystal Palace Hotel', 'Akwa Palace Hotel', 'Guims Group', 'Hilton Subsidiaries'].map(n => (
                                 <div key={n} className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export default function Login({ demoAccounts = [], memberDemoAccounts = [], tab:
 
                 {/* Right panel — form */}
                 <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
-                    <div className="w-full max-w-[400px]">
+                    <main id="main" className="w-full max-w-[400px]">
                         <div className="flex justify-end mb-6"><LanguageSwitch dark /></div>
                         {/* Mobile logo */}
                         <div className="flex lg:hidden justify-center mb-8">
@@ -159,7 +159,7 @@ export default function Login({ demoAccounts = [], memberDemoAccounts = [], tab:
 
                         {demoAccounts.length > 0 && (
                             <div className="mt-8 pt-6 border-t border-slate-600">
-                                <p className="text-sm font-semibold uppercase tracking-widest text-yellow-500 mb-1">{t('auth.demo.title')}</p>
+                                <p className="text-sm font-semibold text-yellow-500 mb-1">{t('auth.demo.title')}</p>
                                 <p className="text-sm text-slate-400 mb-4">{t('auth.demo.text')}</p>
                                 <DemoSelect options={demoAccounts.map((a) => ({ value: a.login, label: a.name, group: a.section }))}
                                     endpoint={(v) => `/demo-login/${v}`} />
@@ -170,7 +170,7 @@ export default function Login({ demoAccounts = [], memberDemoAccounts = [], tab:
                         <p className="text-center text-xs text-slate-400 mt-8">
                             {t('auth.footer')}
                         </p>
-                    </div>
+                    </main>
                 </div>
             </div>
         </>

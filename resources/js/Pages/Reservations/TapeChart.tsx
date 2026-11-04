@@ -17,7 +17,7 @@ interface Bar { id: number; number: string; status: string; room_id: number | nu
 interface Block { room_id: number; from: string; to: string; reason: string }
 interface Feed { from: string; to: string; rooms: Room[]; bars: Bar[]; out_of_order: Block[] }
 
-const COL = 44; // px per day
+const COL = 48; // px per day
 const DAY = 86_400_000;
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const shift = (s: string, n: number) => iso(new Date(Date.parse(s) + n * DAY));

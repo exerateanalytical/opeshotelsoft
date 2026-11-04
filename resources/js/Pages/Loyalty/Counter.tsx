@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { Coins, ScanLine, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -64,6 +65,7 @@ export default function LoyaltyCounter() {
     return (
         <AppLayout title={t('loyalty.counter.title')} subtitle={t('loyalty.counter.subtitle')}>
             <Head title={t('loyalty.counter.title')} />
+            <QueryStatus query={checks} variant="list" />
             {msg && <div className={`mb-4 rounded-lg border px-4 py-2 text-sm ${msg.kind === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>{msg.text}</div>}
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="card p-4 text-sm">
@@ -83,11 +85,11 @@ export default function LoyaltyCounter() {
                 <div className="card p-4 space-y-4 text-sm">
                     <form onSubmit={(e) => { e.preventDefault(); if (scan.trim()) attach({ card: scan.trim() }); }} className="space-y-1">
                         <label className="font-semibold flex items-center gap-1"><ScanLine className="w-4 h-4" /> {t('loyalty.counter.scan')}</label>
-                        <div className="flex gap-2"><input autoFocus className="input flex-1 font-mono" value={scan} onChange={(e) => setScan(e.target.value)} placeholder={t('loyalty.counter.scan_hint')} /><button className="btn-secondary" disabled={busy}>OK</button></div>
+                        <div className="flex gap-2"><input autoFocus className="input flex-1 font-mono" value={scan} onChange={(e) => setScan(e.target.value)} placeholder={t('loyalty.counter.scan_hint')} aria-label={t('loyalty.counter.scan')} /><button className="btn-secondary" disabled={busy}>OK</button></div>
                     </form>
                     <form onSubmit={search} className="space-y-1">
                         <label className="font-semibold flex items-center gap-1"><Search className="w-4 h-4" /> {t('loyalty.counter.search')}</label>
-                        <div className="flex gap-2"><input className="input flex-1" value={q} onChange={(e) => setQ(e.target.value)} /><button className="btn-secondary">{t('loyalty.counter.find')}</button></div>
+                        <div className="flex gap-2"><input className="input flex-1" aria-label={t('loyalty.counter.search')} value={q} onChange={(e) => setQ(e.target.value)} /><button className="btn-secondary">{t('loyalty.counter.find')}</button></div>
                     </form>
                     {hits.length > 0 && (
                         <ul className="divide-y border rounded">

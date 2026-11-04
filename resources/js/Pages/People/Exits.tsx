@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -24,6 +26,7 @@ export default function PeopleExits() {
     return (
         <AppLayout title={t('people.exits.title')} subtitle={t('people.exits.subtitle')}>
             <Head title={t('people.exits.title')} />
+            <QueryStatus query={list} variant="table" />
             <PeopleTabs active="/people/exits" />
             {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
             <form className="card mb-4 grid gap-3 p-4 text-sm sm:grid-cols-3" onSubmit={(e) => { e.preventDefault(); run(async () => { await post('people/exits', { ...form, employee_id: Number(form.employee_id), reason: form.reason || null }); setForm(EMPTY); }); }}>
@@ -49,6 +52,7 @@ export default function PeopleExits() {
             </form>
 
             <div className="space-y-3">
+                {list.data?.length === 0 && <div className="card"><EmptyFor kind="staff" /></div>}
                 {list.data?.map((x) => (
                     <div key={x.id} className="card p-4 text-sm">
                         <div className="flex flex-wrap justify-between gap-2">

@@ -1,6 +1,10 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useApi } from '@/lib/api';
+import { errorKind } from '@/lib/apiErrors';
+import ErrorState from '@/Components/ui/ErrorState';
+import LoadingState from '@/Components/ui/LoadingState';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
 import { EmployeeRef } from './lib';
@@ -17,7 +21,7 @@ export function PeopleTabs({ active }: { active: string }) {
     return (
         <div className="mb-4 flex flex-wrap gap-2 text-sm">
             {PEOPLE_TABS.map(([href, key]) => (
-                <Link key={href} href={href} className={`rounded-lg border px-3 py-1.5 ${active === href ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'}`}>{t(key)}</Link>
+                <Link key={href} href={href} className={`inline-flex min-h-11 items-center rounded-lg border px-3 py-1.5 ${active === href ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'}`}>{t(key)}</Link>
             ))}
         </div>
     );
@@ -32,8 +36,11 @@ export default function PeopleIndex() {
             <PeopleTabs active="/people" />
             <div className="card p-4">
                 <h2 className="mb-3 font-semibold">{t('people.tasks.overdue')}</h2>
-                {overdue.error && <p className="text-sm text-slate-500">{t('people.no_access')}</p>}
-                {overdue.data && overdue.data.length === 0 && <p className="text-sm text-slate-500">{t('people.tasks.none_overdue')}</p>}
+                {overdue.loading && !overdue.data && <LoadingState variant="list" rows={3} />}
+                {overdue.error && !overdue.data && !overdue.loading && (errorKind(overdue.error) === 'forbidden'
+                    ? <p className="text-sm text-slate-500">{t('people.no_access')}</p>
+                    : <ErrorState error={overdue.error} onRetry={overdue.reload} compact />)}
+                {overdue.data && overdue.data.length === 0 && <EmptyFor kind="tasks" />}
                 <ul className="divide-y divide-slate-100 text-sm">
                     {overdue.data?.map((x) => (
                         <li key={x.id} className="flex justify-between py-2">

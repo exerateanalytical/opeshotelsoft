@@ -14,6 +14,7 @@ class Navigation
 {
     public const ITEMS = [
         ['label' => 'nav.dashboard', 'path' => '/dashboard', 'icon' => 'LayoutDashboard', 'section' => null, 'permission' => null],
+        ['label' => 'nav.tasks', 'path' => '/tasks', 'icon' => 'ClipboardCheck', 'section' => null, 'permission' => null],
         ['label' => 'nav.my_space', 'path' => '/me', 'icon' => 'UserCircle', 'section' => null, 'permission' => null],
 
         ['label' => 'nav.owner', 'path' => '/owner', 'icon' => 'Gauge', 'section' => 'nav.section.owner', 'permission' => ['insights.view']],
@@ -31,6 +32,7 @@ class Navigation
         ['label' => 'nav.group_booking', 'path' => '/reservations/group-booking', 'icon' => 'UsersRound', 'section' => 'nav.section.operations', 'permission' => ['experience.manage']],
         ['label' => 'nav.rooming_import', 'path' => '/reservations/rooming-import', 'icon' => 'ListOrdered', 'section' => 'nav.section.operations', 'permission' => ['experience.manage']],
         ['label' => 'nav.channel_health', 'path' => '/reservations/channel-health', 'icon' => 'Network', 'section' => 'nav.section.operations', 'permission' => ['experience.view']],
+        ['label' => 'nav.experience_settings', 'path' => '/reservations/experience-settings', 'icon' => 'Sparkles', 'section' => 'nav.section.operations', 'permission' => ['experience.view']],
         ['label' => 'nav.seasons', 'path' => '/reservations/seasons', 'icon' => 'Sun', 'section' => 'nav.section.operations', 'permission' => ['rates.view']],
         ['label' => 'nav.front_desk', 'path' => '/front-desk', 'icon' => 'DoorOpen', 'section' => 'nav.section.operations', 'permission' => ['frontdesk.view']],
         ['label' => 'nav.in_house', 'path' => '/front-desk/in-house', 'icon' => 'BedDouble', 'section' => 'nav.section.operations', 'permission' => ['frontdesk.view']],

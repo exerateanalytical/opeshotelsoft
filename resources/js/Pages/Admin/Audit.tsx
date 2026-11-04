@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
@@ -40,14 +41,15 @@ export default function AuditIndex() {
     const t = useT();
     const [f, setF] = useState({ user_id: '', subject_type: '', event: '', from: '', to: '' });
     const [page, setPage] = useState(1);
-    const filters = useApi<Filters>('admin/audit/filters');
     const qs = new URLSearchParams({ ...Object.fromEntries(Object.entries(f).filter(([, v]) => v)), page: String(page), per_page: '50' }).toString();
     const log = useApi<Page>(`admin/audit?${qs}`, [qs]);
+    const filters = useApi<Filters>('admin/audit/filters');
     const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { setPage(1); setF({ ...f, [k]: e.target.value }); };
 
     return (
         <AppLayout title={t('admin.audit.title')} subtitle={t('admin.audit.subtitle')}>
             <Head title={t('admin.audit.title')} />
+            <QueryStatus query={log} variant="table" />
             <div className="card p-4 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
                 <div>
                     <label className="label" htmlFor="f-user">{t('admin.audit.user')}</label>

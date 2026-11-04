@@ -140,11 +140,11 @@ function Webhooks() {
             <form onSubmit={create} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-end">
                 <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">{t('dev.endpoint_url')}</label>
-                    <input className="input w-full" type="url" required placeholder="https://example.com/hooks" value={url} onChange={(e) => setUrl(e.target.value)} />
+                    <input className="input w-full" type="url" required placeholder="https://example.com/hooks" aria-label={t('dev.endpoint_url')} value={url} onChange={(e) => setUrl(e.target.value)} />
                 </div>
                 <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">{t('dev.event_types')}</label>
-                    <input className="input w-full" required value={types} onChange={(e) => setTypes(e.target.value)} />
+                    <input className="input w-full" required aria-label={t('dev.event_types')} value={types} onChange={(e) => setTypes(e.target.value)} />
                 </div>
                 <button className="btn-primary inline-flex items-center gap-1" disabled={saving}><Plus className="w-4 h-4" /> {t('common.add')}</button>
             </form>
@@ -187,7 +187,7 @@ function Events() {
         <section className="card p-5 space-y-4">
             <h2 className="flex items-center gap-2 font-semibold text-slate-900"><Radio className="w-4 h-4" /> {t('dev.event_browser')}</h2>
             <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); setAfter(0); setQuery(type); }}>
-                <input className="input flex-1 min-w-[180px]" placeholder={t('dev.filter_ph')} value={type} onChange={(e) => setType(e.target.value)} />
+                <input className="input flex-1 min-w-[180px]" placeholder={t('dev.filter_ph')} aria-label={t('dev.filter_ph')} value={type} onChange={(e) => setType(e.target.value)} />
                 <button className="btn-secondary">{t('common.filter')}</button>
             </form>
             <Banner msg={error ? errText(error) : null} />

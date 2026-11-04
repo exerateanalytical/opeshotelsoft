@@ -85,7 +85,7 @@ class FrontDeskExtrasController
         abort_unless($request->user()->can('frontdesk.configure'), 403);
         $data = $request->validate([
             'rules' => ['present', 'array', 'max:20'],
-            'rules.*.kind' => ['required', 'in:late,early'],
+            'rules.*.kind' => ['required', 'in:late,early,early_checkin'],
             'rules.*.after_hour' => ['required_if:rules.*.kind,late', 'nullable', 'integer', 'between:0,23'],
             'rules.*.charge_code' => ['required', 'string', 'max:16'],
             'rules.*.fee_type' => ['required', 'in:percent_of_night,fixed'],
@@ -103,7 +103,7 @@ class FrontDeskExtrasController
         }
 
         return DB::transaction(function () use ($data) {
-            CheckoutFeeRule::query()->delete();
+            CheckoutFeeRule::query()->when(! collect($data['rules'])->contains('kind', 'early_checkin'), fn ($q) => $q->where('kind', '!=', 'early_checkin'))->delete();
             foreach ($data['rules'] as $r) {
                 CheckoutFeeRule::create(['after_hour' => $r['after_hour'] ?? 0, 'active' => $r['active'] ?? true] + $r);
             }

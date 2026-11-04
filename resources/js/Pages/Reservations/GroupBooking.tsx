@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 
@@ -59,6 +61,9 @@ export default function GroupBooking() {
                 </div>
                 <div className="card space-y-3 p-4">
                     <h2 className="font-semibold">{t('experience.group.rooms')}</h2>
+                    <QueryStatus query={types} variant="form" rows={1} />
+                    <QueryStatus query={plans} variant="form" rows={1} />
+                    {types.data && list(types.data).length === 0 && <EmptyState title={t('states3.empty.group_types.title')} description={t('states3.empty.group_types.text')} action={<a href="/properties" className="btn-primary">{t('states3.empty.outlets.action')}</a>} />}
                     {rooms.map((r, i) => (
                         <div key={i} className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                             <select aria-label={t('experience.group.room_type')} className="input" value={r.room_type_id} onChange={(e) => set(i, { room_type_id: +e.target.value })}>
@@ -75,7 +80,7 @@ export default function GroupBooking() {
                     ))}
                     <button type="button" className="btn-secondary" onClick={() => setRooms([...rooms, blank()])}>{t('experience.group.add_room')}</button>
                 </div>
-                <button type="submit" className="btn-primary" disabled={busy}>{t('experience.group.book')}</button>
+                <button type="submit" className="btn-primary" disabled={busy || !types.data || list(types.data).length === 0}>{t('experience.group.book')}</button>
             </form>
         </AppLayout>
     );

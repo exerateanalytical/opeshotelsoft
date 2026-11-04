@@ -14,7 +14,7 @@ export function OnboardingTabs({ active }: { active: string }) {
     return (
         <nav className="mb-4 flex flex-wrap gap-2 border-b border-slate-200 pb-2 text-sm">
             {TABS.map((tab) => (
-                <Link key={tab.href} href={tab.href} className={tab.href === active ? 'font-semibold text-slate-900' : 'text-slate-500 hover:text-slate-800'}>
+                <Link key={tab.href} href={tab.href} className={`inline-flex min-h-11 items-center ${tab.href === active ? 'font-semibold text-slate-900' : 'text-slate-500 hover:text-slate-800'}`}>
                     {t(tab.key)}
                 </Link>
             ))}

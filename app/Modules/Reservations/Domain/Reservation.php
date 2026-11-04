@@ -20,6 +20,29 @@ class Reservation extends Model
 
     protected $guarded = ['id', 'group_id', 'hotel_id'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $r) {
+            $r->public_code ??= self::newPublicCode((int) $r->group_id);
+        });
+    }
+
+    /** Random 8-character code (no look-alike characters), unique within the group; the unique index is the final guard. */
+    public static function newPublicCode(int $groupId): string
+    {
+        $alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        for ($try = 0; $try < 20; $try++) {
+            $code = '';
+            for ($i = 0; $i < 8; $i++) {
+                $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+            if (! static::withoutGlobalScopes()->where('group_id', $groupId)->where('public_code', $code)->exists()) {
+                return $code;
+            }
+        }
+        throw new \RuntimeException('Could not allocate a unique booking code.');
+    }
+
     protected function casts(): array
     {
         return [

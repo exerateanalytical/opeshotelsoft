@@ -1,4 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { LastUpdated } from '@/Components/ui/ApiState';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -21,6 +24,9 @@ export default function MenuEngineering() {
     return (
         <AppLayout title={t('stock3.menu.title')} subtitle={t('stock3.menu.subtitle')}>
             <Head title={t('stock3.menu.title')} />
+            <QueryStatus query={rep} variant="table" />
+            <LastUpdated at={rep.updatedAt} />
+            <StockTabs current="menu" />
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
                 <input className="input w-full sm:w-40" type="date" aria-label={t('stock.common.from')} value={from} onChange={(e) => setFrom(e.target.value)} />
                 <input className="input w-full sm:w-40" type="date" aria-label={t('stock.common.to')} value={to} onChange={(e) => setTo(e.target.value)} />
@@ -28,7 +34,7 @@ export default function MenuEngineering() {
             </div>
             {r && (
                 <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
-                    {QUADS.map((q) => <div key={q} className="card p-3 text-sm"><p className="text-xs uppercase text-slate-500">{t(`stock3.menu.q.${q}`)}</p><p className="text-xl font-medium">{r.summary.by_quadrant[q] ?? 0}</p></div>)}
+                    {QUADS.map((q) => <div key={q} className="card p-3 text-sm"><p className="text-sm font-medium text-slate-600">{t(`stock3.menu.q.${q}`)}</p><p className="text-xl font-semibold tabular-nums">{r.summary.by_quadrant[q] ?? 0}</p></div>)}
                 </div>
             )}
             {r && r.items.length === 0 && <p className="text-sm text-slate-500">{t('stock3.menu.empty')}</p>}

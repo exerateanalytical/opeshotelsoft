@@ -5,7 +5,7 @@ import ConfirmSheet from './ConfirmSheet';
 import MemberLayout from './MemberLayout';
 import { fmtDate, mapi, MemberApiError, money } from './api';
 
-interface Summary { number: string; status: string; arrival: string; departure: string; nights: number; total_amount: number; currency: string; hotel: { name: string; city: string } | null; room_type: string | null; room: string | null; can_cancel: boolean }
+interface Summary { number: string; reference?: string; status: string; arrival: string; departure: string; nights: number; total_amount: number; currency: string; hotel: { name: string; city: string } | null; room_type: string | null; room: string | null; can_cancel: boolean }
 interface Detail extends Summary {
     modify: { allowed: boolean; reason: string | null; extend_only: boolean };
     cancel: { allowed: boolean; fee: number; currency: string };
@@ -26,19 +26,19 @@ function Booking({ s }: { s: Summary }) {
 
     async function load() {
         setOpen(!open);
-        if (!d) setD(await mapi<Detail>('GET', `/account/bookings/${s.number}`).catch(() => null));
+        if (!d) setD(await mapi<Detail>('GET', `/account/bookings/${s.reference ?? s.number}`).catch(() => null));
     }
     async function run<T>(fn: () => Promise<T>, done?: (r: T) => void) {
         setBusy(true); setMsg(null);
         try { const r = await fn(); done?.(r); } catch (e) { setMsg({ ok: false, text: e instanceof MemberApiError ? e.message : String(e) }); }
         setBusy(false);
     }
-    const modify = (apply: boolean) => run(() => mapi<{ difference: number; new_total: number }>('POST', `/account/bookings/${s.number}/modify`, { ...dates, apply }), (r) => {
+    const modify = (apply: boolean) => run(() => mapi<{ difference: number; new_total: number }>('POST', `/account/bookings/${s.reference ?? s.number}/modify`, { ...dates, apply }), (r) => {
         if (apply) { router.reload(); } else setQuote(r);
     });
     const [askCancel, setAskCancel] = useState(false);
-    const cancel = () => run(() => mapi('POST', `/account/bookings/${s.number}/cancel`), () => router.reload());
-    const pay = () => run(() => mapi<{ url: string }>('POST', `/account/bookings/${s.number}/pay`), (r) => { window.location.href = r.url; });
+    const cancel = () => run(() => mapi('POST', `/account/bookings/${s.reference ?? s.number}/cancel`), () => router.reload());
+    const pay = () => run(() => mapi<{ url: string }>('POST', `/account/bookings/${s.reference ?? s.number}/pay`), (r) => { window.location.href = r.url; });
 
     return (
         <div className="card">
@@ -46,7 +46,7 @@ function Booking({ s }: { s: Summary }) {
                 <span>
                     <span className="block font-semibold">{s.hotel?.name} <span className="font-normal text-slate-500">· {s.hotel?.city}</span></span>
                     <span className="block text-sm">{fmtDate(s.arrival, locale)} → {fmtDate(s.departure, locale)} · {t('member.nights', { count: s.nights })}</span>
-                    <span className="block text-sm text-slate-500">{s.number}{s.room_type ? ` · ${s.room_type}` : ''}{s.room ? ` · ${t('member.room')} ${s.room}` : ''}</span>
+                    <span className="block text-sm text-slate-500">{s.reference ?? s.number}{s.room_type ? ` · ${s.room_type}` : ''}{s.room ? ` · ${t('member.room')} ${s.room}` : ''}</span>
                 </span>
                 <span className="text-right shrink-0">
                     <span className={`badge ${s.status === 'cancelled' ? 'badge-red' : s.status === 'checked_in' ? 'badge-green' : 'badge-blue'}`}>{t(`member.status.${s.status}`)}</span>
@@ -94,9 +94,9 @@ export default function Bookings({ data }: { data: Data }) {
         <MemberLayout title={t('member.bookings.title')}>
             <h2 className="font-semibold">{t('member.bookings.upcoming')}</h2>
             {data.upcoming.length === 0 && <p className="text-slate-600">{t('member.bookings.none')}</p>}
-            {data.upcoming.map((s) => <Booking key={s.number} s={s} />)}
+            {data.upcoming.map((s) => <Booking key={s.reference ?? s.number} s={s} />)}
             {data.past.length > 0 && <h2 className="font-semibold pt-2">{t('member.bookings.past')}</h2>}
-            {data.past.map((s) => <Booking key={s.number} s={s} />)}
+            {data.past.map((s) => <Booking key={s.reference ?? s.number} s={s} />)}
         </MemberLayout>
     );
 }

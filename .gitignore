@@ -27,3 +27,6 @@ Homestead.yaml
 Thumbs.db
 
 /public/ui-audit.js
+
+# raw UI audit output (summarised in docs/UI-REGISTER.md)
+/scripts/ui-audit/results/raw/

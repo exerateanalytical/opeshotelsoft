@@ -6,6 +6,7 @@ import { formatCurrency, formatDateTime } from '@/lib/utils';
 import FloorPlan, { FloorTable } from './FloorPlan';
 import { Banner, Check, Code, errText, MenuItem, Msg, Paginated } from './shared';
 import { useT } from '@/lib/i18n';
+import { refreshPosQueueFromStorage, registerSyncRetry, reportSync } from '@/lib/syncStatus';
 import PrintPdfButton from '@/Components/PrintPdfButton';
 
 type Panel = null | 'discount' | 'split' | 'settle' | 'room' | 'void' | 'comp' | 'transfer' | { voidLine: number } | { compLine: number };
@@ -22,6 +23,7 @@ function readQueue(): QueuedCheck[] {
 }
 function writeQueue(q: QueuedCheck[]) {
     try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch { /* storage unavailable */ }
+    refreshPosQueueFromStorage();
 }
 
 interface ResvRow { id: number; number: string; guest: { first_name: string; last_name: string } | null; room: { number: string } | null; departure: string }
@@ -56,6 +58,16 @@ export default function Terminal({ outletId }: { outletId: number }) {
             const left = pending.filter((p) => !done.has(p.client_uuid));
             writeQueue(left);
             setQueue(left);
+            const rejectedIds = new Set(rejected.map((x) => x.client_uuid));
+            reportSync('pos', {
+                pending: left.length - rejected.length,
+                failed: rejected.length,
+                items: [
+                    ...left.filter((p) => !rejectedIds.has(p.client_uuid)).map((p) => ({ id: p.client_uuid, label: p.table_number ? `#${p.table_number}` : p.client_uuid.slice(0, 8), kind: 'pending' as const })),
+                    ...rejected.map((x) => ({ id: x.client_uuid, label: x.client_uuid.slice(0, 8), detail: x.error, kind: 'failed' as const })),
+                ],
+                ...(done.size ? { lastSyncedAt: Date.now() } : {}),
+            });
             setMsg(rejected.length ? { ok: false, text: t('pos.term.sync_rejected', { errors: rejected.map((x) => x.error).join('; ') }) } : { ok: true, text: t('pos.term.synced', { count: done.size }) });
             reloadChecks();
         } catch {
@@ -68,7 +80,8 @@ export default function Terminal({ outletId }: { outletId: number }) {
     useEffect(() => {
         const timer = window.setInterval(syncQueue, 30000);
         window.addEventListener('online', syncQueue);
-        return () => { window.clearInterval(timer); window.removeEventListener('online', syncQueue); };
+        const unregister = registerSyncRetry('pos', syncQueue);
+        return () => { window.clearInterval(timer); window.removeEventListener('online', syncQueue); unregister(); };
     }, [syncQueue]);
 
     async function settle(ch: Check, payments: object[], change: number) {

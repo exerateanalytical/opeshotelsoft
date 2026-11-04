@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
-import { Loader2 } from 'lucide-react';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -39,9 +40,10 @@ export default function InsightsSettings() {
         <AppLayout title={t('insights.settings.title')} subtitle={t('insights.settings.subtitle')}>
             <Head title={t('insights.settings.title')} />
             {message && <p className={`mb-3 text-sm ${message.ok ? 'text-emerald-700' : 'text-red-700'}`}>{message.text}</p>}
-            {!s && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
+            <QueryStatus query={q} variant="form" rows={4} />
             {s && (
                 <div className="space-y-4">
+                    {Object.keys(s.rules).length === 0 && <div className="card"><EmptyFor kind="generic" /></div>}
                     <div className="card divide-y divide-slate-100">
                         {Object.entries(s.rules).map(([rule, cfg]) => (
                             <div key={rule} className="flex flex-wrap items-end gap-3 p-3 text-sm">

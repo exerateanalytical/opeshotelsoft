@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -28,6 +30,8 @@ export default function Reorder() {
         <AppLayout title={t('stock2.reorder.title')} subtitle={t('stock2.reorder.subtitle')}
             actions={canConvert && groups.some((g) => g.supplier_id) ? <button type="button" className="btn-primary" onClick={() => convert()}>{t('stock2.reorder.convert_all')}</button> : undefined}>
             <Head title={t('stock2.reorder.title')} />
+            <QueryStatus query={data} variant="cards" />
+            <StockTabs current="reorder" />
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
             {data.data && groups.length === 0 && <p className="text-sm text-slate-500">{t('stock2.reorder.empty')}</p>}
             {groups.map((g) => (

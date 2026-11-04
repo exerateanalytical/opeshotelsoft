@@ -52,7 +52,7 @@ class MemberBookings
     public function summary(Reservation $r, ?Hotel $h): array
     {
         return [
-            'number' => $r->number, 'status' => $r->status, 'arrival' => $r->arrival->toDateString(), 'departure' => $r->departure->toDateString(),
+            'number' => $r->number, 'reference' => $r->public_code, 'status' => $r->status, 'arrival' => $r->arrival->toDateString(), 'departure' => $r->departure->toDateString(),
             'nights' => $r->nightCount(), 'adults' => $r->adults, 'children' => $r->children, 'total_amount' => (int) $r->total_amount, 'currency' => $r->currency,
             'deposit_required' => (int) $r->deposit_required, 'deposit_paid' => (int) $r->deposit_paid,
             'hotel' => $h ? $h->only(['code', 'name', 'city', 'phone']) : null,
@@ -63,10 +63,24 @@ class MemberBookings
         ];
     }
 
-    /** The member's own reservation by number (404 for anyone else's). */
+    /**
+     * The member's own reservation by booking reference (unique) or by number (404 for anyone else's). A number can repeat across
+     * hotels, so when it matches several of the member's bookings the member is asked to use the reference.
+     */
     public function find(MemberAccount $a, string $number): Reservation
     {
-        return Reservation::with('guest', 'ratePlan')->where('guest_id', $a->guest_id)->where('number', $number)->firstOrFail();
+        $own = fn () => Reservation::with('guest', 'ratePlan')->where('guest_id', $a->guest_id);
+        $byCode = $own()->where('public_code', strtoupper(trim($number)))->first();
+        if ($byCode) {
+            return $byCode;
+        }
+        $rows = $own()->where('number', $number)->limit(2)->get();
+        if ($rows->count() > 1) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json(['message' => 'Several of your bookings share this number. Open the booking from your list (booking reference).', 'code' => 'ambiguous_booking'], 422));
+        }
+        abort_if($rows->isEmpty(), 404);
+
+        return $rows->first();
     }
 
     public function detail(MemberAccount $a, string $number): array
@@ -240,7 +254,7 @@ class MemberBookings
             }
         }
 
-        return ['confirmation' => $reservation->number, 'status' => $reservation->status, 'total' => (int) $reservation->total_amount, 'currency' => $reservation->currency,
+        return ['confirmation' => $reservation->number, 'reference' => $reservation->public_code, 'status' => $reservation->status, 'total' => (int) $reservation->total_amount, 'currency' => $reservation->currency,
             'deposit_required' => (int) $reservation->deposit_required, 'pay_url' => $payUrl];
     }
 }

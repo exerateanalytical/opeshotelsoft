@@ -24,6 +24,7 @@ class NightAudit
     public function __construct(
         private FolioService $folios,
         private ReservationService $reservations,
+        private NoShowFee $noShowFee,
         private EventBus $bus,
         private TenantContext $ctx,
     ) {}
@@ -79,6 +80,7 @@ class NightAudit
             if ($markNoShows) {
                 foreach (Reservation::whereIn('status', ['confirmed', 'tentative'])->whereDate('arrival', $date)->get() as $r) {
                     $this->reservations->markNoShow($r);
+                    $this->noShowFee->post($r);
                     $noShows[] = $r->number;
                 }
             }

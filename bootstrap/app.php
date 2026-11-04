@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotent' => \App\Platform\Http\Idempotency::class,
         ]);
         $middleware->trustProxies(at: '*');
+        $middleware->prepend(\App\Http\Middleware\PerfDebug::class);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         // Tenant context must exist before route-model binding applies tenant scopes.
         $middleware->prependToPriorityList(
@@ -37,4 +38,6 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
         \App\Platform\Http\ProblemDetails::register($exceptions);
+        // Friendly Inertia error pages for the browser, problem+json with a request id for the API; never leaks messages.
+        \App\Platform\Http\ErrorPages::register($exceptions);
     })->create();

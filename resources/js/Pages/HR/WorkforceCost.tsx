@@ -1,4 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { LastUpdated } from '@/Components/ui/ApiState';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -17,8 +20,11 @@ export default function WorkforceCost() {
     return (
         <AppLayout title={t('workforce.cost.title')} subtitle={t('workforce.cost.subtitle')}>
             <Head title={t('workforce.cost.title')} />
+            <QueryStatus query={d} variant="detail" />
+            <LastUpdated at={d.updatedAt} />
             <WorkforceTabs active="/hr/workforce/cost" />
-            <div className="card mb-4 flex flex-wrap gap-3 p-4 text-sm"><input type="date" className="input" value={from} onChange={(e) => setFrom(e.target.value)} /><input type="date" className="input" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+            <div className="card mb-4 flex flex-wrap gap-3 p-4 text-sm"><input type="date" className="input" aria-label={t('ui2.common.from')} value={from} onChange={(e) => setFrom(e.target.value)} /><input type="date" className="input" aria-label={t('ui2.common.to')} value={to} onChange={(e) => setTo(e.target.value)} /></div>
+            {d.data && d.data.rows.length === 0 && d.data.departments.length === 0 && <div className="card"><EmptyFor kind="generic" /></div>}
             {d.data && (<>
                 <div className="mb-4 grid gap-3 text-sm sm:grid-cols-4">
                     {([['planned_cost', d.data.totals.planned_cost], ['actual_cost', d.data.totals.actual_cost], ['revenue', d.data.totals.revenue]] as const).map(([k, v]) => <div key={k} className="card p-4"><div className="text-slate-500">{t(`workforce.cost.${k}`)}</div><div className="text-lg font-semibold">{n(v)}</div></div>)}

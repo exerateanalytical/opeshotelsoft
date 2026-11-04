@@ -47,8 +47,8 @@ export default function Currencies() {
             {message && <Banner {...message} />}
             {currencies.error && <Banner ok={false} text={currencies.error.message} />}
 
-            <div className="grid lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="min-w-0 space-y-4">
                     <div className="card overflow-x-auto">
                         <table className="table-auto w-full">
                             <thead>
@@ -67,7 +67,7 @@ export default function Currencies() {
                                             <div className="flex gap-1 mt-1">
                                                 {c.is_functional && <span className="badge-blue">{t('admin.currency.functional')}</span>}
                                                 {canManage && !c.is_functional ? (
-                                                    <button type="button" className={c.active ? 'badge-green' : 'badge-slate'} disabled={busy}
+                                                    <button type="button" className={`hit-44 ${c.active ? 'badge-green' : 'badge-slate'}`} disabled={busy}
                                                         onClick={() => run(() => api(`admin/currencies/${c.code}`, { method: 'PATCH', body: JSON.stringify({ active: !c.active }) }))}>
                                                         {c.active ? t('admin.currency.active') : t('admin.currency.inactive')}
                                                     </button>
@@ -82,7 +82,7 @@ export default function Currencies() {
                                                     {t('admin.currency.confirm_delete', { code: c.code })}
                                                 </button>
                                             ) : (
-                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="text-slate-500 hover:text-red-600" onClick={() => setArmed(c.code)}>
+                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="hit-44 text-slate-500 hover:text-red-600" onClick={() => setArmed(c.code)}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             ))}
@@ -111,7 +111,7 @@ export default function Currencies() {
                     )}
                 </div>
 
-                <div className="space-y-4">
+                <div className="min-w-0 space-y-4">
                     {canManage && (
                         <form className="card p-4 space-y-3" onSubmit={(e) => {
                             e.preventDefault();
@@ -146,7 +146,7 @@ export default function Currencies() {
                                         <td className="font-mono text-sm">{r.rate}</td>
                                         <td className="text-right">
                                             {canManage && (
-                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="text-slate-500 hover:text-red-600" disabled={busy}
+                                                <button type="button" title={t('common.delete')} aria-label={t('common.delete')} className="hit-44 text-slate-500 hover:text-red-600" disabled={busy}
                                                     onClick={() => run(() => api(`admin/exchange-rates/${r.id}`, { method: 'DELETE' }))}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>

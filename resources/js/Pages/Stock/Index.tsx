@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { AlertTriangle, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { Fragment, useState, type ReactNode } from 'react';
@@ -524,7 +525,7 @@ function Orders({ items, stores, suppliers, notify }: Refs) {
         <div className="space-y-4">
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <select className="input w-full sm:w-auto sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock.common.all_statuses')}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock4.aria.status')}>
                         <option value="">{t('stock.common.all_statuses')}</option>{['draft', 'submitted', 'approved', 'partially_received', 'received', 'cancelled'].map((s) => <option key={s} value={s}>{t(`stock.status.${s}`)}</option>)}
                     </select>
                     <select className="input w-full sm:w-auto sm:max-w-xs" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} aria-label={t('stock.common.all_suppliers')}>
@@ -582,7 +583,7 @@ function Orders({ items, stores, suppliers, notify }: Refs) {
                             </tr>
                         ))}
                     </Table>
-                    <div className="flex gap-2"><button className="btn-primary" onClick={receive}>{t('stock.po.post_receipt')}</button><button className="btn-secondary" onClick={() => setReceiving(null)}>{t('stock.common.close')}</button></div>
+                    <div className="flex gap-2"><button className="btn-primary" onClick={receive}>{t('stock.po.post_receipt')}</button><button className="btn-secondary" onClick={() => setReceiving(null)}>{t('stock4.common.close')}</button></div>
                 </div>
             )}
         </div>
@@ -671,7 +672,7 @@ function Invoices({ suppliers, notify }: Refs) {
         <div className="space-y-4">
             <div className="card p-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <select className="input w-full sm:w-auto sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock.common.all_statuses')}>
+                    <select className="input w-full sm:w-auto sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('stock4.aria.status')}>
                         <option value="">{t('stock.common.all_statuses')}</option>{['pending', 'approved', 'partially_paid', 'paid'].map((s) => <option key={s} value={s}>{t(`stock.status.${s}`)}</option>)}
                     </select>
                     <select className="input w-full sm:w-auto sm:max-w-xs" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} aria-label={t('stock.common.all_suppliers')}>
@@ -752,7 +753,7 @@ function Invoices({ suppliers, notify }: Refs) {
                         <Field label={t('stock.inv.pay_from_account')}><select className="input" value={pay.account} onChange={(e) => setPay({ ...pay, account: e.target.value })}><option value="">{payAccounts.loading ? t('stock.common.loading') : t('stock.common.select')}</option>{(payAccounts.data ?? []).map((a) => <option key={a.id} value={a.code}>{a.code} — {a.name}</option>)}</select></Field>
                         <Field label={t('stock.common.reference')}><input className="input" value={pay.reference} onChange={(e) => setPay({ ...pay, reference: e.target.value })} /></Field>
                     </div>
-                    <div className="flex gap-2"><button className="btn-primary" onClick={doPay}>{t('stock.inv.record_payment')}</button><button className="btn-secondary" onClick={() => setPaying(null)}>{t('stock.common.close')}</button></div>
+                    <div className="flex gap-2"><button className="btn-primary" onClick={doPay}>{t('stock.inv.record_payment')}</button><button className="btn-secondary" onClick={() => setPaying(null)}>{t('stock4.common.close')}</button></div>
                 </div>
             )}
         </div>
@@ -779,6 +780,7 @@ export default function StockIndex() {
     return (
         <AppLayout title={t('stock.page.title')} subtitle={t('stock.page.subtitle')}>
             <Head title={t('stock.page.title')} />
+            <StockTabs current="index" />
             <div className="tabs mb-4">
                 {TABS.map(([k, l]) => (
                     <button key={k} onClick={() => { setTab(k); setMsg(null); }} className={cn('tab', tab === k && 'active')} aria-current={tab === k ? 'page' : undefined}>{t(l)}</button>

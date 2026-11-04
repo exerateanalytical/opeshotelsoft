@@ -44,7 +44,16 @@ window.__uiAudit = () => {
   const isVis = (e) => { if (!vis.has(e)) vis.set(e, visible(e)); return vis.get(e); };
 
   // ---- colour helpers
+  const _cv = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  const _cache = {};
+  /** Modern colour syntaxes (oklch, lab, color-mix...) are normalised to rgba through a 1x1 canvas. */
+  const norm = (str) => {
+    if (!str || /^rgba?\(/.test(str) || str === 'transparent') return str;
+    if (_cache[str]) return _cache[str];
+    try { _cv.clearRect(0, 0, 1, 1); _cv.fillStyle = '#000'; _cv.fillStyle = str; _cv.fillRect(0, 0, 1, 1); const d = _cv.getImageData(0, 0, 1, 1).data; return (_cache[str] = 'rgba(' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3] / 255 + ')'); } catch (e) { return str; }
+  };
   const parse = (str) => {
+    str = norm(str);
     const m = str.match(/rgba?\(([^)]+)\)/);
     if (!m) return null;
     const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
@@ -137,7 +146,7 @@ window.__uiAudit = () => {
     for (const e of interactive) {
       const s = cs(e);
       if (s.display === 'inline' && e.tagName === 'A') continue; // inline link inside text: exempt
-      if (e.tagName === 'INPUT' && /^(checkbox|radio)$/.test(e.type)) { const lb = e.closest('label'); const r2 = (lb || e).getBoundingClientRect(); if (r2.height >= 44 || r2.width >= 44) continue; }
+      if (e.tagName === 'INPUT' && /^(checkbox|radio)$/.test(e.type)) { const lb = e.closest('label'); const r2 = (lb || e).getBoundingClientRect(); if (r2.height >= 44 || r2.width >= 44) continue; const ps = getComputedStyle(e, '::after'); if (ps.content !== 'none' && parseFloat(ps.width) >= 44 && parseFloat(ps.height) >= 44) continue; }
       const r = e.getBoundingClientRect();
       if (r.width < 43.5 || r.height < 43.5) add('touch-target', e, { w: Math.round(r.width), h: Math.round(r.height) });
     }
@@ -156,6 +165,8 @@ window.__uiAudit = () => {
       if (ix > 4 && iy > 4) {
         const ca = a.closest('label'), cb = b.closest('label');
         if (ca && ca === cb) continue;
+        const adorn = (x, y) => x.tagName === 'INPUT' && y.parentElement === x.parentElement && cs(y).position === 'absolute';
+        if (adorn(a, b) || adorn(b, a)) continue; // reveal or clear button drawn inside its input by design
         add('overlap', a, { with: describe(b), px: Math.round(ix) + 'x' + Math.round(iy) });
       }
     }
@@ -169,11 +180,12 @@ window.__uiAudit = () => {
     const txt = n.nodeValue.trim();
     const p = n.parentElement;
     if (!txt || !p || seen.has(p) || /^(SCRIPT|STYLE|NOSCRIPT|OPTION)$/.test(p.tagName) || !isVis(p)) continue;
-    const dis = p.closest("[disabled],[aria-disabled=true]"); // disabled controls are exempt from contrast (WCAG 1.4.3)
+    const dis = p.closest("[disabled],[aria-disabled=true]") || (() => { for (let e = p; e && e !== document.body; e = e.parentElement) { const c = cs(e); if (c.pointerEvents === "none" && parseFloat(c.opacity) < 1) return e; } return null; })(); // disabled controls are exempt from contrast (WCAG 1.4.3)
     seen.add(p);
     const s = cs(p);
     const size = parseFloat(s.fontSize);
-    if (size < 13) add('small-text', p, { px: size });
+    // [data-doc-preview] is a scaled picture of a printed document (content, aria-hidden), not UI text
+    if (size < 13 && !p.closest('[data-doc-preview]')) add('small-text', p, { px: size });
     // clipped text
     if ((s.overflow === 'hidden' || s.overflowX === 'hidden') && s.textOverflow !== 'ellipsis' && p.scrollWidth > p.clientWidth + 2 && s.whiteSpace === 'nowrap') add('clipped-text', p, { sw: p.scrollWidth, cw: p.clientWidth });
     // contrast
@@ -204,6 +216,9 @@ window.__uiAudit = () => {
   // fixed or sticky elements covering interactive content: checked with the main pane scrolled to its end, so only content that can never be scrolled clear is reported
   const pane = main && main.scrollHeight > main.clientHeight ? main : null;
   const pane0 = pane ? pane.scrollTop : 0;
+  const docEl = document.scrollingElement || document.documentElement;
+  const win0 = docEl.scrollTop;
+  if (!pane && docEl.scrollHeight > H + 1) docEl.scrollTop = docEl.scrollHeight; // layouts where the window is the scroller (member portal, public pages)
   if (pane) pane.scrollTop = pane.scrollHeight;
   for (const e of interactive) {
     const r = e.getBoundingClientRect();
@@ -213,6 +228,7 @@ window.__uiAudit = () => {
     if (!top || e.contains(top) || top.contains(e)) continue;
     for (let a = top; a && a !== document.body; a = a.parentElement) {
       const pos = cs(a).position;
+      if (pos === 'sticky' && cs(a).top !== 'auto' && cs(a).bottom === 'auto') break; // top-sticky bar: content scrolls clear of it
       if (pos === 'fixed' || pos === 'sticky') {
         const inBar = a.closest('header,nav,aside,[role=dialog],.overlay');
         // elements scrolled under a sticky app bar or bottom bar are normal scrolling; flag only when the covered element sits in the resting layout
@@ -223,10 +239,152 @@ window.__uiAudit = () => {
   }
 
   if (pane) pane.scrollTop = pane0;
+  docEl.scrollTop = win0;
+
+  // ================= EXTENDED RULES (R1, directive of 2026-11-04). Advisory unless noted in docs/UI-AUDIT-FINAL.md =================
+  const FALLBACK_OK = /^(lucide|recharts)/;
+  // images: rendered ratio versus natural ratio (distortion), circles that are not circles
+  for (const img of document.querySelectorAll('img')) {
+    if (!isVis(img) || !img.naturalWidth || !img.naturalHeight) continue;
+    const r = img.getBoundingClientRect();
+    const fit = cs(img).objectFit;
+    const nat = img.naturalWidth / img.naturalHeight, ren = r.width / r.height;
+    if ((fit === 'fill' || fit === '') && Math.abs(ren - nat) / nat > 0.06) add('img-distort', img, { natural: nat.toFixed(2), rendered: ren.toFixed(2) });
+  }
+  for (const c of document.querySelectorAll('canvas')) {
+    if (!isVis(c) || !c.width || !c.height) continue;
+    const r = c.getBoundingClientRect();
+    if (Math.abs(r.width / r.height - c.width / c.height) / (c.width / c.height) > 0.06) add('img-distort', c, { canvas: (c.width / c.height).toFixed(2), rendered: (r.width / r.height).toFixed(2) });
+  }
+  for (const sv of document.querySelectorAll('svg[preserveAspectRatio=none]')) if (isVis(sv) && !sv.closest('.recharts-wrapper')) add('img-distort', sv, { note: 'preserveAspectRatio=none' });
+  for (const e of all) {
+    const s = cs(e);
+    if (!isVis(e) || e.tagName === 'svg') continue;
+    const br = parseFloat(s.borderTopLeftRadius);
+    const r = e.getBoundingClientRect();
+    if (r.width >= 16 && r.width <= 160 && (br >= r.width / 2 - 1 || /50%|9999|3.4e/.test(s.borderTopLeftRadius)) && (e.tagName === 'IMG' || /avatar/i.test(e.getAttribute('class') || '')) && Math.abs(r.width - r.height) > 2 && r.height >= 16) add('img-distort', e, { note: 'circle is an ellipse', w: Math.round(r.width), h: Math.round(r.height) });
+  }
+  // line length on wide screens: characters per rendered line
+  if (W >= 1024) {
+    const blocks = Array.from(document.querySelectorAll('p,li,dd,blockquote,td,div,span')).filter((e) => isVis(e) && !e.closest('table') && !/svg/i.test(e.tagName));
+    for (const e of blocks) {
+      const own = Array.from(e.childNodes).filter((x) => x.nodeType === 3).map((x) => x.nodeValue).join('').replace(/\s+/g, ' ').trim();
+      if (own.length < 120) continue;
+      const s = cs(e);
+      const lh = parseFloat(s.lineHeight) || parseFloat(s.fontSize) * 1.5;
+      const lines = Math.max(1, Math.round(e.getBoundingClientRect().height / lh));
+      const cpl = own.length / lines;
+      if (lines >= 2 ? cpl > 90 : e.getBoundingClientRect().width > 90 * parseFloat(s.fontSize) * 0.5 && own.length > 100) add('long-line', e, { cpl: Math.round(cpl), w: Math.round(e.getBoundingClientRect().width) });
+    }
+  }
+  // wide screens: stretched controls and content
+  if (W >= 1600) {
+    for (const e of document.querySelectorAll('.input,.select,.textarea,input[type=text],input[type=email],input[type=search],input[type=tel],input[type=number],select,textarea')) {
+      if (!isVis(e) || e.closest('.table-wrap,table')) continue;
+      const w = e.getBoundingClientRect().width;
+      if (w > 720) add('stretched', e, { kind: 'control', w: Math.round(w) });
+    }
+    for (const f of document.querySelectorAll('form')) { if (isVis(f) && !f.closest('[role=dialog]') && f.getBoundingClientRect().width > 1100 && f.querySelectorAll('.input,.select,input,select').length >= 2 && !f.querySelector('table')) add('stretched', f, { kind: 'form', w: Math.round(f.getBoundingClientRect().width) }); }
+    for (const t of document.querySelectorAll('table')) {
+      if (!isVis(t)) continue;
+      const cols = t.querySelectorAll('thead th').length || 1, w = t.getBoundingClientRect().width;
+      if (cols <= 5 && w / cols > 380) add('stretched', t, { kind: 'table', cols, w: Math.round(w) });
+    }
+  }
+  if (main) { let mw = 0; for (const c of main.children) mw = Math.max(mw, c.getBoundingClientRect().width); out.metrics = Object.assign(out.metrics || {}, { contentW: Math.round(mw) }); }
+  // charts: overlapping tick labels / legend text inside one svg
+  for (const sv of document.querySelectorAll('svg.recharts-surface, svg[role=img]')) {
+    if (!isVis(sv)) continue;
+    const txt = Array.from(sv.querySelectorAll('text')).filter((t) => t.textContent.trim() && t.getBoundingClientRect().width > 0).map((t) => [t, t.getBoundingClientRect()]);
+    let hit = 0, first = null;
+    for (let i = 0; i < txt.length; i++) for (let j = i + 1; j < txt.length; j++) {
+      const a = txt[i][1], b = txt[j][1];
+      const ix = Math.min(a.right, b.right) - Math.max(a.left, b.left), iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (ix > 2 && iy > 3) { hit++; first = first || txt[i][0].textContent.trim() + ' / ' + txt[j][0].textContent.trim(); }
+    }
+    if (hit) add('chart-overlap', sv, { pairs: hit, first });
+    const sr = sv.getBoundingClientRect();
+    if (sr.width >= 60 && sr.height >= 60 && W < 480 && sr.width < 240) add('chart-overlap', sv, { note: 'chart narrower than 240px on phone', w: Math.round(sr.width) });
+  }
+  // typography
+  const phone = W < 768;
+  for (const h of h1s) {
+    const fs = parseFloat(cs(h).fontSize);
+    out.metrics = Object.assign(out.metrics || {}, { h1: fs });
+    if (phone ? (fs < 22 || fs > 30) : (fs < 24 || fs > 36)) add('h1-size', h, { px: fs });
+  }
+  let upperBlocks = 0;
+  const tw2 = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const seen2 = new Set();
+  let n2;
+  while ((n2 = tw2.nextNode())) {
+    const p = n2.parentElement, t = n2.nodeValue.replace(/\s+/g, ' ').trim();
+    if (!p || !t || seen2.has(p) || !isVis(p) || /^(SCRIPT|STYLE|OPTION|TEXTAREA)$/.test(p.tagName)) continue;
+    seen2.add(p);
+    const s = cs(p), fs = parseFloat(s.fontSize);
+    const isUpper = s.textTransform === 'uppercase' || (t.length > 12 && t === t.toUpperCase() && /[A-Z]{4}/.test(t));
+    if (isUpper && t.length > 28) { upperBlocks++; add('uppercase-block', p, { len: t.length }); }
+    if (t.length >= 60 && fs < (phone ? 14 : 13)) add('body-small', p, { px: fs, len: t.length });
+    if (phone && t.length >= 80 && fs < 16 && fs >= 14) out.counts['body-lt16-phone'] = (out.counts['body-lt16-phone'] || 0) + 1;
+    // money and numbers without tabular figures
+    if ((/^[-+−]?\d[\d\s .,]*\s?(FCFA|XAF|XOF|EUR|USD|F|€|\$|%)?$/.test(t) && t.replace(/\D/g, '').length >= 4) && !/tabular-nums/.test(s.fontVariantNumeric || '') && !p.closest('h1,h2,h3,time') ) add('no-tabular', p, { text: t.slice(0, 20) });
+  }
+  // icons: size, family, name
+  for (const sv of document.querySelectorAll('svg')) {
+    if (!isVis(sv) || sv.closest('.recharts-wrapper,[data-doc-preview],canvas,.l1-chart-legend,.l1-chart-tip')) continue;
+    const r = sv.getBoundingClientRect();
+    if (r.width > 40 || r.height > 40) continue;
+    const cls = sv.getAttribute('class') || '';
+    if (!/lucide/.test(cls) && !sv.closest('[data-brand-logo],.brand-logo')) add('icon-family', sv, { in: describe(sv.parentElement) });
+    else if (/lucide/.test(cls)) {
+      const sw = parseFloat(cs(sv).strokeWidth);
+      if (sw && (sw < 1.5 || sw > 2.25)) add('icon-stroke', sv, { sw });
+      if (cs(sv).fill !== 'none' && cs(sv).fill !== 'rgba(0, 0, 0, 0)') add('icon-family', sv, { note: 'filled lucide' });
+    }
+  }
+  // colour-only status: tiny coloured dots with no text neighbour and no name
+  for (const e of all) {
+    if (e.tagName === 'svg' || !isVis(e) || e.children.length) continue;
+    const r = e.getBoundingClientRect(), s = cs(e);
+    if (r.width >= 6 && r.width <= 14 && Math.abs(r.width - r.height) < 1 && parseFloat(s.borderTopLeftRadius) >= r.width / 2 - 0.5 && s.backgroundColor !== 'rgba(0, 0, 0, 0)' && !(e.innerText || '').trim()) {
+      const par = e.parentElement; const sib = par ? (par.innerText || '').trim() : '';
+      if (!sib && !e.getAttribute('aria-label') && !e.getAttribute('title') && !par.getAttribute('aria-label') && !par.getAttribute('title')) add('colour-only-status', e, { bg: s.backgroundColor });
+    }
+  }
+  // buttons: deviation from the shared classes (computed height, radius, padding)
+  const btnSel = '.btn-primary,.btn-secondary,.btn-danger,.btn-ghost,.btn-accent';
+  const sig = {};
+  for (const b of document.querySelectorAll(btnSel)) {
+    if (!isVis(b)) continue;
+    const s = cs(b), r = b.getBoundingClientRect();
+    if (b.classList.contains('btn-icon') || b.classList.contains('hit-44') || r.width < 20) continue;
+    const k = (b.className.match(/btn-(primary|secondary|danger|ghost|accent)/) || [])[0] + (b.classList.contains('btn-sm') ? ' sm' : b.classList.contains('btn-lg') ? ' lg' : '');
+    if (r.height > 52) continue; // label wrapped onto two lines: not a style variant
+    (sig[k] = sig[k] || {})[Math.round(r.height) + '|' + s.borderTopLeftRadius + '|' + s.paddingLeft + '|' + s.fontSize] = 1;
+  }
+  out.metrics = Object.assign(out.metrics || {}, { btn: Object.fromEntries(Object.entries(sig).map(([k, v]) => [k, Object.keys(v)])) });
+  for (const [k, v] of Object.entries(sig)) if (Object.keys(v).length > 1 && !/ sm| lg/.test(' ' + k.split(' ').slice(1).join(' '))) add('btn-variant', main || document.body, { class: k, variants: Object.keys(v).slice(0, 4) });
+  for (const b of document.querySelectorAll('button,a[role=button],a[href]')) {
+    if (!isVis(b) || b.matches(btnSel) || b.closest('nav,aside,header,[role=tablist],.tabs,table') ) continue;
+    const c = b.getAttribute('class') || '';
+    if (/btn|nav-|tab|badge|chip|pill|hit-44|skip|link/.test(c)) continue;
+    const s = cs(b), r = b.getBoundingClientRect();
+    if (s.backgroundColor !== 'rgba(0, 0, 0, 0)' && parseFloat(s.borderTopLeftRadius) > 0 && r.width >= 56 && r.height >= 24 && r.height <= 64 && (b.innerText || '').trim().length > 1) add('btn-nonstandard', b, { h: Math.round(r.height), r: s.borderTopLeftRadius, bg: s.backgroundColor });
+  }
+  // cards: nested cards (card inside card)
+  for (const c of document.querySelectorAll('.card')) if (isVis(c) && c.parentElement && c.parentElement.closest('.card')) add('nested-card', c);
+  // off-token radius on bordered boxes (not 0, 4, 8, 12, 16, 24 or full)
+  const okR = new Set(['0px', '2px', '4px', '6px', '8px', '12px', '16px', '24px']);
+  const badR = {};
+  for (const e of all) { if (!isVis(e) || e.tagName === 'svg') continue; const rr = cs(e).borderTopLeftRadius; if (rr !== '0px' && !okR.has(rr) && parseFloat(rr) < 100 && rr !== '50%') badR[rr] = (badR[rr] || 0) + 1; }
+  for (const [k, v] of Object.entries(badR)) add('radius-off-scale', document.body, { radius: k, n: v });
+  out.metrics = Object.assign(out.metrics || {}, { fontSizes: Array.from(new Set(Array.from(seen2).map((p) => cs(p).fontSize))).sort((a, b) => parseFloat(a) - parseFloat(b)), zoom: window.devicePixelRatio });
 
   // summary
   const critical = ['overflow-x', 'overlap', 'small-text', 'contrast', 'no-label', 'img-alt', 'glow', 'covered-by-fixed', 'table-escape', 'h1'];
   if (touch) critical.push('touch-target');
   out.critical = critical.reduce((s, k) => s + (out.counts[k] || 0), 0);
+  const advisory = ['img-distort', 'long-line', 'stretched', 'chart-overlap', 'h1-size', 'uppercase-block', 'body-small', 'no-tabular', 'icon-family', 'icon-stroke', 'colour-only-status', 'btn-variant', 'btn-nonstandard', 'nested-card', 'radius-off-scale'];
+  out.advisory = advisory.reduce((s, k) => s + (out.counts[k] || 0), 0);
   return out;
 };

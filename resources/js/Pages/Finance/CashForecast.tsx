@@ -3,7 +3,8 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { Banner, Field, Loading } from './shared';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { Banner, Field, FinEmptyState } from './shared';
 import { M, Table, Td, Th } from './coreShared';
 import { AbNav } from './ab3Shared';
 
@@ -30,8 +31,9 @@ export default function CashForecast() {
                 <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5 shrink-0" checked={pending} onChange={(e) => setPending(e.target.checked)} />{t('acc3.fc.include_pending')}</label>
                 <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5 shrink-0" checked={budget} onChange={(e) => setBudget(e.target.checked)} />{t('acc3.fc.include_budget')}</label>
             </div>
-            <Loading on={f.loading} />
-            {d && (
+            <QueryStatus query={f} variant="table" />
+            {d && d.weeks.length === 0 && <div className="card"><FinEmptyState k="forecast" /></div>}
+            {d && d.weeks.length > 0 && (
                 <>
                     <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 [&>*]:min-w-0">
                         {[[t('acc3.fc.opening'), M(d.opening)], [t('acc3.fc.closing'), M(d.closing)], [t('acc3.fc.lowest'), `${M(d.lowest.balance)} (${t('acc3.fc.week')} ${d.lowest.week ?? '-'})`],

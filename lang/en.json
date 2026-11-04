@@ -73,6 +73,7 @@
     "auth.password": "Password",
     "auth.show_password": "Show password",
     "auth.remember": "Remember me",
+    "auth.forgot.text": "Staff passwords are reset by your hotel administrator or your group network administrator. Ask them to set a new password for your account. Guests and loyalty members can reset theirs from the Member tab on the sign-in page.",
     "auth.forgot": "Forgot password?",
     "auth.submit": "Sign In",
     "auth.demo.title": "Demo logins",

@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
-import { Check, Loader2 } from 'lucide-react';
+import { Check } from 'lucide-react';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -78,15 +80,14 @@ export default function Wizard() {
         <AppLayout title={t('onboarding.title')} subtitle={t('onboarding.subtitle')}>
             <Head title={t('onboarding.title')} />
             <OnboardingTabs active="/onboarding" />
-            {state.loading && !s && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
-            {state.error && <p className="text-sm text-red-700">{state.error.message}</p>}
+            <QueryStatus query={state} variant="detail" />
             {s && (
                 <div className="grid gap-4 md:grid-cols-[220px_1fr]">
                     <ol className="card p-3 text-sm space-y-1">
                         {s.steps.map((st, i) => (
                             <li key={st.key}>
                                 <button type="button" onClick={() => go(st.key)}
-                                    className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left ${step === st.key ? 'bg-slate-100 font-semibold text-slate-900' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                    className={`flex min-h-11 w-full items-center gap-2 rounded px-2 py-1.5 text-left ${step === st.key ? 'bg-slate-100 font-semibold text-slate-900' : 'text-slate-600 hover:bg-slate-50'}`}>
                                     <span className={`flex h-5 w-5 items-center justify-center rounded-full border text-xs ${st.done ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300'}`}>
                                         {st.done ? <Check className="h-3 w-3" /> : i + 1}
                                     </span>
@@ -244,6 +245,8 @@ function TaxesStep({ busy, run }: Omit<StepProps, 's'>) {
     const [rates, setRates] = useState<Record<string, string>>({});
     return (
         <div className="space-y-3">
+            <QueryStatus query={taxes} variant="table" rows={3} />
+            {taxes.data && list.length === 0 && <EmptyFor kind="generic" />}
             <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead><tr className="text-left text-slate-500"><th className="py-1">{t('onboarding.f.code')}</th><th>{t('onboarding.f.name')}</th><th>{t('onboarding.f.rate')}</th><th /></tr></thead>
                 <tbody>

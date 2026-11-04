@@ -3,6 +3,8 @@
 namespace App\Modules\Reservations\Experience\Http;
 
 use App\Modules\Channels\Domain\Connection;
+use App\Modules\FrontOffice\Domain\ChargeCode;
+use App\Modules\FrontOffice\Domain\CheckoutFeeRule;
 use App\Modules\Reservations\Domain\Reservation;
 use App\Modules\Reservations\Domain\RoomBlock;
 use App\Modules\Reservations\Experience\Application\ChannelHealth;
@@ -15,6 +17,7 @@ use App\Modules\Reservations\Experience\Domain\ExperienceSetting;
 use App\Modules\Reservations\Experience\Domain\GuestReview;
 use App\Modules\Reservations\Experience\Domain\RoomSuggestion;
 use App\Modules\Tenancy\Domain\Hotel;
+use App\Platform\Domain\DomainException;
 use App\Platform\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 
@@ -157,6 +160,7 @@ class ExperienceController
     {
         $d = $request->validate([
             'deposit_deadline_hours' => ['sometimes', 'integer', 'between:1,720'], 'deposit_reminder_hours' => ['sometimes', 'integer', 'between:1,720'],
+            'early_checkin_enabled' => ['sometimes', 'boolean'], 'late_checkout_enabled' => ['sometimes', 'boolean'], 'no_show_fee' => ['sometimes', 'boolean'],
             'auto_release' => ['sometimes', 'boolean'], 'auto_no_show' => ['sometimes', 'boolean'], 'guest_modify' => ['sometimes', 'boolean'], 'guest_modify_cutoff_hours' => ['sometimes', 'integer', 'between:0,720'],
         ]);
         $s = ExperienceSetting::forCurrentHotel();
@@ -173,14 +177,52 @@ class ExperienceController
     public function saveService(Request $request, ?ExperienceService $service = null)
     {
         $d = $request->validate(['code' => [$service ? 'sometimes' : 'required', 'string', 'max:24'], 'name' => [$service ? 'sometimes' : 'required', 'string', 'max:120'],
-            'price' => [$service ? 'sometimes' : 'required', 'integer', 'min:0'], 'charge_code' => [$service ? 'sometimes' : 'required', 'string', 'max:16'], 'active' => ['sometimes', 'boolean']]);
+            'name_en' => ['nullable', 'string', 'max:120'], 'price' => [$service ? 'sometimes' : 'required', 'integer', 'min:0'], 'charge_code' => [$service ? 'sometimes' : 'required', 'string', 'max:16'], 'active' => ['sometimes', 'boolean']]);
         $service ? $service->update($d) : $service = ExperienceService::create($d);
 
         return response()->json($service->refresh(), $request->isMethod('post') ? 201 : 200);
     }
 
-    public function reviews()
+    public function reviews(Request $request)
     {
-        return GuestReview::orderByDesc('submitted_at')->paginate(50);
+        $page = GuestReview::when($request->integer('rating'), fn ($q, $n) => $q->where('rating', $n))->orderByDesc('submitted_at')->paginate(50);
+        $stays = Reservation::with('guest:id,first_name,last_name')->whereIn('id', $page->pluck('reservation_id'))->get()->keyBy('id');
+        $page->getCollection()->transform(function ($r) use ($stays) {
+            $s = $stays->get($r->reservation_id);
+
+            return $r->toArray() + ['stay' => $s ? ['number' => $s->number, 'arrival' => $s->arrival?->toDateString(), 'departure' => $s->departure?->toDateString(), 'guest' => trim(($s->guest?->first_name ?? '').' '.($s->guest?->last_name ?? ''))] : null];
+        });
+
+        return $page;
+    }
+
+    // ---- Early check-in / late check-out fee rules (additive: the front desk PUT replaces the whole list) ----
+
+    public function feeRules()
+    {
+        return ['data' => CheckoutFeeRule::whereIn('kind', ['early_checkin', 'late'])->orderBy('kind')->orderBy('after_hour')->get()];
+    }
+
+    public function saveFeeRule(Request $request, ?CheckoutFeeRule $rule = null)
+    {
+        $new = ! $rule;
+        $d = $request->validate([
+            'kind' => [$new ? 'required' : 'sometimes', 'in:early_checkin,late'], 'after_hour' => [$new ? 'required' : 'sometimes', 'integer', 'between:0,23'],
+            'charge_code' => [$new ? 'required' : 'sometimes', 'string', 'max:16'], 'fee_type' => [$new ? 'required' : 'sometimes', 'in:percent_of_night,fixed'],
+            'value' => [$new ? 'required' : 'sometimes', 'integer', 'min:1'], 'label' => ['nullable', 'string', 'max:60'], 'active' => ['sometimes', 'boolean'],
+        ]);
+        if ($rule && ! in_array($rule->kind, ['early_checkin', 'late'], true)) {
+            throw new DomainException('This rule is managed from the front desk settings.');
+        }
+        $code = $d['charge_code'] ?? $rule?->charge_code;
+        if (! ChargeCode::where('code', $code)->exists()) {
+            throw new DomainException("Unknown charge code $code.");
+        }
+        if (($d['fee_type'] ?? $rule?->fee_type) === 'percent_of_night' && ($d['value'] ?? $rule?->value) > 100) {
+            throw new DomainException('A percentage fee cannot exceed 100%.');
+        }
+        $rule ? $rule->update($d) : $rule = CheckoutFeeRule::create($d + ['active' => true]);
+
+        return response()->json($rule->refresh(), $new ? 201 : 200);
     }
 }

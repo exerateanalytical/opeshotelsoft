@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
@@ -25,6 +26,7 @@ export default function ChannelHealth() {
     return (
         <AppLayout title={t('experience.channels.title')}>
             <Head title={t('experience.channels.title')} />
+            <QueryStatus query={board} variant="table" />
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <button type="button" className="btn-secondary" onClick={board.reload}>{t('experience.channels.refresh')}</button>

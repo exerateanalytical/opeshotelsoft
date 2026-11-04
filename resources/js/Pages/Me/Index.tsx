@@ -1,6 +1,8 @@
 import { Head, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { useState } from 'react';
+import { api, useApi } from '@/lib/api';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useT } from '@/lib/i18n';
 
 interface Profile { name: string; number: string; phone: string | null; address: string | null; bank_name: string | null; bank_account: string | null; momo_number: string | null }
@@ -20,30 +22,28 @@ const post = (p: string, b: unknown) => api(p, { method: 'POST', body: JSON.stri
 export default function MeIndex() {
     const t = useT();
     const [tab, setTab] = useState<(typeof TABS)[number]>('payslips');
-    const [me, setMe] = useState<Profile | null>(null);
+    const meQ = useApi<Profile>('hr/me');
+    const slipsQ = useApi<Slip[]>('payroll/payslips/mine');
+    const leaveQ = useApi<Leave>('hr/me/leave');
+    const shiftsQ = useApi<Shift[]>('hr/me/schedule');
+    const docsQ = useApi<Docs>('hr/me/documents');
+    const contractsQ = useApi<Contract[]>('hr/me/contracts');
+    const reqsQ = useApi<Req[]>('hr/me/requests');
+    const me = meQ.data;
+    const slips = slipsQ.data ?? [];
+    const leave = leaveQ.data;
+    const shifts = shiftsQ.data ?? [];
+    const docs = docsQ.data;
+    const contracts = contractsQ.data ?? [];
+    const reqs = reqsQ.data ?? [];
     const [err, setErr] = useState<string | null>(null);
     const [ok, setOk] = useState<string | null>(null);
-    const [slips, setSlips] = useState<Slip[]>([]);
-    const [leave, setLeave] = useState<Leave | null>(null);
-    const [shifts, setShifts] = useState<Shift[]>([]);
-    const [docs, setDocs] = useState<Docs | null>(null);
-    const [contracts, setContracts] = useState<Contract[]>([]);
-    const [reqs, setReqs] = useState<Req[]>([]);
     const [lf, setLf] = useState({ leave_type_id: '', start_date: '', end_date: '' });
     const [kind, setKind] = useState(KINDS[0]);
     const [val, setVal] = useState({ address: '', phone: '', bank_name: '', bank_account: '', momo_number: '', purpose: '' });
 
     const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
-    const load = () => {
-        api<Profile>('hr/me').then(setMe).catch((e) => setErr(msg(e)));
-        api<Slip[]>('payroll/payslips/mine').then(setSlips).catch(() => undefined);
-        api<Leave>('hr/me/leave').then(setLeave).catch(() => undefined);
-        api<Shift[]>('hr/me/schedule').then(setShifts).catch(() => undefined);
-        api<Docs>('hr/me/documents').then(setDocs).catch(() => undefined);
-        api<Contract[]>('hr/me/contracts').then(setContracts).catch(() => undefined);
-        api<Req[]>('hr/me/requests').then(setReqs).catch(() => undefined);
-    };
-    useEffect(load, []);
+    const load = () => { [meQ, slipsQ, leaveQ, shiftsQ, docsQ, contractsQ, reqsQ].forEach((q) => q.reload()); };
     const run = async (fn: () => Promise<unknown>, done?: string) => { setErr(null); setOk(null); try { await fn(); if (done) setOk(done); load(); } catch (e) { setErr(msg(e)); } };
     const fields: Record<string, string[]> = { address_change: ['address'], phone_change: ['phone'], bank_change: ['bank_name', 'bank_account'], momo_change: ['momo_number'], employment_certificate: ['purpose'], salary_certificate: ['purpose'] };
 
@@ -61,10 +61,19 @@ export default function MeIndex() {
                 {err && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</div>}
                 {ok && <div role="status" className="rounded-lg border border-slate-200 bg-white p-3 text-sm">{ok}</div>}
 
-                {tab === 'payslips' && (<div className="card divide-y divide-slate-100">{slips.map((s) => (
+                <QueryStatus query={meQ} variant="detail" rows={2} />
+                {!meQ.error && (<>
+                {tab === 'payslips' && <QueryStatus query={slipsQ} variant="list" rows={3} />}
+                {tab === 'leave' && <QueryStatus query={leaveQ} variant="list" rows={3} />}
+                {tab === 'schedule' && <QueryStatus query={shiftsQ} variant="list" rows={3} />}
+                {tab === 'documents' && <QueryStatus query={docsQ} variant="list" rows={3} />}
+                {tab === 'contract' && <QueryStatus query={contractsQ} variant="list" rows={2} />}
+                {tab === 'requests' && <QueryStatus query={reqsQ} variant="list" rows={3} />}
+
+                {tab === 'payslips' && slipsQ.data && (<div className="card divide-y divide-slate-100">{slips.map((s) => (
                     <div key={s.id} className="flex items-center justify-between p-3"><span>{s.run.period}<br /><span className="text-sm text-slate-600">{t('talent.me.net')}: {money(s.net)} XAF</span></span>
                         <a className="btn-secondary" href={`/api/v1/documents/payslips/${s.id}`} target="_blank" rel="noreferrer">PDF</a></div>))}
-                    {!slips.length && <p className="p-3 text-slate-500">{t('talent.none')}</p>}</div>)}
+                    {!slips.length && <EmptyFor kind="generic" />}</div>)}
 
                 {tab === 'leave' && leave && (<>
                     <div className="card p-3">{t('talent.me.balance')}: <strong>{leave.balance}</strong> {t('talent.me.days')}</div>
@@ -77,7 +86,7 @@ export default function MeIndex() {
                     <div className="card divide-y divide-slate-100">{leave.requests.map((r) => <p key={r.id} className="p-3">{r.start_date.slice(0, 10)} - {r.end_date.slice(0, 10)} ({r.days} {t('talent.me.days')}) <span className="text-sm text-slate-600">{t(`talent.req_status.${r.status}`)}</span></p>)}</div>
                 </>)}
 
-                {tab === 'schedule' && (<div className="card divide-y divide-slate-100">{shifts.map((s) => <p key={s.id} className="p-3">{s.date.slice(0, 10)} - {String(s.starts_at).slice(0, 5)} / {String(s.ends_at).slice(0, 5)}</p>)}{!shifts.length && <p className="p-3 text-slate-500">{t('talent.none')}</p>}</div>)}
+                {tab === 'schedule' && shiftsQ.data && (<div className="card divide-y divide-slate-100">{shifts.map((s) => <p key={s.id} className="p-3">{s.date.slice(0, 10)} - {String(s.starts_at).slice(0, 5)} / {String(s.ends_at).slice(0, 5)}</p>)}{!shifts.length && <p className="p-3 text-slate-500">{t('talent.none')}</p>}</div>)}
 
                 {tab === 'documents' && docs && (<>
                     <div className="card divide-y divide-slate-100"><h2 className="p-3 font-semibold">{t('talent.me.documents')}</h2>
@@ -88,12 +97,12 @@ export default function MeIndex() {
                         {!docs.certificates.length && <p className="p-3 text-slate-500">{t('talent.none')}</p>}</div>
                 </>)}
 
-                {tab === 'contract' && (<div className="card divide-y divide-slate-100">{contracts.map((c) => (
+                {tab === 'contract' && contractsQ.data && (<div className="card divide-y divide-slate-100">{contracts.map((c) => (
                     <div key={c.id} className="flex items-center justify-between p-3"><span>{c.title}</span>
                         <button className="btn-primary" onClick={() => run(async () => { const r = (await post(`hr/me/contracts/${c.id}/link`, {})) as { url: string }; window.location.href = r.url; })}>{t('talent.me.sign')}</button></div>))}
                     {!contracts.length && <p className="p-3 text-slate-500">{t('talent.me.no_contract')}</p>}</div>)}
 
-                {tab === 'requests' && (<>
+                {tab === 'requests' && reqsQ.data && (<>
                     <div className="card grid gap-2 p-3">
                         <select className="input" aria-label={t('talent.me.request_kind')} value={kind} onChange={(e) => setKind(e.target.value)}>{KINDS.map((k) => <option key={k} value={k}>{t(`talent.kind.${k}`)}</option>)}</select>
                         {(fields[kind] ?? []).map((f) => <input key={f} className="input" aria-label={t(`talent.me.field.${f}`)} placeholder={t(`talent.me.field.${f}`)} value={val[f as keyof typeof val]} onChange={(e) => setVal({ ...val, [f]: e.target.value })} />)}
@@ -104,6 +113,7 @@ export default function MeIndex() {
                         <p key={r.id} className="flex items-center justify-between p-3"><span>{t(`talent.kind.${r.kind}`)}<br /><span className="text-sm text-slate-600">{t(`talent.req_status.${r.status}`)}{r.note ? ` - ${r.note}` : ''}</span></span>
                             {r.status === 'approved' && r.kind.endsWith('certificate') && <a className="btn-secondary" href={`/api/v1/hr/me/requests/${r.id}/certificate`} target="_blank" rel="noreferrer">PDF</a>}</p>))}</div>
                     {me && <div className="card p-3 text-sm text-slate-700"><p>{t('talent.me.current')}</p><p>{me.phone} - {me.address}</p><p>{me.bank_name} {me.bank_account} {me.momo_number}</p></div>}
+                </>)}
                 </>)}
             </main>
         </div>

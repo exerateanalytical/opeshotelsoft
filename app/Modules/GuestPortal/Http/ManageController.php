@@ -2,7 +2,7 @@
 
 namespace App\Modules\GuestPortal\Http;
 
-use App\Modules\GuestPortal\Application\GuestLinks;
+use App\Modules\GuestPortal\Application\PublicBookingResolver;
 use App\Modules\GuestPortal\Application\ManageService;
 use App\Modules\Reservations\Domain\Reservation;
 use App\Modules\Reservations\Experience\Application\DigitalCheckin;
@@ -98,13 +98,10 @@ class ManageController
     {
         $g = Group::where('slug', $slug)->where('status', 'active')->firstOrFail();
         $this->ctx->set($g->id, null, null);
-        $in = $request->validate(['confirmation' => ['required', 'string'], 'token' => [$allowLastName ? 'nullable' : 'required', 'string'], 'last_name' => ['nullable', 'string']]);
-        $r = $this->ctx->withoutScope(fn () => Reservation::with('guest')->where('number', $in['confirmation'])->where('group_id', $g->id)->first());
-        $ok = $r && (
-            (! empty($in['token']) && hash_equals(GuestLinks::manageToken($r), $in['token']))
-            || ($allowLastName && ! empty($in['last_name']) && strcasecmp($r->guest->last_name, $in['last_name']) === 0)
-        );
-        abort_unless($ok, $r ? 403 : 404, $r ? 'Invalid link.' : 'Booking not found.');
+        $in = $request->validate(['confirmation' => ['required', 'string'], 'token' => [$allowLastName ? 'nullable' : 'required', 'string'], 'last_name' => ['nullable', 'string'], 'hotel' => ['nullable', 'string', 'max:20']]);
+        // Booking reference or confirmation number; the token (or, for reviews only, the last name) proves ownership and picks the right hotel.
+        abort_unless(! empty($in['token']) || ($allowLastName && ! empty($in['last_name'])), 403, 'Invalid link.');
+        $r = app(PublicBookingResolver::class)->resolve($g->id, $in['confirmation'], $in['hotel'] ?? null, $in['last_name'] ?? null, $in['token'] ?? null, 403);
 
         $hotel = Hotel::withoutGlobalScopes()->findOrFail($r->hotel_id);
         $this->ctx->set($hotel->group_id, $hotel->id, [$hotel->id]);

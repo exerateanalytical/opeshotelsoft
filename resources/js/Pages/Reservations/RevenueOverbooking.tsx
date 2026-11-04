@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -43,6 +45,8 @@ export default function RevenueOverbooking() {
 
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{t('revenue.ob.policies')}</h2>
+                    <QueryStatus query={policies} variant="form" rows={3} />
+                    {policies.data?.data.length === 0 && <EmptyState title={t('states3.empty.policies.title')} description={t('states3.empty.policies.text')} action={<a href="/properties" className="btn-secondary">{t('states3.empty.outlets.action')}</a>} />}
                     {policies.data?.data.map((x) => {
                         const e = edit[x.room_type_id] ?? { max_rooms: String(x.max_rooms), max_percent: String(x.max_percent) };
                         return (
@@ -61,9 +65,9 @@ export default function RevenueOverbooking() {
                             <option value="">{t('revenue.common.room_type')}</option>
                             {policies.data?.data.map((x) => <option key={x.room_type_id} value={x.room_type_id}>{x.room_type}</option>)}
                         </select>
-                        <input className="input" type="date" value={apply.from} onChange={(e) => setApply({ ...apply, from: e.target.value })} />
-                        <input className="input" type="date" min={apply.from} value={apply.to} onChange={(e) => setApply({ ...apply, to: e.target.value })} />
-                        <input className="input" type="number" title={t('revenue.ob.limit')} value={apply.limit} onChange={(e) => setApply({ ...apply, limit: e.target.value })} />
+                        <input className="input" type="date" aria-label={t('revenue.common.from')} value={apply.from} onChange={(e) => setApply({ ...apply, from: e.target.value })} />
+                        <input className="input" type="date" aria-label={t('revenue.common.to')} min={apply.from} value={apply.to} onChange={(e) => setApply({ ...apply, to: e.target.value })} />
+                        <input className="input" type="number" aria-label={t('revenue.ob.limit')} title={t('revenue.ob.limit')} value={apply.limit} onChange={(e) => setApply({ ...apply, limit: e.target.value })} />
                         <button type="button" className="btn-primary" disabled={!apply.room_type_id} onClick={async () => {
                             try {
                                 const r = await api<{ applied: number }>('revenue/overbooking/apply', { method: 'POST', body: JSON.stringify({ ...apply, room_type_id: +apply.room_type_id, limit: +apply.limit }) });
@@ -76,14 +80,15 @@ export default function RevenueOverbooking() {
 
                 <section className="card p-4">
                     <h2 className="mb-2 font-medium">{t('revenue.ob.exposure')}</h2>
-                    {!exposure.data?.data.length ? <p className="text-sm text-slate-500">{t('revenue.common.empty')}</p> : exposure.data.data.map((x, i) => (
+                    <QueryStatus query={exposure} variant="list" rows={2} />
+                    {exposure.data && !exposure.data.data.length ? <p className="text-sm text-slate-500">{t('revenue.common.empty')}</p> : exposure.data?.data.map((x, i) => (
                         <div key={i} className="text-sm">{formatDate(x.date)} · {x.room_type} · {x.booked}/{x.rooms} · {t('revenue.ob.over')} {x.over}</div>
                     ))}
                 </section>
 
                 <section className="card space-y-3 p-4">
                     <h2 className="font-medium">{t('revenue.ob.walk_policy')}</h2>
-                    <textarea className="input w-full" rows={3} value={walk.walk_policy} onChange={(e) => setWalk({ ...walk, walk_policy: e.target.value })} />
+                    <textarea className="textarea" rows={3} aria-label={t('revenue.ob.walk_policy')} value={walk.walk_policy} onChange={(e) => setWalk({ ...walk, walk_policy: e.target.value })} />
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <label className="label">{t('revenue.ob.walk_comp')}<input className="input w-full" type="number" value={walk.walk_compensation} onChange={(e) => setWalk({ ...walk, walk_compensation: e.target.value })} /></label>
                         <label className="label">{t('revenue.ob.walk_partner')}<input className="input w-full" value={walk.walk_partner_hotel} onChange={(e) => setWalk({ ...walk, walk_partner_hotel: e.target.value })} /></label>

@@ -17,7 +17,8 @@ export default function BottomNav() {
     const nav = props.nav ?? [];
     const [open, setOpen] = useState(false);
     const current = activePath(url, nav);
-    const tabs = pickTabs(nav, 4);
+    const roles = ((props as { auth?: { user?: { roles?: string[] } | null } }).auth?.user?.roles) ?? [];
+    const tabs = pickTabs(nav, 4, roles);
     const inTabs = tabs.some((x) => x.path === current);
     const hotels = (props.hotels as HotelOption[] | undefined) ?? [];
     const property = props.property as unknown as HotelOption | null;
@@ -66,7 +67,7 @@ export default function BottomNav() {
                     </div>
                     {groupNav(nav).map((section, si) => (
                         <section key={section.title ?? si}>
-                            {section.title && <h3 className="mb-1 px-1 text-xs font-semibold uppercase tracking-wider text-slate-500">{t(section.title)}</h3>}
+                            {section.title && <h3 className="mb-1 px-1 text-sm font-semibold text-slate-600">{t(section.title)}</h3>}
                             <ul>
                                 {section.items.map((item) => {
                                     const Icon = navIcon(item.icon);

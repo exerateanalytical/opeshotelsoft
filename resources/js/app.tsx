@@ -1,7 +1,7 @@
 import '../css/app.css';
 
 import { createRoot } from 'react-dom/client';
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { Toaster } from 'react-hot-toast';
 
@@ -14,6 +14,10 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         if (!el) return;
+        // Keep <html lang> in step with the chosen language so number and date formatting follow it
+        const syncLang = (p: { props?: Record<string, unknown> }) => { const l = p?.props?.locale; if (typeof l === 'string') document.documentElement.lang = l; };
+        syncLang(props.initialPage);
+        router.on('navigate', (e) => syncLang(e.detail.page));
         const root = createRoot(el);
         root.render(
             <>

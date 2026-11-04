@@ -2,8 +2,9 @@ import AppLayout from '@/Layouts/AppLayout';
 import CashierBar from '@/Components/CashierBar';
 import EditStay from './Edit';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Loader2, Undo2 } from 'lucide-react';
+import { ArrowLeft, Undo2 } from 'lucide-react';
 import { useState } from 'react';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { CheckOutPanel, RegistrationCardPanel, RoomMovePanel, RoutingPanel } from '@/Pages/FrontDesk/Partials/StayPanels';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
@@ -97,13 +98,13 @@ export default function ReservationShow({ id }: { id: string }) {
                 <div className="mb-6"><EditStay reservation={r} onSaved={() => (res.reload(), folio.reload())} /></div>
             )}
 
-            {(message || res.error || folio.error) && (
+            {(message || (r && res.error) || (f && folio.error)) && (
                 <div role="status" className={cn('mb-4 rounded-lg text-sm px-4 py-3', message?.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>
                     {message?.text ?? res.error?.message ?? folio.error?.message}
                 </div>
             )}
 
-            {!r || !f ? <Loader2 className="w-6 h-6 mx-auto mt-16 animate-spin text-slate-500" aria-label="..." /> : (
+            {!r ? <QueryStatus query={res} variant="detail" /> : !f ? <QueryStatus query={folio} variant="detail" /> : (
                 <div className="grid lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 card overflow-hidden">
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 border-b border-slate-200">

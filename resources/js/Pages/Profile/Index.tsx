@@ -126,8 +126,8 @@ export default function ProfileIndex({ profile, twoFactor }: Props) {
                 <form onSubmit={saveInfo} className="card p-5 space-y-4">
                     <h2 className="flex items-center gap-2 font-semibold text-slate-900"><UserCircle className="w-4 h-4" /> {t('profile.account')}</h2>
                     <div>
-                        <label className="label">{t('profile.name')}</label>
-                        <input className="input w-full" value={info.data.name} onChange={(e) => info.setData('name', e.target.value)} />
+                        <label className="label" htmlFor="profile-name">{t('profile.name')}</label>
+                        <input id="profile-name" className="input w-full" value={info.data.name} onChange={(e) => info.setData('name', e.target.value)} />
                         <FieldError msg={info.errors.name} />
                     </div>
                     <div>
@@ -157,19 +157,19 @@ export default function ProfileIndex({ profile, twoFactor }: Props) {
                 <form onSubmit={savePw} className="card p-5 space-y-4">
                     <h2 className="flex items-center gap-2 font-semibold text-slate-900"><KeyRound className="w-4 h-4" /> {t('profile.password.title')}</h2>
                     <div>
-                        <label className="label">{t('profile.password.current')}</label>
-                        <input type="password" autoComplete="current-password" className="input w-full" value={pw.data.current_password} onChange={(e) => pw.setData('current_password', e.target.value)} />
+                        <label className="label" htmlFor="pw-current">{t('profile.password.current')}</label>
+                        <input id="pw-current" type="password" autoComplete="current-password" className="input w-full" value={pw.data.current_password} onChange={(e) => pw.setData('current_password', e.target.value)} />
                         <FieldError msg={pw.errors.current_password} />
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="label">{t('profile.password.new')}</label>
-                            <input type="password" autoComplete="new-password" className="input w-full" value={pw.data.password} onChange={(e) => pw.setData('password', e.target.value)} />
+                            <label className="label" htmlFor="pw-new">{t('profile.password.new')}</label>
+                            <input id="pw-new" type="password" autoComplete="new-password" className="input w-full" value={pw.data.password} onChange={(e) => pw.setData('password', e.target.value)} />
                             <FieldError msg={pw.errors.password} />
                         </div>
                         <div>
-                            <label className="label">{t('profile.password.confirm')}</label>
-                            <input type="password" autoComplete="new-password" className="input w-full" value={pw.data.password_confirmation} onChange={(e) => pw.setData('password_confirmation', e.target.value)} />
+                            <label className="label" htmlFor="pw-confirm">{t('profile.password.confirm')}</label>
+                            <input id="pw-confirm" type="password" autoComplete="new-password" className="input w-full" value={pw.data.password_confirmation} onChange={(e) => pw.setData('password_confirmation', e.target.value)} />
                         </div>
                     </div>
                     <button type="submit" className="btn-primary" disabled={pw.processing}>{t('profile.password.title')}</button>

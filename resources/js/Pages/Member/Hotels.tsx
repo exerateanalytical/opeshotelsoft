@@ -20,7 +20,7 @@ export default function Hotels({ data }: { data: Data }) {
             )}
             {data.hotels.map((h) => (
                 <div key={h.code} className="card p-4 space-y-2">
-                    <p className="font-semibold text-lg">{h.name} {h.stars ? <span aria-label={`${h.stars} ${t('member.hotels.stars')}`} className="text-brand-600">{'★'.repeat(h.stars)}</span> : null}</p>
+                    <p className="font-semibold text-lg">{h.name} {h.stars ? <span aria-label={`${h.stars} ${t('member.hotels.stars')}`} className="text-brand-800">{'★'.repeat(h.stars)}</span> : null}</p>
                     {h.description && <p className="text-sm text-slate-700">{h.description}</p>}
                     <p className="text-sm flex items-center gap-2"><MapPin className="w-4 h-4" />{[h.address, h.city].filter(Boolean).join(', ')}</p>
                     {h.phone && <p className="text-sm flex items-center gap-2"><Phone className="w-4 h-4" /><a href={`tel:${h.phone}`}>{h.phone}</a></p>}

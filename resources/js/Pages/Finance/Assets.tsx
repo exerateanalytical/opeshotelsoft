@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Badge, Banner, errMsg, Field, Loading, today } from './shared';
+import { Badge, Banner, errMsg, Field, today } from './shared';
 import { useT } from '@/lib/i18n';
 import PrintPdfButton from '@/Components/PrintPdfButton';
 
@@ -36,6 +37,7 @@ export default function Assets() {
     return (
         <div className="space-y-4">
             <Banner error={error} success={ok} />
+            <QueryStatus query={classes} variant="table" />
             <div className="flex gap-2"><PrintPdfButton path="asset-register" label={t('documents3.print_register')} /><PrintPdfButton path="depreciation-schedule" label={t('documents3.print_schedule')} /></div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 [&>*]:min-w-0">
                 <form className="card grid grid-cols-1 gap-2 sm:grid-cols-2 p-4 [&>*]:min-w-0" onSubmit={(e) => { e.preventDefault(); post('accounting/asset-classes', cls, t('fin.assets.class_saved')); }}>
@@ -92,7 +94,7 @@ export default function Assets() {
             )}
 
             <div className="card overflow-x-auto">
-                <Loading on={assets.loading} />
+                <QueryStatus query={assets} variant="table" />
                 <table className="table-auto w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-2">{t('fin.assets.asset')}</th><th className="p-2">{t('fin.assets.acquired')}</th><th className="p-2 text-right">{t('fin.assets.cost')}</th><th className="p-2 text-right">{t('fin.assets.book_value')}</th><th className="p-2">{t('fin.col.status')}</th><th /></tr></thead>
                     <tbody>

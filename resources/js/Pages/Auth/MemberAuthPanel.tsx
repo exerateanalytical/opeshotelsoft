@@ -101,7 +101,7 @@ export default function MemberAuthPanel({ demo = [] }: { demo?: Demo[] }) {
 
             {demo.length > 0 && (
                 <div className="mt-8 pt-6 border-t border-slate-600">
-                    <p className="text-sm font-semibold uppercase tracking-widest text-yellow-500 mb-1">{t('member.auth.demo_title')}</p>
+                    <p className="text-sm font-semibold text-yellow-500 mb-1">{t('member.auth.demo_title')}</p>
                     <p className="text-sm text-slate-400 mb-4">{t('member.auth.demo_text')}</p>
                     <DemoSelect options={demo.map((a) => ({ value: String(a.n), label: a.name }))}
                         endpoint={(v) => `/demo-member-login/${v}`} label={t('member.auth.demo_select')} placeholder={t('member.auth.demo_placeholder')} />

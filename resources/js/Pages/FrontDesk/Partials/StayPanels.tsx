@@ -1,5 +1,6 @@
 import { Eraser, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { activeHotelId, api, ApiError, useApi } from '@/lib/api';
 import { cn, formatCurrency, formatDateTime } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -40,9 +41,9 @@ export function CheckOutPanel({ id, onDone, notify }: { id: number | string; onD
     }
 
     return (
-        <div className="card px-5 py-4 space-y-3">
+        <div className="card px-4 py-4 space-y-3">
             <h3 className="font-semibold text-slate-800">{t('fo.stay.check_out_title')}</h3>
-            {!q ? <Loader2 className="w-4 h-4 animate-spin text-slate-500" /> : (
+            {!q ? <QueryStatus query={quote} variant="form" rows={2} /> : (
                 <>
                     {q.early && <p className="text-sm text-slate-600">{t('fo.stay.early_departure', { count: q.nights_released })}</p>}
                     {q.fee && (
@@ -62,14 +63,14 @@ export function CheckOutPanel({ id, onDone, notify }: { id: number | string; onD
                     )}
                     {confirming ? (
                         <div className="flex flex-wrap gap-2">
-                            <button className="btn-primary" disabled={busy === 'out'}
+                            <button className="btn-primary btn-lg" disabled={busy === 'out'}
                                 onClick={() => post('out', `reservations/${id}/check-out`, waive ? { waive_fee: true } : {}, t('fo.stay.checked_out'))}>
                                 {busy === 'out' && <Loader2 className="w-4 h-4 animate-spin" />} {t('fo.stay.confirm_check_out')}
                             </button>
                             <button className="btn-secondary" onClick={() => setConfirming(false)}>{t('common.cancel')}</button>
                         </div>
                     ) : (
-                        <button className="btn-primary w-full justify-center" onClick={() => setConfirming(true)}>{t('fo.stay.check_out')}</button>
+                        <button type="button" className="btn-primary btn-lg w-full justify-center" onClick={() => setConfirming(true)}>{t('fo.stay.check_out')}</button>
                     )}
                 </>
             )}
@@ -106,7 +107,7 @@ export function RoomMovePanel({ id, onDone, notify }: { id: number | string; onD
         }}>
             <h3 className="font-semibold text-slate-800">{t('fo.stay.move_room')}</h3>
             <select className="input" required value={roomId} onChange={(e) => setRoomId(e.target.value)}>
-                <option value="" disabled>{rooms.loading ? t('common.loading') : t('fo.stay.vacant_room')}</option>
+                <option value="" disabled>{rooms.loading ? t('common.loading') : rooms.error ? t('states3.rooms_error') : rooms.data?.length === 0 ? t('states3.rooms_none') : t('fo.stay.vacant_room')}</option>
                 {rooms.data?.map((r) => <option key={r.id} value={r.id}>{r.number} · {r.room_type?.code} · {t(`fo.hk.${r.hk_status}`) === `fo.hk.${r.hk_status}` ? r.hk_status.replace(/_/g, ' ') : t(`fo.hk.${r.hk_status}`)}</option>)}
             </select>
             <input className="input" required maxLength={255} aria-label={t('fo.stay.reason')} placeholder={t('fo.stay.reason')} value={reason} onChange={(e) => setReason(e.target.value)} />
@@ -149,8 +150,9 @@ export function RoutingPanel({ id, companyId, chargeCodes, notify }: { id: numbe
     }
 
     return (
-        <div className="card px-5 py-4 space-y-3">
+        <div className="card px-4 py-4 space-y-3">
             <h3 className="font-semibold text-slate-800">{t('fo.stay.routing')}</h3>
+            <QueryStatus query={rules} variant="list" rows={2} />
             {rules.data?.length === 0 && <p className="text-sm text-slate-500">{t('fo.stay.no_rules')}</p>}
             <ul className="space-y-1">
                 {rules.data?.map((r) => (
@@ -303,7 +305,7 @@ export function RegistrationCardPanel({ id, editable, notify }: { id: number | s
     if (card.error?.problem.status === 404) return null;
 
     return (
-        <div className="card px-5 py-4 space-y-3">
+        <div className="card px-4 py-4 space-y-3">
             <h3 className="font-semibold text-slate-800">{t('fo.stay.card')}</h3>
             {!c ? <Loader2 className="w-4 h-4 animate-spin text-slate-500" /> : (
                 <>
@@ -339,7 +341,7 @@ export function RegistrationCardPanel({ id, editable, notify }: { id: number | s
                             <canvas ref={canvas} width={600} height={200} aria-label={t('fo.stay.signature_pad')}
                                 className={cn('w-full h-32 rounded border border-slate-300 bg-white touch-none', signed && 'border-slate-500')}
                                 onPointerDown={down} onPointerMove={move} onPointerUp={() => (drawing.current = false)} onPointerLeave={() => (drawing.current = false)} />
-                            <button className="btn-primary w-full justify-center" disabled={busy || (!file && !signed)} onClick={save}>
+                            <button className="btn-primary btn-lg w-full justify-center" disabled={busy || (!file && !signed)} onClick={save}>
                                 {busy && <Loader2 className="w-4 h-4 animate-spin" />} {t('fo.stay.save_card')}
                             </button>
                         </div>

@@ -1,5 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, usePage } from '@inertiajs/react';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -87,6 +89,8 @@ export default function Import() {
 
             <div className="card p-4">
                 <h2 className="mb-2 font-semibold text-slate-900">{t('onboarding.import.history')}</h2>
+                <QueryStatus query={history} variant="table" rows={3} />
+                {history.data && history.data.length === 0 && <EmptyFor kind="generic" />}
                 <div className="overflow-x-auto"><table className="w-full text-sm">
                     <tbody>
                         {(history.data ?? []).map((b) => (
@@ -131,7 +135,7 @@ function CopySetup() {
         <div className="card p-4 mb-4 space-y-3">
             <h2 className="font-semibold text-slate-900">{t('onboarding.copy.title')}</h2>
             <p className="text-sm text-slate-500">{t('onboarding.copy.help')}</p>
-            <select className="input max-w-sm" value={source} onChange={(e) => setSource(e.target.value)}>
+            <select className="input max-w-sm" aria-label={t('onboarding.copy.source')} value={source} onChange={(e) => setSource(e.target.value)}>
                 <option value="">{t('onboarding.copy.source')}</option>
                 {(hotels.data?.data ?? []).filter((h) => h.id !== current).map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
             </select>

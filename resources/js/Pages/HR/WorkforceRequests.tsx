@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -17,6 +19,8 @@ export default function WorkforceRequests() {
     return (
         <AppLayout title={t('workforce.requests.title')} subtitle={t('workforce.requests.subtitle')}>
             <Head title={t('workforce.requests.title')} />
+            <QueryStatus query={open} variant="list" rows={3} />
+            <QueryStatus query={reqs} variant="list" />
             <WorkforceTabs active="/hr/workforce/requests" />
             {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
             <div className="card mb-4 p-4 text-sm"><h2 className="mb-2 font-semibold">{t('workforce.requests.open_shifts')}</h2>
@@ -25,6 +29,7 @@ export default function WorkforceRequests() {
                     <li key={s.id} className="flex items-center justify-between py-2"><span>{s.date.slice(0, 10)} {s.starts_at.slice(0, 5)}-{s.ends_at.slice(0, 5)} {s.role}</span>
                         <button className="btn-primary" onClick={() => act(() => wpost(`workforce/open-shifts/${s.id}/claim`))}>{t('workforce.requests.claim')}</button></li>))}</ul></div>
             <div className="card p-4 text-sm"><h2 className="mb-2 font-semibold">{t('workforce.requests.list')}</h2>
+                {reqs.data?.length === 0 && <EmptyFor kind="generic" />}
                 <ul className="divide-y divide-slate-100">{reqs.data?.map((r) => (
                     <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                         <span>{t(`workforce.kind.${r.kind}`)} - {r.requester}{r.counterpart ? ` / ${r.counterpart}` : ''} - {r.shift?.date.slice(0, 10)} {r.shift?.starts_at.slice(0, 5)} - {t(`workforce.status.${r.status}`)}</span>

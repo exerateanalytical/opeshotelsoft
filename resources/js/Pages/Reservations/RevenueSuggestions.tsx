@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -55,7 +57,9 @@ export default function RevenueSuggestions() {
 
                 <section className="card p-4">
                     <h2 className="mb-2 font-medium">{t('revenue.sug.pending')}</h2>
-                    {!sugs.data?.data.length ? <p className="text-sm text-slate-500">{t('revenue.common.empty')}</p> : (
+                    <QueryStatus query={types} variant="form" rows={1} />
+                    <QueryStatus query={sugs} variant="list" rows={3} />
+                    {sugs.data && !sugs.data.data.length ? <EmptyState title={t('revenue.common.empty')} description={t('states3.empty.suggestions.text')} /> : !sugs.data ? null : (
                         <div className="space-y-2">
                             {sugs.data.data.map((g) => (
                                 <div key={g.id} className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -93,13 +97,13 @@ export default function RevenueSuggestions() {
                     <h2 className="font-medium">{t('revenue.sug.events')}</h2>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                         <input className="input" aria-label={t('revenue.common.name')} placeholder={t('revenue.common.name')} value={ev.name} onChange={(e) => setEv({ ...ev, name: e.target.value })} />
-                        <input className="input" type="date" value={ev.start_date} onChange={(e) => setEv({ ...ev, start_date: e.target.value })} />
-                        <input className="input" type="date" min={ev.start_date} value={ev.end_date} onChange={(e) => setEv({ ...ev, end_date: e.target.value })} />
-                        <input className="input" type="number" title={t('revenue.sug.event_impact')} value={ev.impact_pct} onChange={(e) => setEv({ ...ev, impact_pct: e.target.value })} />
+                        <input className="input" type="date" aria-label={t('revenue.common.from')} value={ev.start_date} onChange={(e) => setEv({ ...ev, start_date: e.target.value })} />
+                        <input className="input" type="date" aria-label={t('revenue.common.to')} min={ev.start_date} value={ev.end_date} onChange={(e) => setEv({ ...ev, end_date: e.target.value })} />
+                        <input className="input" type="number" aria-label={t('revenue.sug.event_impact')} title={t('revenue.sug.event_impact')} value={ev.impact_pct} onChange={(e) => setEv({ ...ev, impact_pct: e.target.value })} />
                         <button type="button" className="btn-secondary" disabled={!ev.name || !ev.start_date || !ev.end_date} onClick={() => run(() => api('revenue/events', { method: 'POST', body: JSON.stringify({ ...ev, impact_pct: +ev.impact_pct }) }), () => { setEv({ name: '', start_date: '', end_date: '', impact_pct: '10' }); events.reload(); })}>{t('revenue.common.add')}</button>
                     </div>
                     {events.data?.data.map((x) => (
-                        <div key={x.id} className="flex items-center justify-between text-sm">
+                        <div key={x.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                             <span>{x.name} · {formatDate(x.start_date)} → {formatDate(x.end_date)} · {x.impact_pct}%</span>
                             <button type="button" className="btn-secondary" onClick={() => run(() => api(`revenue/events/${x.id}`, { method: 'DELETE' }), events.reload)}>{t('revenue.common.delete')}</button>
                         </div>
@@ -110,12 +114,12 @@ export default function RevenueSuggestions() {
                     <h2 className="font-medium">{t('revenue.sug.competitors')}</h2>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <input className="input" aria-label={t('revenue.sug.competitor')} placeholder={t('revenue.sug.competitor')} value={cr.competitor} onChange={(e) => setCr({ ...cr, competitor: e.target.value })} />
-                        <input className="input" type="date" value={cr.date} onChange={(e) => setCr({ ...cr, date: e.target.value })} />
+                        <input className="input" type="date" aria-label={t('revenue.common.from')} value={cr.date} onChange={(e) => setCr({ ...cr, date: e.target.value })} />
                         <input className="input" type="number" aria-label={t('revenue.common.rate')} placeholder={t('revenue.common.rate')} value={cr.rate} onChange={(e) => setCr({ ...cr, rate: e.target.value })} />
                         <button type="button" className="btn-secondary" disabled={!cr.competitor || !cr.date || !cr.rate} onClick={() => run(() => api('revenue/competitor-rates', { method: 'POST', body: JSON.stringify({ ...cr, rate: +cr.rate }) }), () => { setCr({ competitor: '', date: '', rate: '' }); comps.reload(); })}>{t('revenue.common.add')}</button>
                     </div>
                     {comps.data?.data.map((x) => (
-                        <div key={x.id} className="flex items-center justify-between text-sm">
+                        <div key={x.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                             <span>{x.competitor} · {formatDate(x.date)} · {formatCurrency(x.rate)}</span>
                             <button type="button" className="btn-secondary" onClick={() => run(() => api(`revenue/competitor-rates/${x.id}`, { method: 'DELETE' }), comps.reload)}>{t('revenue.common.delete')}</button>
                         </div>

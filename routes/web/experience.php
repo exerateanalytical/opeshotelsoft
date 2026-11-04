@@ -10,6 +10,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reservations/group-booking', fn () => Inertia::render('Reservations/GroupBooking'))->middleware('can:experience.manage')->name('experience.group');
     Route::get('/reservations/rooming-import', fn () => Inertia::render('Reservations/RoomingImport'))->middleware('can:experience.manage')->name('experience.rooming');
     Route::get('/reservations/channel-health', fn () => Inertia::render('Reservations/ChannelHealth'))->middleware('can:experience.view')->name('experience.channels');
+    Route::get('/reservations/experience-settings', fn () => Inertia::render('Reservations/ExperienceSettings'))->middleware('can:experience.view')->name('experience.settings');
 });
 
 // Public review page (link sent after the stay): confirmation number + last name, stores a rating and comment.

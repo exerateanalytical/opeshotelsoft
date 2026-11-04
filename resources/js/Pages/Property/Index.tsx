@@ -1,4 +1,6 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head } from '@inertiajs/react';
 import { Layers } from 'lucide-react';
 import { useState } from 'react';
@@ -192,6 +194,10 @@ export default function PropertyIndex() {
     return (
         <AppLayout title={t('prop.title')} subtitle={t('prop.subtitle')}>
             <Head title={t('prop.title')} />
+            <QueryStatus query={rt} variant="table" />
+            {tab === 'rooms' && rt.data && rt.data.data.length === 0 && (
+                <div className="card mb-5"><EmptyFor kind="rooms" action={<button type="button" className="btn-primary" onClick={() => setTab('room-types')}>{t('prop.noun.room_type')}</button>} /></div>
+            )}
             <div className="tabs mb-5">
                 {TABS.map(([k, l]) => (
                     <button key={k} onClick={() => setTab(k)}

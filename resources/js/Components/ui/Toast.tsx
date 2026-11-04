@@ -47,7 +47,7 @@ export function ToastRegion() {
                     <div key={i.id} className={`pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-lg border-2 bg-white px-4 py-3 text-sm font-medium ${S.cls}`}>
                         <S.icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
                         <span className="flex-1 text-slate-900">{i.text}</span>
-                        <button type="button" onClick={() => toast.dismiss(i.id)} aria-label={t('ui.toast.dismiss')} className="-m-2 p-2 text-slate-600">
+                        <button type="button" onClick={() => toast.dismiss(i.id)} aria-label={t('ui.toast.dismiss')} className="hit-44 -m-2 p-2 text-slate-600">
                             <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                     </div>

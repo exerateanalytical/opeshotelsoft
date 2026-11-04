@@ -53,7 +53,7 @@ export default function InHouse() {
                             <tr key={r.id} className="hover:bg-slate-50">
                                 <td className="text-sm font-semibold whitespace-nowrap">{r.room ?? '—'} <span className="text-xs font-normal text-slate-500">{r.room_type}</span></td>
                                 <td className="text-sm">
-                                    <Link href={`/reservations/${r.id}`} className="text-blue-700 hover:underline">{r.guest?.name ?? '—'}</Link>
+                                    <Link href={`/reservations/${r.id}`} className="text-navy-600 underline underline-offset-2">{r.guest?.name ?? '—'}</Link>
                                     {r.guest?.vip && <span className="badge-yellow ml-2 inline-flex items-center gap-1"><Star className="w-3 h-3" /> VIP</span>}
                                     <div className="text-xs text-slate-500">{r.number}</div>
                                 </td>

@@ -1,6 +1,9 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Award, Loader2, Save, Users } from 'lucide-react';
+import ErrorState from '@/Components/ui/ErrorState';
+import LoadingState from '@/Components/ui/LoadingState';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -80,10 +83,10 @@ export default function LoyaltyIndex() {
             <Head title={t('loyalty.title')} />
             {error && <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm">{error}</div>}
             {success && <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 text-sm">{success}</div>}
-            {program.error && <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm">{program.error.message}</div>}
-
-            {program.loading && !p ? (
-                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
+            {program.error && !program.loading ? (
+                <div className="card"><ErrorState error={program.error} onRetry={program.reload} /></div>
+            ) : program.loading && !p ? (
+                <LoadingState variant="cards" rows={3} />
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <form onSubmit={save} className="card p-5 space-y-4 lg:col-span-1">
@@ -170,14 +173,14 @@ function TierEditor({ tiers, onSaved, onError }: { tiers: Tier[]; onSaved: (t: s
 
     const row = (d: TierDraft, set: (d: TierDraft) => void, key: number | 'new') => (
         <tr key={key} className={`border-t align-top ${d.active ? '' : 'opacity-60'}`}>
-            <td className="py-2 pr-2"><input className="input w-14" type="number" min={0} max={255} value={d.rank} onChange={(e) => set({ ...d, rank: +e.target.value })} /></td>
-            <td className="py-2 pr-2"><input className="input w-20" maxLength={16} value={d.code} onChange={(e) => set({ ...d, code: e.target.value })} placeholder="CODE" /></td>
-            <td className="py-2 pr-2"><input className="input w-28" maxLength={100} value={d.name} onChange={(e) => set({ ...d, name: e.target.value })} placeholder={t('loyalty.name')} /></td>
-            <td className="py-2 pr-2"><input className="input w-24" type="number" min={0} value={d.min_qualifying_points} onChange={(e) => set({ ...d, min_qualifying_points: +e.target.value })} /></td>
-            <td className="py-2 pr-2"><input className="input w-16" type="number" min={0} value={d.min_qualifying_nights} onChange={(e) => set({ ...d, min_qualifying_nights: +e.target.value })} /></td>
-            <td className="py-2 pr-2"><input className="input w-16" type="number" min={0} max={99.99} step={0.05} value={d.earn_multiplier} onChange={(e) => set({ ...d, earn_multiplier: +e.target.value })} /></td>
-            <td className="py-2 pr-2"><input className="input w-48" value={d.benefits} onChange={(e) => set({ ...d, benefits: e.target.value })} placeholder="welcome_drink, late_checkout_14h" /></td>
-            <td className="py-2 pr-2"><input type="checkbox" checked={d.active} onChange={(e) => set({ ...d, active: e.target.checked })} /></td>
+            <td className="py-2 pr-2"><input className="input w-14" aria-label={t('loyalty.col.order')} type="number" min={0} max={255} value={d.rank} onChange={(e) => set({ ...d, rank: +e.target.value })} /></td>
+            <td className="py-2 pr-2"><input className="input w-20" maxLength={16} value={d.code} onChange={(e) => set({ ...d, code: e.target.value })} placeholder="CODE" aria-label={t('loyalty.col.code')} /></td>
+            <td className="py-2 pr-2"><input className="input w-28" maxLength={100} value={d.name} onChange={(e) => set({ ...d, name: e.target.value })} placeholder={t('loyalty.name')} aria-label={t('loyalty.name')} /></td>
+            <td className="py-2 pr-2"><input className="input w-24" aria-label={t('loyalty.col.qual_points')} type="number" min={0} value={d.min_qualifying_points} onChange={(e) => set({ ...d, min_qualifying_points: +e.target.value })} /></td>
+            <td className="py-2 pr-2"><input className="input w-16" aria-label={t('loyalty.col.nights')} type="number" min={0} value={d.min_qualifying_nights} onChange={(e) => set({ ...d, min_qualifying_nights: +e.target.value })} /></td>
+            <td className="py-2 pr-2"><input className="input w-16" aria-label={t('loyalty.col.earn')} type="number" min={0} max={99.99} step={0.05} value={d.earn_multiplier} onChange={(e) => set({ ...d, earn_multiplier: +e.target.value })} /></td>
+            <td className="py-2 pr-2"><input className="input w-48" value={d.benefits} onChange={(e) => set({ ...d, benefits: e.target.value })} placeholder="welcome_drink, late_checkout_14h" aria-label={t('loyalty.col.benefits')} /></td>
+            <td className="py-2 pr-2"><input type="checkbox" aria-label={t('guests.status.active')} checked={d.active} onChange={(e) => set({ ...d, active: e.target.checked })} /></td>
             <td className="py-2">
                 <button type="button" className={key === 'new' ? 'btn-primary' : 'btn-secondary'} disabled={busy !== null || !d.code || !d.name} onClick={() => submit(key)}>
                     {busy === key ? <Loader2 className="w-4 h-4 animate-spin" /> : key === 'new' ? t('common.add') : t('common.save')}
@@ -203,6 +206,7 @@ function TierEditor({ tiers, onSaved, onError }: { tiers: Tier[]; onSaved: (t: s
                     </tr>
                 </thead>
                 <tbody>
+                    {tiers.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="loyalty" /></td></tr>}
                     {tiers.map((x) => drafts[x.id] && row(drafts[x.id], (d) => setDrafts((all) => ({ ...all, [x.id]: d })), x.id))}
                     {row(fresh, setFresh, 'new')}
                 </tbody>

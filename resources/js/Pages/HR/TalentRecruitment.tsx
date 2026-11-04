@@ -45,9 +45,9 @@ export default function TalentRecruitment() {
             <TalentTabs active="/hr/talent" />
             <Banner error={err} ok={ok} />
 
-            <Section title={t('talent.posts')} right={<a className="text-sm underline" href="/careers" onClick={(e) => { e.preventDefault(); const s = (groupSlug()); if (s) window.open(`/careers/${s}`, '_blank'); }}>{t('talent.careers_page')}</a>}>
+            <Section title={t('talent.posts')} right={<a className="inline-flex min-h-11 items-center text-sm underline" href="/careers" onClick={(e) => { e.preventDefault(); const s = (groupSlug()); if (s) window.open(`/careers/${s}`, '_blank'); }}>{t('talent.careers_page')}</a>}>
                 <div className="mb-3 flex flex-wrap gap-2">
-                    <input className="input" placeholder={t('talent.post_title')} value={title} onChange={(e) => setTitle(e.target.value)} />
+                    <input className="input" placeholder={t('talent.post_title')} aria-label={t('talent.post_title')} value={title} onChange={(e) => setTitle(e.target.value)} />
                     <button className="btn-primary" disabled={!title} onClick={() => run(async () => { await tsend('posts', { title }); setTitle(''); })}>{t('talent.add_post')}</button>
                 </div>
                 <div className="overflow-x-auto"><table className="w-full text-sm">
@@ -62,7 +62,7 @@ export default function TalentRecruitment() {
             </Section>
 
             <Section title={t('talent.pipeline')} right={
-                <select className="input" value={stage} onChange={(e) => setStage(e.target.value)}>
+                <select className="input" aria-label={t('ui2.hr.filter_stage')} value={stage} onChange={(e) => setStage(e.target.value)}>
                     <option value="">{t('talent.all_stages')}</option>{STAGES.concat('hired').map((s) => <option key={s} value={s}>{t(`talent.stage.${s}`)}</option>)}
                 </select>}>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -82,13 +82,13 @@ export default function TalentRecruitment() {
                                 {STAGES.filter((s) => s !== sel.applicant.stage).map((s) => <button key={s} className="btn-secondary" onClick={() => run(() => tsend(`applicants/${sel.applicant.id}/stage`, { stage: s }))}>{t(`talent.stage.${s}`)}</button>)}
                                 <button className="btn-secondary" onClick={() => run(() => tsend(`applicants/${sel.applicant.id}/pool`, { in: !sel.applicant.talent_pool }))}>{sel.applicant.talent_pool ? t('talent.pool_remove') : t('talent.pool_add')}</button>
                             </div>
-                            <div className="flex gap-2"><input className="input flex-1" placeholder={t('talent.note')} value={note} onChange={(e) => setNote(e.target.value)} />
+                            <div className="flex gap-2"><input className="input flex-1" placeholder={t('talent.note')} aria-label={t('talent.note')} value={note} onChange={(e) => setNote(e.target.value)} />
                                 <button className="btn-secondary" disabled={!note} onClick={() => run(async () => { await tsend(`applicants/${sel.applicant.id}/notes`, { body: note }); setNote(''); })}>{t('talent.add')}</button></div>
                             <ul className="space-y-1">{sel.notes.map((n) => <li key={n.id} className="text-slate-700">- {n.body}</li>)}</ul>
 
                             <div className="rounded-lg border border-slate-200 p-3">
                                 <h4 className="mb-2 font-semibold">{t('talent.interviews')}</h4>
-                                <div className="mb-2 flex flex-wrap gap-2"><input type="datetime-local" className="input" value={when} onChange={(e) => setWhen(e.target.value)} />
+                                <div className="mb-2 flex flex-wrap gap-2"><input type="datetime-local" className="input" aria-label={t('ui2.hr.interview_at')} value={when} onChange={(e) => setWhen(e.target.value)} />
                                     <button className="btn-secondary" disabled={!when || !me} onClick={() => run(() => tsend(`applicants/${sel.applicant.id}/interviews`, { scheduled_at: when.replace('T', ' '), panel: [me] }))}>{t('talent.schedule_me')}</button></div>
                                 {sel.interviews.map((i) => (
                                     <div key={i.id} className="mb-2 border-t border-slate-100 pt-2">
@@ -106,8 +106,8 @@ export default function TalentRecruitment() {
                                 {sel.offers.map((o) => (
                                     <p key={o.id} className="mb-1">{money(o.base_salary)} XAF <Pill tone={o.status === 'accepted' ? 'ok' : 'muted'}>{t(`talent.offer_status.${o.status}`)}</Pill>
                                         {o.status === 'draft' || o.status === 'sent' ? <button className="btn-secondary ml-2" onClick={() => run(() => tsend(`offers/${o.id}/send`), t('talent.offer_sent'))}>{t('talent.send_offer')}</button> : null}</p>))}
-                                <div className="flex flex-wrap gap-2"><input className="input" type="number" placeholder={t('talent.salary')} value={salary} onChange={(e) => setSalary(e.target.value)} />
-                                    <input className="input" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+                                <div className="flex flex-wrap gap-2"><input className="input" type="number" placeholder={t('talent.salary')} aria-label={t('talent.salary')} value={salary} onChange={(e) => setSalary(e.target.value)} />
+                                    <input className="input" type="date" aria-label={t('ui2.hr.start_date')} value={start} onChange={(e) => setStart(e.target.value)} />
                                     <button className="btn-primary" disabled={!salary || !start} onClick={() => run(() => tsend(`applicants/${sel.applicant.id}/offers`, { base_salary: Number(salary), start_date: start }))}>{t('talent.make_offer')}</button></div>
                             </div>
                         </div>)}

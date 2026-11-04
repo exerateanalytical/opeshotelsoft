@@ -71,7 +71,7 @@ class GuestJourney
         $lang = $this->lang($r);
         $g = $r->guest()->withoutGlobalScopes()->first();
         $base = ['guest_name' => trim("$g?->first_name $g?->last_name"), 'hotel_name' => Hotel::withoutGlobalScopes()->find($r->hotel_id)?->name,
-            'number' => $r->number, 'arrival' => $r->arrival?->toDateString(), 'departure' => $r->departure?->toDateString()];
+            'number' => $r->number, 'reference' => $r->public_code, 'arrival' => $r->arrival?->toDateString(), 'departure' => $r->departure?->toDateString()];
         $vars = match ($journey) {
             'booking_confirmation' => ['manage_url' => $this->links->manage($r, $lang)],
             'pre_arrival' => ['checkin_url' => $this->links->checkin($r, $lang)],

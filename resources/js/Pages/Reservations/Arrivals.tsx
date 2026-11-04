@@ -1,7 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
-import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -62,7 +63,8 @@ export default function Arrivals() {
                     {(['ready', 'partial', 'missing'] as const).map((s) => <span key={s} className={BADGE[s]}>{t(`experience.readiness.${s}`)}: {feed.data?.summary[s] ?? 0}</span>)}
                 </div>
                 {msg && <div className={cn('rounded-md border p-3 text-sm', msg.ok ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-red-300 bg-red-50 text-red-800')}>{msg.text}</div>}
-                {feed.loading && !feed.data ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                <QueryStatus query={feed} variant="table" />
+                {feed.data && (
                     <div className="card overflow-x-auto">
                         <table className="table-auto">
                             <thead><tr>
@@ -70,7 +72,7 @@ export default function Arrivals() {
                                 <th>{t('experience.arrivals.readiness')}</th><th>{t('experience.arrivals.suggestions')}</th><th />
                             </tr></thead>
                             <tbody>
-                                {(feed.data?.arrivals ?? []).length === 0 && <tr><td colSpan={6} className="p-4 text-slate-500">{t('experience.arrivals.none')}</td></tr>}
+                                {(feed.data?.arrivals ?? []).length === 0 && <tr><td colSpan={6}><EmptyState title={t('experience.arrivals.none')} description={t('states3.empty.arrivals.text')} action={<a href="/reservations/create" className="btn-secondary">{t('states.empty.reservations.action')}</a>} /></td></tr>}
                                 {(feed.data?.arrivals ?? []).map((a) => (
                                     <tr key={a.id} className="align-top">
                                         <td><div className="font-medium">{a.vip && '★ '}{a.guest}</div><div className="text-xs text-slate-500">{a.number} · {a.booking_ref}</div></td>

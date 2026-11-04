@@ -1,3 +1,5 @@
+import Field from '@/Components/ui/Field';
+import FilterBar from '@/Components/ui/FilterBar';
 import AppLayout from '@/Layouts/AppLayout';
 import CashierBar from '@/Components/CashierBar';
 import { Head } from '@inertiajs/react';
@@ -50,22 +52,29 @@ export default function Cashier() {
             <Head title={t('billing.cashier.title')} />
             <CashierBar onChange={() => setRefresh((n) => n + 1)} refresh={refresh} />
 
-            <div className="flex flex-wrap gap-3 mb-4 items-center">
-                <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('billing.cashier.all_shifts')}>
-                    <option value="">{t('billing.cashier.all_shifts')}</option>
-                    <option value="open">{t('billing.status.open')}</option>
-                    <option value="closed">{t('billing.status.closed')}</option>
-                </select>
-                <select className="input w-auto" aria-label={t('billing.cashier.cashier')} value={userId} onChange={(e) => setUserId(e.target.value)}>
-                    <option value="">{t('billing.cashier.all_cashiers')}</option>
-                    {Object.entries(cashiers).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-                </select>
-                <label className="text-sm text-slate-600 flex items-center gap-2">{t('billing.cashier.from')} <input type="date" className="input w-auto" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-                <label className="text-sm text-slate-600 flex items-center gap-2">{t('billing.cashier.to')} <input type="date" className="input w-auto" value={to} onChange={(e) => setTo(e.target.value)} /></label>
-                <label className="min-h-11 text-sm text-slate-600 flex items-center gap-2">
+            <FilterBar
+                activeCount={[status, userId, from, to].filter(Boolean).length + (onlyVariance ? 1 : 0)}
+                onClear={() => { setStatus(''); setUserId(''); setFrom(''); setTo(''); setOnlyVariance(false); }}
+            >
+                <Field label={t('billing.folios.status')}>
+                    <select className="select sm:w-44" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <option value="">{t('billing.cashier.all_shifts')}</option>
+                        <option value="open">{t('billing.status.open')}</option>
+                        <option value="closed">{t('billing.status.closed')}</option>
+                    </select>
+                </Field>
+                <Field label={t('billing.cashier.cashier')}>
+                    <select className="select sm:w-48" value={userId} onChange={(e) => setUserId(e.target.value)}>
+                        <option value="">{t('billing.cashier.all_cashiers')}</option>
+                        {Object.entries(cashiers).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                    </select>
+                </Field>
+                <Field label={t('billing.cashier.from')}><input type="date" className="input sm:w-40" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
+                <Field label={t('billing.cashier.to')}><input type="date" className="input sm:w-40" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
+                <label className="flex min-h-11 items-center gap-2 text-sm text-slate-700">
                     <input type="checkbox" checked={onlyVariance} onChange={(e) => setOnlyVariance(e.target.checked)} /> {t('billing.cashier.only_variance')}
                 </label>
-            </div>
+            </FilterBar>
 
             {shifts.error && <div className="mb-4 rounded-lg text-sm px-4 py-3 bg-red-50 text-red-700">{shifts.error.message}</div>}
 

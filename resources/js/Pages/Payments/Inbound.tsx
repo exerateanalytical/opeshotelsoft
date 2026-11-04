@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
@@ -41,11 +42,12 @@ export default function PaymentInbound() {
     return (
         <AppLayout title={t('payments2.inbound.title')} subtitle={t('payments2.inbound.subtitle')}>
             <Head title={t('payments2.inbound.title')} />
-            <div className="card px-4 py-3 mb-4 flex flex-wrap items-end gap-3">
+            <QueryStatus query={list} variant="list" />
+            <div className="card px-4 py-4 mb-4 flex flex-wrap items-end gap-3">
                 <label className="label"><span className="label">{t('payments2.inbound.bank_account')}</span>
-                    <input className="input w-40" inputMode="numeric" value={bank} onChange={(e) => setBank(e.target.value)} /></label>
+                    <input className="input sm:w-48" inputMode="numeric" value={bank} onChange={(e) => setBank(e.target.value)} /></label>
                 <button className="btn-secondary" onClick={scan} disabled={!bank}>{t('payments2.inbound.scan')}</button>
-                <select className="input w-44 ml-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="select w-44 sm:ml-auto" aria-label={t('res.status')} value={status} onChange={(e) => setStatus(e.target.value)}>
                     {['review', 'posted', 'ignored'].map((s) => <option key={s} value={s}>{t(`payments2.status.${s}`)}</option>)}
                 </select>
                 {msg && <div className="w-full text-slate-700">{msg}</div>}

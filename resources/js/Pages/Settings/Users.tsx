@@ -104,7 +104,7 @@ export default function SettingsUsers() {
                         <form onSubmit={save} className="card px-5 py-4 mb-6 space-y-4">
                             <div className="flex items-center">
                                 <h3 className="font-semibold text-slate-800">{editing === 'new' ? t('settings.users.new') : t('settings.users.edit', { name: editing.name })}</h3>
-                                <button type="button" className="ml-auto text-slate-500 hover:text-slate-600" onClick={() => setEditing(null)}><X className="w-5 h-5" /></button>
+                                <button type="button" aria-label={t('common.cancel')} className="hit-44 ml-auto text-slate-500 hover:text-slate-600" onClick={() => setEditing(null)}><X className="w-5 h-5" /></button>
                             </div>
                             <div className="grid sm:grid-cols-2 gap-3">
                                 <Field label={t('profile.name')}><input className="input w-full" required value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Field>
@@ -143,7 +143,7 @@ export default function SettingsUsers() {
                                     <div className="flex flex-wrap gap-2 mt-2">
                                         {hotelList.map((h) => (
                                             <button type="button" key={h.id} onClick={() => toggleHotel(h.id)}
-                                                className={cn('text-xs px-3 py-1 rounded-full border', draft.hotel_ids.includes(h.id) ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-300 text-slate-600')}>
+                                                className={cn('hit-44 text-xs px-3 py-1 rounded-full border', draft.hotel_ids.includes(h.id) ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-300 text-slate-600')}>
                                                 {h.code} · {h.name}
                                             </button>
                                         ))}
@@ -162,13 +162,13 @@ export default function SettingsUsers() {
                             <div className="flex flex-wrap gap-2 px-5 py-4 border-b border-slate-100">
                                 <div className="relative flex-1 min-w-[10rem]">
                                     <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-500" />
-                                    <input className="input w-full pl-8" placeholder={t('settings.users.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+                                    <input className="input w-full pl-8" placeholder={t('settings.users.search')} aria-label={t('settings.users.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                                 </div>
-                                <select className="input" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+                                <select className="input" aria-label={t('ui2.users.filter_role')} value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                                     <option value="">{t('settings.users.all_roles')}</option>
                                     {(roles.data ?? []).map((r) => <option key={r.id} value={r.name}>{r.name}</option>)}
                                 </select>
-                                <select className="input" value={hotelFilter} onChange={(e) => setHotelFilter(e.target.value)}>
+                                <select className="input" aria-label={t('ui2.users.filter_hotel')} value={hotelFilter} onChange={(e) => setHotelFilter(e.target.value)}>
                                     <option value="">{t('settings.users.all_hotels')}</option>
                                     {hotelList.map((h) => <option key={h.id} value={h.id}>{h.code}</option>)}
                                 </select>
@@ -184,7 +184,7 @@ export default function SettingsUsers() {
                                             <td className="text-sm">{u.roles.map((r) => r.name).join(', ') || '—'}</td>
                                             <td className="text-xs">{u.all_hotels ? t('settings.users.all_hotels') : u.hotels.map((h) => h.code).join(', ') || '—'}</td>
                                             <td><span className={cn('text-xs px-2 py-0.5 rounded', u.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>{u.status}</span></td>
-                                            <td className="text-right"><button title={t('common.edit')} className="text-slate-500 hover:text-indigo-600" onClick={() => open(u)}><Pencil className="w-4 h-4" /></button></td>
+                                            <td className="text-right"><button title={t('common.edit')} aria-label={t('common.edit')} className="hit-44 text-slate-500 hover:text-indigo-600" onClick={() => open(u)}><Pencil className="w-4 h-4" /></button></td>
                                         </tr>
                                     ))}
                                 </tbody>

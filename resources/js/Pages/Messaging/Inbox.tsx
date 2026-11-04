@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
@@ -50,6 +52,7 @@ export default function MessagingInbox() {
         <AppLayout title={t('messaging.inbox.title')} subtitle={t('messaging.inbox.subtitle')}
             actions={<Link href="/messaging/templates" className="btn-secondary">{t('messaging.templates.title')}</Link>}>
             <Head title={t('messaging.inbox.title')} />
+            <QueryStatus query={list} variant="list" />
             {reg.data?.dry_run && <p className="mb-3 text-sm text-slate-600">{t('messaging.dry_run')}</p>}
             <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
                 <div className="card p-3 space-y-3">
@@ -62,7 +65,7 @@ export default function MessagingInbox() {
                     </div>
                     <input className="input" aria-label={t('messaging.search')} placeholder={t('messaging.search')} value={q} onChange={(e) => setQ(e.target.value)} />
                     <ul className="divide-y divide-slate-200">
-                        {list.data?.data.length === 0 && <li className="py-4 text-sm text-slate-500">{t('messaging.empty')}</li>}
+                        {list.data?.data.length === 0 && <li><EmptyFor kind="messages" /></li>}
                         {list.data?.data.map((c) => (
                             <li key={c.id}>
                                 <button type="button" onClick={() => setSel(c.id)} className={`w-full py-2 px-2 text-left ${sel === c.id ? 'bg-slate-100' : ''}`}>

@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head, Link } from '@inertiajs/react';
 import { Loader2, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -82,6 +83,7 @@ export default function Waitlist() {
     return (
         <AppLayout title={t('res.waitlist.title')}>
             <Head title={t('res.waitlist.title')} />
+            <QueryStatus query={list} variant="table" />
             <div className="mx-auto max-w-5xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <Link href="/reservations" className="btn-secondary">{t('res.title')}</Link>
@@ -109,13 +111,13 @@ export default function Waitlist() {
                     )}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         <label className="label">{t('res.room_type')}
-                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })} aria-label={t('res.choose')}>
+                            <select className="input w-full" value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })}>
                                 <option value="">{t('res.choose')}</option>
                                 {types.data?.data.map((rt) => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                             </select>
                         </label>
                         <label className="label">{t('res.rate_plan')}
-                            <select className="input w-full" value={form.rate_plan_id} onChange={(e) => setForm({ ...form, rate_plan_id: e.target.value })} aria-label={t('res.waitlist.decide_later')}>
+                            <select className="input w-full" value={form.rate_plan_id} onChange={(e) => setForm({ ...form, rate_plan_id: e.target.value })}>
                                 <option value="">{t('res.waitlist.decide_later')}</option>
                                 {plans.data?.data.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
@@ -152,7 +154,7 @@ export default function Waitlist() {
                                         {['waiting', 'offered'].includes(e.status) && (
                                             <div className={cn('text-xs', e.available ? 'text-emerald-700' : 'text-slate-500')}>{e.available ? t('res.waitlist.available') : t('res.waitlist.still_sold_out')}</div>
                                         )}
-                                        {e.reservation_id && <Link className="text-blue-700 underline" href={`/reservations/${e.reservation_id}`}>{t('res.waitlist.open_booking')}</Link>}
+                                        {e.reservation_id && <Link className="text-navy-600 underline" href={`/reservations/${e.reservation_id}`}>{t('res.waitlist.open_booking')}</Link>}
                                     </div>
                                     {['waiting', 'offered'].includes(e.status) && (
                                         <div className="flex flex-wrap items-center gap-2">

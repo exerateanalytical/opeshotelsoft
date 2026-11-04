@@ -1,5 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import EmptyState from '@/Components/ui/EmptyState';
+import { Image as ImageIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
@@ -64,8 +67,9 @@ export default function BrandingPage() {
             <Head title={t('onboarding.branding.title')} />
             <OnboardingTabs active="/onboarding/branding" />
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
-            <div className="grid gap-4 lg:grid-cols-2">
-                <div className="card p-4 space-y-3">
+            <QueryStatus query={b} variant="form" />
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="card min-w-0 p-4 space-y-3">
                     <div className="grid gap-3 sm:grid-cols-2">
                         {FIELDS.map((k) => (
                             <label key={k} className="block">
@@ -77,8 +81,8 @@ export default function BrandingPage() {
                             <label key={k} className="block">
                                 <span className="label">{t(`onboarding.f.${k}`)}</span>
                                 <div className="flex gap-2">
-                                    <input type="color" className="h-9 w-12 border border-slate-300" value={f[k] || '#1f2937'} onChange={set(k)} />
-                                    <input className="input" value={f[k] ?? ''} onChange={set(k)} placeholder="#1f2937" />
+                                    <input type="color" className="h-11 w-12 shrink-0 border border-slate-300" aria-label={t(`onboarding.f.${k}`)} value={f[k] || '#1f2937'} onChange={set(k)} />
+                                    <input className="input" value={f[k] ?? ''} onChange={set(k)} placeholder="#1f2937" aria-label={t(`onboarding.f.${k}`)} />
                                 </div>
                             </label>
                         ))}
@@ -96,11 +100,11 @@ export default function BrandingPage() {
                         <button type="button" className="btn-secondary" disabled={busy} onClick={() => openPdf('documents/templates/letter/print')}>{t('onboarding.branding.preview_pdf')}</button>
                     </div>
                 </div>
-                <div className="space-y-4">
+                <div className="min-w-0 space-y-4">
                     <div className="card p-4 space-y-3">
                         <h2 className="font-semibold text-slate-900">{t('onboarding.branding.logo')}</h2>
-                        {b.data?.logo ? <img src={b.data.logo} alt="" className="max-h-20" /> : <p className="text-sm text-slate-500">{t('onboarding.branding.no_logo')}</p>}
-                        <input type="file" accept="image/png,image/jpeg" onChange={(e) => e.target.files?.[0] && logo(e.target.files[0])} />
+                        {b.data?.logo ? <img src={b.data.logo} alt="" className="max-h-20" /> : <div className="border border-dashed border-slate-300 [&>div]:py-4"><EmptyState icon={ImageIcon} title={t('onboarding.branding.no_logo')} /></div>}
+                        <input type="file" className="block min-h-11 w-full min-w-0 text-sm" aria-label={t('onboarding.branding.logo')} accept="image/png,image/jpeg" onChange={(e) => e.target.files?.[0] && logo(e.target.files[0])} />
                         {b.data?.logo && <button type="button" className="btn-secondary" disabled={busy} onClick={() => run(() => api('documents/branding/logo/remove', { method: 'POST' }))}>{t('onboarding.branding.remove_logo')}</button>}
                         <p className="text-xs text-slate-500">{t('onboarding.branding.logo_help')}</p>
                     </div>
@@ -110,11 +114,11 @@ export default function BrandingPage() {
                         <div className="flex flex-wrap gap-2">
                             {DESIGNS.map((d) => (
                                 <button key={d} type="button" onClick={() => setF((p) => ({ ...p, letterhead_design: d }))}
-                                    className={`border px-2 py-1 text-sm ${design === d ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}>{t(`documents2.design.${d}`)}</button>
+                                    className={`min-h-11 border px-3 py-1 text-sm ${design === d ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}>{t(`documents2.design.${d}`)}</button>
                             ))}
                         </div>
                         <div className="text-xs text-slate-500">{t('documents2.design.preview')}</div>
-                        <div className="overflow-hidden border border-slate-200" style={{ height: 300 }}>
+                        <div data-doc-preview className="overflow-hidden border border-slate-200" style={{ height: 300 }}>
                             <div style={{ transform: 'scale(0.38)', transformOrigin: 'top left', width: '210mm' }} dangerouslySetInnerHTML={{ __html: preview }} />
                         </div>
                         <button type="button" className="btn-secondary" onClick={() => openPdf(`documents/branding/sample?design=${design}`)}>{t('documents2.design.sample_pdf')}</button>

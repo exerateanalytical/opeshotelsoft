@@ -21,6 +21,10 @@ return [
     */
     'demo_logins' => env('DEMO_LOGINS', false) && env('APP_ENV') !== 'production',
 
+    // Local-only query/time headers for scripts/perf/bench.php (App\Http\Middleware\PerfDebug).
+    // PERF_DEBUG=sql also appends each request's SQL to storage/logs/perf-sql.log.
+    'perf_debug' => env('PERF_DEBUG') === 'sql' ? 'sql' : (bool) env('PERF_DEBUG', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

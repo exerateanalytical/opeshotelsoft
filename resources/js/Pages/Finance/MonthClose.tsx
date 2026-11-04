@@ -1,9 +1,10 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
-import { Banner, errMsg, Field, Loading } from './shared';
+import { Banner, errMsg, Field, FinEmptyState, Loading } from './shared';
 import { Table, Td, Th } from './coreShared';
 import { AbNav } from './ab3Shared';
 
@@ -32,6 +33,7 @@ export default function MonthClose() {
     return (
         <AppLayout title={t('acc3.cl.title')} subtitle={t('acc3.cl.subtitle')}>
             <Head title={t('acc3.cl.title')} />
+            <QueryStatus query={runs} variant="table" />
             <AbNav active="/finance/month-close" />
             <Banner error={error} success={ok} />
             <div className="card mb-4 p-4">
@@ -43,6 +45,7 @@ export default function MonthClose() {
                 {r?.status === 'complete' && <p className="mt-2 text-sm text-emerald-700">{t('acc3.cl.lock_hint')}</p>}
             </div>
             <Loading on={runs.loading || (!!exists && run.loading)} />
+            {runs.data && !exists && <div className="card"><FinEmptyState k="close" action={<button type="button" className="btn-primary" onClick={() => act(() => api('accounting3/close/runs', { method: 'POST', body: JSON.stringify({ year, month }) }), t('acc3.cl.started'))}>{t('acc3.cl.start')}</button>} /></div>}
             {r && (
                 <div className="card p-4">
                     <Table head={<><Th>{t('acc3.cl.task')}</Th><Th>{t('acc3.cl.owner')}</Th><Th>{t('acc3.cl.due')}</Th><Th>{t('acc3.cl.check')}</Th><Th>{t('acc3.cl.signoff')}</Th><Th /></>}>

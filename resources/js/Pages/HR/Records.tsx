@@ -1,5 +1,6 @@
 import Avatar from '@/Components/ui/Avatar';
 import { activeHotelId, api, ApiError, useApi } from '@/lib/api';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { formatDate } from '@/lib/utils';
 import { AlertTriangle, Check, Download, Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -49,6 +50,7 @@ async function download(doc: Doc) {
 export function ExpiryAlerts() {
     const t = useT();
     const alerts = useApi<Doc[]>('hr/documents/expiring?days=30');
+    if (alerts.error && !alerts.data) return <QueryStatus query={alerts} variant="list" rows={1} />;
     if (!alerts.data?.length) return null;
     return (
         <div className="card mb-5">
@@ -72,6 +74,7 @@ export function RecordsTab() {
     return (
         <div>
             <ExpiryAlerts />
+            <QueryStatus query={list} variant="form" rows={1} />
             <div className="card mb-5">
                 <Field label={t('hr.emp.employee')}>
                     <select className="input" value={id ?? ''} onChange={(e) => setId(e.target.value ? Number(e.target.value) : null)}>
@@ -119,7 +122,8 @@ function EmployeeRecord({ id, employees }: { id: number; employees: Employee[] }
     const e = emp.data;
     return (
         <div className="mb-5">
-            <Banner ok={m.ok} err={m.err ?? emp.error?.message} />
+            <Banner ok={m.ok} err={m.err} />
+            <QueryStatus query={emp} variant="detail" />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <div className="card">
                     <h3 className="mb-3 font-semibold">{t('hr.rec.reporting_payslip')}</h3>
@@ -233,7 +237,7 @@ export function OrgChartTab() {
     const chart = useApi<{ department_id: number | null; department: string; employees: OrgNode[] }[]>('hr/org-chart');
     return (
         <div>
-            <Banner err={chart.error?.message} />
+            <QueryStatus query={chart} variant="cards" rows={4} />
             {chart.data?.length === 0 && <p className="text-sm text-slate-500">{t('hr.rec.no_employees')}</p>}
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 {chart.data?.map((d) => (

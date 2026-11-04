@@ -142,7 +142,7 @@ class TapeOps
                 $this->inventory->take($r->hotel_id, $room->room_type_id, $d, $r->departure);
             }
 
-            $child = $r->replicate(['number', 'room_id', 'room_type_id', 'arrival', 'total_amount', 'deposit_required', 'deposit_paid', 'deposit_deadline', 'deposit_reminded_at', 'status', 'checked_in_at', 'checked_out_at']);
+            $child = $r->replicate(['number', 'public_code', 'room_id', 'room_type_id', 'arrival', 'total_amount', 'deposit_required', 'deposit_paid', 'deposit_deadline', 'deposit_reminded_at', 'status', 'checked_in_at', 'checked_out_at']);
             $child->fill([
                 'number' => NumberSequence::next($r->hotel_id, 'reservation', 'R'), 'status' => $r->status === 'checked_in' ? 'confirmed' : $r->status,
                 'room_id' => $room->id, 'room_type_id' => $room->room_type_id, 'arrival' => $d, 'departure' => $r->departure,

@@ -1,4 +1,9 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import EmptyState from '@/Components/ui/EmptyState';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
+import { LastUpdated } from '@/Components/ui/ApiState';
+import StockTabs from './StockTabs';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
@@ -11,13 +16,13 @@ interface Report { store: string; rows: Row[]; totals: { theoretical_value: numb
 export default function Variance() {
     const t = useT();
     const canManage = usePerms().includes('stockcontrol.manage');
-    const outlets = useApi<Paged<Ref> | Ref[]>('outlets?per_page=100');
-    const outletList = Array.isArray(outlets.data) ? outlets.data : outlets.data?.data ?? [];
     const [outlet, setOutlet] = useState('');
     const [from, setFrom] = useState(today().slice(0, 8) + '01');
     const [to, setTo] = useState(today());
     const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
     const report = useApi<Report>(outlet ? `stock-control/variance?outlet_id=${outlet}&from=${from}&to=${to}` : null, [outlet, from, to]);
+    const outlets = useApi<Paged<Ref> | Ref[]>('outlets?per_page=100');
+    const outletList = Array.isArray(outlets.data) ? outlets.data : outlets.data?.data ?? [];
 
     async function freeze() {
         try { await api('stock-control/variance/reviews', { method: 'POST', body: JSON.stringify({ outlet_id: Number(outlet), from, to }) }); setMsg({ ok: true, text: t('stock2.variance.frozen') }); } catch (e) { setMsg({ ok: false, text: errMsg(e) }); }
@@ -27,6 +32,9 @@ export default function Variance() {
         <AppLayout title={t('stock2.variance.title')} subtitle={t('stock2.variance.subtitle')}
             actions={canManage && outlet ? <button type="button" className="btn-secondary" onClick={freeze}>{t('stock2.variance.freeze')}</button> : undefined}>
             <Head title={t('stock2.variance.title')} />
+            <QueryStatus query={report} variant="table" />
+            <LastUpdated at={report.updatedAt} />
+            <StockTabs current="variance" />
             <div className="mb-3 flex flex-wrap gap-2">
                 <select className="input" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label={t('stock2.variance.pick_outlet')}>
                     <option value="">{t('stock2.variance.pick_outlet')}</option>
@@ -36,7 +44,6 @@ export default function Variance() {
                 <input className="input" type="date" aria-label={t('stock.common.to')} value={to} onChange={(e) => setTo(e.target.value)} />
             </div>
             {msg && <p className={`mb-3 text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-700'}`}>{msg.text}</p>}
-            {report.error && <p className="mb-3 text-sm text-red-700">{report.error.message}</p>}
             {report.data && (
                 <>
                     <div className="mb-3 grid grid-cols-2 gap-2 text-sm md:grid-cols-4 [&>*]:min-w-0">
@@ -59,10 +66,11 @@ export default function Variance() {
                                 ))}
                             </tbody>
                         </table>
-                        {report.data.rows.length === 0 && <p className="py-4 text-center text-sm text-slate-500">{t('stock2.common.nothing')}</p>}
+                        {report.data.rows.length === 0 && <EmptyFor kind="stock" />}
                     </div>
                 </>
             )}
+            {!outlet && <div className="card"><EmptyState title={t('states3.empty.variance_pick.title')} description={t('states3.empty.variance_pick.text')} /></div>}
         </AppLayout>
     );
 }

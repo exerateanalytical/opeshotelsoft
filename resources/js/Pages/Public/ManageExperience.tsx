@@ -42,7 +42,7 @@ interface Opts {
     readiness: { status: string; missing: string[] };
     review: { allowed: boolean; submitted: boolean };
 }
-export interface ManageBooking { number: string; arrival: string; departure: string; status: string; currency: string; manage_token: string }
+export interface ManageBooking { number: string; public_code?: string; arrival: string; departure: string; status: string; currency: string; manage_token: string }
 
 export const Card = ({ id, title, children }: { id?: string; title: string; children: ReactNode }) => (
     <section id={id} className="scroll-mt-4 space-y-3 rounded-lg border border-slate-200 bg-white p-5">
@@ -55,7 +55,7 @@ const toDataUrl = (f: File) => new Promise<string>((res, rej) => { const r = new
 
 export default function ManageExperience({ b, slug, lang, onChanged, hidePay = false }: { b: ManageBooking; slug: string; lang: Lang; onChanged: () => void; hidePay?: boolean }) {
     const d = L[lang] ?? L.fr;
-    const auth = { confirmation: b.number, token: b.manage_token };
+    const auth = { confirmation: b.public_code ?? b.number, token: b.manage_token };
     const [o, setO] = useState<Opts | null>(null);
     const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
     const [dates, setDates] = useState({ arrival: b.arrival, departure: b.departure });

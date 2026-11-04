@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError, useApi } from '@/lib/api';
 import { useT } from '@/lib/i18n';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import EmptyState from '@/Components/ui/EmptyState';
+import { Image as ImageIcon } from 'lucide-react';
 import { upload } from './shared';
 
 interface WM { mode: 'none' | 'text' | 'image'; text: string; opacity: number; position: 'center' | 'diagonal' | 'tile'; apply: 'all' | 'drafts'; image: string | null }
@@ -16,7 +19,7 @@ export default function WatermarkForm({ onSaved, nextLabel, onNext }: { onSaved?
     useEffect(() => {
         if (wm.data) setF(wm.data);
     }, [wm.data]);
-    if (!f) return null;
+    if (!f) return <QueryStatus query={wm} variant="form" rows={2} />;
     const set = <K extends keyof WM>(k: K, v: WM[K]) => setF({ ...f, [k]: v });
 
     async function run(fn: () => Promise<unknown>) {
@@ -90,8 +93,8 @@ export default function WatermarkForm({ onSaved, nextLabel, onNext }: { onSaved?
             )}
             <div className="space-y-2">
                 <span className="label">{t('documents2.wm.upload')}</span>
-                {f.image && <img src={f.image} alt="" className="max-h-16 border border-slate-200" />}
-                <input type="file" accept="image/png,image/jpeg" onChange={(e) => e.target.files?.[0] && image(e.target.files[0])} />
+                {f.image ? <img src={f.image} alt="" className="max-h-16 border border-slate-200" /> : <div className="border border-dashed border-slate-300 [&>div]:py-4"><EmptyState icon={ImageIcon} title={t('documents2.wm.upload')} /></div>}
+                <input type="file" className="block min-h-11 w-full min-w-0 text-sm" aria-label={t('documents2.wm.upload')} accept="image/png,image/jpeg" onChange={(e) => e.target.files?.[0] && image(e.target.files[0])} />
                 {f.image && <button type="button" className="btn-secondary" disabled={busy} onClick={() => run(() => api('documents/watermark/image/remove', { method: 'POST' }))}>{t('documents2.wm.remove')}</button>}
             </div>
             <div className="flex gap-2">

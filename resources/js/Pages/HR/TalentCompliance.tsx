@@ -1,7 +1,9 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { api, useApi } from '@/lib/api';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { useT } from '@/lib/i18n';
 import { Banner, Pill, Section, TalentTabs, msg, tget, tsend, unwrap } from './TalentShared';
 
@@ -14,7 +16,8 @@ interface Settings { payroll_review_required: boolean; variance_pct: number; ove
 
 export default function TalentCompliance() {
     const t = useT();
-    const [reqs, setReqs] = useState<Req[]>([]);
+    const main = useApi<Req[]>('hr/talent/requests?status=pending');
+    const reqs = main.data ?? [];
     const [runs, setRuns] = useState<Run[]>([]);
     const [runId, setRunId] = useState('');
     const [review, setReview] = useState<Review | null>(null);
@@ -25,14 +28,14 @@ export default function TalentCompliance() {
     const [err, setErr] = useState<string | null>(null);
     const [ok, setOk] = useState<string | null>(null);
 
-    const load = () => {
-        tget<Req[]>('requests?status=pending').then(setReqs).catch(() => undefined);
+    const loadAux = () => {
         api<Run[] | { data: Run[] }>('payroll/runs').then((r) => setRuns(unwrap(r))).catch(() => undefined);
         api<Emp[] | { data: Emp[] }>('hr/employees').then((r) => setEmps(unwrap(r))).catch(() => undefined);
         tget<{ employees: Emp[] }>('privacy/eligible').then((r) => setEligible(r.employees)).catch(() => undefined);
         tget<Settings>('settings').then(setSettings).catch(() => undefined);
     };
-    useEffect(load, []);
+    const load = () => { main.reload(); loadAux(); };
+    useEffect(loadAux, []);
     useEffect(() => { if (runId) tget<Review>(`payroll/${runId}/checks`).then(setReview).catch((e) => setErr(msg(e))); else setReview(null); }, [runId]);
     const run = async (fn: () => Promise<unknown>, done?: string) => { setErr(null); setOk(null); try { await fn(); if (done) setOk(done); load(); if (runId) tget<Review>(`payroll/${runId}/checks`).then(setReview); } catch (e) { setErr(msg(e)); } };
 
@@ -41,9 +44,10 @@ export default function TalentCompliance() {
             <Head title={t('talent.compliance.title')} />
             <TalentTabs active="/hr/talent/compliance" />
             <Banner error={err} ok={ok} />
+            <QueryStatus query={main} variant="list" />
 
             <Section title={t('talent.staff_requests')}>
-                {!reqs.length && <p className="text-sm text-slate-500">{t('talent.none')}</p>}
+                {main.data && !reqs.length && <EmptyFor kind="generic" />}
                 {reqs.map((r) => (
                     <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 py-2 text-sm">
                         <span>{r.employee} - {t(`talent.kind.${r.kind}`)} {Object.values(r.payload).join(' ')}</span>
@@ -55,7 +59,7 @@ export default function TalentCompliance() {
             </Section>
 
             <Section title={t('talent.payroll_checks')}>
-                <select className="input mb-3" value={runId} onChange={(e) => setRunId(e.target.value)}><option value="">{t('talent.choose_run')}</option>{runs.map((r) => <option key={r.id} value={r.id}>{r.period} ({r.status})</option>)}</select>
+                <select className="input mb-3" aria-label={t('talent.choose_run')} value={runId} onChange={(e) => setRunId(e.target.value)}><option value="">{t('talent.choose_run')}</option>{runs.map((r) => <option key={r.id} value={r.id}>{r.period} ({r.status})</option>)}</select>
                 {review && (
                     <div className="text-sm">
                         <p className="mb-2">{review.required ? t('talent.review_required') : t('talent.review_advisory')}</p>

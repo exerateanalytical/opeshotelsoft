@@ -24,7 +24,8 @@ class NotificationsModule
         $reservation = fn (string $template) => function (StoredEvent $e) use ($template) {
             $p = $e->payload;
             app(Notifier::class)->notify($template, ['guest_id' => $p['guest_id'] ?? null], [
-                'number' => $p['number'] ?? '', 'booking_ref' => $p['booking_ref'] ?? '', 'arrival' => $p['arrival'] ?? '',
+                'number' => $p['number'] ?? '', 'booking_ref' => $p['booking_ref'] ?? '',
+                'reference' => ! empty($p['id']) ? (string) \App\Modules\Reservations\Domain\Reservation::withoutGlobalScopes()->whereKey($p['id'])->value('public_code') : '', 'arrival' => $p['arrival'] ?? '',
                 'departure' => $p['departure'] ?? '', 'total_amount' => number_format((int) ($p['total_amount'] ?? 0), 0, ',', ' '),
                 'currency' => $p['currency'] ?? 'XAF', 'reason' => $p['reason'] ?? '',
             ], ['type' => 'reservation', 'id' => $p['id'] ?? null, 'source_event_id' => $e->id]);

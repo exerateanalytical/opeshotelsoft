@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import EmptyState from '@/Components/ui/EmptyState';
+import QueryStatus from '@/Components/ui/QueryStatus';
 import { api, ApiError, useApi } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
@@ -44,6 +46,8 @@ export default function RevenueOffers() {
                         <input className="input" type="number" aria-label={t('revenue.offers.max_uses')} placeholder={t('revenue.offers.max_uses')} value={p.max_uses} onChange={(e) => setP({ ...p, max_uses: e.target.value })} />
                         <button type="button" className="btn-primary" disabled={!p.code || !p.name} onClick={() => run(() => api('revenue/promo-codes', { method: 'POST', body: JSON.stringify({ ...p, value: +p.value, max_uses: p.max_uses ? +p.max_uses : null }) }), () => { setP({ code: '', name: '', type: 'percent', value: '10', max_uses: '' }); promos.reload(); })}>{t('revenue.common.add')}</button>
                     </div>
+                    <QueryStatus query={promos} variant="list" rows={2} />
+                    {promos.data?.data.length === 0 && <EmptyState title={t('states3.empty.promos.title')} description={t('states3.empty.promos.text')} />}
                     {promos.data?.data.map((x) => (
                         <div key={x.id} className="flex items-center justify-between rounded-md border border-slate-200 p-2 text-sm">
                             <span><strong>{x.code}</strong> · {x.name} · {x.type === 'percent' ? `${x.value}%` : formatCurrency(x.value)} · {t('revenue.offers.uses')} {x.uses}{x.max_uses ? `/${x.max_uses}` : ''}</span>
@@ -73,6 +77,8 @@ export default function RevenueOffers() {
                     <button type="button" className="btn-primary" disabled={!c.company_id || !c.code || !c.name || !c.parent_rate_plan_id || !c.valid_from || !c.valid_to}
                         onClick={() => run(() => api('revenue/contracts', { method: 'POST', body: JSON.stringify({ ...c, company_id: +c.company_id, parent_rate_plan_id: +c.parent_rate_plan_id, discount_percent: +c.discount_percent }) }), contracts.reload)}>{t('revenue.common.add')}</button>
 
+                    <QueryStatus query={contracts} variant="list" rows={2} />
+                    {contracts.data?.data.length === 0 && <EmptyState title={t('states3.empty.contracts.title')} description={t('states3.empty.contracts.text')} />}
                     {contracts.data?.data.map((x) => (
                         <div key={x.id} className="space-y-2 rounded-md border border-slate-200 p-3 text-sm">
                             <div className="font-medium">{x.code} · {x.name} · {x.company?.name} · {x.rate_plan?.code} ({x.rate_plan?.derived_adjust_percent}%)</div>

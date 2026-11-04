@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { api, useApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { useT } from '@/lib/i18n';
-import { Banner, errMsg, Field, Loading, today } from './shared';
+import { Banner, errMsg, Field, FinEmptyState, Loading, today } from './shared';
 import { CoreNav, M, Table, Td, Th } from './coreShared';
 
 const KINDS = ['prepaid_expense', 'deferred_income', 'accrued_expense', 'accrued_income'] as const;
@@ -72,6 +72,7 @@ export default function Accruals() {
                         </tr>
                     ))}
                 </Table>
+                {schedules.data?.length === 0 && <FinEmptyState k="schedules" />}
                 {open && (
                     <div className="mt-3 border-t border-slate-100 pt-3">
                         <Loading on={items.loading} />

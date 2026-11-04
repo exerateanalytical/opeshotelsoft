@@ -4,7 +4,7 @@ import { money, t } from './i18n';
 import PublicLayout, { Notice, publicApi, type PublicProps } from './PublicLayout';
 
 interface Booking {
-    number: string; status: string; arrival: string; departure: string; adults: number; children: number; total_amount: number; currency: string;
+    number: string; public_code?: string; status: string; arrival: string; departure: string; adults: number; children: number; total_amount: number; currency: string;
     deposit_required: number; deposit_paid: number; manage_token: string; room_type: string | null; can_cancel: boolean;
     hotel: { code: string; name: string; phone: string | null; check_in_time: string } | null;
     guest: { first_name: string; last_name: string };
@@ -38,24 +38,25 @@ export default function Manage(p: PublicProps) {
         try { await fn(); } catch (e) { setError((e as Error & { status?: number }).status === 404 ? d.notFound : (e as Error).message); }
         setBusy(false);
     };
+    const refOf = (x: Booking) => x.public_code ?? x.number;
     const reload = (number = conf, name = lastName) => publicApi<Booking>(slug, '/reservations/lookup', { confirmation: number.trim(), last_name: name.trim() }).then(setB);
 
     const lookup = (e: FormEvent) => { e.preventDefault(); run(() => reload()); };
     const cancel = () => run(async () => {
-        const r = await publicApi<{ cancellation_fee: number }>(slug, '/reservations/cancel', { confirmation: b!.number, token: b!.manage_token });
+        const r = await publicApi<{ cancellation_fee: number }>(slug, '/reservations/cancel', { confirmation: refOf(b!), token: b!.manage_token });
         setConfirmCancel(false);
-        await reload(b!.number);
+        await reload(refOf(b!));
         setMsg(`${d.cancelled}${r.cancellation_fee > 0 ? ` ${d.fee}: ${money(r.cancellation_fee, b!.currency, p.lang)}` : ''}`);
     });
     const deposit = (e: FormEvent) => { e.preventDefault(); run(async () => {
         // W03 Payments endpoint: creates a payment intent (sandbox/dry-run without keys).
-        const r = await publicApi<{ reference: string; status: string; redirect_url: string | null }>(slug, `/reservations/${encodeURIComponent(b!.number)}/deposit`, {
+        const r = await publicApi<{ reference: string; status: string; redirect_url: string | null }>(slug, `/reservations/${encodeURIComponent(refOf(b!))}/deposit`, {
             token: b!.manage_token, provider: pay.method, payer_phone: pay.method === 'card' ? null : pay.phone.replace(/\s/g, ''),
             return_url: window.location.href,
         });
         if (r.redirect_url) { window.location.href = r.redirect_url; return; }
         setPending(r.reference);
-        await reload(b!.number);
+        await reload(refOf(b!));
         setMsg(`${d.depositPending}: ${r.reference}`);
     }); };
 
@@ -81,7 +82,7 @@ export default function Manage(p: PublicProps) {
                     <div className="grid gap-6 md:grid-cols-2">
                         <Card title={b.hotel?.name ?? ''}>
                             <dl className="grid grid-cols-2 gap-2 text-base">
-                                <dt className="text-slate-500">{d.confirmationNo}</dt><dd className="font-mono">{b.number}</dd>
+                                <dt className="text-slate-500">{d.confirmationNo}</dt><dd className="font-mono">{b.public_code ?? b.number}{b.public_code ? ` (${b.hotel?.code ?? ""} ${b.number})` : ""}</dd>
                                 <dt className="text-slate-500">{d.status}</dt><dd><span className={b.status === 'cancelled' ? 'badge-red' : 'badge-green'}>{d.statuses[b.status] ?? b.status}</span></dd>
                                 <dt className="text-slate-500">{d.checkIn}</dt><dd>{b.arrival}</dd>
                                 <dt className="text-slate-500">{d.checkOut}</dt><dd>{b.departure}</dd>
@@ -121,7 +122,7 @@ export default function Manage(p: PublicProps) {
                                 </form>
                             </Card>
                         )}
-                        <ManageExperience b={b} slug={slug} lang={p.lang} hidePay={!!upcoming && due > 0} onChanged={() => reload(b.number)} />
+                        <ManageExperience b={b} slug={slug} lang={p.lang} hidePay={!!upcoming && due > 0} onChanged={() => reload(refOf(b))} />
 
                         {b.can_cancel && (
                             <Card title={d.cancel}>

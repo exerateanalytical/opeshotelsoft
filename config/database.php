@@ -97,6 +97,9 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Opening a PostgreSQL connection costs 150-250 ms on Windows (a process per backend).
+            // DB_PERSISTENT=true reuses it across requests of the same PHP process (docs/PERFORMANCE.md).
+            'options' => extension_loaded('pdo_pgsql') && env('DB_PERSISTENT', false) ? [PDO::ATTR_PERSISTENT => true] : [],
         ],
 
         'sqlsrv' => [

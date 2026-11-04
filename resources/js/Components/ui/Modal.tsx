@@ -14,6 +14,8 @@ interface Props {
     size?: 'md' | 'lg' | 'xl';
     /** `dialog` is a bottom sheet on phones and a centred dialog from 768px. `sheet` is always a bottom sheet. */
     variant?: 'dialog' | 'sheet';
+    /** id of a `<form>` inside the body: submit buttons in the footer are bound to it (`form` attribute), so they can submit from outside the body. */
+    formId?: string;
 }
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -22,8 +24,13 @@ const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:n
  * Accessible modal: role=dialog, labelled, Escape closes, focus is trapped and restored, body scroll locked.
  * Renders as a bottom Sheet on phones.
  */
-export default function Modal({ open, onClose, title, children, footer, size = 'md', variant = 'dialog' }: Props) {
+export default function Modal({ open, onClose, title, children, footer, size = 'md', variant = 'dialog', formId }: Props) {
     const t = useT();
+    const footerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!open || !formId) return;
+        footerRef.current?.querySelectorAll<HTMLButtonElement>('button[type="submit"]:not([form])').forEach((b) => b.setAttribute('form', formId));
+    });
     const titleId = useId();
     const panel = useRef<HTMLDivElement>(null);
     const onCloseRef = useRef(onClose);
@@ -65,7 +72,7 @@ export default function Modal({ open, onClose, title, children, footer, size = '
                     </button>
                 </div>
                 <div className="scroll-pane flex-1 px-4 py-4">{children}</div>
-                {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3">{footer}</div>}
+                {footer && <div ref={footerRef} className="flex flex-wrap justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3">{footer}</div>}
             </div>
         </div>,
         document.body,

@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import QueryStatus from '@/Components/ui/QueryStatus';
+import { EmptyFor } from '@/Components/ui/EmptyStates';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
@@ -39,6 +41,7 @@ export default function PeopleReviews() {
     return (
         <AppLayout title={t('people.reviews.title')} subtitle={t('people.reviews.subtitle')}>
             <Head title={t('people.reviews.title')} />
+            <QueryStatus query={cycles} variant="table" />
             <PeopleTabs active="/people/reviews" />
             {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
 
@@ -53,6 +56,7 @@ export default function PeopleReviews() {
                 <table className="w-full text-sm">
                     <thead><tr className="text-left text-slate-500"><th className="p-2">{t('people.reviews.cycle_name')}</th><th>{t('people.reviews.period')}</th><th>{t('people.status')}</th><th>{t('people.reviews.count')}</th><th /></tr></thead>
                     <tbody>
+                        {cycles.data?.length === 0 && <tr><td colSpan={8} className="p-0"><EmptyFor kind="events" /></td></tr>}
                         {cycles.data?.map((c) => (
                             <tr key={c.id} className={`border-t border-slate-100 ${cycleId === c.id ? 'bg-slate-50' : ''}`}>
                                 <td className="p-2"><button className="underline" onClick={() => setCycleId(c.id)}>{c.name}</button></td>

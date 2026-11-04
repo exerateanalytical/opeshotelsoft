@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { Award, CalendarClock, CheckCircle2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useLocale, useT } from '@/lib/i18n';
 import ConfirmSheet from './ConfirmSheet';
@@ -44,15 +45,18 @@ export default function Card({ data }: { data: Data }) {
                 <div className="flex justify-between items-start gap-3">
                     <div>
                         <p className="text-sm text-slate-300">{t('member.card.tier')}</p>
-                        <p className="text-2xl font-bold">{m.tier.name}</p>
+                        <p className="flex items-center gap-2 text-2xl font-bold"><Award className="h-6 w-6" aria-hidden="true" />{m.tier.name}</p>
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded text-sm font-semibold ${status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>{t(`member.card.status.${status}`)}</span>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-sm font-semibold ${status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
+                        {status === 'active' ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <XCircle className="h-4 w-4" aria-hidden="true" />}{t(`member.card.status.${status}`)}
+                    </span>
                 </div>
                 <div className="bg-white rounded-lg p-3 mx-auto w-fit" aria-label={t('member.card.qr')} dangerouslySetInnerHTML={{ __html: c.qr_svg.replace(/width="\d+" height="\d+"/, 'width="200" height="200"') }} />
                 <div>
                     <p className="text-lg font-semibold">{m.name}</p>
                     <p className="font-mono tracking-wider">{c.card_number.replace(/(\d{4})(?=\d)/g, '$1 ')}</p>
-                    <p className="text-sm text-slate-300">{t('member.card.member_no')} {m.number}{c.expires_on ? ` · ${t('member.card.expires')} ${fmtDate(c.expires_on, locale)}` : ''}</p>
+                    <p className="text-sm text-slate-300">{t('member.card.member_no')} {m.number}</p>
+                    {c.expires_on && <p className="flex items-center gap-1.5 text-sm text-slate-300"><CalendarClock className="h-4 w-4" aria-hidden="true" />{t('member.card.expires')} {fmtDate(c.expires_on, locale)}</p>}
                 </div>
             </div>
 

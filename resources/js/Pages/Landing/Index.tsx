@@ -160,7 +160,7 @@ export default function Landing() {
                     <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2">
                         <div>
                             <div className="mb-6 inline-block rounded-md bg-white p-3"><BrandLogo variant="wordmark" size={260} /></div>
-                            <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-brand-300">{t('landing.hero.eyebrow')}</p>
+                            <p className="mb-4 text-sm font-semibold text-brand-300">{t('landing.hero.eyebrow')}</p>
                             <h1 className="text-4xl font-bold leading-tight md:text-5xl">{t('landing.hero.title')}</h1>
                             <p className="mt-5 text-lg text-navy-100">{t('landing.hero.sub')}</p>
                             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
