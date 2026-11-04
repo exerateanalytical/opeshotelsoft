@@ -98,7 +98,13 @@ class Navigation
     /** Entries the user may see, in config order. */
     public static function for(User $user): array
     {
-        return array_values(array_filter(self::ITEMS, function ($item) use ($user) {
+        // "My space" is the employee self-service: only shown to logins linked to an employee record (its data calls refuse everyone else).
+        $isEmployee = null;
+
+        return array_values(array_filter(self::ITEMS, function ($item) use ($user, &$isEmployee) {
+            if ($item['path'] === '/me') {
+                return $isEmployee ??= \Illuminate\Support\Facades\DB::table('employees')->where('user_id', $user->id)->exists();
+            }
             if ($item['permission'] === null) {
                 return true;
             }
