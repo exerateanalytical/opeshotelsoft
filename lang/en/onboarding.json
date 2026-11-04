@@ -143,5 +143,9 @@
     "onboarding.templates.preview": "Preview (sample data)",
     "onboarding.templates.preview_pdf": "PDF preview",
     "onboarding.templates.reset": "Reset to default",
-    "onboarding.templates.reset_confirm": "Remove the custom text and go back to the default?"
+    "onboarding.templates.reset_confirm": "Remove the custom text and go back to the default?",
+    "onboarding.branding.seal": "Seal or stamp",
+    "onboarding.branding.no_seal": "No seal.",
+    "onboarding.branding.remove_seal": "Remove seal",
+    "onboarding.branding.seal_help": "PNG or JPEG with a transparent or white background, 1 MB max. Printed at the end of every document."
 }

@@ -49,6 +49,7 @@ final class Letterhead
             'color' => $color($hotel?->brand_color, self::DEFAULT_COLOR),
             'accent' => $color($hotel?->accent_color, self::DEFAULT_ACCENT),
             'logo' => self::logoDataUri($hotel),
+            'seal' => self::sealDataUri($hotel),
             'design' => self::design($hotel),
         ]);
     }
@@ -84,6 +85,18 @@ final class Letterhead
     public static function logoDataUri(?Hotel $hotel): ?string
     {
         $path = $hotel?->logo_path;
+        if (! $path || ! Storage::disk(self::LOGO_DISK)->exists($path)) {
+            return null;
+        }
+        $mime = str_ends_with($path, '.png') ? 'image/png' : 'image/jpeg';
+
+        return "data:$mime;base64,".base64_encode(Storage::disk(self::LOGO_DISK)->get($path));
+    }
+
+    /** Hotel seal/stamp (hotels.settings.seal_path), printed beside the signature area of the footer. */
+    public static function sealDataUri(?Hotel $hotel): ?string
+    {
+        $path = $hotel?->settings['seal_path'] ?? null;
         if (! $path || ! Storage::disk(self::LOGO_DISK)->exists($path)) {
             return null;
         }

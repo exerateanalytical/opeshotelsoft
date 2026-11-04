@@ -70,6 +70,7 @@
 @if(!empty($templateNote))
 <div class="small" style="margin-top:6mm">{!! $templateNote !!}</div>
 @endif
+@if(! $compact && ! empty($lh['seal']))<div style="text-align:right; margin-top:8mm; page-break-inside:avoid"><img src="{{ $lh['seal'] }}" style="max-height:28mm; max-width:28mm" alt=""></div>@endif
 </div>
 
 <div class="engine-foot" data-engine="foot" @if($e['design'] === 'executive' && ! $compact) style="padding-left:18mm" @endif>

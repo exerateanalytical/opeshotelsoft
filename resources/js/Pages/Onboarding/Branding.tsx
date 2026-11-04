@@ -12,7 +12,7 @@ import WatermarkForm from './Watermark';
 const DESIGNS = ['classic', 'modern', 'executive', 'minimal', 'heritage', 'corporate', 'resort'] as const;
 
 const FIELDS = ['legal_name', 'tax_id', 'trade_register', 'address', 'city', 'postal_box', 'phone', 'email'] as const;
-type Branding = Record<string, string | null> & { logo: string | null };
+type Branding = Record<string, string | null> & { logo: string | null; seal: string | null };
 
 export default function BrandingPage() {
     const t = useT();
@@ -22,7 +22,7 @@ export default function BrandingPage() {
     const [busy, setBusy] = useState(false);
 
     useEffect(() => {
-        if (b.data) setF(Object.fromEntries(Object.entries(b.data).filter(([k]) => k !== 'logo').map(([k, v]) => [k, v == null ? '' : String(v)])));
+        if (b.data) setF(Object.fromEntries(Object.entries(b.data).filter(([k]) => k !== 'logo' && k !== 'seal').map(([k, v]) => [k, v == null ? '' : String(v)])));
     }, [b.data]);
     const [preview, setPreview] = useState('');
     const design = f.letterhead_design || 'classic';
@@ -46,6 +46,15 @@ export default function BrandingPage() {
         } finally {
             setBusy(false);
         }
+    }
+
+    async function seal(file: File) {
+        const form = new FormData();
+        form.append('seal', file);
+        await run(async () => {
+            const r = await upload<{ message?: string }>('documents/branding/seal', form);
+            if (!r.ok) throw new Error(r.body?.message ?? t('onboarding.error'));
+        });
     }
 
     async function logo(file: File) {
@@ -107,6 +116,13 @@ export default function BrandingPage() {
                         <input type="file" className="block min-h-11 w-full min-w-0 text-sm" aria-label={t('onboarding.branding.logo')} accept="image/png,image/jpeg" onChange={(e) => e.target.files?.[0] && logo(e.target.files[0])} />
                         {b.data?.logo && <button type="button" className="btn-secondary" disabled={busy} onClick={() => run(() => api('documents/branding/logo/remove', { method: 'POST' }))}>{t('onboarding.branding.remove_logo')}</button>}
                         <p className="text-xs text-slate-500">{t('onboarding.branding.logo_help')}</p>
+                    </div>
+                    <div className="card p-4 space-y-3">
+                        <h2 className="font-semibold text-slate-900">{t('onboarding.branding.seal')}</h2>
+                        {b.data?.seal ? <img src={b.data.seal} alt="" className="max-h-20" /> : <div className="border border-dashed border-slate-300 [&>div]:py-4"><EmptyState icon={ImageIcon} title={t('onboarding.branding.no_seal')} /></div>}
+                        <input type="file" className="block min-h-11 w-full min-w-0 text-sm" aria-label={t('onboarding.branding.seal')} accept="image/png,image/jpeg" onChange={(e) => e.target.files?.[0] && seal(e.target.files[0])} />
+                        {b.data?.seal && <button type="button" className="btn-secondary" disabled={busy} onClick={() => run(() => api('documents/branding/seal/remove', { method: 'POST' }))}>{t('onboarding.branding.remove_seal')}</button>}
+                        <p className="text-xs text-slate-500">{t('onboarding.branding.seal_help')}</p>
                     </div>
                     <div className="card p-4 space-y-3">
                         <h2 className="font-semibold text-slate-900">{t('documents2.design.title')}</h2>

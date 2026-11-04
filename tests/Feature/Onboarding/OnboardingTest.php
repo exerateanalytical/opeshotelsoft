@@ -75,6 +75,11 @@ class OnboardingTest extends TestCase
         $this->assertNotNull($this->getJson('/api/v1/documents/branding')->json('logo'));
         $this->post('/api/v1/documents/branding/logo', ['logo' => UploadedFile::fake()->createWithContent('x.svg', '<svg onload="alert(1)"/>')])->assertStatus(422);
 
+        $this->post('/api/v1/documents/branding/seal', ['seal' => UploadedFile::fake()->createWithContent('seal.png', base64_decode(self::PNG))])->assertOk();
+        $this->assertNotNull($this->getJson('/api/v1/documents/branding')->json('seal'));
+        $this->post('/api/v1/documents/branding/seal', ['seal' => UploadedFile::fake()->createWithContent('x.svg', '<svg/>')])->assertStatus(422);
+        $this->postJson('/api/v1/documents/branding/seal/remove')->assertOk()->assertJsonPath('seal', null);
+
         $html = view('pdf.report', ['title' => 'T', 'columns' => [], 'rows' => [], 'params' => [], 'hotel' => $this->hotel->fresh(), 'lang' => 'fr'])->render();
         $this->assertStringContainsString('Akwa Palace SA', $html);
         $this->assertStringContainsString('#0f766e', $html);

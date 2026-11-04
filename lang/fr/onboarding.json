@@ -143,5 +143,9 @@
     "onboarding.templates.preview": "Aperçu (données d'exemple)",
     "onboarding.templates.preview_pdf": "Aperçu PDF",
     "onboarding.templates.reset": "Revenir au modèle par défaut",
-    "onboarding.templates.reset_confirm": "Supprimer le texte personnalisé et revenir au modèle par défaut ?"
+    "onboarding.templates.reset_confirm": "Supprimer le texte personnalisé et revenir au modèle par défaut ?",
+    "onboarding.branding.seal": "Sceau ou cachet",
+    "onboarding.branding.no_seal": "Aucun sceau.",
+    "onboarding.branding.remove_seal": "Retirer le sceau",
+    "onboarding.branding.seal_help": "PNG ou JPEG sur fond transparent ou blanc, 1 Mo maximum. Imprimé à la fin de chaque document."
 }

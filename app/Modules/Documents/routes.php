@@ -32,6 +32,8 @@ Route::prefix('documents')->group(function () {
     Route::put('branding', [B::class, 'update']);
     Route::post('branding/logo', [B::class, 'uploadLogo']);
     Route::post('branding/logo/remove', [B::class, 'removeLogo']);
+    Route::post('branding/seal', [B::class, 'uploadSeal']);
+    Route::post('branding/seal/remove', [B::class, 'removeSeal']);
 
     Route::get('templates', [T::class, 'index']);
     Route::post('templates/preview', [T::class, 'preview']);

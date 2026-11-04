@@ -72,6 +72,38 @@ class BrandingController
         return $this->payload($hotel);
     }
 
+    public function uploadSeal(Request $request)
+    {
+        $this->can($request);
+        $request->validate(['seal' => ['required', 'file', 'mimes:png,jpg,jpeg', 'max:1024']]);
+        $hotel = $this->hotel();
+        $file = $request->file('seal');
+        $ext = strtolower($file->getClientOriginalExtension()) === 'png' ? 'png' : 'jpg';
+        abort_unless(@getimagesize($file->getRealPath()), 422, 'Not a valid image.');
+        $path = "branding/{$hotel->id}/seal-".now()->format('YmdHis').".$ext";
+        Storage::disk(Letterhead::LOGO_DISK)->put($path, file_get_contents($file->getRealPath()));
+        $old = $hotel->settings['seal_path'] ?? null;
+        $hotel->update(['settings' => array_merge($hotel->settings ?? [], ['seal_path' => $path])]);
+        if ($old && $old !== $path) {
+            Storage::disk(Letterhead::LOGO_DISK)->delete($old);
+        }
+        $this->bus->record('documents.branding.seal_uploaded', ['hotel_id' => $hotel->id], 'hotel', $hotel->id);
+
+        return $this->payload($hotel);
+    }
+
+    public function removeSeal(Request $request)
+    {
+        $this->can($request);
+        $hotel = $this->hotel();
+        if ($old = $hotel->settings['seal_path'] ?? null) {
+            Storage::disk(Letterhead::LOGO_DISK)->delete($old);
+            $hotel->update(['settings' => array_diff_key($hotel->settings ?? [], ['seal_path' => 1])]);
+        }
+
+        return $this->payload($hotel);
+    }
+
     public function removeLogo(Request $request)
     {
         $this->can($request);
@@ -195,7 +227,7 @@ class BrandingController
 
     private function payload(Hotel $hotel): array
     {
-        return $hotel->only(['id', 'name', ...self::FIELDS]) + ['logo' => Letterhead::logoDataUri($hotel), 'letterhead_design' => Letterhead::design($hotel)];
+        return $hotel->only(['id', 'name', ...self::FIELDS]) + ['logo' => Letterhead::logoDataUri($hotel), 'seal' => Letterhead::sealDataUri($hotel), 'letterhead_design' => Letterhead::design($hotel)];
     }
 
     private function hotel(): Hotel
